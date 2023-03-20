@@ -31,9 +31,12 @@ def prompt2response( msg:str
         dict: API response
     """
     assert max_requests >= 0, "max_requests should be non-negative"
+    assert openai.api_key is not None, "API key is not set!"
+
     # initial prompt message
     if isinstance(msg, str): 
         msg = default_prompt(msg)
+        
     # default options
     if not len(options):
         options = {"model":"gpt-3.5-turbo"}
@@ -73,6 +76,7 @@ def proxy_on(host:str, port:int=7890):
         host (str): proxy host
         port (int, optional): proxy port. Defaults to 7890.
     """
+    host = host.replace("http://", "").replace("https://", "")
     os.environ['http_proxy'] = f"http://{host}:{port}"
     os.environ['https_proxy'] = f"https://{host}:{port}"
 
@@ -89,10 +93,16 @@ def show_proxy():
     if http is None:
         print("`http_proxy` is not set!")
     else:
-        print(f"http_proxy:http://{http}")
+        print(f"http_proxy:\t{http}")
     if https is None:
         print("`https_proxy` is not set!")
     else:
-        print(f"https_proxy:https://{https}")
+        print(f"https_proxy:\t{https}")
 
+def show_apikey():
+    if openai.api_key is not None:
+        print(f"API key:\t{openai.api_key}")
+    else:
+        print("API key is not set!")
     
+        
