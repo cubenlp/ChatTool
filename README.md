@@ -1,3 +1,5 @@
+> 以下为 ChatGPT 自动生成的 README.md 文件（待修改），中文文档移步[这里](README_zh_CN.md)。
+
 # Package Name
 
 A brief description of the package.
