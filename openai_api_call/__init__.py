@@ -15,7 +15,7 @@ if os.environ.get('OPENAI_API_KEY') is not None:
         print("Warning: The default environment variable `OPENAI_API_KEY` is not a valid API key.")
     openai.api_key = apikey
 
-def prompt2response( msg:str
+def prompt2response( msg:Union[str, List[Dict]]
                    , contentonly:bool=False
                    , max_requests:int=1
                    , model:str = "gpt-3.5-turbo"
@@ -23,7 +23,7 @@ def prompt2response( msg:str
     """Transform prompt to the API response
     
     Args:
-        msg (str): prompt message
+        msg (Union[str, List[Dict]]): prompt message
         contentonly (bool, optional): whether to return only the content of the response. Defaults to False.
         max_requests (int, optional): maximum number of requests to make. Defaults to 1.
         model (str, optional): model to use. Defaults to "gpt-3.5-turbo".

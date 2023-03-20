@@ -53,8 +53,8 @@ openai_api_call.default_prompt = lambda msg: [
     {"role": "user", "content": msg}
 ]
 prompt = "Hello!"
-# OpenAI 原先支持的参数
-response = prompt2response(prompt, temperature=0.5)
+# 设置重试次数为 Inf
+response = prompt2response(prompt, temperature=0.5, max_requests=-1)
 print("消耗 tokens 数量：", getntoken(response))
 print("返回内容：", getcontent(response))
 ```
