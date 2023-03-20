@@ -12,7 +12,7 @@ python # 进入 Python 解释器
 ```
 
 ## 使用示例
-简单的使用示例：
+简单示例：
 
 ```python
 import openai_api_call
@@ -26,7 +26,7 @@ show_apikey() # 查看当前 API key
 prompt = "Hello, GPT-3.5!"
 print(prompt2response(prompt, contentonly=True))
 ```
-其中 API key 可以在 `.bashrc` 中设置：
+其中 API 密钥可以在 `.bashrc` 结尾处添加如下代码，进行设置：
 
 ```bash
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -39,7 +39,7 @@ from openai_api_call import proxy_on, proxy_off, show_proxy
 show_proxy() # 查看当前代理
 proxy_on("127.0.0.1") # 本地代理，端口默认为 7890
 show_proxy() # 查看更新后的代理
-print(prompt2response("Hello", contentonly=True))
+print(prompt2response("Hello!", contentonly=True))
 proxy_off() # 关闭代理
 ```
 
@@ -48,12 +48,13 @@ proxy_off() # 关闭代理
 ```python
 from openai_api_call import getntoken, getcontent
 # 自定义发送模板
-openai_api_call.default_template = lambda msg: [
+openai_api_call.default_prompt = lambda msg: [
+    {"role": "system", "content": "帮我翻译这段文字"},
     {"role": "user", "content": msg}
 ]
 prompt = "Hello!"
 # OpenAI 原先支持的参数
-response = prompt2response(prompt, temperture=0.5)
+response = prompt2response(prompt, temperature=0.5)
 print("消耗 tokens 数量：", getntoken(response))
 print("返回内容：", getcontent(response))
 ```

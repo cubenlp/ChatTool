@@ -18,6 +18,7 @@ if os.environ.get('OPENAI_API_KEY') is not None:
 def prompt2response( msg:str
                    , contentonly:bool=False
                    , max_requests:int=1
+                   , model:str = "gpt-3.5-turbo"
                    , **options):
     """Transform prompt to the API response
     
@@ -25,6 +26,7 @@ def prompt2response( msg:str
         msg (str): prompt message
         contentonly (bool, optional): whether to return only the content of the response. Defaults to False.
         max_requests (int, optional): maximum number of requests to make. Defaults to 1.
+        model (str, optional): model to use. Defaults to "gpt-3.5-turbo".
         **options : options for the API call.
     
     Returns:
@@ -39,19 +41,24 @@ def prompt2response( msg:str
         
     # default options
     if not len(options):
-        options = {"model":"gpt-3.5-turbo"}
+        options = {}
     # make request
     res = {}
     while max_requests:
+        numoftries = 0
         try:
             res = openai.ChatCompletion.create(
-                  messages=msg, **options)
+                  messages=msg, 
+                  model=model,
+                  **options)
         except:
             max_requests -= 1
+            numoftries += 1
+            print(f"API call failed! Try again ({numoftries})")
             continue
         break
     else:
-        raise Exception("API call failed! You can try to update the API key"
+        raise Exception("API call failed!\nYou can try to update the API key"
                         + ", increase `max_requests` or set proxy.")
     return getcontent(res) if contentonly else res
 
