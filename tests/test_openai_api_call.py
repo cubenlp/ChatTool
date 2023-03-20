@@ -3,10 +3,7 @@
 """Tests for `openai_api_call` package."""
 
 import pytest
-
 from click.testing import CliRunner
-
-from openai_api_call import openai_api_call
 from openai_api_call import cli
 
 

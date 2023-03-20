@@ -10,9 +10,9 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=7.0', ]
+requirements = ['Click>=7.0', 'openai>=0.27.0']
 
-test_requirements = ['pytest>=3', ]
+test_requirements = ['pytest>=3', 'unittest']
 
 setup(
     author="Rex Wang",
