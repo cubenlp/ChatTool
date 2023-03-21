@@ -93,7 +93,7 @@ next_resp = prompt2response(next_prompt)
 print(next_resp.content)
 
 # 打印对话历史
-print(next_resp.chat_log)
+list(map(print,next_resp.chat_log()))
 ```
 
 ## 开源协议

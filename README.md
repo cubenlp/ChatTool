@@ -101,7 +101,7 @@ next_resp = prompt2response(next_prompt)
 print(next_resp.content)
 
 # print chat history
-print(next_resp.chat_log)
+list(map(print,next_resp.chat_log()))
 ```
 
 ## License
