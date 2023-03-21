@@ -57,6 +57,7 @@ proxy_off()
 ### Basic Usage
 
 Example 1, send prompt and return information:
+
 ```python
 from openai_api_call import prompt2response, show_apikey
 
@@ -68,7 +69,8 @@ show_proxy()
 
 # Send prompt and return response
 prompt = "Hello, GPT-3.5!"
-print(prompt2response(prompt, contentonly=True))
+resp = prompt2response(prompt)
+print(resp.content)
 ```
 
 Example 2, customize the message template and return the information and the number of consumed tokens:
