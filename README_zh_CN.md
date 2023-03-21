@@ -1,4 +1,11 @@
-# OpenAI API Call
+# OpenAI API 
+[![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
+[![Tests](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/)
+[![Documentation Status](https://readthedocs.org/projects/openai-api-call/badge/?version=latest)](https://openai-api-call.readthedocs.io/en/latest/?version=latest)
+
+<!-- 
+[![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/) 
+-->
 
 OpenAI API 的简单封装，用于发送 prompt message 并返回 response。
 

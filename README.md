@@ -1,11 +1,13 @@
 > 以下为 ChatGPT 自动生成的 README.md 文件（待修改），中文文档移步[这里](README_zh_CN.md)。
 
 # Openai API call
-
 [![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
-[![Build Status](https://img.shields.io/travis/RexWzh/openai_api_call.svg)](https://travis-ci.com/RexWzh/openai_api_call)
+[![Tests](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/)
 [![Documentation Status](https://readthedocs.org/projects/openai-api-call/badge/?version=latest)](https://openai-api-call.readthedocs.io/en/latest/?version=latest)
-[![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/)
+
+<!-- 
+[![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/) 
+-->
 
 A simple wrapper for OpenAI API, which can send prompt message and return response.
 
