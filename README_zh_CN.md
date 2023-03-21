@@ -5,7 +5,7 @@ OpenAI API 的简单封装，用于发送 prompt message 并返回 response。
 ## 安装方法
 
 ```bash
-pip install git+https://github.com/RexWzh/openai_api_call.git
+pip install openai-api-call
 ```
 
 ## 使用方法

@@ -12,7 +12,7 @@ A simple wrapper for OpenAI API, which can send prompt message and return respon
 ## Installation
 
 ```bash
-pip install git+https://github.com/RexWzh/openai_api_call.git
+pip install openai-api-call
 ```
 
 ## Usage
