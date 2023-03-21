@@ -9,8 +9,6 @@ Welcome to Openai API call's documentation!
    installation
    usage
    modules
-   contributing
-   history
 
 Indices and tables
 ==================
