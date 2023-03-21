@@ -1,14 +1,22 @@
 > 以下为 ChatGPT 自动生成的 README.md 文件（待修改），中文文档移步[这里](README_zh_CN.md)。
 
-# Package Name
+# Openai API call
 
-A brief description of the package.
+[![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
+[![Build Status](https://img.shields.io/travis/RexWzh/openai_api_call.svg)](https://travis-ci.com/RexWzh/openai_api_call)
+[![Documentation Status](https://readthedocs.org/projects/openai-api-call/badge/?version=latest)](https://openai-api-call.readthedocs.io/en/latest/?version=latest)
+[![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/)
+
+A short wrapper of the OpenAI api call.
+
+* Free software: MIT license
+* Documentation: https://openai-api-call.readthedocs.io.
 
 ## Installation
 To install the package, you can use pip:
 
 ```bash
-$ pip install package_name
+pip install git+https://github.com/RexWzh/openai_api_call.git
 ```
 
 ## Usage
@@ -50,3 +58,11 @@ print(total_tokens)
 ## License
 
 This package is licensed under the MIT license. See the LICENSE file for more details.
+
+## Features
+
+* TODO
+
+## Credits
+
+This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) project template.
