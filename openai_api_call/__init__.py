@@ -49,6 +49,7 @@ def prompt2response( msg:Union[str, List[Dict]]
             resp.response = openai.ChatCompletion.create(
                 messages=msg, model=model,
                 **options)
+            resp._request_msg = msg
         except:
             max_requests -= 1
             numoftries += 1

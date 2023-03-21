@@ -7,12 +7,6 @@
 [![Documentation Status](https://readthedocs.org/projects/openai-api-call/badge/?version=latest)](https://openai-api-call.readthedocs.io/en/latest/?version=latest)
 [![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/)
 
-A short wrapper of the OpenAI api call.
-
-* Free software: MIT license
-* Documentation: https://openai-api-call.readthedocs.io.
-# OpenAI API Call
-
 A simple wrapper for OpenAI API, which can send prompt message and return response.
 
 ## Installation
@@ -77,7 +71,6 @@ Example 2, customize the message template and return the information and the num
 
 ```python
 import openai_api_call
-from openai_api_call import getntoken, getcontent
 
 # Customize the sending template
 openai_api_call.default_prompt = lambda msg: [
@@ -87,8 +80,28 @@ openai_api_call.default_prompt = lambda msg: [
 prompt = "Hello!"
 # Set the number of retries to Inf
 response = prompt2response(prompt, temperature=0.5, max_requests=-1)
-print("Number of consumed tokens: ", getntoken(response))
-print("Returned content: ", getcontent(response))
+print("Number of consumed tokens: ", response.total_tokens)
+print("Returned content: ", response.content)
+```
+
+### Advanced Usage
+
+Continue chatting based on the last response:
+
+```python
+# first call
+prompt = "Hello, GPT-3.5!"
+resp = prompt2response(prompt)
+print(resp.content)
+
+# next call
+next_prompt = resp.next_prompt("How are you?")
+print(next_prompt)
+next_resp = prompt2response(next_prompt)
+print(next_resp.content)
+
+# print chat history
+print(next_resp.chat_log)
 ```
 
 ## License

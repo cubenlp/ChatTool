@@ -1,6 +1,6 @@
 
 # test for error response
-from openai_api_call import Resp
+from openai_api_call import Resp, default_prompt
 
 err_api_key_resp = {
     "error": {
@@ -63,3 +63,15 @@ def test_valid():
     assert resp.created == 1679408728
     assert resp.is_valid() == True
 
+# test next talk
+def test_next_talk():
+    resp = Resp(response=valid_response)
+    msg = "hello!"
+    resp._request_msg = default_prompt(msg)
+    new_prompt = resp.next_prompt("How are you?")
+    assert new_prompt == [
+        {'role': 'user', 'content': 'hello!'},
+        {'role': 'assistant', 'content': 'Hello, how can I assist you today?'},
+        {'role': 'user', 'content': 'How are you?'}
+    ]
+    

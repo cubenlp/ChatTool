@@ -55,7 +55,8 @@ show_proxy()
 
 # 发送 prompt 并返回 response
 prompt = "Hello, GPT-3.5!"
-print(prompt2response(prompt, contentonly=True))
+resp = prompt2response(prompt)
+print(resp.content)
 ```
 
 
@@ -63,7 +64,6 @@ print(prompt2response(prompt, contentonly=True))
 
 ```python
 import openai_api_call
-from openai_api_call import getntoken, getcontent
 
 # 自定义发送模板
 openai_api_call.default_prompt = lambda msg: [
@@ -73,8 +73,27 @@ openai_api_call.default_prompt = lambda msg: [
 prompt = "Hello!"
 # 设置重试次数为 Inf
 response = prompt2response(prompt, temperature=0.5, max_requests=-1)
-print("消耗 tokens 数量：", getntoken(response))
-print("返回内容：", getcontent(response))
+print("Number of consumed tokens: ", response.total_tokens)
+print("Returned content: ", response.content)
+```
+
+### 进阶用法
+继续上一次的对话：
+
+```python
+# 第一次调用
+prompt = "Hello, GPT-3.5!"
+resp = prompt2response(prompt)
+print(resp.content)
+
+# 下一次调用
+next_prompt = resp.next_prompt("How are you?")
+print(next_prompt)
+next_resp = prompt2response(next_prompt)
+print(next_resp.content)
+
+# 打印对话历史
+print(next_resp.chat_log)
 ```
 
 ## 开源协议

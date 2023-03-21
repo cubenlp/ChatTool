@@ -4,22 +4,20 @@ from typing import List, Dict, Union
 
 class Resp():
     
-    def __init__( self
-                , response:Union[List[Dict], None]=None
-                , request_msg:Union[List[Dict], None]=None) -> None:
+    def __init__(self, response:Union[List[Dict], None]=None) -> None:
         self.response = response
-        self.request_msg = request_msg
+        self._request_msg = None
 
-    def chat_history(self):
+    def chat_log(self):
         """Chat history"""
-        assert self.request_msg is not None, "Request message is not set!"
-        ai_resp = {"role:": "assistant", "content": self.content}
-        return self.request_msg + [ai_resp]
+        assert self._request_msg is not None, "Request message is not set!"
+        ai_resp = {"role": "assistant", "content": self.content}
+        return self._request_msg + [ai_resp]
     
-    def finetune_prompt(self, msg):
-        """Finetune prompt for the next API call"""
+    def next_prompt(self, msg):
+        """next prompt for the next API call"""
         prompt = {"role": "user", "content": msg}
-        return self.chat_history() + [prompt]
+        return self.chat_log() + [prompt]
 
     @property
     def total_tokens(self):
