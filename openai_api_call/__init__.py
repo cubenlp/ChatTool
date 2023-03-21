@@ -19,6 +19,7 @@ if os.environ.get('OPENAI_API_KEY') is not None:
 def prompt2response( msg:Union[str, List[Dict]]
                    , max_requests:int=1
                    , model:str = "gpt-3.5-turbo"
+                   , strip:bool=True
                    , **options)->Resp:
     """Transform prompt to the API response
     
@@ -26,6 +27,7 @@ def prompt2response( msg:Union[str, List[Dict]]
         msg (Union[str, List[Dict]]): prompt message
         max_requests (int, optional): maximum number of requests to make. Defaults to 1.
         model (str, optional): model to use. Defaults to "gpt-3.5-turbo".
+        strip (bool, optional): whether to strip the prompt message. Defaults to True.
         **options : options for the API call.
     
     Returns:
@@ -49,6 +51,8 @@ def prompt2response( msg:Union[str, List[Dict]]
             resp.response = openai.ChatCompletion.create(
                 messages=msg, model=model,
                 **options)
+            if strip:
+                resp._strip_content()
             resp._request_msg = msg
         except:
             max_requests -= 1

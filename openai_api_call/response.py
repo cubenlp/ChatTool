@@ -19,6 +19,11 @@ class Resp():
         prompt = {"role": "user", "content": msg}
         return self.chat_log() + [prompt]
 
+    def _strip_content(self):
+        """Strip the content"""
+        self.response['choices'][0]['message']['content'] = \
+            self.response['choices'][0]['message']['content'].strip()
+    
     @property
     def total_tokens(self):
         """Total number of tokens"""
