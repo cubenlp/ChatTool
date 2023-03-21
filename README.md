@@ -11,9 +11,11 @@ A short wrapper of the OpenAI api call.
 
 * Free software: MIT license
 * Documentation: https://openai-api-call.readthedocs.io.
+# OpenAI API Call
+
+A simple wrapper for OpenAI API, which can send prompt message and return response.
 
 ## Installation
-To install the package, you can use pip:
 
 ```bash
 pip install git+https://github.com/RexWzh/openai_api_call.git
@@ -21,38 +23,70 @@ pip install git+https://github.com/RexWzh/openai_api_call.git
 
 ## Usage
 
-The main module of this package provides a function called `prompt2response`, which sends a prompt message to GPT-3 and returns the response. Here's an example:
+### Set API Key
 
-```python
-import package_name
-
-msg = "Hello, GPT-3!"
-res = package_name.prompt2response(msg)
-print(res)
+```py
+import openai
+openai.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-This will send the prompt message "Hello, GPT-3!" to GPT-3 using the default options and return the response.
+Or set `OPENAI_API_KEY` in `~/.bashrc` to automatically set it when you start the terminal:
 
-You can also customize the behavior of `prompt2response` by passing in additional arguments:
+```bash
+# Add the following code to ~/.bashrc
+export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
 
-- `contentonly`: if set to True, only the response message content will be returned (default is False).
-- `max_requests`: maximum number of times to retry if the request fails (default is 0).
-- `options`: a dictionary of options to pass to the OpenAI API (default is {"model":"gpt-3.5-turbo"}).
+### Set Proxy (Optional)
 
-## Examples
+```py
+from openai_api_call import proxy_on, proxy_off, show_proxy
+# Check the current proxy
+show_proxy()
 
-Here are some more examples of how to use the package:
+# Set local proxy, port number is 7890 by default
+proxy_on("127.0.0.1", port=7890)
+
+# Check the updated proxy
+show_proxy()
+
+# Turn off proxy
+proxy_off() 
+```
+
+### Basic Usage
+
+Example 1, send prompt and return information:
+```python
+from openai_api_call import prompt2response, show_apikey
+
+# Check if API key is set
+show_apikey()
+
+# Check if proxy is enabled
+show_proxy()
+
+# Send prompt and return response
+prompt = "Hello, GPT-3.5!"
+print(prompt2response(prompt, contentonly=True))
+```
+
+Example 2, customize the message template and return the information and the number of consumed tokens:
 
 ```python
-# Send a prompt message and get only the response message content
-res = package_name.prompt2response("What is the meaning of life?", contentonly=True)
-print(res)
+import openai_api_call
+from openai_api_call import getntoken, getcontent
 
-# Send multiple prompt messages and get the total number of tokens used
-res1 = package_name.prompt2response("How are you?")
-res2 = package_name.prompt2response("What's your name?")
-total_tokens = package_name.getntoken(res1) + package_name.getntoken(res2)
-print(total_tokens)
+# Customize the sending template
+openai_api_call.default_prompt = lambda msg: [
+    {"role": "system", "content": "帮我翻译这段文字"},
+    {"role": "user", "content": msg}
+]
+prompt = "Hello!"
+# Set the number of retries to Inf
+response = prompt2response(prompt, temperature=0.5, max_requests=-1)
+print("Number of consumed tokens: ", getntoken(response))
+print("Returned content: ", getcontent(response))
 ```
 
 ## License

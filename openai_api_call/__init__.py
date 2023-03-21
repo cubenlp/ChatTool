@@ -32,7 +32,7 @@ def prompt2response( msg:Union[str, List[Dict]]
     Returns:
         dict: API response
     """
-    assert max_requests >= 0, "max_requests should be non-negative"
+    # assert max_requests >= 0, "max_requests should be non-negative"
     assert openai.api_key is not None, "API key is not set!"
 
     # initial prompt message
