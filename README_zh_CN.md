@@ -3,58 +3,107 @@
 OpenAI API 的简单封装，用于发送 prompt message 并返回 response。
 
 ## 安装方法
-当前模块未发布到 PyPI，因此需要先 clone 本仓库，然后在本地调用：
 
 ```bash
-git clone https://github.com/RexWzh/openai_api_call.git
-cd openai_api_call
-python # 进入 Python 解释器
+pip install git+https://github.com/RexWzh/openai_api_call.git
 ```
 
-## 使用示例
-简单示例：
+## 使用方法
 
-```python
-import openai_api_call
-from openai_api_call import prompt2response, show_apikey
+### 设置 API 密钥
 
-# 设置 API key（或者在环境变量中设置）
-# openai.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-show_apikey() # 查看当前 API key
-
-# 发送 prompt message 并返回 response
-prompt = "Hello, GPT-3.5!"
-print(prompt2response(prompt, contentonly=True))
+```py
+import openai
+openai.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
-其中 API 密钥可以在 `.bashrc` 结尾处添加如下代码，进行设置：
+
+或者直接在 `~/.bashrc` 中设置 `OPENAI_API_KEY`，每次启动终端可以自动设置：
 
 ```bash
+# 在 ~/.bashrc 中添加如下代码
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-设置代理：
+### 设置代理（可选）
 
-```python
+```py
 from openai_api_call import proxy_on, proxy_off, show_proxy
-show_proxy() # 查看当前代理
-proxy_on("127.0.0.1") # 本地代理，端口默认为 7890
-show_proxy() # 查看更新后的代理
-print(prompt2response("Hello!", contentonly=True))
-proxy_off() # 关闭代理
+# 查看当前代理
+show_proxy()
+
+# 设置本地代理，端口号默认为 7890
+proxy_on("127.0.0.1", port=7890)
+
+# 查看更新后的代理
+show_proxy()
+
+# 关闭代理
+proxy_off() 
 ```
 
-其他选项：
+### 基本使用
+
+示例一，发送 prompt 并返回信息：
+```python
+from openai_api_call import prompt2response, show_apikey
+
+# 检查 API 密钥是否设置
+show_apikey()
+
+# 查看是否开启代理
+show_proxy()
+
+# 发送 prompt 并返回 response
+prompt = "Hello, GPT-3.5!"
+resp = prompt2response(prompt)
+print(resp.content)
+```
+
+
+示例二，自定义消息模板，并返回信息和消耗的 tokens 数量：
 
 ```python
-from openai_api_call import getntoken, getcontent
+import openai_api_call
+
 # 自定义发送模板
 openai_api_call.default_prompt = lambda msg: [
     {"role": "system", "content": "帮我翻译这段文字"},
     {"role": "user", "content": msg}
 ]
 prompt = "Hello!"
-# OpenAI 原先支持的参数
-response = prompt2response(prompt, temperature=0.5)
-print("消耗 tokens 数量：", getntoken(response))
-print("返回内容：", getcontent(response))
+# 设置重试次数为 Inf
+response = prompt2response(prompt, temperature=0.5, max_requests=-1)
+print("Number of consumed tokens: ", response.total_tokens)
+print("Returned content: ", response.content)
 ```
+
+### 进阶用法
+继续上一次的对话：
+
+```python
+# 第一次调用
+prompt = "Hello, GPT-3.5!"
+resp = prompt2response(prompt)
+print(resp.content)
+
+# 下一次调用
+next_prompt = resp.next_prompt("How are you?")
+print(next_prompt)
+next_resp = prompt2response(next_prompt)
+print(next_resp.content)
+
+# 打印对话历史
+print(next_resp.chat_log)
+```
+
+## 开源协议
+
+这个项目使用 MIT 协议开源。
+
+## 未来计划
+
+* TODO
+
+## 致谢
+
+这个项目是使用 [Cookiecutter](https://github.com/audreyr/cookiecutter) 和 [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) 模板创建的。

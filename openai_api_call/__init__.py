@@ -7,6 +7,7 @@ __version__ = '0.1.0'
 import openai
 from typing import List, Dict, Union
 import os
+from .response import Resp
 
 # read API key from the environment variable
 if os.environ.get('OPENAI_API_KEY') is not None:
@@ -15,42 +16,40 @@ if os.environ.get('OPENAI_API_KEY') is not None:
         print("Warning: The default environment variable `OPENAI_API_KEY` is not a valid API key.")
     openai.api_key = apikey
 
-def prompt2response( msg:str
-                   , contentonly:bool=False
+def prompt2response( msg:Union[str, List[Dict]]
                    , max_requests:int=1
                    , model:str = "gpt-3.5-turbo"
-                   , **options):
+                   , **options)->Resp:
     """Transform prompt to the API response
     
     Args:
-        msg (str): prompt message
-        contentonly (bool, optional): whether to return only the content of the response. Defaults to False.
+        msg (Union[str, List[Dict]]): prompt message
         max_requests (int, optional): maximum number of requests to make. Defaults to 1.
         model (str, optional): model to use. Defaults to "gpt-3.5-turbo".
         **options : options for the API call.
     
     Returns:
-        dict: API response
+        Resp: API response
     """
-    assert max_requests >= 0, "max_requests should be non-negative"
+    # assert max_requests >= 0, "max_requests should be non-negative"
     assert openai.api_key is not None, "API key is not set!"
 
-    # initial prompt message
+    # initialize prompt message
     if isinstance(msg, str): 
         msg = default_prompt(msg)
-        
+    
     # default options
     if not len(options):
         options = {}
     # make request
-    res = {}
+    resp = Resp()
     while max_requests:
         numoftries = 0
         try:
-            res = openai.ChatCompletion.create(
-                  messages=msg, 
-                  model=model,
-                  **options)
+            resp.response = openai.ChatCompletion.create(
+                messages=msg, model=model,
+                **options)
+            resp._request_msg = msg
         except:
             max_requests -= 1
             numoftries += 1
@@ -60,10 +59,7 @@ def prompt2response( msg:str
     else:
         raise Exception("API call failed!\nYou can try to update the API key"
                         + ", increase `max_requests` or set proxy.")
-    return getcontent(res) if contentonly else res
-
-getntoken = lambda res: res['usage']['total_tokens']
-getcontent = lambda res: res['choices'][0]['message']['content']
+    return resp
 
 def default_prompt(msg:str):
     """Default prompt message for the API call
