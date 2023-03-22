@@ -1,7 +1,7 @@
 # OpenAI API 
 [![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
 [![Tests](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/)
-[![Documentation Status](https://readthedocs.org/projects/openai-api-call/badge/?version=latest)](https://openai-api-call.readthedocs.io/en/latest/?version=latest)
+[![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
 
 <!-- 
 [![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/) 
@@ -109,8 +109,4 @@ list(map(print,next_resp.chat_log()))
 
 ## 未来计划
 
-* TODO
-
-## 致谢
-
-这个项目是使用 [Cookiecutter](https://github.com/audreyr/cookiecutter) 和 [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) 模板创建的。
+* 更新仓库文档
