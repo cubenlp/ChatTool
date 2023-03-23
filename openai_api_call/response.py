@@ -8,6 +8,12 @@ class Resp():
         self.response = response
         self._request_msg = None
 
+    def print_log(self, sep: Union[str, None]=None):
+        if sep is None:
+            sep = '\n' + '-'*15 + '\n'
+        for d in self.chat_log():
+            print(sep, d['role'], sep, d['content'])
+
     def chat_log(self):
         """Chat history"""
         assert self._request_msg is not None, "Request message is not set!"
@@ -24,6 +30,12 @@ class Resp():
         self.response['choices'][0]['message']['content'] = \
             self.response['choices'][0]['message']['content'].strip()
     
+    def __repr__(self) -> str:
+        return f"`Resp`: {self.content}"
+    
+    def __str__(self) -> str:
+        return self.content
+
     @property
     def total_tokens(self):
         """Total number of tokens"""

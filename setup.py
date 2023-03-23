@@ -7,6 +7,8 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
+VERSION = '0.1.1'
+
 requirements = ['Click>=7.0', 'openai>=0.27.0']
 
 test_requirements = ['pytest>=3', 'unittest']
@@ -41,6 +43,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/RexWzh/openai_api_call',
-    version='0.1.0',
+    version=VERSION,
     zip_safe=False,
 )

@@ -74,4 +74,13 @@ def test_next_talk():
         {'role': 'assistant', 'content': 'Hello, how can I assist you today?'},
         {'role': 'user', 'content': 'How are you?'}
     ]
+    resp.print_log()
+    assert True
+
+def test_show():
+    resp = Resp(response=valid_response)
+    msg = "hello!"
+    resp._request_msg = default_prompt(msg)
+    assert str(resp) == resp.content
+    assert repr(resp) == f"`Resp`: {resp.content}"
     
