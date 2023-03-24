@@ -101,12 +101,19 @@ print(next_resp.content)
 
 # 打印对话历史
 list(map(print,next_resp.chat_log()))
+# 或者 >=0.1.1 版本
+next_resp.print_log()
 ```
 
 ## 开源协议
 
 这个项目使用 MIT 协议开源。
 
-## 未来计划
+## 未来计划-TODO
 
 * 更新仓库文档
+* 设置访问延迟
+* 设置访问间隔
+* 设置密钥池
+* 允许并发访问
+* 新建 Chat 类型变量

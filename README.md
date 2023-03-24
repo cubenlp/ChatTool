@@ -110,6 +110,11 @@ list(map(print,next_resp.chat_log()))
 
 This package is licensed under the MIT license. See the LICENSE file for more details.
 
-## Features
+## Features-TODO
 
 * update documentation of the repo.
+* set access delay.
+* set access interval.
+* set key pool.
+* allow concurrent access.
+* create new Chat type variable.
