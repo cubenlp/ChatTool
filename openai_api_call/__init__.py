@@ -8,6 +8,7 @@ import openai
 from typing import List, Dict, Union
 import os
 from .response import Resp
+from .chat import Chat, default_prompt
 
 # read API key from the environment variable
 if os.environ.get('OPENAI_API_KEY') is not None:
@@ -16,7 +17,7 @@ if os.environ.get('OPENAI_API_KEY') is not None:
         print("Warning: The default environment variable `OPENAI_API_KEY` is not a valid API key.")
     openai.api_key = apikey
 
-def prompt2response( msg:Union[str, List[Dict]]
+def prompt2response( msg:Union[str, List[Dict], Chat]
                    , max_requests:int=1
                    , model:str = "gpt-3.5-turbo"
                    , strip:bool=True
@@ -37,23 +38,22 @@ def prompt2response( msg:Union[str, List[Dict]]
     assert openai.api_key is not None, "API key is not set!"
 
     # initialize prompt message
-    if isinstance(msg, str): 
-        msg = default_prompt(msg)
+    chat = Chat(msg) # previous chat
     
     # default options
     if not len(options):
         options = {}
     # make request
-    resp = Resp()
+    resp = None
     while max_requests:
         numoftries = 0
         try:
-            resp.response = openai.ChatCompletion.create(
-                messages=msg, model=model,
+            response = openai.ChatCompletion.create(
+                messages=chat.next, model=model,
                 **options)
+            resp = Resp(response, chat)
             if strip:
-                resp._strip_content()
-            resp._request_msg = msg
+                resp.strip_content()
         except:
             max_requests -= 1
             numoftries += 1
@@ -64,17 +64,6 @@ def prompt2response( msg:Union[str, List[Dict]]
         raise Exception("API call failed!\nYou can try to update the API key"
                         + ", increase `max_requests` or set proxy.")
     return resp
-
-def default_prompt(msg:str):
-    """Default prompt message for the API call
-
-    Args:
-        msg (str): prompt message
-
-    Returns:
-        List[Dict]: default prompt message
-    """
-    return [{"role": "user", "content": msg},]
 
 def proxy_on(host:str, port:int=7890):
     """Set proxy for the API call

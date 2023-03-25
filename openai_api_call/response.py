@@ -1,35 +1,32 @@
 # Response class for OpenAI API call
 
 from typing import List, Dict, Union
+from .chat import Chat
 
 class Resp():
     
-    def __init__(self, response:Union[List[Dict], None]=None) -> None:
+    def __init__(self, response:Dict, msg:Union[List[Dict], None, str, Chat]=None) -> None:
+        """
+        Args:
+            response (Dict): response from OpenAI API call
+            msg (List[Dict], optional): prompt message. Defaults to None.
+        """
         self.response = response
-        self._request_msg = None
-
-    def print_log(self, sep: Union[str, None]=None):
-        if sep is None:
-            sep = '\n' + '-'*15 + '\n'
-        for d in self.chat_log():
-            print(sep, d['role'], sep, d['content'])
-
-    def chat_log(self):
-        """Chat history"""
-        assert self._request_msg is not None, "Request message is not set!"
-        ai_resp = {"role": "assistant", "content": self.content}
-        return self._request_msg + [ai_resp]
+        self._oldchat = msg if isinstance(msg, Chat) else Chat(msg)
+        self._chat = None
     
-    def next_prompt(self, msg):
-        """next prompt for the next API call"""
-        prompt = {"role": "user", "content": msg}
-        return self.chat_log() + [prompt]
-
-    def _strip_content(self):
+    @property
+    def chat(self):
+        """The chat object"""
+        if self._chat is None:
+            self._chat = self._oldchat.copy().assistant(self.content)
+        return self._chat
+ 
+    def strip_content(self):
         """Strip the content"""
         self.response['choices'][0]['message']['content'] = \
             self.response['choices'][0]['message']['content'].strip()
-    
+
     def __repr__(self) -> str:
         return f"`Resp`: {self.content}"
     
@@ -58,14 +55,17 @@ class Resp():
     
     @property
     def id(self):
+        """ID of the response"""
         return self.response['id']
     
     @property
     def model(self):
+        """Model used for the response"""
         return self.response['model']
     
     @property
     def created(self):
+        """Time of the response"""
         return self.response['created']
     
     def is_valid(self):
@@ -91,4 +91,3 @@ class Resp():
     def error_code(self):
         """Error code"""
         return self.response['error']['code']
-
