@@ -12,7 +12,7 @@ OpenAI API 的简单封装，用于发送 prompt message 并返回 response。
 ## 安装方法
 
 ```bash
-pip install openai-api-call
+pip install openai-api-call --upgrade
 ```
 
 ## 使用方法

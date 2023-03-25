@@ -14,7 +14,7 @@ A simple wrapper for OpenAI API, which can send prompt message and return respon
 ## Installation
 
 ```bash
-pip install openai-api-call
+pip install openai-api-call --upgrade
 ```
 
 ## Usage
