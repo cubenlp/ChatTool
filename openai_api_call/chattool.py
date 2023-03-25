@@ -16,7 +16,7 @@ class Chat():
         else:
             raise ValueError("msg should be a list of dict, a string or None")
     
-    def getresponse(self
+    def getresponse( self
                    , max_requests:int=1
                    , strip:bool=True
                    , update:bool = True
