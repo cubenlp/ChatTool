@@ -1,6 +1,7 @@
 # The object that stores the chat log
 
 from typing import List, Dict, Union
+import openai_api_call
 from .response import Resp
 import openai
 
@@ -9,7 +10,7 @@ class Chat():
         if msg is None:
             self._chat_log = []
         elif isinstance(msg, str):
-            self._chat_log = self.default_prompt(msg)
+            self._chat_log = openai_api_call.default_prompt(msg)
         elif isinstance(msg, list):
             self._chat_log = msg
         else:
@@ -63,18 +64,6 @@ class Chat():
             self.assistant(resp.content)
         return resp
 
-    @staticmethod
-    def default_prompt(msg:str):
-        """Default prompt message for the API call
-
-        Args:
-            msg (str): prompt message
-
-        Returns:
-            List[Dict]: default prompt message
-        """
-        return [{"role": "user", "content": msg},]
-    
     def add(self, role:str, msg:str):
         assert role in ['user', 'assistant', 'system'], "role should be 'user', 'assistant' or 'system'"
         self._chat_log.append({"role": role, "content": msg})
@@ -114,7 +103,7 @@ class Chat():
     def pop(self):
         """Pop the last message"""
         return self._chat_log.pop()
-
+    
     def __len__(self):
         """Length of the chat log"""
         return len(self._chat_log)

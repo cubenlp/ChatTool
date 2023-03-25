@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 import openai
 import os
@@ -21,5 +21,17 @@ def show_apikey():
         print(f"API key:\t{openai.api_key}")
     else:
         print("API key is not set!")
+
+def default_prompt(msg:str):
+    """Default prompt message for the API call
+
+    Args:
+        msg (str): prompt message
+
+    Returns:
+        List[Dict]: default prompt message
+    """
+    return [{"role": "user", "content": msg},]
+    
 
         

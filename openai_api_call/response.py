@@ -6,7 +6,7 @@ class Resp():
     
     def __init__(self, response:Dict, strip:bool=True) -> None:
         self.response = response
-        if strip: self._strip_content()
+        if strip and self.is_valid(): self._strip_content()
     
     def _strip_content(self):
         """Strip the content"""

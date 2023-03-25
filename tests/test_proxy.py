@@ -1,4 +1,4 @@
-from openai_api_call import proxy_off, proxy_on
+from openai_api_call import proxy_off, proxy_on, proxy_status
 import os
 
 def test_proxy():
@@ -11,3 +11,5 @@ def test_proxy():
     proxy_off()
     assert os.environ.get('http_proxy') is None
     assert os.environ.get('https_proxy') is None
+    proxy_status()
+    assert True
