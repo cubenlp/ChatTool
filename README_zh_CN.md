@@ -36,15 +36,15 @@ export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ### 设置代理（可选）
 
 ```py
-from openai_api_call import proxy_on, proxy_off, show_proxy
+from openai_api_call import proxy_on, proxy_off, proxy_status
 # 查看当前代理
-show_proxy()
+proxy_status()
 
 # 设置本地代理，端口号默认为 7890
 proxy_on("127.0.0.1", port=7890)
 
 # 查看更新后的代理
-show_proxy()
+proxy_status()
 
 # 关闭代理
 proxy_off() 
@@ -54,13 +54,13 @@ proxy_off()
 
 示例一，发送 prompt 并返回信息：
 ```python
-from openai_api_call import Chat, show_apikey, show_proxy
+from openai_api_call import Chat, show_apikey, proxy_status
 
 # 检查 API 密钥是否设置
 show_apikey()
 
 # 查看是否开启代理
-show_proxy()
+proxy_status()
 
 # 发送 prompt 并返回 response
 chat = Chat("Hello, GPT-3.5!")

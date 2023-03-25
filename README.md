@@ -38,15 +38,15 @@ export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ### Set Proxy (Optional)
 
 ```py
-from openai_api_call import proxy_on, proxy_off, show_proxy
+from openai_api_call import proxy_on, proxy_off, proxy_status
 # Check the current proxy
-show_proxy()
+proxy_status()
 
 # Set local proxy, port number is 7890 by default
 proxy_on("127.0.0.1", port=7890)
 
 # Check the updated proxy
-show_proxy()
+proxy_status()
 
 # Turn off proxy
 proxy_off() 
@@ -57,13 +57,13 @@ proxy_off()
 Example 1, send prompt and return information:
 
 ```python
-from openai_api_call import prompt2response, show_apikey
+from openai_api_call import Chat, show_apikey
 
 # Check if API key is set
 show_apikey()
 
 # Check if proxy is enabled
-show_proxy()
+proxy_status()
 
 # Send prompt and return response
 chat = Chat("Hello, GPT-3.5!")

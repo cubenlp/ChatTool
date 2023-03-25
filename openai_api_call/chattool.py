@@ -37,7 +37,7 @@ class Chat():
         assert openai.api_key is not None, "API key is not set!"
 
         # initialize prompt message
-        msg = self.chat_log()
+        msg = self.chat_log
         
         # default options
         if not len(options):
