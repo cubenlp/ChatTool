@@ -1,15 +1,17 @@
 import os
+from typing import Union
 
-def proxy_on(host:str, port:int=7890):
+def proxy_on(http:Union[str, None]=None, https:Union[str, None]=None):
     """Set proxy for the API call
 
     Args:
-        host (str): proxy host
-        port (int, optional): proxy port. Defaults to 7890.
+        http (str, optional): http proxy. Defaults to None.
+        https (str, optional): https proxy. Defaults to None.
     """
-    host = host.replace("http://", "").replace("https://", "")
-    os.environ['http_proxy'] = f"http://{host}:{port}"
-    os.environ['https_proxy'] = f"https://{host}:{port}"
+    if http is not None:
+        os.environ['http_proxy'] = http
+    if https is not None:
+        os.environ['https_proxy'] = https
 
 def proxy_off():
     """Turn off proxy for the API call"""
@@ -29,3 +31,10 @@ def proxy_status():
         print("`https_proxy` is not set!")
     else:
         print(f"https_proxy:\t{https}")
+
+def proxy_test(url:str="www.facebook.com"):
+    url = url.replace("http://", "").replace("https://", "")
+    if os.system("curl -I https://"+url) != 0:
+        print("Https: Curl to "+url+" failed!")
+    if os.system("curl -I http://"+url) != 0:
+        print("Http: Curl to "+url+" failed!")
