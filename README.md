@@ -42,8 +42,8 @@ from openai_api_call import proxy_on, proxy_off, proxy_status
 # Check the current proxy
 proxy_status()
 
-# Set local proxy, port number is 7890 by default
-proxy_on("127.0.0.1", port=7890)
+# Set proxy(example)
+proxy_on(http="127.0.0.1:7890", https="socks://127.0.0.1:7891")
 
 # Check the updated proxy
 proxy_status()

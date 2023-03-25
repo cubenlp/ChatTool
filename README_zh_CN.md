@@ -40,8 +40,8 @@ from openai_api_call import proxy_on, proxy_off, proxy_status
 # 查看当前代理
 proxy_status()
 
-# 设置本地代理，端口号默认为 7890
-proxy_on("127.0.0.1", port=7890)
+# 设置代理，这里 IP 127.0.0.1 代表本机
+proxy_on(http="127.0.0.1:7890", https="socks://127.0.0.1:7891")
 
 # 查看更新后的代理
 proxy_status()
