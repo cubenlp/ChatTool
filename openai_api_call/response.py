@@ -1,30 +1,13 @@
 # Response class for OpenAI API call
 
-from typing import List, Dict, Union
+from typing import Dict
 
 class Resp():
     
-    def __init__(self, response:Union[List[Dict], None]=None) -> None:
+    def __init__(self, response:Dict, strip:bool=True) -> None:
         self.response = response
-        self._request_msg = None
-
-    def print_log(self, sep: Union[str, None]=None):
-        if sep is None:
-            sep = '\n' + '-'*15 + '\n'
-        for d in self.chat_log():
-            print(sep, d['role'], sep, d['content'])
-
-    def chat_log(self):
-        """Chat history"""
-        assert self._request_msg is not None, "Request message is not set!"
-        ai_resp = {"role": "assistant", "content": self.content}
-        return self._request_msg + [ai_resp]
+        if strip: self._strip_content()
     
-    def next_prompt(self, msg):
-        """next prompt for the next API call"""
-        prompt = {"role": "user", "content": msg}
-        return self.chat_log() + [prompt]
-
     def _strip_content(self):
         """Strip the content"""
         self.response['choices'][0]['message']['content'] = \
