@@ -52,7 +52,7 @@ proxy_off()
 
 示例一，发送 prompt 并返回信息：
 ```python
-from openai_api_call import prompt2response, show_apikey
+from openai_api_call import prompt2response, show_apikey, show_proxy
 
 # 检查 API 密钥是否设置
 show_apikey()
@@ -71,6 +71,7 @@ print(resp.content)
 
 ```python
 import openai_api_call
+from openai_api_call import prompt2response
 
 # 自定义发送模板
 openai_api_call.default_prompt = lambda msg: [
@@ -88,21 +89,19 @@ print("Returned content: ", response.content)
 继续上一次的对话：
 
 ```python
-# 第一次调用
+# 初次调用
 prompt = "Hello, GPT-3.5!"
 resp = prompt2response(prompt)
 print(resp.content)
 
-# 下一次调用
-next_prompt = resp.next_prompt("How are you?")
-print(next_prompt)
-next_resp = prompt2response(next_prompt)
+# 继续聊天
+chat = resp.chat
+chat.user("How are you?")
+next_resp = prompt2response(chat)
 print(next_resp.content)
 
 # 打印对话历史
-list(map(print,next_resp.chat_log()))
-# 或者 >=0.1.1 版本
-next_resp.print_log()
+next_resp.chat.print_log()
 ```
 
 ## 开源协议

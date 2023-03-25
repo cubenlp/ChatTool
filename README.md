@@ -55,7 +55,7 @@ proxy_off()
 Example 1, send prompt and return information:
 
 ```python
-from openai_api_call import prompt2response, show_apikey
+from openai_api_call import prompt2response, show_apikey, show_proxy
 
 # Check if API key is set
 show_apikey()
@@ -73,6 +73,7 @@ Example 2, customize the message template and return the information and the num
 
 ```python
 import openai_api_call
+from openai_api_call import prompt2response
 
 # Customize the sending template
 openai_api_call.default_prompt = lambda msg: [
@@ -96,14 +97,14 @@ prompt = "Hello, GPT-3.5!"
 resp = prompt2response(prompt)
 print(resp.content)
 
-# next call
-next_prompt = resp.next_prompt("How are you?")
-print(next_prompt)
-next_resp = prompt2response(next_prompt)
+# continue chatting
+chat = resp.chat
+chat.user("How are you?")
+next_resp = prompt2response(chat)
 print(next_resp.content)
 
 # print chat history
-list(map(print,next_resp.chat_log()))
+next_resp.chat.print_log()
 ```
 
 ## License

@@ -30,7 +30,7 @@ class Chat():
         if isinstance(msg, str):
             self._chat_log.append({"role": role, "content": msg})
         else:
-            raise ValueError("msg should be a string or a Resp object")
+            raise ValueError("msg should be a string")
         return self if not copy else self.copy()
 
     def user(self, msg, copy:bool=False):
@@ -76,4 +76,4 @@ class Chat():
         return f"<Chat with {len(self)} messages>"
     
     def __str__(self) -> str:
-        return self.__repr__()
+        return f"{self.history}"
