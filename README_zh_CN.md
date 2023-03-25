@@ -12,8 +12,10 @@ OpenAI API 的简单封装，用于发送 prompt message 并返回 response。
 ## 安装方法
 
 ```bash
-pip install openai-api-call
+pip install openai-api-call --upgrade
 ```
+
+> 注：版本 `0.2.0` 起改用 `Chat` 类型来处理数据，不兼容之前的版本。
 
 ## 使用方法
 
@@ -34,15 +36,15 @@ export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ### 设置代理（可选）
 
 ```py
-from openai_api_call import proxy_on, proxy_off, show_proxy
+from openai_api_call import proxy_on, proxy_off, proxy_status
 # 查看当前代理
-show_proxy()
+proxy_status()
 
 # 设置本地代理，端口号默认为 7890
 proxy_on("127.0.0.1", port=7890)
 
 # 查看更新后的代理
-show_proxy()
+proxy_status()
 
 # 关闭代理
 proxy_off() 
@@ -52,17 +54,17 @@ proxy_off()
 
 示例一，发送 prompt 并返回信息：
 ```python
-from openai_api_call import prompt2response, show_apikey
+from openai_api_call import Chat, show_apikey, proxy_status
 
 # 检查 API 密钥是否设置
 show_apikey()
 
 # 查看是否开启代理
-show_proxy()
+proxy_status()
 
 # 发送 prompt 并返回 response
-prompt = "Hello, GPT-3.5!"
-resp = prompt2response(prompt)
+chat = Chat("Hello, GPT-3.5!")
+resp = chat.getresponse(update=False) # 不更新对话历史，默认为 True
 print(resp.content)
 ```
 
@@ -77,30 +79,32 @@ openai_api_call.default_prompt = lambda msg: [
     {"role": "system", "content": "帮我翻译这段文字"},
     {"role": "user", "content": msg}
 ]
-prompt = "Hello!"
+chat = Chat("Hello!")
 # 设置重试次数为 Inf
-response = prompt2response(prompt, temperature=0.5, max_requests=-1)
+response = chat.getresponse(temperature=0.5, max_requests=-1)
 print("Number of consumed tokens: ", response.total_tokens)
 print("Returned content: ", response.content)
 ```
 
-### 进阶用法
-继续上一次的对话：
+示例三，多轮对话：
 
 ```python
-# 第一次调用
-prompt = "Hello, GPT-3.5!"
-resp = prompt2response(prompt)
+# 初次对话
+chat = Chat("Hello, GPT-3.5!")
+resp = chat.getresponse() # 更新对话历史，默认为 True
 print(resp.content)
 
-# 下一次调用
-next_prompt = resp.next_prompt("How are you?")
-print(next_prompt)
-next_resp = prompt2response(next_prompt)
+# 继续对话
+chat.user("How are you?")
+next_resp = chat.getresponse()
 print(next_resp.content)
 
+# 假装对话历史
+chat.user("What's your name?")
+chat.assistant("My name is GPT-3.5.")
+
 # 打印对话历史
-list(map(print,next_resp.chat_log()))
+chat.print_log()
 ```
 
 ## 开源协议
