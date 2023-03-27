@@ -64,15 +64,15 @@ class Chat():
                 time.sleep(random.random()*timeinterval)
                 resp = Resp(response, strip=strip)
                 break
-            except:
+            except Exception as e:
                 max_requests -= 1
                 numoftries += 1
-                print(f"API call failed! Try again ({numoftries})")
+                print(f"API call failed with message: {e}\nTry again ({numoftries})")
             finally:
                 # Disable the alarm after execution
                 signal.alarm(0)
         else:
-            raise Exception("API call failed!\nYou can try to update the API key"
+            raise Exception("Failed to get the response!\nYou can try to update the API key"
                             + ", increase `max_requests` or set proxy.")
         if update: # update the chat log
             self.assistant(resp.content)

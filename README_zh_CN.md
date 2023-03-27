@@ -80,8 +80,8 @@ openai_api_call.default_prompt = lambda msg: [
     {"role": "user", "content": msg}
 ]
 chat = Chat("Hello!")
-# 设置重试次数为 Inf
-response = chat.getresponse(temperature=0.5, max_requests=-1)
+# 设置重试次数为 Inf，超时时间为 10s
+response = chat.getresponse(temperature=0.5, max_requests=-1, timeout=10)
 print("Number of consumed tokens: ", response.total_tokens)
 print("Returned content: ", response.content)
 ```

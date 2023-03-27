@@ -82,7 +82,8 @@ openai_api_call.default_prompt = lambda msg: [
 ]
 chat = Chat("Hello!")
 # Set the number of retries to Inf
-response = chat.getresponse(temperature=0.5, max_requests=-1)
+# The timeout for each request is 10 seconds
+response = chat.getresponse(temperature=0.5, max_requests=-1, timeout=10)
 print("Number of consumed tokens: ", response.total_tokens)
 print("Returned content: ", response.content)
 ```
