@@ -32,6 +32,3 @@ def default_prompt(msg:str):
         List[Dict]: default prompt message
     """
     return [{"role": "user", "content": msg},]
-    
-
-        

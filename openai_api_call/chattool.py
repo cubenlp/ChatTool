@@ -4,6 +4,11 @@ from typing import List, Dict, Union
 import openai_api_call
 from .response import Resp
 import openai
+import signal, time, random
+
+# timeout handler
+def handler(signum, frame):
+    raise Exception("API call timed out!")
 
 class Chat():
     def __init__(self, msg:Union[List[Dict], None, str]=None) -> None:
@@ -20,6 +25,8 @@ class Chat():
                    , max_requests:int=1
                    , strip:bool=True
                    , update:bool = True
+                   , timeout:int = 0
+                   , timeinterval:int = 0
                    , model:str = "gpt-3.5-turbo"
                    , **options)->Resp:
         """Get the API response
@@ -28,6 +35,8 @@ class Chat():
             max_requests (int, optional): maximum number of requests to make. Defaults to 1.
             strip (bool, optional): whether to strip the prompt message. Defaults to True.
             update (bool, optional): whether to update the chat log. Defaults to True.
+            timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).   
+            timeinterval (int, optional): time interval between two API calls. Defaults to 0.
             model (str, optional): model to use. Defaults to "gpt-3.5-turbo".
             **options : options inherited from the `openai.ChatCompletion.create` function.
 
@@ -38,27 +47,32 @@ class Chat():
 
         # initialize prompt message
         msg = self.chat_log
-        
         # default options
-        if not len(options):
-            options = {}
+        if not len(options):options = {}
         # make request
         resp = None
         numoftries = 0
+        # Set the timeout handler
+        signal.signal(signal.SIGALRM, handler)
         while max_requests:
             try:
+                # Set the alarm to trigger after `timeout` seconds
+                signal.alarm(timeout)
+                # Make the API call
                 response = openai.ChatCompletion.create(
-                    messages=msg, model=model,
-                    **options)
+                    messages=msg, model=model, **options)
+                time.sleep(random.random()*timeinterval)
                 resp = Resp(response, strip=strip)
-            except:
+                break
+            except Exception as e:
                 max_requests -= 1
                 numoftries += 1
-                print(f"API call failed! Try again ({numoftries})")
-                continue
-            break
+                print(f"API call failed with message: {e}\nTry again ({numoftries})")
+            finally:
+                # Disable the alarm after execution
+                signal.alarm(0)
         else:
-            raise Exception("API call failed!\nYou can try to update the API key"
+            raise Exception("Failed to get the response!\nYou can try to update the API key"
                             + ", increase `max_requests` or set proxy.")
         if update: # update the chat log
             self.assistant(resp.content)
