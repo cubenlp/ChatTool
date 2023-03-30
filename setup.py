@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '0.2.2'
+VERSION = '0.2.3'
 
 requirements = ['Click>=7.0', 'openai>=0.27.0']
 
