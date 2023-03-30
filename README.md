@@ -24,8 +24,8 @@ pip install openai-api-call --upgrade
 ### Set API Key
 
 ```py
-import openai
-openai.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+import openai_api_call
+openai_api_call.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 Or set `OPENAI_API_KEY` in `~/.bashrc` to automatically set it when you start the terminal:
@@ -43,7 +43,7 @@ from openai_api_call import proxy_on, proxy_off, proxy_status
 proxy_status()
 
 # Set proxy(example)
-proxy_on(http="127.0.0.1:7890", https="socks://127.0.0.1:7891")
+proxy_on(http="127.0.0.1:7890", https="127.0.0.1:7890")
 
 # Check the updated proxy
 proxy_status()
@@ -67,7 +67,7 @@ proxy_status()
 
 # Send prompt and return response
 chat = Chat("Hello, GPT-3.5!")
-resp = chat.getresponse(update=False) # Do not update the chat history, default is True
+resp = chat.getresponse(update=False) # Not update the chat history, default to True
 ```
 
 Example 2, customize the message template and return the information and the number of consumed tokens:
@@ -115,6 +115,7 @@ chat.print_log()
 
 This package is licensed under the MIT license. See the LICENSE file for more details.
 
-## Features
+## update log
 
-* update documentation of the repo.
+- Since version `0.2.0`, `Chat` type is used to handle data
+- Since version `0.3.0`, you can use different API Key to send requests.

@@ -1,17 +1,16 @@
 # rewrite the request function
 
 from typing import List, Dict
-import requests
-import json
+import requests, json
 url = "https://api.openai.com/v1/chat/completions"
 
 ## TODO: catch error types
-def chat_completion(apikey:str, msg:List[Dict], model:str, **options) -> Dict:
+def chat_completion(apikey:str, messages:List[Dict], model:str, **options) -> Dict:
     """Chat completion API call
     
     Args:
         apikey (str): API key
-        msg (List[Dict]): prompt message
+        messages (List[Dict]): prompt message
         model (str): model to use
         **options : options inherited from the `openai.ChatCompletion.create` function.
     
@@ -21,7 +20,7 @@ def chat_completion(apikey:str, msg:List[Dict], model:str, **options) -> Dict:
     # request data
     payload = {
         "model": model,
-        "messages": msg
+        "messages": messages
     }
     # inherit options
     payload.update(options)

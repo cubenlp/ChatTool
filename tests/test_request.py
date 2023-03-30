@@ -1,4 +1,4 @@
-import requests, responses
+import responses
 from openai_api_call import chat_completion
 
 mock_resp = {
@@ -27,7 +27,7 @@ mock_resp = {
 def test_chat_completion():
     responses.add(responses.POST, 'https://api.openai.com/v1/chat/completions',
                   json=mock_resp, status=200)
-    resp = chat_completion(apikey="sk-123", msg=[{"role": "user", "content": "hello"}], model="gpt-3.5-turbo")
+    resp = chat_completion(apikey="sk-123", messages=[{"role": "user", "content": "hello"}], model="gpt-3.5-turbo")
     assert resp == mock_resp
     assert len(responses.calls) == 1
     assert responses.calls[0].request.url == 'https://api.openai.com/v1/chat/completions'

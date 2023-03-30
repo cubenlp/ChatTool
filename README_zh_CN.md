@@ -22,8 +22,8 @@ pip install openai-api-call --upgrade
 ### 设置 API 密钥
 
 ```py
-import openai
-openai.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+import openai_api_call
+openai_api_call.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 或者直接在 `~/.bashrc` 中设置 `OPENAI_API_KEY`，每次启动终端可以自动设置：
@@ -41,7 +41,7 @@ from openai_api_call import proxy_on, proxy_off, proxy_status
 proxy_status()
 
 # 设置代理，这里 IP 127.0.0.1 代表本机
-proxy_on(http="127.0.0.1:7890", https="socks://127.0.0.1:7891")
+proxy_on(http="127.0.0.1:7890", https="127.0.0.1:7890")
 
 # 查看更新后的代理
 proxy_status()
@@ -111,6 +111,7 @@ chat.print_log()
 
 这个项目使用 MIT 协议开源。
 
-## 未来计划
+## 更新日志
 
-* 更新仓库文档
+- 版本 `0.2.0` 开始改用 `Chat` 类型作为中心交互对象
+- 版本 `0.3.0` 允许使用不同 API Key 发送请求，也即不以 `openai.py` 作为依赖

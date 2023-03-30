@@ -7,9 +7,9 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '0.2.3'
+VERSION = '0.3.0'
 
-requirements = ['Click>=7.0', 'requests>=2.0']
+requirements = ['Click>=7.0', 'requests>=2.20']
 
 test_requirements = ['pytest>=3', 'unittest']
 
