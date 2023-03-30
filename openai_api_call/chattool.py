@@ -74,7 +74,7 @@ class Chat():
                 signal.alarm(timeout)
                 # Make the API call
                 response = chat_completion(
-                    api_key, messages=msg, model=model, **options)
+                    api_key=api_key, messages=msg, model=model, **options)
                 time.sleep(random.random() * timeinterval)
                 resp = Resp(response, strip=strip)
                 break
