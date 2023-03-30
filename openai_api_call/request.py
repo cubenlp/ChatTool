@@ -1,8 +1,7 @@
 # rewrite the request function
 
 from typing import List, Dict
-import requests
-import json
+import requests, json
 url = "https://api.openai.com/v1/chat/completions"
 
 ## TODO: catch error types
