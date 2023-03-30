@@ -142,3 +142,6 @@ class Chat():
     def __str__(self) -> str:
         return f"{self.history}"
 
+    def __getitem__(self, index):
+        """Get the message at index"""
+        return self._chat_log[index]['content']
