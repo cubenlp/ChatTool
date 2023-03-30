@@ -3,7 +3,7 @@
 from typing import List, Dict, Union
 import openai_api_call
 from .response import Resp
-import openai
+from .request import chat_completion
 import signal, time, random
 
 # timeout handler
@@ -20,6 +20,17 @@ class Chat():
             self._chat_log = msg
         else:
             raise ValueError("msg should be a list of dict, a string or None")
+        self._api_key = openai_api_call.api_key
+    
+    @property
+    def api_key(self):
+        """Get API key"""
+        return self._api_key
+    
+    @api_key.setter
+    def api_key(self, api_key:str):
+        """Set API key"""
+        self._api_key = api_key
     
     def getresponse( self
                    , max_requests:int=1
@@ -27,6 +38,7 @@ class Chat():
                    , update:bool = True
                    , timeout:int = 0
                    , timeinterval:int = 0
+                   , api_key:Union[str, None]=None
                    , model:str = "gpt-3.5-turbo"
                    , **options)->Resp:
         """Get the API response
@@ -43,7 +55,9 @@ class Chat():
         Returns:
             Resp: API response
         """
-        assert openai.api_key is not None, "API key is not set!"
+        if api_key is None:
+            api_key = self.api_key
+        assert api_key is not None, "API key is not set!"
 
         # initialize prompt message
         msg = self.chat_log
@@ -59,9 +73,9 @@ class Chat():
                 # Set the alarm to trigger after `timeout` seconds
                 signal.alarm(timeout)
                 # Make the API call
-                response = openai.ChatCompletion.create(
-                    messages=msg, model=model, **options)
-                time.sleep(random.random()*timeinterval)
+                response = chat_completion(
+                    api_key=api_key, messages=msg, model=model, **options)
+                time.sleep(random.random() * timeinterval)
                 resp = Resp(response, strip=strip)
                 break
             except Exception as e:
@@ -83,15 +97,15 @@ class Chat():
         self._chat_log.append({"role": role, "content": msg})
         return self
 
-    def user(self, msg):
+    def user(self, msg:str):
         """User message"""
         return self.add('user', msg)
     
-    def assistant(self, msg):
+    def assistant(self, msg:str):
         """Assistant message"""
         return self.add('assistant', msg)
     
-    def system(self, msg):
+    def system(self, msg:str):
         """System message"""
         return self.add('system', msg)
     

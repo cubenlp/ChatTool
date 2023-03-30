@@ -9,7 +9,7 @@ with open('README.md') as readme_file:
 
 VERSION = '0.2.3'
 
-requirements = ['Click>=7.0', 'openai>=0.27.0']
+requirements = ['Click>=7.0', 'requests>=2.0']
 
 test_requirements = ['pytest>=3', 'unittest']
 
