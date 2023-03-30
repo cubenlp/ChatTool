@@ -45,7 +45,8 @@ def test_chat():
     assert chat[0] == "hello!"
     assert chat[1] == "Hello, how can I assist you today?"
     assert chat[2] == "I am a system message"
-    
+    assert chat[-1] == "I am a system message"
+
     chat.pop()
     assert chat.chat_log == [
         {"role": "user", "content": "hello!"},
