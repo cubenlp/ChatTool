@@ -5,7 +5,7 @@ import requests, json
 url = "https://api.openai.com/v1/chat/completions"
 
 ## TODO: catch error types
-def chat_completion(apikey:str, messages:List[Dict], model:str, **options) -> Dict:
+def chat_completion(api_key:str, messages:List[Dict], model:str, **options) -> Dict:
     """Chat completion API call
     
     Args:
@@ -27,7 +27,7 @@ def chat_completion(apikey:str, messages:List[Dict], model:str, **options) -> Di
     # request headers
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apikey
+        'Authorization': 'Bearer ' + api_key
     }
     # get response
     response = requests.post(url, headers=headers, data=json.dumps(payload))
