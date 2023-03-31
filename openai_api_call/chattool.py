@@ -140,7 +140,7 @@ class Chat():
         return f"<Chat with {len(self)} messages>"
     
     def __str__(self) -> str:
-        return f"{self.history}"
+        return self.__repr__()
 
     def __getitem__(self, index):
         """Get the message at index"""
