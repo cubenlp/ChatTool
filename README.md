@@ -9,7 +9,7 @@
 [![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/) 
 -->
 
-A simple wrapper for OpenAI API, which can send prompt message and return response.
+A simple wrapper for OpenAI API, which can be used to send requests and get responses.
 
 ## Installation
 
@@ -17,18 +17,16 @@ A simple wrapper for OpenAI API, which can send prompt message and return respon
 pip install openai-api-call --upgrade
 ```
 
-> Note: Since version `0.2.0`, `Chat` type is used to handle data, which is not compatible with previous versions.
-
 ## Usage
 
 ### Set API Key
 
 ```py
-import openai_api_call
-openai_api_call.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+import openai_api_call as apicall
+apicall.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-Or set `OPENAI_API_KEY` in `~/.bashrc` to automatically set it when you start the terminal:
+Or set `OPENAI_API_KEY` in `~/.bashrc` to avoid setting the API key every time:
 
 ```bash
 # Add the following code to ~/.bashrc
@@ -52,9 +50,19 @@ proxy_status()
 proxy_off() 
 ```
 
+Alternatively, you can use a proxy URL to send requests from restricted network, as shown below:
+
+```py
+from openai_api_call import request
+
+# set request url
+alt_url = "https://api.example.com/v1/chat/completions"
+request.url = alt_url
+```
+
 ### Basic Usage
 
-Example 1, send prompt and return information:
+Example 1, send prompt and return response:
 
 ```python
 from openai_api_call import Chat, show_apikey
@@ -73,10 +81,10 @@ resp = chat.getresponse(update=False) # Not update the chat history, default to 
 Example 2, customize the message template and return the information and the number of consumed tokens:
 
 ```python
-import openai_api_call
+import openai_api_call as apicall
 
 # Customize the sending template
-openai_api_call.default_prompt = lambda msg: [
+apicall.default_prompt = lambda msg: [
     {"role": "system", "content": "帮我翻译这段文字"},
     {"role": "user", "content": msg}
 ]
@@ -106,6 +114,9 @@ print(next_resp.content)
 # fake response
 chat.user("What's your name?")
 chat.assistant("My name is GPT-3.5.")
+
+# get the last result
+print(chat[-1])
 
 # print chat history
 chat.print_log()
