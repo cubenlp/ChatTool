@@ -77,6 +77,7 @@ class Chat():
                     api_key=api_key, messages=msg, model=model, **options)
                 time.sleep(random.random() * timeinterval)
                 resp = Resp(response, strip=strip)
+                assert resp.is_valid(), "Invalid response with message: " + resp.error_message
                 break
             except Exception as e:
                 max_requests -= 1
@@ -128,10 +129,10 @@ class Chat():
         """Chat history"""
         return self._chat_log
     
-    def pop(self):
+    def pop(self, ind:int=-1):
         """Pop the last message"""
-        return self._chat_log.pop()
-    
+        return self._chat_log.pop(ind)
+
     def __len__(self):
         """Length of the chat log"""
         return len(self._chat_log)

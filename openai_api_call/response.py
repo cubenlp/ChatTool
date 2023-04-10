@@ -53,7 +53,7 @@ class Resp():
     
     def is_valid(self):
         """Check if the response is an error"""
-        return 'error' not in self.response
+        return 'error' not in self.response and 'choices' in self.response
     
     @property
     def error_message(self):
