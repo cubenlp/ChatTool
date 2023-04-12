@@ -31,6 +31,14 @@ apicall.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
+当然，你也可以为每个 `Chat` 对象设置不同的 `api_key`：
+
+```py
+from openai_api_call import Chat
+chat = Chat("hello")
+chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
 ### 设置代理（可选）
 
 ```py
@@ -54,8 +62,7 @@ proxy_off()
 from openai_api_call import request
 
 # 设置代理 URL
-alt_url = "https://api.example.com/v1/chat/completions"
-request.url = alt_url
+request.bash_url = "https://api.example.com"
 ```
 
 ### 基本使用
@@ -75,7 +82,6 @@ chat = Chat("Hello, GPT-3.5!")
 resp = chat.getresponse(update=False) # 不更新对话历史，默认为 True
 print(resp.content)
 ```
-
 
 示例二，自定义消息模板，并返回信息和消耗的 tokens 数量：
 
@@ -116,6 +122,18 @@ print(chat[-1])
 
 # 打印对话历史
 chat.print_log()
+```
+
+此外，你可以使用 `Chat` 类的 `show_usage_status` 方法来查看 API 的使用情况：
+
+```py
+# 查看默认 API 的使用情况
+chat = Chat()
+chat.show_usage_status()
+
+# 查看指定 API 的使用情况
+chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chat.show_usage_status()
 ```
 
 ## 开源协议
