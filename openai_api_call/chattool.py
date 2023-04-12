@@ -3,8 +3,9 @@
 from typing import List, Dict, Union
 import openai_api_call
 from .response import Resp
-from .request import chat_completion
+from .request import chat_completion, usage_status
 import signal, time, random
+import datetime
 
 # timeout handler
 def handler(signum, frame):
@@ -92,6 +93,39 @@ class Chat():
         if update: # update the chat log
             self.assistant(resp.content)
         return resp
+
+    def get_usage_status(self, recent:int=10, duration:int=365):
+        """Get the usage status
+        
+        Args:
+            recent (int, optional): number of the usage of recent days. Defaults to 10.
+            duration (int, optional): duration of the usage. Defaults to 365.
+        
+        Returns:
+            str: usage status
+        """
+        storage, usage, dailyusage = usage_status(self.api_key, duration=duration)
+        message = f"Total account:\t{storage:.4f} $" + '\n' +\
+                f"Total usage:\t{usage:.4f} $" + '\n' +\
+                f"Total remaining:\t{storage-usage:.4f} $"
+        if recent <= 0 or len(dailyusage) == 0: # no need to print the usage of recent days
+            return message
+        recent = min(recent, len(dailyusage)) # number of recent days
+        dailyusage = dailyusage[-recent:]
+        for day in dailyusage:
+            date = datetime.datetime.fromtimestamp(day.get("timestamp")).strftime("%Y-%m-%d")
+            line_items = day.get("line_items")
+            cost = sum([item.get("cost") for item in line_items])
+            message += '\n' + f"{date}:\t{cost:.4f} $"
+        return message
+    
+    def show_usage_status(self, recent:int=10, duration:int=365):
+        """Show the usage status
+        
+        Args:
+            recent (int, optional): number of the usage of recent days. Defaults to 10.
+        """
+        print(self.get_usage_status(recent=recent, duration=duration))
 
     def add(self, role:str, msg:str):
         assert role in ['user', 'assistant', 'system'], "role should be 'user', 'assistant' or 'system'"

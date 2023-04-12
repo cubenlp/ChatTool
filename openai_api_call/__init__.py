@@ -5,7 +5,7 @@ __email__ = '1073853456@qq.com'
 __version__ = '0.3.4'
 
 import os
-from .chattool import Chat, Resp, chat_completion
+from .chattool import Chat, Resp, chat_completion, usage_status
 from .proxy import proxy_on, proxy_off, proxy_status
 
 # read API key from the environment variable
