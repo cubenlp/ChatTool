@@ -5,7 +5,7 @@ import requests, json
 import datetime, os, warnings
 
 base_url = "https://api.openai.com"
-url = "https://api.openai.com/v1/chat/completions"
+url = None
 
 def chat_completion(api_key:str, messages:List[Dict], model:str, **options) -> Dict:
     """Chat completion API call
@@ -44,13 +44,12 @@ def chat_completion(api_key:str, messages:List[Dict], model:str, **options) -> D
         raise Exception(response.text)
     return response.json()
 
-def usage_status(api_key:str, duration:int=365):
+def usage_status(api_key:str, duration:int=99):
     """Get usage status
     
     Args:
         api_key (str): API key
-        duration (int, optional): duration to check. Defaults to 365.
-
+        duration (int, optional): duration to check. Defaults to 99, which is the maximum duration.
     Returns:
         Tuple[float, float, List[float]]: total storage, total usage, daily costs
     """
