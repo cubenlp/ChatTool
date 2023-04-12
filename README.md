@@ -33,6 +33,14 @@ Or set `OPENAI_API_KEY` in `~/.bashrc` to avoid setting the API key every time:
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
+Also, you might set different `api_key` for each `Chat` object:
+
+```py
+from openai_api_call import Chat
+chat = Chat("hello")
+chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
 ### Set Proxy (Optional)
 
 ```py
@@ -56,8 +64,7 @@ Alternatively, you can use a proxy URL to send requests from restricted network,
 from openai_api_call import request
 
 # set request url
-alt_url = "https://api.example.com/v1/chat/completions"
-request.url = alt_url
+request.base_url = "https://api.example.com"
 ```
 
 ### Basic Usage
@@ -96,9 +103,7 @@ print("Number of consumed tokens: ", response.total_tokens)
 print("Returned content: ", response.content)
 ```
 
-### Advanced Usage
-
-Continue chatting based on the last response:
+Example 3, continue chatting based on the last response:
 
 ```python
 # first call
@@ -120,6 +125,18 @@ print(chat[-1])
 
 # print chat history
 chat.print_log()
+```
+
+Moreover, you can check the usage status of the API key:
+
+```py
+# show usage status of the default API key
+chat = Chat()
+chat.show_usage_status()
+
+# show usage status of the specified API key
+chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chat.show_usage_status()
 ```
 
 ## License
