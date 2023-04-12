@@ -50,6 +50,7 @@ def usage_status(api_key:str, duration:int=99):
     Args:
         api_key (str): API key
         duration (int, optional): duration to check. Defaults to 99, which is the maximum duration.
+    
     Returns:
         Tuple[float, float, List[float]]: total storage, total usage, daily costs
     """
