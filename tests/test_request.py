@@ -101,13 +101,13 @@ mock_billing = {
 
 @responses.activate
 def test_usage_status():
-    responses.add(responses.GET, 'https://api.openai.com/v1/billing/subscription',
+    responses.add(responses.GET, 'https://api.openai.com/v1/dashboard/billing/subscription',
                     json=mock_usage, status=200)
-    responses.add(responses.GET, 'https://api.openai.com/v1/billing/usage',
+    responses.add(responses.GET, 'https://api.openai.com/v1/dashboard/billing/usage',
                     json=mock_billing, status=200)
     storage, usage, daily = usage_status(api_key="sk-123")
-    assert storage == 0
-    assert usage == 106.619
+    assert storage == 5.00004
+    assert usage == 106.619 / 100
     assert len(daily) == 1
     assert daily[0]["timestamp"] == 1681171200.0
     assert sum([item["cost"] for item in daily[0]["line_items"]]) == 106.619
