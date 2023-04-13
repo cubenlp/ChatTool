@@ -101,6 +101,9 @@ chat = Chat("Hello!")
 response = chat.getresponse(temperature=0.5, max_requests=-1, timeout=10)
 print("Number of consumed tokens: ", response.total_tokens)
 print("Returned content: ", response.content)
+
+# Reset the default template
+apicall.default_prompt = None
 ```
 
 Example 3, continue chatting based on the last response:
