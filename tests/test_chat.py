@@ -147,3 +147,6 @@ def test_with_template():
     assert chat.chat_log == [
         {"role": "system", "content": "I am a system message"},
         {"role": "user", "content": "hello!"}]
+    openai_api_call.default_prompt = None
+    chat = Chat("hello!")
+    assert chat.chat_log == [{"role": "user", "content": "hello!"}]
