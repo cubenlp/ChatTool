@@ -12,16 +12,31 @@ def handler(signum, frame):
     raise Exception("API call timed out!")
 
 class Chat():
-    def __init__(self, msg:Union[List[Dict], None, str]=None) -> None:
+    def __init__( self
+                , msg:Union[List[Dict], None, str]=None
+                , api_key:Union[None, str]=None) -> None:
+        """Chat object
+        
+        Args:
+            msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
+            api_key (Union[None, str], optional): API key. Defaults to None.
+
+        Raises:
+            ValueError: msg should be a list of dict, a string or None
+        """
         if msg is None:
             self._chat_log = []
         elif isinstance(msg, str):
-            self._chat_log = openai_api_call.default_prompt(msg)
+            if openai_api_call.default_prompt is None:
+                self._chat_log = [{"role": "user", "content": msg}]
+            else:
+                self._chat_log = openai_api_call.default_prompt(msg)
         elif isinstance(msg, list):
             self._chat_log = msg
         else:
             raise ValueError("msg should be a list of dict, a string or None")
-        self._api_key = openai_api_call.api_key
+        if api_key is None:
+            self._api_key = openai_api_call.api_key
     
     @property
     def api_key(self):
