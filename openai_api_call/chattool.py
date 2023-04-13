@@ -32,7 +32,7 @@ class Chat():
             else:
                 self._chat_log = openai_api_call.default_prompt(msg)
         elif isinstance(msg, list):
-            self._chat_log = msg
+            self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
         if api_key is None:
