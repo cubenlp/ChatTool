@@ -169,7 +169,7 @@ class Chat():
     
     def copy(self):
         """Copy the chat log"""
-        return Chat(self._chat_log.copy())
+        return Chat(self._chat_log)
     
     def print_log(self, sep: Union[str, None]=None):
         if sep is None:
