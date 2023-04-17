@@ -126,6 +126,9 @@ chat.assistant("My name is GPT-3.5.")
 # get the last result
 print(chat[-1])
 
+# save chat history
+chat.save("chat_history.log", mode="w") # default to "a"
+
 # print chat history
 chat.print_log()
 ```

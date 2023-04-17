@@ -1,6 +1,6 @@
 # Test for the Chat class
 from openai_api_call import Chat, Resp
-import openai_api_call
+import openai_api_call, json
 
 # test for the chat class
 def test_chat():
@@ -91,6 +91,13 @@ def test_chat():
     assert chat.chat_log == [
         {"role": "user", "content": "hello!"},
         {"role": "assistant", "content": "Hello, how can I assist you today?"}]
+    
+    # save json
+    chat.save("test.log", mode="w")
+    with open("test.log", "r") as f:
+        data = json.loads(f.read())
+    chat2 = Chat(data)
+    assert chat2.chat_log == chat.chat_log
 
     # print log
     chat.print_log()

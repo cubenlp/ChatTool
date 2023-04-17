@@ -124,6 +124,9 @@ chat.assistant("My name is GPT-3.5.")
 # 打印最后一次谈话
 print(chat[-1])
 
+# 保存对话内容
+chat.save("chat_history.log", mode="w") # 默认为 "a"
+
 # 打印对话历史
 chat.print_log()
 ```
