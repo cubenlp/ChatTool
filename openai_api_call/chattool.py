@@ -187,12 +187,6 @@ class Chat():
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data) + end)
         return True
-    
-    @staticmethod
-    def json2chat(data:str):
-        """Convert json string to Chat"""
-        data = json.loads(data)
-        return Chat(data)
         
     def print_log(self, sep: Union[str, None]=None):
         """Print the chat log"""
