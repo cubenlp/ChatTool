@@ -31,6 +31,14 @@ jobs:
         python -m pip install .[test]
         python -m pip install -r requirements_dev.txt
 
-    - name: Test with pytest
+    - name: Test with pytest and coverage
       run: |
-        python -m pytest tests/
+        pip install coverage
+        coverage run -m pytest tests/
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
