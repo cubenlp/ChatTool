@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '0.3.8'
+VERSION = '0.3.9'
 
 requirements = ['Click>=7.0', 'requests>=2.20']
 

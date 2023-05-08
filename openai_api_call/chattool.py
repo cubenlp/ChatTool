@@ -133,17 +133,21 @@ class Chat():
             status[-1].update({date: cost})
         return status
     
-    def show_usage_status(self, recent:int=10, duration:int=99):
+    def show_usage_status(self, thismonth:bool=True, recent:int=10, duration:int=99):
         """Show the usage status
         
         Args:
+            thismonth (bool): 
             recent (int, optional): number of the usage of recent days. Defaults to 10.
             duration (int, optional): duration of the usage. Defaults to 99.
         """
+        if thismonth:
+            duration = datetime.datetime.now().day - 1
         storage, usage, rem, recent_usage = self.get_usage_status(recent=recent, duration=duration)
         print(f"Total account: {storage:.4f}$")
-        print(f"Total usage: {usage:.4f}$")
-        print(f"Total remaining: {rem:.4f}$")
+        print(f"Total usage(the last {len(recent_usage)} days): {usage:.4f}$")
+        if thismonth:
+            print(f"Total remaining(this month): {rem:.4f}$")
         for date, cost in recent_usage.items():
             print(f"{date}: {cost:.4f}$")
 
