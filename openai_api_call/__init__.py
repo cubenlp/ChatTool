@@ -11,8 +11,9 @@ from .proxy import proxy_on, proxy_off, proxy_status
 # read API key from the environment variable
 if os.environ.get('OPENAI_API_KEY') is not None:
     api_key = os.environ.get('OPENAI_API_KEY')
-    if not api_key.startswith("sk-"):
-        print("Warning: The default environment variable `OPENAI_API_KEY` is not a valid API key.")
+    # skip checking the validity of the API key
+    # if not api_key.startswith("sk-"):
+    #     print("Warning: The default environment variable `OPENAI_API_KEY` is not a valid API key.")
 else:
     api_key = None
 

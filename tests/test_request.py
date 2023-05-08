@@ -1,5 +1,6 @@
 import responses
 from openai_api_call import chat_completion, usage_status
+from openai_api_call.request import normalize_url, is_valid_url
 
 mock_resp = {
     "id":"chatcmpl-6wXDUIbYzNkmqSF9UnjPuKLP1hHls",
@@ -111,3 +112,19 @@ def test_usage_status():
     assert len(daily) == 1
     assert daily[0]["timestamp"] == 1681171200.0
     assert sum([item["cost"] for item in daily[0]["line_items"]]) == 106.619
+
+# normalize base url
+def test_is_valid_url():
+    assert is_valid_url("http://api.wzhecnu.cn") == True
+    assert is_valid_url("https://www.google.com/") == True
+    assert is_valid_url("ftp://ftp.debian.org/debian/") == True
+    assert is_valid_url("api.wzhecnu.cn") == False
+    assert is_valid_url("example.com") == False
+
+
+def test_normalize_url():
+    assert normalize_url("http://api.wzhecnu.cn/") == "http://api.wzhecnu.cn/"
+    assert normalize_url("https://www.google.com") == "https://www.google.com"
+    assert normalize_url("ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz") == "ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz"
+    assert normalize_url("api.wzhecnu.cn") == "https://api.wzhecnu.cn"
+    assert normalize_url("example.com/foo/bar") == "https://example.com/foo/bar"
