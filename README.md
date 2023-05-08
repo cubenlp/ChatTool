@@ -68,6 +68,8 @@ from openai_api_call import request
 request.base_url = "https://api.example.com"
 ```
 
+You can set `OPENAI_BASE_URL` in `~/.bashrc` as well.
+
 ### Basic Usage
 
 Example 1, send prompt and return response:

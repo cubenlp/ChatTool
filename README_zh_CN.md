@@ -65,6 +65,8 @@ from openai_api_call import request
 request.bash_url = "https://api.example.com"
 ```
 
+同样地，可以在环境变量指定 `OPENAI_BASE_URL` 来自动设置。
+
 ### 基本使用
 
 示例一，发送 prompt 并返回信息：
