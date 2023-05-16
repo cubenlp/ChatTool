@@ -16,12 +16,12 @@ class Chat():
     def __init__( self
                 , msg:Union[List[Dict], None, str]=None
                 , api_key:Union[None, str]=None) -> None:
-        """Chat object
-        
+        """Initialize the chat log
+
         Args:
             msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
             api_key (Union[None, str], optional): API key. Defaults to None.
-
+        
         Raises:
             ValueError: msg should be a list of dict, a string or None
         """
@@ -144,10 +144,13 @@ class Chat():
         if thismonth:
             duration = datetime.datetime.now().day - 1
         storage, usage, rem, recent_usage = self.get_usage_status(recent=recent, duration=duration)
-        print(f"Total account: {storage:.4f}$")
-        print(f"Total usage(the last {len(recent_usage)} days): {usage:.4f}$")
+        print(f"Amount: {storage:.4f}$")
         if thismonth:
-            print(f"Total remaining(this month): {rem:.4f}$")
+            print(f"Usage(this month): {usage:.4f}$")
+            print(f"Remaining(this month): {rem:.4f}$")
+        if len(recent_usage) > 0:
+            usage = sum(recent_usage.values())
+            print(f"Usage(the last {len(recent_usage)} days): {usage:.4f}$")
         for date, cost in recent_usage.items():
             print(f"{date}: {cost:.4f}$")
 
