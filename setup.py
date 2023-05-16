@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '0.3.10'
+VERSION = '0.4.0'
 
 requirements = ['Click>=7.0', 'requests>=2.20']
 
@@ -42,7 +42,7 @@ setup(
     packages=find_packages(include=['openai_api_call', 'openai_api_call.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/RexWzh/openai_api_call',
+    url='https://github.com/cubenlp/openai_api_call',
     version=VERSION,
     zip_safe=False,
 )

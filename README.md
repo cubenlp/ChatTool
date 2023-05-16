@@ -2,12 +2,12 @@
 
 # Openai API call
 [![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
-[![Tests](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/RexWzh/openai_api_call/actions/workflows/test.yml/)
+[![Tests](https://github.com/cubenlp/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/openai_api_call/actions/workflows/test.yml/)
 [![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
-[![Coverage](https://codecov.io/gh/RexWzh/openai_api_call/branch/master/graph/badge.svg)](https://codecov.io/gh/RexWzh/openai_api_call.jl)
+[![Coverage](https://codecov.io/gh/cubenlp/openai_api_call/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/openai_api_call.jl)
 
 <!-- 
-[![Updates](https://pyup.io/repos/github/RexWzh/openai_api_call/shield.svg)](https://pyup.io/repos/github/RexWzh/openai_api_call/) 
+[![Updates](https://pyup.io/repos/github/cubenlp/openai_api_call/shield.svg)](https://pyup.io/repos/github/cubenlp/openai_api_call/) 
 -->
 
 A simple wrapper for OpenAI API, which can be used to send requests and get responses.
