@@ -192,7 +192,7 @@ class Chat():
         assert mode in ['a', 'w'], "mode should be 'a' or 'w'"
         data = self.chat_log
         with open(path, mode, encoding='utf-8') as f:
-            f.write(json.dumps(data) + end)
+            f.write(json.dumps(data, ensure_ascii=False) + end)
         return True
         
     def print_log(self, sep: Union[str, None]=None):
