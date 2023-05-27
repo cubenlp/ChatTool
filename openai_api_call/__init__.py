@@ -42,7 +42,9 @@ def show_base_url():
     print(f"Base url:\t{request.base_url}")
 
 def debug_log( net_url:str="https://www.baidu.com"
-             , timeout:int=5):
+             , timeout:int=5
+             , test_usage:bool=True
+             , test_response:bool=True):
     # 1. Test whether the network is available
     try:
         requests.get(net_url, timeout=timeout)
@@ -68,14 +70,16 @@ def debug_log( net_url:str="https://www.baidu.com"
         print("Warning: the `url` parameter is deprecated, please use `base_url` instead.")
 
     # 5. Get usage status
-    print("\nThe usage status of your API key:")
-    Chat().show_usage_status(recent=3)
+    if test_usage:
+        print("\nThe usage status of your API key:")
+        Chat().show_usage_status(recent=3)
 
     # 6. Test hello world
-    print("\nTest hello world:")
-    chat = Chat("hello world")
-    chat.getresponse(max_requests=3)
-    chat.print_log()
+    if test_response:
+        print("\nTest hello world:")
+        chat = Chat("hello world")
+        chat.getresponse(max_requests=3)
+        chat.print_log()
 
     print("\nDebug is finished.")
     return True

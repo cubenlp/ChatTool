@@ -35,4 +35,4 @@ def test_command_line_interface():
     assert '--help  Show this message and exit.' in help_result.output
 
 def test_debug_log():
-    assert debug_log()
+    assert debug_log(test_response=False, test_usage=False)
