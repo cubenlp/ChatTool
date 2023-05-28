@@ -155,3 +155,4 @@ chat.show_usage_status()
 - 版本 `0.3.0` 开始不依赖模块 `openai.py` ，而是直接使用 `requests` 发送请求
     - 支持对每个 `Chat` 使用不同 API 密钥
     - 支持使用代理链接
+- 版本 `0.4.0` 开始，工具维护转至 [CubeNLP](https://github.com/cubenlp) 组织账号

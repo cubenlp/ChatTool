@@ -81,7 +81,7 @@ def chat_completion(api_key:str, messages:List[Dict], model:str, **options) -> D
     
     chat_url = normalize_url(chat_url)
     # get response
-    response = requests.post(chat_url, headers=headers, data=json.dumps(payload))
+    response = requests.post(chat_url, headers=headers, data=json.dumps(payload, ensure_ascii=False))
     if response.status_code != 200:
         raise Exception(response.text)
     return response.json()

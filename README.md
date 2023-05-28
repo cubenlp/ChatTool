@@ -156,3 +156,4 @@ This package is licensed under the MIT license. See the LICENSE file for more de
 
 - Since version `0.2.0`, `Chat` type is used to handle data
 - Since version `0.3.0`, you can use different API Key to send requests.
+- Since version `0.4.0`, this package is mantained by [cubenlp](https://github.com/cubenlp).
