@@ -45,6 +45,17 @@ def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
              , test_usage:bool=True
              , test_response:bool=True):
+    """Debug the API call
+
+    Args:
+        net_url (str, optional): The url to test the network. Defaults to "https://www.baidu.com".
+        timeout (int, optional): The timeout for the network test. Defaults to 5.
+        test_usage (bool, optional): Whether to test the usage status. Defaults to True.
+        test_response (bool, optional): Whether to test the hello world. Defaults to True.
+    
+    Returns:
+        bool: True if the debug is finished.
+    """
     # 1. Test whether the network is available
     try:
         requests.get(net_url, timeout=timeout)

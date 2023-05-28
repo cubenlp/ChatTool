@@ -36,3 +36,4 @@ def test_command_line_interface():
 
 def test_debug_log():
     assert debug_log(test_response=False, test_usage=False)
+    assert not debug_log(net_url="https://baidu123.com") # invalid url
