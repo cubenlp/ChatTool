@@ -5,7 +5,7 @@ __email__ = '1073853456@qq.com'
 __version__ = '0.4.1'
 
 import os
-from .chattool import Chat, Resp, chat_completion, usage_status
+from .chattool import Chat, Resp, chat_completion, usage_status, load_chats
 from .proxy import proxy_on, proxy_off, proxy_status
 import requests
 from . import request

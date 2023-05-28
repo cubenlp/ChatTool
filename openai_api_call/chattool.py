@@ -7,6 +7,7 @@ from .request import chat_completion, usage_status
 import signal, time, random
 import datetime
 import json
+import warnings
 
 # timeout handler
 def handler(signum, frame):
@@ -180,7 +181,7 @@ class Chat():
         """Copy the chat log"""
         return Chat(self._chat_log)
 
-    def save(self, path:str, mode:str='a', end:str='\n'):
+    def save(self, path:str, mode:str='a', end:str='\n', chatid:int=-1):
         """
         Save the chat log to a file
 
@@ -188,12 +189,15 @@ class Chat():
             path (str): path to the file
             mode (str, optional): mode to open the file. Defaults to 'a'.
             end (str, optional): end of each line. Defaults to '\n'.
+            chatid (int, optional): chat id. Defaults to -1.
         """
         assert mode in ['a', 'w'], "mode should be 'a' or 'w'"
         data = self.chat_log
+        if chatid >= 0:
+            data = {'chatid': chatid, 'chatlog': data}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + end)
-        return True
+        return
         
     def print_log(self, sep: Union[str, None]=None):
         """Print the chat log"""
@@ -220,7 +224,64 @@ class Chat():
     
     def __str__(self) -> str:
         return self.__repr__()
+    
+    def __eq__(self, chat: object) -> bool:
+        if isinstance(chat, Chat):
+            return self._chat_log == chat._chat_log
+        return False
 
     def __getitem__(self, index):
         """Get the message at index"""
         return self._chat_log[index]['content']
+
+def load_chats( checkpoint:str
+              , sep='\n'
+              , last_message_only:bool=False
+              , chat_log_only:bool=False
+              , chat_size:int=0):
+    """Load chats from a checkpoint file
+    
+    Args:
+        checkpoint (str): path to the checkpoint file
+        sep (str, optional): separator of chats. Defaults to '\n'.
+        last_message_only (bool, optional): whether to return the last message of each chat. Defaults to False.
+        chat_log_only (bool, optional): whether to return the chat log only. Defaults to False.
+        chat_size (int, optional): number of chats. Defaults to 0.
+
+    Returns:
+        list: chats
+    """
+    # load chats from the checkpoint file
+    with open(checkpoint, 'r', encoding='utf-8') as f:
+        txts = f.read().strip().split(sep)
+    chats = [json.loads(txt) for txt in txts]
+    # no chats
+    if not len(chats): return []
+    # number of chats
+    if chat_size == 0:
+        chat_size = len(chats)
+    # chats with chatid
+    if 'chatid' in chats[0]:
+        chatlogs = [None] * chat_size
+        for chat in chats:
+            idx = chat['chatid']
+            if idx >= chat_size:
+                warnings.warn(f"chatid {idx} is out of the default chat size {chat_size}")
+                chatlogs.extend([None] * (idx - chat_size + 1))
+                chat_size = idx + 1
+            chatlogs[idx] = chat['chatlog']
+    else:
+        # chats without chatid
+        chatlogs = chats
+    # last message of chats only
+    if last_message_only:
+        msgs = [None] * len(chatlogs)
+        for i, chat in enumerate(chatlogs):
+            if chat is None: continue
+            msgs[i] = chat[-1]['content'] if len(chat) else ""
+        return msgs
+    # chat log only
+    if chat_log_only:
+        return chatlogs
+    # return Chat class
+    return [Chat(chatlog) if chatlog is not None else None for chatlog in chatlogs]
