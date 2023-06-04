@@ -35,5 +35,6 @@ def test_command_line_interface():
     assert '--help  Show this message and exit.' in help_result.output
 
 def test_debug_log():
-    assert debug_log(test_response=False, test_usage=False)
+    assert debug_log(test_response=False, test_usage=False, net_url="https://www.baidu.com") or debug_log(
+        test_response=False, test_usage=False, net_url="https://google.com")
     assert not debug_log(net_url="https://baidu123.com") # invalid url
