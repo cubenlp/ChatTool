@@ -2,10 +2,10 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 
 import os
-from .chattool import Chat, Resp, chat_completion, usage_status
+from .chattool import Chat, Resp, chat_completion, usage_status, load_chats
 from .proxy import proxy_on, proxy_off, proxy_status
 import requests
 from . import request
@@ -43,8 +43,20 @@ def show_base_url():
 
 def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
+             , message:str="hello world! 你好！"
              , test_usage:bool=True
              , test_response:bool=True):
+    """Debug the API call
+
+    Args:
+        net_url (str, optional): The url to test the network. Defaults to "https://www.baidu.com".
+        timeout (int, optional): The timeout for the network test. Defaults to 5.
+        test_usage (bool, optional): Whether to test the usage status. Defaults to True.
+        test_response (bool, optional): Whether to test the hello world. Defaults to True.
+    
+    Returns:
+        bool: True if the debug is finished.
+    """
     # 1. Test whether the network is available
     try:
         requests.get(net_url, timeout=timeout)
@@ -76,8 +88,8 @@ def debug_log( net_url:str="https://www.baidu.com"
 
     # 6. Test hello world
     if test_response:
-        print("\nTest hello world:")
-        chat = Chat("hello world")
+        print("\nTest message:", message)
+        chat = Chat(message)
         chat.getresponse(max_requests=3)
         chat.print_log()
 
