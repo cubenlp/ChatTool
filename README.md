@@ -148,6 +148,39 @@ chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 chat.show_usage_status()
 ```
 
+### Advance usage
+
+Save the chat history to a file:
+
+```python
+checkpoint = "tmp.log"
+# chat 1
+chat = Chat()
+chat.save(checkpoint, mode="w") # default to "a"
+# chat 2
+chat = Chat("hello!")
+chat.save(checkpoint)
+# chat 3
+chat.assistant("你好, how can I assist you today?")
+chat.save(checkpoint)
+```
+
+Load the chat history from a file:
+
+```python
+# load chats(default)
+chats = load_chats(checkpoint)
+assert chats == [Chat(log) for log in chat_logs]
+# load chat log only
+chat_logs = load_chats(checkpoint, chat_log_only=True)
+assert chat_logs == [[], [{'role': 'user', 'content': 'hello!'}],
+                      [{'role': 'user', 'content': 'hello!'}, 
+                       {'role': 'assistant', 'content': '你好, how can I assist you today?'}]]
+# load the last message only
+chat_msgs = load_chats(checkpoint, last_message_only=True)
+assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
+```
+
 ## License
 
 This package is licensed under the MIT license. See the LICENSE file for more details.

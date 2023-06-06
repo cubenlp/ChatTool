@@ -43,6 +43,7 @@ def show_base_url():
 
 def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
+             , message:str="hello world! 你好！"
              , test_usage:bool=True
              , test_response:bool=True):
     """Debug the API call
@@ -87,8 +88,8 @@ def debug_log( net_url:str="https://www.baidu.com"
 
     # 6. Test hello world
     if test_response:
-        print("\nTest hello world:")
-        chat = Chat("hello world")
+        print("\nTest message:", message)
+        chat = Chat(message)
         chat.getresponse(max_requests=3)
         chat.print_log()
 
