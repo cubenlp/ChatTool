@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Callable
 from .chattool import Chat
 
 def load_chats( checkpoint:str
-              , sep='\n'
+              , sep:str='\n'
               , last_message_only:bool=False
               , chat_log_only:bool=False):
     """Load chats from a checkpoint file

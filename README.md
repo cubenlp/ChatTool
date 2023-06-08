@@ -181,6 +181,26 @@ chat_msgs = load_chats(checkpoint, last_message_only=True)
 assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
 ```
 
+In general, one can create a function `msg2chat` and use `process_chats` to process the data:
+
+```python
+def msg2chat(msg):
+    chat = Chat(api_key=api_key)
+    chat.system("You are a helpful translator for numbers.")
+    chat.user(f"Please translate the digit to Roman numerals: {msg}")
+    chat.getresponse()
+
+checkpath = "tmp.log"
+# first part of the data
+msgs = ["1", "2", "3"]
+chats = process_chats(msgs, msg2chat, checkpath, clearfile=True)
+assert len(chats) == 3
+assert all([len(chat) == 3 for chat in chats])
+# continue the process
+msgs = msgs + ["4", "5", "6"]
+continue_chats = process_chats(msgs, msg2chat, checkpath)
+```
+
 ## License
 
 This package is licensed under the MIT license. See the LICENSE file for more details.
@@ -190,3 +210,4 @@ This package is licensed under the MIT license. See the LICENSE file for more de
 - Since version `0.2.0`, `Chat` type is used to handle data
 - Since version `0.3.0`, you can use different API Key to send requests.
 - Since version `0.4.0`, this package is mantained by [cubenlp](https://github.com/cubenlp).
+- Since version `0.5.0`, one can use `process_chats` to process the data, with a customized `msg2chat` function and a checkpoint file.
