@@ -1,5 +1,5 @@
 import json, warnings, os
-from typing import List, Dict, Union, Callable
+from typing import List, Dict, Union, Callable, Any
 from .chattool import Chat
 
 def load_chats( checkpoint:str
@@ -39,18 +39,18 @@ def load_chats( checkpoint:str
         chatlogs = chats
     # last message of chats only
     if last_message_only:
-        msgs = [None] * len(chatlogs)
+        data = [None] * len(chatlogs)
         for i, chat in enumerate(chatlogs):
             if chat is None: continue
-            msgs[i] = chat[-1]['content'] if len(chat) else ""
-        return msgs
+            data[i] = chat[-1]['content'] if len(chat) else ""
+        return data
     # chat log only
     if chat_log_only: return chatlogs
     # return Chat class
     return [Chat(chatlog) if chatlog is not None else None for chatlog in chatlogs]
 
-def process_chats( msgs:List[str]
-                 , msg2chat:Callable[[str], Chat]
+def process_chats( data:List[Any]
+                 , data2chat:Callable[[Any], Chat]
                  , checkpoint:str
                  , sep:str='\n'
                  , last_message_only:bool=False
@@ -58,8 +58,8 @@ def process_chats( msgs:List[str]
     """Process chats and save to a checkpoint file
     
     Args:
-        msgs (List[str]): messages
-        msg2chat (Callable[[str], Chat]): function to convert a message to a chat
+        data (List[Any]): data to be processed
+        data2chat (Callable[[Any], Chat]): function to convert data to Chat
         checkpoint (str): path to the checkpoint file
         sep (str, optional): separator of chats. Defaults to '\n'.
         last_message_only (bool, optional): whether to return the last message of each chat. Defaults to False.
@@ -73,14 +73,14 @@ def process_chats( msgs:List[str]
         os.system(f"rm {checkpoint}")
     ## load chats from the checkpoint file
     chats = load_chats(checkpoint, sep=sep)
-    if len(chats) > len(msgs):
+    if len(chats) > len(data):
         warnings.warn(f"checkpoint file {checkpoint} has more chats than the messages")
-        return chats[:len(msgs)]
-    chats.extend([None] * (len(msgs) - len(chats)))
+        return chats[:len(data)]
+    chats.extend([None] * (len(data) - len(chats)))
     ## process chats
-    for i, msg in enumerate(msgs):
+    for i, msg in enumerate(data):
         if chats[i] is not None: continue
-        chat = msg2chat(msg)
+        chat = data2chat(msg)
         chat.save(checkpoint, mode='a', end=sep)
         chats[i] = chat
     if last_message_only:
