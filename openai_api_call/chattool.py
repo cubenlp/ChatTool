@@ -1,6 +1,6 @@
 # The object that stores the chat log
 
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Callable
 import openai_api_call
 from .response import Resp
 from .request import chat_completion, usage_status
@@ -37,8 +37,7 @@ class Chat():
             self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
-        if api_key is None:
-            self._api_key = openai_api_call.api_key
+        self._api_key = openai_api_call.api_key if api_key is None else api_key
     
     @property
     def api_key(self):
@@ -233,55 +232,3 @@ class Chat():
     def __getitem__(self, index):
         """Get the message at index"""
         return self._chat_log[index]['content']
-
-def load_chats( checkpoint:str
-              , sep='\n'
-              , last_message_only:bool=False
-              , chat_log_only:bool=False
-              , chat_size:int=0):
-    """Load chats from a checkpoint file
-    
-    Args:
-        checkpoint (str): path to the checkpoint file
-        sep (str, optional): separator of chats. Defaults to '\n'.
-        last_message_only (bool, optional): whether to return the last message of each chat. Defaults to False.
-        chat_log_only (bool, optional): whether to return the chat log only. Defaults to False.
-        chat_size (int, optional): number of chats. Defaults to 0.
-
-    Returns:
-        list: chats
-    """
-    # load chats from the checkpoint file
-    with open(checkpoint, 'r', encoding='utf-8') as f:
-        txts = f.read().strip().split(sep)
-    chats = [json.loads(txt) for txt in txts]
-    # no chats
-    if not len(chats): return []
-    # number of chats
-    if chat_size == 0:
-        chat_size = len(chats)
-    # chats with chatid
-    if 'chatid' in chats[0]:
-        chatlogs = [None] * chat_size
-        for chat in chats:
-            idx = chat['chatid']
-            if idx >= chat_size:
-                warnings.warn(f"chatid {idx} is out of the default chat size {chat_size}")
-                chatlogs.extend([None] * (idx - chat_size + 1))
-                chat_size = idx + 1
-            chatlogs[idx] = chat['chatlog']
-    else:
-        # chats without chatid
-        chatlogs = chats
-    # last message of chats only
-    if last_message_only:
-        msgs = [None] * len(chatlogs)
-        for i, chat in enumerate(chatlogs):
-            if chat is None: continue
-            msgs[i] = chat[-1]['content'] if len(chat) else ""
-        return msgs
-    # chat log only
-    if chat_log_only:
-        return chatlogs
-    # return Chat class
-    return [Chat(chatlog) if chatlog is not None else None for chatlog in chatlogs]

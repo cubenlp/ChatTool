@@ -4,10 +4,10 @@ __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
 __version__ = '0.4.2'
 
-import os
-from .chattool import Chat, Resp, chat_completion, usage_status, load_chats
+import os, requests
+from .chattool import Chat, Resp, chat_completion, usage_status
+from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
-import requests
 from . import request
 
 

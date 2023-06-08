@@ -1,5 +1,5 @@
 # Test for the Chat class
-from openai_api_call import Chat, Resp, load_chats
+from openai_api_call import Chat, Resp
 import openai_api_call, json
 
 # test for the chat class
@@ -157,43 +157,3 @@ def test_with_template():
     openai_api_call.default_prompt = None
     chat = Chat("hello!")
     assert chat.chat_log == [{"role": "user", "content": "hello!"}]
-
-def test_with_checkpoint():
-    # save chats without chatid
-    chat = Chat()
-    checkpath = "tmp.log"
-    chat.save(checkpath, mode="w")
-    chat = Chat("hello!")
-    chat.save(checkpath) # append
-    chat.assistant("你好, how can I assist you today?")
-    chat.save(checkpath) # append
-    ## load chats
-    chat_logs = load_chats(checkpath, chat_log_only=True)
-    assert chat_logs == [[], [{'role': 'user', 'content': 'hello!'}],
-                          [{'role': 'user', 'content': 'hello!'}, 
-                           {'role': 'assistant', 'content': '你好, how can I assist you today?'}]]
-    chat_msgs = load_chats(checkpath, last_message_only=True)
-    assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
-    chats = load_chats(checkpath)
-    assert chats == [Chat(log) for log in chat_logs]
-
-    # save chats with chatid
-    chat = Chat()
-    checkpath = "tmp.log"
-    chat.save(checkpath, mode="w", chatid=0)
-    chat = Chat("hello!")
-    chat.save(checkpath, chatid=3)
-    chat.assistant("你好, how can I assist you today?")
-    chat.save(checkpath, chatid=2)
-    ## load chats
-    chat_logs = load_chats(checkpath, chat_log_only=True)
-    assert chat_logs == [[], None, 
-                         [{'role': 'user', 'content': 'hello!'}, {'role': 'assistant', 'content': '你好, how can I assist you today?'}],
-                           [{'role': 'user', 'content': 'hello!'}]]
-    chat_msgs = load_chats(checkpath, last_message_only=True)
-    assert chat_msgs == ["", None, "你好, how can I assist you today?", "hello!"]
-    chats = load_chats(checkpath)
-    assert chats == [Chat(log) if log is not None else None for log in chat_logs]
-    
-    
-    
