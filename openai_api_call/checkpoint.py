@@ -75,7 +75,9 @@ def process_chats( data:List[Any]
     chats = load_chats(checkpoint, sep=sep)
     if len(chats) > len(data):
         warnings.warn(f"checkpoint file {checkpoint} has more chats than the messages")
-        return chats[:len(data)]
+        chats = chats[:len(data)]
+        return [chat[-1] for chat in chats] if last_message_only else chats
+        
     chats.extend([None] * (len(data) - len(chats)))
     ## process chats
     for i, msg in enumerate(data):
