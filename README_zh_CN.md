@@ -145,6 +145,53 @@ chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 chat.show_usage_status()
 ```
 
+### 进阶用法
+将对话历史保存到文件中：
+
+```python
+checkpoint = "tmp.log"
+# chat 1
+chat = Chat()
+chat.save(checkpoint, mode="w") # 默认为 "a"
+# chat 2
+chat = Chat("hello!")
+chat.save(checkpoint)
+# chat 3
+chat.assistant("你好, how can I assist you today?")
+chat.save(checkpoint)
+```
+
+从文件中加载对话历史：
+
+```python
+# 加载 Chat 对象（默认）
+chats = load_chats(checkpoint)
+assert chats == [Chat(log) for log in chat_logs]
+# 仅加载对话历史
+chat_logs = load_chats(checkpoint, chat_log_only=True)
+# 仅加载最后一条消息
+chat_msgs = load_chats(checkpoint, last_message_only=True)
+assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
+```
+
+一般来说，你可以定义函数 `msg2chat` 并使用 `process_chats` 来处理数据：
+
+```python
+def msg2chat(msg):
+    chat = Chat(api_key=api_key)
+    chat.system("You are a helpful translator for numbers.")
+    chat.user(f"Please translate the digit to Roman numerals: {msg}")
+    chat.getresponse()
+
+checkpath = "tmp.log"
+# 处理数据的第一部分
+msgs = ["1", "2", "3"]
+chats = process_chats(msgs, msg2chat, checkpath, clearfile=True)
+# 继续处理数据
+msgs = msgs + ["4", "5", "6"]
+continue_chats = process_chats(msgs, msg2chat, checkpath)
+```
+
 ## 开源协议
 
 这个项目使用 MIT 协议开源。
@@ -156,3 +203,4 @@ chat.show_usage_status()
     - 支持对每个 `Chat` 使用不同 API 密钥
     - 支持使用代理链接
 - 版本 `0.4.0` 开始，工具维护转至 [CubeNLP](https://github.com/cubenlp) 组织账号
+- 版本 `0.5.0` 开始，支持使用 `process_chats` 处理数据，借助 `msg2chat` 函数以及 `checkpoint` 文件
