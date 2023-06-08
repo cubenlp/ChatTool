@@ -12,6 +12,9 @@
 - Binxuan (Code Tester)
   - GitHub: [Binxuan's GitHub Profile](https://github.com/LuaMarke)
 
+- Yadong (Code Tester)
+  - GitHub: [Yadong's GitHub Profile](https://github.com/enria)
+
 Thank you all for your contributions! 
 
 License: MIT
