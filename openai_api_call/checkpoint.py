@@ -1,6 +1,7 @@
 import json, warnings, os
 from typing import List, Dict, Union, Callable, Any
 from .chattool import Chat
+from tqdm import tqdm
 
 def load_chats( checkpoint:str
               , sep:str='\n'
@@ -80,9 +81,9 @@ def process_chats( data:List[Any]
         
     chats.extend([None] * (len(data) - len(chats)))
     ## process chats
-    for i, msg in enumerate(data):
+    for i in tqdm(range(len(data))):
         if chats[i] is not None: continue
-        chat = data2chat(msg)
+        chat = data2chat(data[i])
         chat.save(checkpoint, mode='a', end=sep)
         chats[i] = chat
     if last_message_only:
