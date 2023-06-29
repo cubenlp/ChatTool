@@ -3,7 +3,7 @@
 from typing import List, Dict, Union, Callable
 import openai_api_call
 from .response import Resp
-from .request import chat_completion, usage_status, get_valid_models
+from .request import chat_completion, usage_status, valid_models
 import signal, time, random
 import datetime
 import json
@@ -153,6 +153,18 @@ class Chat():
             print(f"Usage(the last {len(recent_usage)} days): {usage:.4f}$")
         for date, cost in recent_usage.items():
             print(f"{date}: {cost:.4f}$")
+
+    def get_valid_models(self, gpt_only:bool=True)->List[str]:
+        """Get the valid models
+
+        Args:
+            gpt_only (bool, optional): whether to only show the GPT models. Defaults to True.
+
+        Returns:
+            List[str]: valid models
+        """
+        return valid_models(self.api_key, gpt_only=gpt_only)
+        
 
     def add(self, role:str, msg:str):
         """Add a message to the chat log"""

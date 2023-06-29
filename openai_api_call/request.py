@@ -130,7 +130,7 @@ def usage_status(api_key:str, duration:int=99, url:str=""):
         raise Exception(billing_response.text)
 
 # https://api.openai.com/v1/models
-def get_valid_models(api_key:str, gpt_only:bool=True, url:str=""):
+def valid_models(api_key:str, gpt_only:bool=True, url:str=""):
     """Get valid models
     
     Args:
