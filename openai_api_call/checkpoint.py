@@ -1,7 +1,7 @@
 import json, warnings, os
 from typing import List, Dict, Union, Callable, Any
 from .chattool import Chat
-from tqdm import tqdm
+import tqdm
 
 def load_chats( checkpoint:str
               , sep:str='\n'
@@ -55,7 +55,8 @@ def process_chats( data:List[Any]
                  , checkpoint:str
                  , sep:str='\n'
                  , last_message_only:bool=False
-                 , clearfile:bool=False):
+                 , clearfile:bool=False
+                 , notebook:bool=False):
     """Process chats and save to a checkpoint file
     
     Args:
@@ -65,6 +66,7 @@ def process_chats( data:List[Any]
         sep (str, optional): separator of chats. Defaults to '\n'.
         last_message_only (bool, optional): whether to return the last message of each chat. Defaults to False.
         clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
+        notebook (bool, optional): whether to use tqdm in Jupiter Notebook. Defaults to False.
 
     Returns:
         list: chats or last messages of chats
@@ -81,7 +83,8 @@ def process_chats( data:List[Any]
         
     chats.extend([None] * (len(data) - len(chats)))
     ## process chats
-    for i in tqdm(range(len(data))):
+    tq = tqdm.tqdm if not notebook else tqdm.notebook.tqdm
+    for i in tq(range(len(data))):
         if chats[i] is not None: continue
         chat = data2chat(data[i])
         chat.save(checkpoint, mode='a', end=sep)
