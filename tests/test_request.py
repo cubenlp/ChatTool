@@ -1,6 +1,6 @@
-import responses
+import responses, json
 from openai_api_call import chat_completion, usage_status
-from openai_api_call.request import normalize_url, is_valid_url
+from openai_api_call.request import normalize_url, is_valid_url, valid_models
 
 mock_resp = {
     "id":"chatcmpl-6wXDUIbYzNkmqSF9UnjPuKLP1hHls",
@@ -112,6 +112,22 @@ def test_usage_status():
     assert len(daily) == 1
     assert daily[0]["timestamp"] == 1681171200.0
     assert sum([item["cost"] for item in daily[0]["line_items"]]) == 106.619
+
+# test for valid models response
+with open("tests/assets/model_response.json", "r") as f:
+    valid_models_response = json.load(f)
+
+@responses.activate
+def test_valid_models():
+    responses.add(responses.GET, 'https://api.openai.com/v1/models',
+                    json=valid_models_response, status=200)
+    models = valid_models(api_key="sk-123", gpt_only=False)
+    assert len(models) == 53
+    models = valid_models(api_key="sk-123", gpt_only=True)
+    assert len(models) == 5
+    assert models == ['gpt-3.5-turbo-0613', 'gpt-3.5-turbo', 
+                      'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-16k-0613', 'gpt-3.5-turbo-16k']
+    
 
 # normalize base url
 def test_is_valid_url():

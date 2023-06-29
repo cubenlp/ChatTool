@@ -3,7 +3,7 @@
 from typing import List, Dict, Union, Callable
 import openai_api_call
 from .response import Resp
-from .request import chat_completion, usage_status
+from .request import chat_completion, usage_status, valid_models
 import signal, time, random
 import datetime
 import json
@@ -16,7 +16,8 @@ def handler(signum, frame):
 class Chat():
     def __init__( self
                 , msg:Union[List[Dict], None, str]=None
-                , api_key:Union[None, str]=None) -> None:
+                , api_key:Union[None, str]=None
+                , base_url:Union[None, str]=None) -> None:
         """Initialize the chat log
 
         Args:
@@ -38,16 +39,32 @@ class Chat():
         else:
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = openai_api_call.api_key if api_key is None else api_key
+        self._base_url = openai_api_call.request.base_url if base_url is None else base_url
     
     @property
     def api_key(self):
         """Get API key"""
         return self._api_key
     
+    @property
+    def base_url(self):
+        """Get base url"""
+        return self._base_url
+    
     @api_key.setter
     def api_key(self, api_key:str):
         """Set API key"""
         self._api_key = api_key
+    
+    @base_url.setter
+    def base_url(self, base_url:str):
+        """Set base url"""
+        self._base_url = base_url
+
+    @property
+    def chat_log(self):
+        """Chat history"""
+        return self._chat_log
     
     def getresponse( self
                    , max_requests:int=1
@@ -91,7 +108,7 @@ class Chat():
                 signal.alarm(timeout)
                 # Make the API call
                 response = chat_completion(
-                    api_key=api_key, messages=msg, model=model, **options)
+                    api_key=api_key, messages=msg, model=model, chat_url=self.base_url, **options)
                 time.sleep(random.random() * timeinterval)
                 resp = Resp(response, strip=strip)
                 assert resp.is_valid(), "Invalid response with message: " + resp.error_message
@@ -120,7 +137,7 @@ class Chat():
         Returns:
             str: usage status
         """
-        storage, usage, dailyusage = usage_status(self.api_key, duration=duration)
+        storage, usage, dailyusage = usage_status(self.api_key, duration=duration, url=self.base_url)
         status = [storage, usage, storage-usage, {}]
         if recent <= 0 or len(dailyusage) == 0: # no need to print the usage of recent days
             return status
@@ -153,6 +170,17 @@ class Chat():
             print(f"Usage(the last {len(recent_usage)} days): {usage:.4f}$")
         for date, cost in recent_usage.items():
             print(f"{date}: {cost:.4f}$")
+
+    def get_valid_models(self, gpt_only:bool=True)->List[str]:
+        """Get the valid models
+
+        Args:
+            gpt_only (bool, optional): whether to only show the GPT models. Defaults to True.
+
+        Returns:
+            List[str]: valid models
+        """
+        return valid_models(self.api_key, gpt_only=gpt_only, url=self.base_url)
 
     def add(self, role:str, msg:str):
         """Add a message to the chat log"""
@@ -204,11 +232,6 @@ class Chat():
             sep = '\n' + '-'*15 + '\n'
         for d in self._chat_log:
             print(sep, d['role'], sep, d['content'])
-    
-    @property
-    def chat_log(self):
-        """Chat history"""
-        return self._chat_log
     
     def pop(self, ind:int=-1):
         """Pop the last message"""
