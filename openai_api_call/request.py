@@ -10,6 +10,9 @@ url = None # Deprecated
 # Read base_url from the environment
 if os.environ.get('OPENAI_BASE_URL') is not None:
     base_url = os.environ.get("OPENAI_BASE_URL")
+elif os.environ.get('OPENAI_API_BASE_URL') is not None:
+    # adapt to the environment variable of chatgpt-web
+    base_url = os.environ.get("OPENAI_API_BASE_URL")
 else:
     base_url = "https://api.openai.com"
 
@@ -47,8 +50,7 @@ def normalize_url(url: str) -> str:
         parsed_url = parsed_url._replace(scheme="https")
     return urlunparse(parsed_url).replace("///", "//")
 
-
-def chat_completion(api_key:str, messages:List[Dict], model:str, **options) -> Dict:
+def chat_completion(api_key:str, messages:List[Dict], model:str, chat_url:str="", **options) -> Dict:
     """Chat completion API call
     
     Args:
@@ -73,11 +75,12 @@ def chat_completion(api_key:str, messages:List[Dict], model:str, **options) -> D
         'Authorization': 'Bearer ' + api_key
     }
     # initialize chat url
-    if url is not None: # deprecated warning
-        warnings.warn("The `url` parameter is deprecated. Please use `base_url` instead.", DeprecationWarning)
-        chat_url = url
-    else:
-        chat_url = os.path.join(base_url, "v1/chat/completions")
+    if not chat_url:
+        if url is not None: # deprecated warning
+            warnings.warn("The `url` parameter is deprecated. Please use `base_url` instead.", DeprecationWarning)
+            chat_url = url
+        else:
+            chat_url = os.path.join(base_url, "v1/chat/completions")
     
     chat_url = normalize_url(chat_url)
     # get response
