@@ -45,7 +45,8 @@ def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
              , message:str="hello world! 你好！"
              , test_usage:bool=True
-             , test_response:bool=True):
+             , test_response:bool=True
+             , test_model:bool=True):
     """Debug the API call
 
     Args:
@@ -86,7 +87,12 @@ def debug_log( net_url:str="https://www.baidu.com"
         print("\nThe usage status of your API key:")
         Chat().show_usage_status(recent=3)
 
-    # 6. Test hello world
+    # 6. Get model list
+    if test_model:
+        print("\nThe model list:")
+        print(Chat().get_valid_models())
+        
+    # 7. Test hello world
     if test_response:
         print("\nTest message:", message)
         chat = Chat(message)

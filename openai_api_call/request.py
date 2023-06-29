@@ -109,7 +109,7 @@ def usage_status(api_key:str, duration:int=99, url:Union[str, None]=None):
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    if not url: url = base_url
+    if url is None: url = base_url
     url = normalize_url(base_url)
     # Get storage limit
     subscription_url = os.path.join(url, "v1/dashboard/billing/subscription")
@@ -151,7 +151,7 @@ def valid_models(api_key:str, gpt_only:bool=True, url:Union[str, None]=None):
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    if not url: url = base_url
+    if url is None: url = base_url
     models_url = normalize_url(os.path.join(url, "v1/models"))
     models_response = requests.get(models_url, headers=headers)
     if models_response.status_code == 200:
