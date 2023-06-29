@@ -89,7 +89,7 @@ def chat_completion(api_key:str, messages:List[Dict], model:str, chat_url:str=""
         raise Exception(response.text)
     return response.json()
 
-def usage_status(api_key:str, duration:int=99):
+def usage_status(api_key:str, duration:int=99, url:str=""):
     """Get usage status
     
     Args:
@@ -103,7 +103,8 @@ def usage_status(api_key:str, duration:int=99):
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    url = normalize_url(base_url)
+    if not url:
+        url = normalize_url(base_url)
     # Get storage limit
     subscription_url = os.path.join(url, "v1/dashboard/billing/subscription")
     subscription_response = requests.get(subscription_url, headers=headers)
@@ -127,3 +128,31 @@ def usage_status(api_key:str, duration:int=99):
         return total_storage, total_usage, daily_costs
     else:
         raise Exception(billing_response.text)
+
+# https://api.openai.com/v1/models
+def get_valid_models(api_key:str, gpt_only:bool=True, url:str=""):
+    """Get valid models
+    
+    Args:
+        api_key (str): API key
+        gpt_only (bool, optional): whether to return only GPT models. Defaults to True.
+
+    Returns:
+        List[str]: list of valid models
+    """
+    headers = {
+        "Authorization": "Bearer " + api_key,
+        "Content-Type": "application/json"
+    }
+    if not url:
+        url = normalize_url(base_url)
+    models_url = os.path.join(url, "v1/models")
+    models_response = requests.get(models_url, headers=headers)
+    if models_response.status_code == 200:
+        data = models_response.json()
+        # model_list = data.get("data")
+        model_list = [model.get("id") for model in data.get("data")]
+        return [model for model in model_list if "gpt" in model] if gpt_only else model_list
+    else:
+        raise Exception(models_response.text)
+    

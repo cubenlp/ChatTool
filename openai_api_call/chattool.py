@@ -3,7 +3,7 @@
 from typing import List, Dict, Union, Callable
 import openai_api_call
 from .response import Resp
-from .request import chat_completion, usage_status
+from .request import chat_completion, usage_status, get_valid_models
 import signal, time, random
 import datetime
 import json
