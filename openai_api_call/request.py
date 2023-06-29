@@ -1,6 +1,6 @@
 # rewrite the request function
 
-from typing import List, Dict
+from typing import List, Dict, Union
 import requests, json
 import datetime, os, warnings
 from urllib.parse import urlparse, urlunparse
@@ -50,13 +50,18 @@ def normalize_url(url: str) -> str:
         parsed_url = parsed_url._replace(scheme="https")
     return urlunparse(parsed_url).replace("///", "//")
 
-def chat_completion(api_key:str, messages:List[Dict], model:str, chat_url:str="", **options) -> Dict:
+def chat_completion( api_key:str
+                   , messages:List[Dict]
+                   , model:str
+                   , chat_url:Union[str, None]=None
+                   , **options) -> Dict:
     """Chat completion API call
     
     Args:
         apikey (str): API key
         messages (List[Dict]): prompt message
         model (str): model to use
+        chat_url (Union[str, None], optional): chat url. Defaults to None.
         **options : options inherited from the `openai.ChatCompletion.create` function.
     
     Returns:
@@ -89,12 +94,13 @@ def chat_completion(api_key:str, messages:List[Dict], model:str, chat_url:str=""
         raise Exception(response.text)
     return response.json()
 
-def usage_status(api_key:str, duration:int=99, url:str=""):
+def usage_status(api_key:str, duration:int=99, url:Union[str, None]=None):
     """Get usage status
     
     Args:
         api_key (str): API key
         duration (int, optional): duration to check. Defaults to 99, which is the maximum duration.
+        url (Union[str, None], optional): base url. Defaults to None.
     
     Returns:
         Tuple[float, float, List[float]]: total storage, total usage, daily costs
@@ -103,8 +109,8 @@ def usage_status(api_key:str, duration:int=99, url:str=""):
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    if not url:
-        url = normalize_url(base_url)
+    if not url: url = base_url
+    url = normalize_url(base_url)
     # Get storage limit
     subscription_url = os.path.join(url, "v1/dashboard/billing/subscription")
     subscription_response = requests.get(subscription_url, headers=headers)
@@ -130,12 +136,13 @@ def usage_status(api_key:str, duration:int=99, url:str=""):
         raise Exception(billing_response.text)
 
 # https://api.openai.com/v1/models
-def valid_models(api_key:str, gpt_only:bool=True, url:str=""):
+def valid_models(api_key:str, gpt_only:bool=True, url:Union[str, None]=None):
     """Get valid models
     
     Args:
         api_key (str): API key
         gpt_only (bool, optional): whether to return only GPT models. Defaults to True.
+        url (Union[str, None], optional): base url. Defaults to None.
 
     Returns:
         List[str]: list of valid models
@@ -144,9 +151,8 @@ def valid_models(api_key:str, gpt_only:bool=True, url:str=""):
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    if not url:
-        url = normalize_url(base_url)
-    models_url = os.path.join(url, "v1/models")
+    if not url: url = base_url
+    models_url = normalize_url(os.path.join(url, "v1/models"))
     models_response = requests.get(models_url, headers=headers)
     if models_response.status_code == 200:
         data = models_response.json()

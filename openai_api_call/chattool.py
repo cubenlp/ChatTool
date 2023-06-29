@@ -23,6 +23,7 @@ class Chat():
         Args:
             msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
             api_key (Union[None, str], optional): API key. Defaults to None.
+            base_url (Union[None, str], optional): base url. Defaults to None.
         
         Raises:
             ValueError: msg should be a list of dict, a string or None
