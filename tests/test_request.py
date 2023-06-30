@@ -211,7 +211,6 @@ def test_is_valid_url():
     assert is_valid_url("api.wzhecnu.cn") == False
     assert is_valid_url("example.com") == False
 
-
 def test_normalize_url():
     assert normalize_url("http://api.wzhecnu.cn/") == "http://api.wzhecnu.cn/"
     assert normalize_url("https://www.google.com") == "https://www.google.com"

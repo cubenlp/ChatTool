@@ -4,15 +4,68 @@ from typing import List, Dict, Union, Callable
 import openai_api_call
 from .response import Resp
 from .request import chat_completion, usage_status, valid_models
-import signal, time, random, datetime, json, warnings, docstring_parser
+import signal, time, random, datetime, json, warnings
+from docstring_parser import parse
+import inspect
 
 # timeout handler
 def handler(signum, frame):
     raise Exception("API call timed out!")
 
 # convert function to description
-def func2desc(func:Callable) -> str:
-    pass
+def func2desc( func:Callable
+             , name:Union[str, None]=None
+             , required:Union[List[str], None]=None
+             , parabydoc:bool=False):
+    """Create a description for the function
+
+    Args:
+        func (Callable): function
+        name (Union[str, None], optional): name of the function. Defaults to None.
+        required (Union[List[str], None], optional): required parameters. Defaults to None.
+        parabydoc (bool, optional): whether to parse parameter via docstring. By Default, it use the signature of the function.
+
+    Returns:
+        Dict: description
+    
+    Important Note for parameters:
+        1. You can add any keyword in the description of the parameter.
+        2. However, the keyword `type` is strictly required.
+           For example:
+           - `list` and `dict` are allowed.
+           - `typing.List` and `typing.Dict` are not supported.
+    """
+    desc = {}
+    # set key "name"
+    desc['name'] = name if name is not None else func.__name__
+    # get description from docstring
+    hasdoc = func.__doc__ is not None and len(func.__doc__.strip()) > 0
+    if hasdoc:
+        parsed_docs = parse(func.__doc__)
+        # set key "description"
+        short = "" if parsed_docs.short_description is None else parsed_docs.short_description
+        long = "" if parsed_docs.long_description is None else parsed_docs.long_description
+        desc['description'] = short + "\n" + long
+    # set parameters
+    desc['parameters'] = {"type": "object", "properties": {}}
+    ## set parameters.properties via docstring
+    properties = desc['parameters']['properties']
+    if parabydoc:
+        if not hasdoc:
+            warnings.warn("No docstring found for function " + func.__name__ + ".")
+        for param in parsed_docs.params:
+            properties[param.arg_name] = {"type": param.type_name, "description": param.description}
+    # set parameters.properties via signature
+    if not hasdoc or not parabydoc:
+        sig = inspect.signature(func)
+        for para in sig.parameters.values():
+            t = para.annotation if para.annotation != inspect._empty else "object"
+            properties[para.name] = {"type": t, "description": ""}
+    if required is not None:
+        desc['parameters']['required'] = required
+    else:
+        desc['parameters']['required'] = list(properties.keys())
+    return desc
 
 class Chat():
     def __init__( self

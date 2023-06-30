@@ -211,3 +211,4 @@ This package is licensed under the MIT license. See the LICENSE file for more de
 - Since version `0.3.0`, you can use different API Key to send requests.
 - Since version `0.4.0`, this package is mantained by [cubenlp](https://github.com/cubenlp).
 - Since version `0.5.0`, one can use `process_chats` to process the data, with a customized `msg2chat` function and a checkpoint file.
+- Since version `0.6.0`, the feature [function call](https://platform.openai.com/docs/guides/gpt/function-calling) is added.
