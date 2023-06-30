@@ -4,14 +4,15 @@ from typing import List, Dict, Union, Callable
 import openai_api_call
 from .response import Resp
 from .request import chat_completion, usage_status, valid_models
-import signal, time, random
-import datetime
-import json
-import warnings
+import signal, time, random, datetime, json, warnings, docstring_parser
 
 # timeout handler
 def handler(signum, frame):
     raise Exception("API call timed out!")
+
+# convert function to description
+def func2desc(func:Callable) -> str:
+    pass
 
 class Chat():
     def __init__( self
@@ -41,6 +42,8 @@ class Chat():
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = openai_api_call.api_key if api_key is None else api_key
         self._chat_url = chat_url
+        self._function_call = None
+        self._functions = None
     
     @property
     def api_key(self):
@@ -66,7 +69,80 @@ class Chat():
     def chat_log(self):
         """Chat history"""
         return self._chat_log
+
+    @property
+    def function_call(self):
+        """Function call
+        
+        Control the behavior of the model. Can be "auto", "none" or a dict with only one key "name"
+        
+        Explanation:
+            "auto": the model will automatically call the function if it thinks it is necessary
+            "none": the model will never call the function
+            {"name": "get_current_weather"}: the model will be forced to call the function "get_current_weather"
+        """
+        return self._function_call
     
+    @function_call.setter
+    def function_call(self, para:Union[None, str, Dict]):
+        """Set value of function call
+
+        Args:
+            para (Union[None, str, Dict]): function call. Can be "auto", "none" or a dict with only one key "name"
+        
+        Examples:
+            >>> chat = Chat()
+            >>> chat.function_call = None
+            >>> chat.function_call = "auto"
+            >>> chat.function_call = "none"
+            >>> chat.function_call = {"name": "get_current_weather"}
+        """
+        if para is not None:
+            if isinstance(para, str):
+                assert para in ["auto", "none"], "Function call should be either 'auto' or 'none'!"
+            elif isinstance(para, dict):
+                assert 'name' in para.keys() and len(para) == 1, "Function call should be a dict with only one key 'name'!"
+            else:
+                raise ValueError("Function call should be either 'auto', 'none' or a dict!")
+        self._function_call = para
+    
+    @property
+    def functions(self):
+        """function list for the function calling feature"""
+        return self._functions
+    
+    @functions.setter
+    def functions(self, para:Union[None, List[Dict]]):
+        """Set function list
+
+        Note: one can use the function `func2desc` to generate the description of a function.
+
+        Args:
+            para (Union[None, List[Dict]]): function list. Defaults to None.
+        
+        Examples:
+            >>> chat = Chat()
+            >>> chat.functions = None
+            >>> chat.functions = [{
+                "name": "get_current_weather",
+                "description": "Get the current weather",
+                "arguments": {
+                    "location": {
+                        "type": "string",
+                        "description": "The location to get the weather for"
+                    },
+                    "time": {
+                        "type": "string",
+                        "description": "The time to get the weather for"
+                    }
+                }
+            }]
+        """
+        if para is not None:
+            assert isinstance(para, list), "Functions should be a list!"
+            assert len(para), "Functions should not be empty!"
+        self._functions = para
+
     def getresponse( self
                    , max_requests:int=1
                    , strip:bool=True
@@ -74,6 +150,8 @@ class Chat():
                    , timeout:int = 0
                    , timeinterval:int = 0
                    , api_key:Union[str, None]=None
+                   , functions:Union[None, List[Dict]]=None
+                   , function_call:Union[None, str, Dict]=None
                    , model:str = "gpt-3.5-turbo"
                    , **options)->Resp:
         """Get the API response
@@ -93,6 +171,12 @@ class Chat():
         if api_key is None:
             api_key = self.api_key
         assert api_key is not None, "API key is not set!"
+        if functions is None:
+            functions = self.functions
+        if function_call is None:
+            function_call = self.function_call
+        if function_call is not None:
+            assert functions is not None, "`function_call` is only allowed when `functions` are specified."
 
         # initialize prompt message
         msg = self.chat_log
@@ -109,7 +193,8 @@ class Chat():
                 signal.alarm(timeout)
                 # Make the API call
                 response = chat_completion(
-                    api_key=api_key, messages=msg, model=model, chat_url=self.chat_url, **options)
+                    api_key=api_key, messages=msg, model=model, chat_url=self.chat_url,
+                    function_call=self.function_call, functions=self.functions, **options)
                 time.sleep(random.random() * timeinterval)
                 resp = Resp(response, strip=strip)
                 assert resp.is_valid(), "Invalid response with message: " + resp.error_message

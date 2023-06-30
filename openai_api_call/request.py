@@ -54,6 +54,8 @@ def chat_completion( api_key:str
                    , messages:List[Dict]
                    , model:str
                    , chat_url:Union[str, None]=None
+                   , function_call:Union[str, None]=None
+                   , functions:Union[List[str], None]=None
                    , **options) -> Dict:
     """Chat completion API call
     
@@ -62,6 +64,8 @@ def chat_completion( api_key:str
         messages (List[Dict]): prompt message
         model (str): model to use
         chat_url (Union[str, None], optional): chat url. Defaults to None.
+        function_call (Union[str, None], optional): function call. Defaults to None.
+        functions (Union[List[str], None], optional): functions. Defaults to None.
         **options : options inherited from the `openai.ChatCompletion.create` function.
     
     Returns:
@@ -72,6 +76,10 @@ def chat_completion( api_key:str
         "model": model,
         "messages": messages
     }
+    if function_call is not None:
+        payload.update({"function_call": function_call})
+    if functions is not None:
+        payload.update({"functions": functions})
     # inherit options
     payload.update(options)
     # request headers
@@ -135,10 +143,10 @@ def usage_status(api_key:str, duration:int=99, url:Union[str, None]=None):
     else:
         raise Exception(billing_response.text)
 
-# https://api.openai.com/v1/models
 def valid_models(api_key:str, gpt_only:bool=True, url:Union[str, None]=None):
     """Get valid models
-    
+    Request url: https://api.openai.com/v1/models
+
     Args:
         api_key (str): API key
         gpt_only (bool, optional): whether to return only GPT models. Defaults to True.
