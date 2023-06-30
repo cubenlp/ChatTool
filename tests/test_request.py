@@ -1,6 +1,7 @@
 import responses, json
-from openai_api_call import chat_completion, usage_status
+from openai_api_call import chat_completion, usage_status, debug_log
 from openai_api_call.request import normalize_url, is_valid_url, valid_models
+import openai_api_call
 
 mock_resp = {
     "id":"chatcmpl-6wXDUIbYzNkmqSF9UnjPuKLP1hHls",
@@ -119,6 +120,7 @@ with open("tests/assets/model_response.json", "r") as f:
 
 @responses.activate
 def test_valid_models():
+    openai_api_call.api_key = "sk-123"
     responses.add(responses.GET, 'https://api.openai.com/v1/models',
                     json=valid_models_response, status=200)
     models = valid_models(api_key="sk-123", gpt_only=False)
@@ -127,7 +129,21 @@ def test_valid_models():
     assert len(models) == 5
     assert models == ['gpt-3.5-turbo-0613', 'gpt-3.5-turbo', 
                       'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-16k-0613', 'gpt-3.5-turbo-16k']
-    
+
+@responses.activate
+def test_debug_log():
+    """Test the debug log"""
+    responses.add(responses.GET, 'https://api.openai.com/v1/models',
+                    json=valid_models_response, status=200)
+    responses.add(responses.GET, 'https://api.openai.com/v1/dashboard/billing/subscription',
+                    json=mock_usage, status=200)
+    responses.add(responses.GET, 'https://api.openai.com/v1/dashboard/billing/usage',
+                    json=mock_billing, status=200)
+    responses.add(responses.POST, 'https://api.openai.com/v1/chat/completions',
+                  json=mock_resp, status=200)
+    responses.add(responses.GET, 'https://www.google.com', status=200)
+    assert debug_log(net_url="https://www.google.com")
+    assert not debug_log(net_url="https://baidu123.com") # invalid url
 
 # normalize base url
 def test_is_valid_url():
