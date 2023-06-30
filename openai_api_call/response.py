@@ -6,7 +6,8 @@ class Resp():
     
     def __init__(self, response:Dict, strip:bool=True) -> None:
         self.response = response
-        if strip and self.is_valid(): self._strip_content()
+        if strip and self.is_valid() and self.content is not None:
+            self._strip_content()
     
     def _strip_content(self):
         """Strip the content"""
@@ -14,7 +15,12 @@ class Resp():
             self.response['choices'][0]['message']['content'].strip()
     
     def __repr__(self) -> str:
-        return f"`Resp`: {self.content}"
+        if self.finish_reason == 'stop':
+            return f"`Resp`: {self.content}"
+        elif self.finish_reason == "function call":
+            return f"`Resp`: {self.function_call}"
+        else:
+            return f"`Resp`: {self.content}"
     
     def __str__(self) -> str:
         return self.content
@@ -75,3 +81,12 @@ class Resp():
         """Error code"""
         return self.response['error']['code']
 
+    @property
+    def finish_reason(self):
+        """Finish reason"""
+        return self.response['choices'][0]['finish_reason']
+
+    @property
+    def function_call(self):
+        """Function call"""
+        return self.response['choices'][0]['message']['function_call']
