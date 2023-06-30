@@ -1,5 +1,5 @@
 import responses, json
-from openai_api_call import chat_completion, usage_status, debug_log
+from openai_api_call import chat_completion, usage_status, debug_log, Chat
 from openai_api_call.request import normalize_url, is_valid_url, valid_models
 import openai_api_call
 
@@ -144,6 +144,64 @@ def test_debug_log():
     responses.add(responses.GET, 'https://www.google.com', status=200)
     assert debug_log(net_url="https://www.google.com")
     assert not debug_log(net_url="https://baidu123.com") # invalid url
+
+# test for function call
+function_response = {
+  "id": "chatcmpl-7X2vF57BKsEuzaSen0wFSI30Y2mJX",
+  "object": "chat.completion",
+  "created": 1688110413,
+  "model": "gpt-3.5-turbo-0613",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": None,
+        "function_call": {
+          "name": "get_current_weather",
+          "arguments": "{\n  \"location\": \"Boston, MA\"\n}"
+        }
+      },
+      "finish_reason": "function_call"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 88,
+    "completion_tokens": 18,
+    "total_tokens": 106
+  }
+}
+
+functions = [{
+    "name": "get_current_weather",
+    "description": "Get the current weather",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "location": {
+                "type": "string",
+                "description": "The city and state, e.g. San Francisco, CA",
+            },
+            "format": {
+                "type": "string",
+                "enum": ["celsius", "fahrenheit"],
+                "description": "The temperature unit to use. Infer this from the users location.",
+            },
+        },
+        "required": ["location", "format"],
+    },
+}]
+
+@responses.activate
+def test_functions():
+    responses.add(responses.POST, 'https://api.openai.com/v1/chat/completions',
+                  json=function_response, status=200)
+    chat = Chat("What is the weather in Boston?")
+    chat.functions = functions
+    resp = chat.getresponse()
+    assert resp.finish_reason == "function_call"
+    assert resp.function_call['name'] == "get_current_weather"
+    assert resp.function_call['arguments'] == "{\n  \"location\": \"Boston, MA\"\n}"
 
 # normalize base url
 def test_is_valid_url():

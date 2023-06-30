@@ -15,7 +15,12 @@ class Resp():
             self.response['choices'][0]['message']['content'].strip()
     
     def __repr__(self) -> str:
-        return f"`Resp`: {self.content}"
+        if self.finish_reason == 'stop':
+            return f"`Resp`: {self.content}"
+        elif self.finish_reason == "function call":
+            return f"`Resp`: {self.function_call}"
+        else:
+            return f"`Resp`: {self.content}"
     
     def __str__(self) -> str:
         return self.content
@@ -76,3 +81,12 @@ class Resp():
         """Error code"""
         return self.response['error']['code']
 
+    @property
+    def finish_reason(self):
+        """Finish reason"""
+        return self.response['choices'][0]['finish_reason']
+
+    @property
+    def function_call(self):
+        """Function call"""
+        return self.response['choices'][0]['message']['function_call']
