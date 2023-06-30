@@ -9,7 +9,7 @@ with open('README.md') as readme_file:
 
 VERSION = '0.5.3'
 
-requirements = ['Click>=7.0', 'requests>=2.20', 'tqdm>=4.60']
+requirements = ['Click>=7.0', 'requests>=2.20', 'tqdm>=4.60', 'docstring_parser>=0.10']
 
 test_requirements = ['pytest>=3', 'unittest']
 
