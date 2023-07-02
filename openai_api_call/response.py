@@ -63,6 +63,11 @@ class Resp():
         return self.usage['completion_tokens']
     
     @property
+    def finish_reason(self):
+        """Finish reason"""
+        return self.response['choices'][0]['finish_reason']
+    
+    @property
     def message(self):
         """Message"""
         return self.response['choices'][0]['message']
@@ -71,11 +76,6 @@ class Resp():
     def content(self):
         """Content of the response"""
         return self.message['content']
-
-    @property
-    def finish_reason(self):
-        """Finish reason"""
-        return self.message['finish_reason']
 
     @property
     def function_call(self):

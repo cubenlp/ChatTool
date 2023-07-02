@@ -268,23 +268,54 @@ class Chat():
         """
         return valid_models(self.api_key, gpt_only=gpt_only)
 
-    def add(self, role:str, msg:str):
-        """Add a message to the chat log"""
-        assert role in ['user', 'assistant', 'system'], "role should be 'user', 'assistant' or 'system'"
-        self._chat_log.append({"role": role, "content": msg})
+    def add( self
+           , role:str
+           , content
+           , function_call:Union[None, dict]=None
+           , name:Union[None, str]=None):
+        """Add a role message to the chat log
+        
+        This is the wrapper of the `message` part of the `openai.ChatCompletion.create` function.
+
+        Args:
+            role (str): role of the message, should be 'user', 'assistant', 'system' or 'function'.
+            content (object): content of the message, it can be None, str, or object of function response.
+            function_call (Union[None, dict], optional): function call, arguments of the function. Defaults to None.
+            name (Union[None, str], optional): name of the function. Defaults to None.
+        """
+        assert role in ['user', 'assistant', 'system', 'function'], "role should be 'user', 'assistant', 'system' or 'function'!"
+        # same as before
+        if role == 'system' or role == 'user' \
+            or (role == 'assistant' and function_call is None):
+            assert content is not None, "Invalid format: The content should not be None!"
+            self._chat_log.append({"role": role, "content": content})
+        
+        # assistant with function call
+        elif role == 'assistant':
+            if content is not None:
+                warnings.warn("The content will be ignored when `function_call` is specified!")
+            self._chat_log.append({"role": role, "content": content, "function_call": function_call})
+        # function call
+        elif role == 'function':
+            assert name is not None, "Invalid format: The name of fucntion should be specified!"
+            self._chat_log.append({"role": role, "name": name, "content": content})
         return self
 
-    def user(self, msg:str):
+    def user(self, content:str):
         """User message"""
-        return self.add('user', msg)
+        return self.add('user', content)
     
-    def assistant(self, msg:str):
+    def assistant(self, content:Union[None, str], call:Union[dict, None]=None):
         """Assistant message"""
-        return self.add('assistant', msg)
+        return self.add('assistant', content, function_call=call)
     
-    def system(self, msg:str):
+    def system(self, content:str):
         """System message"""
-        return self.add('system', msg)
+        return self.add('system', content)
+
+    def function(self, funcname:str, funcresp):
+        """Function call"""
+        return self.add('function', name=funcname, content=funcresp)
     
     def clear(self):
         """Clear the chat log"""

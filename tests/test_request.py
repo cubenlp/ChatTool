@@ -201,7 +201,7 @@ def test_functions():
     resp = chat.getresponse()
     assert resp.finish_reason == "function_call"
     assert resp.function_call['name'] == "get_current_weather"
-    assert resp.function_call['arguments'] == "{\n  \"location\": \"Boston, MA\"\n}"
+    assert resp.function_call['arguments'] == json.loads("{\n  \"location\": \"Boston, MA\"\n}")
 
 # normalize base url
 def test_is_valid_url():
@@ -211,10 +211,50 @@ def test_is_valid_url():
     assert is_valid_url("api.wzhecnu.cn") == False
     assert is_valid_url("example.com") == False
 
-
 def test_normalize_url():
     assert normalize_url("http://api.wzhecnu.cn/") == "http://api.wzhecnu.cn/"
     assert normalize_url("https://www.google.com") == "https://www.google.com"
     assert normalize_url("ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz") == "ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz"
     assert normalize_url("api.wzhecnu.cn") == "https://api.wzhecnu.cn"
     assert normalize_url("example.com/foo/bar") == "https://example.com/foo/bar"
+
+def get_current_weather(location, unit="fahrenheit"):
+    """Get the current weather in a given location"""
+    weather_info = {
+        "location": location,
+        "temperature": "72",
+        "unit": unit,
+        "forecast": ["sunny", "windy"],
+    }
+    return json.dumps(weather_info)
+
+@responses.activate
+def test_run_conversation():
+    """test case from openai"""
+    responses.add(responses.POST, 'https://api.openai.com/v1/chat/completions',
+                  json=function_response, status=200)
+    # Step 1: send the conversation and available functions to GPT
+    messages = [{"role": "user", "content": "What's the weather like in Boston?"}]
+    chat = Chat(messages)
+    response = chat.getresponse()
+    if 'function_call' in response.function_call:
+        # Step 3: call the function
+        # Note: the JSON response may not always be valid; be sure to handle errors
+        available_functions = {
+            "get_current_weather": get_current_weather,
+        }  # only one function in this example, but you can have multiple
+        function_name = response.function_call['name']
+        fuction_to_call = available_functions[function_name]
+        function_args = json.loads(response.function_call["arguments"])
+        function_result = fuction_to_call(**function_args)
+        # Step 4: send the info on the function call and function response to GPT
+        chat.function(function_name, function_result)
+        response = chat.getresponse()
+      
+    ## use Chat object directly
+    chat = Chat()
+    chat.user("What's the weather like in Boston?")
+    chat.functions = functions
+    chat.function_call = 'auto'
+    chat.name2function = {'get_current_weather': get_current_weather}
+    
