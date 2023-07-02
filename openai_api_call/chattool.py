@@ -178,7 +178,7 @@ class Chat():
                    , timeinterval:int = 0
                    , api_key:Union[str, None]=None
                    , function_call:Union[None, str, Dict]=None
-                   , secondresponse:bool=False
+                   , funceval:bool=False
                    , model:str = "gpt-3.5-turbo"
                    , **options)->Resp:
         """Get the API response
@@ -240,10 +240,19 @@ class Chat():
             raise Exception("Failed to get the response!\nYou can try to update the API key"
                             + ", increase `max_requests` or set proxy.")
         if update: # update the chat log
-            if resp.is_function_call():
-                self._chat_log.append(resp.message)
-            else:
+            if not resp.is_function_call():
                 self.assistant(resp.content)
+            else: # function call
+                self._chat_log.append(resp.message)
+                if funceval:
+                    args = resp.function_call['arguments']
+                    funcname = resp.function_call['name']
+                    func = available_functions.get(funcname)
+                    if func is None:
+                        raise Exception(f"Please check the function name `{funcname}` in `chat.available_functions`")
+                    # get the response
+                    result = func(**args)
+                    self.function(funcname, result)
         return resp
 
     def get_usage_status(self, recent:int=10, duration:int=99):
