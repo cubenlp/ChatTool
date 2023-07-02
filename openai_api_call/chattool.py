@@ -391,9 +391,22 @@ class Chat():
         """Print the chat log"""
         if sep is None:
             sep = '\n' + '-'*15 + '\n'
-        for d in self._chat_log:
-            print(sep, d['role'], sep)
-            print(d['content'])
+        for data in self._chat_log:
+            role = data['role']
+            if role == 'user' or role == 'system'\
+                or (role == 'assistant' and 'function_call' not in data):
+                print(sep, role, sep, end='')
+                print(data['content'])
+            elif role == 'assistant':
+                print(sep, "assistant(with function call)", sep, end='')
+                print(data['function_call'])
+            elif role == 'function':
+                print(sep, "function", sep, end='')
+                print(data['name'])
+                print(data['content'])
+            else:
+                print("invalid role!")
+        return
     
     def pop(self, ind:int=-1):
         """Pop the last message"""
@@ -416,4 +429,4 @@ class Chat():
 
     def __getitem__(self, index):
         """Get the message at index"""
-        return self._chat_log[index]['content']
+        return self._chat_log[index]

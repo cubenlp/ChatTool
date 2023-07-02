@@ -16,10 +16,8 @@ class Resp():
             self.content.strip()
     
     def __repr__(self) -> str:
-        if self.finish_reason == 'stop':
-            return f"`Resp`: {self.content}"
-        elif self.finish_reason == "function call":
-            return f"`Resp`: {self.function_call}"
+        if self.finish_reason == "function_call":
+            return f"`Resp(call)`: {self.function_call}"
         else:
             return f"`Resp`: {self.content}"
     
