@@ -201,7 +201,7 @@ def test_functions():
     resp = chat.getresponse()
     assert resp.finish_reason == "function_call"
     assert resp.function_call['name'] == "get_current_weather"
-    assert resp.function_call['arguments'] == json.loads("{\n  \"location\": \"Boston, MA\"\n}")
+    assert resp.function_call['arguments'] == "{\n  \"location\": \"Boston, MA\"\n}"
 
 # normalize base url
 def test_is_valid_url():
@@ -245,7 +245,7 @@ def test_run_conversation():
         }
         function_name = response.function_call['name']
         fuction_to_call = available_functions[function_name]
-        function_args = response.function_call["arguments"]
+        function_args = response.get_func_args()
         function_result = fuction_to_call(**function_args)
         # Step 4: send the info on the function call and function response to GPT
         chat.function(function_name, function_result)

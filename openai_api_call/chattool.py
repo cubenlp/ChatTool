@@ -10,7 +10,7 @@ import signal, time, random, datetime, json, warnings, docstring_parser
 def handler(signum, frame):
     raise Exception("API call timed out!")
 
-# convert function to description
+# TODO:convert function to description
 def func2desc(func:Callable) -> str:
     pass
 
@@ -115,8 +115,6 @@ class Chat():
     @functions.setter
     def functions(self, para:Union[None, List[Dict]]):
         """Set function list
-
-        Note: one can use the function `func2desc` to generate the description of a function.
 
         Args:
             para (Union[None, List[Dict]]): function list. Defaults to None.
@@ -240,12 +238,13 @@ class Chat():
             raise Exception("Failed to get the response!\nYou can try to update the API key"
                             + ", increase `max_requests` or set proxy.")
         if update: # update the chat log
+            # The following is equivalent to `self.chat_log.append(resp.message))`
             if not resp.is_function_call():
                 self.assistant(resp.content)
             else: # function call
-                self._chat_log.append(resp.message)
+                self.assistant(resp.content, call=resp.function_call['arguments'])
                 if funceval:
-                    args = resp.function_call['arguments']
+                    args = resp.get_func_args()
                     funcname = resp.function_call['name']
                     func = available_functions.get(funcname)
                     if func is None:
@@ -313,7 +312,7 @@ class Chat():
     def add( self
            , role:str
            , content
-           , function_call:Union[None, dict]=None
+           , function_call:Union[None, str]=None
            , name:Union[None, str]=None):
         """Add a role message to the chat log
         
@@ -346,7 +345,7 @@ class Chat():
         """User message"""
         return self.add('user', content)
     
-    def assistant(self, content:Union[None, str], call:Union[dict, None]=None):
+    def assistant(self, content:Union[None, str], call:Union[None, str]=None):
         """Assistant message"""
         return self.add('assistant', content, function_call=call)
     

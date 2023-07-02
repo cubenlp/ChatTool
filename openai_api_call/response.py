@@ -83,11 +83,18 @@ class Resp():
         if self.is_function_call:
             args = {}
             args['name'] = self.message['function_call']['name']
-            args['arguments'] = json.loads(self.message['function_call']['arguments'])
+            args['arguments'] = self.message['function_call']['arguments']
             return args
         else:
             return None
     
+    def get_func_args(self):
+        """Function arguments"""
+        if self.is_function_call:
+            return json.loads(self.function_call['arguments'])
+        else:
+            return None
+
     def is_function_call(self):
         """Check if the response is a function call"""
         return self.finish_reason == 'function_call' and \
