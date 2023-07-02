@@ -211,10 +211,55 @@ def test_is_valid_url():
     assert is_valid_url("api.wzhecnu.cn") == False
     assert is_valid_url("example.com") == False
 
-
 def test_normalize_url():
     assert normalize_url("http://api.wzhecnu.cn/") == "http://api.wzhecnu.cn/"
     assert normalize_url("https://www.google.com") == "https://www.google.com"
     assert normalize_url("ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz") == "ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz"
     assert normalize_url("api.wzhecnu.cn") == "https://api.wzhecnu.cn"
     assert normalize_url("example.com/foo/bar") == "https://example.com/foo/bar"
+
+def get_current_weather(location, unit="fahrenheit"):
+    """Get the current weather in a given location"""
+    weather_info = {
+        "location": location,
+        "temperature": "72",
+        "unit": unit,
+        "forecast": ["sunny", "windy"],
+    }
+    return json.dumps(weather_info)
+
+@responses.activate
+def test_run_conversation():
+    """test case from openai"""
+    responses.add(responses.POST, 'https://api.openai.com/v1/chat/completions',
+                  json=function_response, status=200)
+    # send the conversation and available functions to GPT
+    messages = [{"role": "user", "content": "What's the weather like in Boston?"}]
+    chat = Chat(messages)
+    chat.functions = functions
+    response = chat.getresponse()
+    if response.is_function_call():
+        # call the function
+        available_functions = {
+            "get_current_weather": get_current_weather,
+        }
+        function_name = response.function_call['name']
+        fuction_to_call = available_functions[function_name]
+        function_args = response.get_func_args()
+        function_result = fuction_to_call(**function_args)
+        # Step 4: send the info on the function call and function response to GPT
+        chat.function(function_name, function_result)
+        response = chat.getresponse()
+        chat.print_log()
+    
+    ## use Chat object directly
+    chat = Chat()
+    chat.user("What's the weather like in Boston?")
+    chat.functions = functions
+    chat.function_call = 'auto'
+    chat.available_functions = {
+        "get_current_weather": get_current_weather,
+    }
+    chat.getresponse(update=True, funceval=True)
+    
+    
