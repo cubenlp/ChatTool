@@ -182,13 +182,13 @@ functions = [{
                 "type": "string",
                 "description": "The city and state, e.g. San Francisco, CA",
             },
-            "format": {
+            "unit": {
                 "type": "string",
                 "enum": ["celsius", "fahrenheit"],
                 "description": "The temperature unit to use. Infer this from the users location.",
             },
         },
-        "required": ["location", "format"],
+        "required": ["location"],
     },
 }]
 
@@ -237,15 +237,16 @@ def test_run_conversation():
     messages = [{"role": "user", "content": "What's the weather like in Boston?"}]
     chat = Chat(messages)
     chat.functions = functions
+    available_functions = {
+            "get_current_weather": get_current_weather,
+        }
+    chat.available_functions = available_functions
     response = chat.getresponse()
     if response.is_function_call():
         # call the function
-        available_functions = {
-            "get_current_weather": get_current_weather,
-        }
         function_name = response.function_call['name']
         fuction_to_call = available_functions[function_name]
-        function_args = response.get_func_args()
+        function_args = json.loads(response.function_call['arguments'])
         function_result = fuction_to_call(**function_args)
         # Step 4: send the info on the function call and function response to GPT
         chat.function(function_name, function_result)
