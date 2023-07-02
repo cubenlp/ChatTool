@@ -44,6 +44,7 @@ class Chat():
         self._chat_url = chat_url
         self._function_call = None
         self._functions = None
+        self._available_functions = None
     
     @property
     def api_key(self):
@@ -143,6 +144,32 @@ class Chat():
             assert len(para), "Functions should not be empty!"
         self._functions = para
 
+    @property
+    def available_functions(self):
+        """Available functions"""
+        return self._available_functions
+    
+    @available_functions.setter
+    def available_functions(self, funcs:Union[list, dict, None]):
+        """Set available functions
+
+        Args:
+            funcs (Union[list, dict, None]): available functions. Defaults to None. 
+                If it is a list, the function name will be used as the key.
+        """
+        assert funcs is None or isinstance(funcs, (list, dict)), "Available functions should be a list or a dict!"
+
+        if funcs is None:
+            self._available_functions = None
+        elif not len(funcs): # empty list
+            warnings.warn("No available functions!")
+            self._available_functions = {}
+        elif isinstance(funcs, list):
+            # use function name as key
+            self._available_functions = {func.__name__: func for func in funcs}
+        else:
+            self._available_functions = funcs
+        
     def getresponse( self
                    , max_requests:int=1
                    , strip:bool=True
@@ -150,8 +177,8 @@ class Chat():
                    , timeout:int = 0
                    , timeinterval:int = 0
                    , api_key:Union[str, None]=None
-                   , functions:Union[None, List[Dict]]=None
                    , function_call:Union[None, str, Dict]=None
+                   , secondresponse:bool=False
                    , model:str = "gpt-3.5-turbo"
                    , **options)->Resp:
         """Get the API response
@@ -168,15 +195,18 @@ class Chat():
         Returns:
             Resp: API response
         """
+        # Two optional keys: "api_key" and "function_call"
         if api_key is None:
             api_key = self.api_key
         assert api_key is not None, "API key is not set!"
-        if functions is None:
-            functions = self.functions
         if function_call is None:
             function_call = self.function_call
+        # functions(Json schemas)
+        functions = self.functions
         if function_call is not None:
             assert functions is not None, "`function_call` is only allowed when `functions` are specified."
+        # available functions(dict)
+        available_functions = self.available_functions
 
         # initialize prompt message
         msg = self.chat_log
@@ -210,7 +240,10 @@ class Chat():
             raise Exception("Failed to get the response!\nYou can try to update the API key"
                             + ", increase `max_requests` or set proxy.")
         if update: # update the chat log
-            self.assistant(resp.content)
+            if resp.is_function_call():
+                self._chat_log.append(resp.message)
+            else:
+                self.assistant(resp.content)
         return resp
 
     def get_usage_status(self, recent:int=10, duration:int=99):
@@ -289,7 +322,6 @@ class Chat():
             or (role == 'assistant' and function_call is None):
             assert content is not None, "Invalid format: The content should not be None!"
             self._chat_log.append({"role": role, "content": content})
-        
         # assistant with function call
         elif role == 'assistant':
             if content is not None:

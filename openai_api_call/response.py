@@ -88,7 +88,6 @@ class Resp():
         else:
             return None
     
-    @property
     def is_function_call(self):
         """Check if the response is a function call"""
         return self.finish_reason == 'function_call' and \
