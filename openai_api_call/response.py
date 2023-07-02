@@ -16,10 +16,8 @@ class Resp():
             self.content.strip()
     
     def __repr__(self) -> str:
-        if self.finish_reason == 'stop':
-            return f"`Resp`: {self.content}"
-        elif self.finish_reason == "function call":
-            return f"`Resp`: {self.function_call}"
+        if self.finish_reason == "function_call":
+            return f"`Resp(call)`: {self.function_call}"
         else:
             return f"`Resp`: {self.content}"
     
@@ -85,13 +83,6 @@ class Resp():
             args['name'] = self.message['function_call']['name']
             args['arguments'] = self.message['function_call']['arguments']
             return args
-        else:
-            return None
-    
-    def get_func_args(self):
-        """Function arguments"""
-        if self.is_function_call:
-            return json.loads(self.function_call['arguments'])
         else:
             return None
 

@@ -65,9 +65,9 @@ def test_process_chats():
 
     # get the last message only
     last_msgs = process_chats(msgs, msg2chat, checkpath, clearfile=False, last_message_only=True)
-    assert last_msgs == [chat[-1] for chat in continue_chats]
+    assert last_msgs == [chat[-1]['content'] for chat in continue_chats]
     last_msgs = process_chats(msgs[:3], msg2chat, checkpath, clearfile=False, last_message_only=True)
-    assert last_msgs == [chat[-1] for chat in continue_chats[:3]]
+    assert last_msgs == [chat[-1]['content'] for chat in continue_chats[:3]]
     
     
     

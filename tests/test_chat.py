@@ -45,10 +45,10 @@ def test_chat():
         {"role": "system", "content": "I am a system message"}
     ]
     # get index
-    assert chat[0] == "hello!"
-    assert chat[1] == "Hello, how can I assist you today?"
-    assert chat[2] == "I am a system message"
-    assert chat[-1] == "I am a system message"
+    assert chat[0]['content'] == "hello!"
+    assert chat[1]['content'] == "Hello, how can I assist you today?"
+    assert chat[2]['content'] == "I am a system message"
+    assert chat[-1]['content'] == "I am a system message"
     # pop/copy/clear
     chat.pop()
     assert chat.chat_log == [

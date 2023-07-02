@@ -10,7 +10,7 @@ import signal, time, random, datetime, json, warnings, docstring_parser
 def handler(signum, frame):
     raise Exception("API call timed out!")
 
-# TODO:convert function to description
+# TODO: Generate a function description(Json Schema)
 def func2desc(func:Callable) -> str:
     pass
 
@@ -167,7 +167,17 @@ class Chat():
             self._available_functions = {func.__name__: func for func in funcs}
         else:
             self._available_functions = funcs
-        
+    
+    def eval_func(self, call:dict, update:bool=True):
+        name = call['name']
+        func = self.available_functions.get(name)
+        assert func is not None, f"Function {name} is not available!"
+        args = json.loads(call['arguments'])
+        result = func(**args)
+        if update:
+            self.function(name, result)
+        return result
+    
     def getresponse( self
                    , max_requests:int=1
                    , strip:bool=True
@@ -176,7 +186,7 @@ class Chat():
                    , timeinterval:int = 0
                    , api_key:Union[str, None]=None
                    , function_call:Union[None, str, Dict]=None
-                   , funceval:bool=False
+                   , evalfunc:bool=False
                    , model:str = "gpt-3.5-turbo"
                    , **options)->Resp:
         """Get the API response
@@ -242,16 +252,10 @@ class Chat():
             if not resp.is_function_call():
                 self.assistant(resp.content)
             else: # function call
-                self.assistant(resp.content, call=resp.function_call['arguments'])
-                if funceval:
-                    args = resp.get_func_args()
-                    funcname = resp.function_call['name']
-                    func = available_functions.get(funcname)
-                    if func is None:
-                        raise Exception(f"Please check the function name `{funcname}` in `chat.available_functions`")
-                    # get the response
-                    result = func(**args)
-                    self.function(funcname, result)
+                self.assistant(resp.content, call=resp.function_call)
+                if evalfunc:
+                    assert available_functions is not None, "Please specify the available functions!"
+                    self.eval_func(resp.function_call, update=True)
         return resp
 
     def get_usage_status(self, recent:int=10, duration:int=99):
@@ -311,7 +315,7 @@ class Chat():
 
     def add( self
            , role:str
-           , content
+           , content:Union[None, str]=None
            , function_call:Union[None, str]=None
            , name:Union[None, str]=None):
         """Add a role message to the chat log
@@ -353,7 +357,7 @@ class Chat():
         """System message"""
         return self.add('system', content)
 
-    def function(self, funcname:str, funcresp):
+    def function(self, funcname:str, funcresp:str):
         """Function call"""
         return self.add('function', name=funcname, content=funcresp)
     
@@ -387,8 +391,22 @@ class Chat():
         """Print the chat log"""
         if sep is None:
             sep = '\n' + '-'*15 + '\n'
-        for d in self._chat_log:
-            print(sep, d['role'], sep, d['content'])
+        for data in self._chat_log:
+            role = data['role']
+            if role == 'user' or role == 'system'\
+                or (role == 'assistant' and 'function_call' not in data):
+                print(sep, role, sep, end='')
+                print(data['content'])
+            elif role == 'assistant':
+                print(sep, "assistant(with function call)", sep, end='')
+                print(data['function_call'])
+            elif role == 'function':
+                print(sep, "function", sep, end='')
+                print(data['name'])
+                print(data['content'])
+            else:
+                print("invalid role!")
+        return
     
     def pop(self, ind:int=-1):
         """Pop the last message"""
@@ -411,4 +429,4 @@ class Chat():
 
     def __getitem__(self, index):
         """Get the message at index"""
-        return self._chat_log[index]['content']
+        return self._chat_log[index]
