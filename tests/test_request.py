@@ -233,28 +233,33 @@ def test_run_conversation():
     """test case from openai"""
     responses.add(responses.POST, 'https://api.openai.com/v1/chat/completions',
                   json=function_response, status=200)
-    # Step 1: send the conversation and available functions to GPT
+    # send the conversation and available functions to GPT
     messages = [{"role": "user", "content": "What's the weather like in Boston?"}]
     chat = Chat(messages)
+    chat.functions = functions
     response = chat.getresponse()
-    if 'function_call' in response.function_call:
-        # Step 3: call the function
-        # Note: the JSON response may not always be valid; be sure to handle errors
+    if response.is_function_call():
+        # call the function
         available_functions = {
             "get_current_weather": get_current_weather,
-        }  # only one function in this example, but you can have multiple
+        }
         function_name = response.function_call['name']
         fuction_to_call = available_functions[function_name]
-        function_args = json.loads(response.function_call["arguments"])
+        function_args = response.function_call["arguments"]
         function_result = fuction_to_call(**function_args)
         # Step 4: send the info on the function call and function response to GPT
         chat.function(function_name, function_result)
         response = chat.getresponse()
-      
+        chat.print_log()
+    
     ## use Chat object directly
     chat = Chat()
     chat.user("What's the weather like in Boston?")
     chat.functions = functions
     chat.function_call = 'auto'
-    chat.name2function = {'get_current_weather': get_current_weather}
+    chat.available_functions = {
+        "get_current_weather": get_current_weather,
+    }
+    chat.getresponse(update=True, funceval=True)
+    
     
