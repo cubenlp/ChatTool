@@ -1,8 +1,7 @@
 # rewrite the request function
 
 from typing import List, Dict, Union
-import requests, json
-import os
+import requests, json, os
 from urllib.parse import urlparse, urlunparse
 
 # Read base_url from the environment
@@ -54,6 +53,7 @@ def chat_completion( api_key:str
                    , messages:List[Dict]
                    , model:str
                    , chat_url:Union[str, None]=None
+                   , timeout:int = 0
                    , **options) -> Dict:
     """Chat completion API call
     
@@ -85,7 +85,11 @@ def chat_completion( api_key:str
     
     chat_url = normalize_url(chat_url)
     # get response
-    response = requests.post(chat_url, headers=headers, data=json.dumps(payload))
+    if timeout <= 0: timeout = None
+    response = requests.post(
+        chat_url, headers=headers, 
+        data=json.dumps(payload), timeout=timeout)
+
     if response.status_code != 200:
         raise Exception(response.text)
     return response.json()
