@@ -4,16 +4,12 @@ from .chattool import Chat
 import tqdm
 
 def load_chats( checkpoint:str
-              , last_message_only:bool=False
-              , chat_log_only:bool=False
               , withid:bool=False):
     """Load chats from a checkpoint file
     
     Args:
         checkpoint (str): path to the checkpoint file
-        sep (str, optional): separator of chats. Defaults to '\n'.
-        last_message_only (bool, optional): whether to return the last message of each chat. Defaults to False.
-        chat_log_only (bool, optional): whether to return the chat log only. Defaults to False.
+        withid (bool, optional): whether the checkpoint file contains chatid. Defaults to False.
 
     Returns:
         list: chats
@@ -29,27 +25,18 @@ def load_chats( checkpoint:str
     if len(txts) == 1 and txts[0] == '': return []
 
     # get the chatlogs
-    chats = [json.loads(txt) for txt in txts]
-    ## chats with chatid
+    logs = [json.loads(txt) for txt in txts]
+    ## chatlogs with chatid
     if withid:
         chat_size, chatlogs = 1, [None]
-        for chat in chats:
-            idx = chat['chatid']
+        for log in logs:
+            idx = log['chatid']
             if idx >= chat_size: # extend chatlogs
                 chatlogs.extend([None] * (idx - chat_size + 1))
                 chat_size = idx + 1
-            chatlogs[idx] = chat['chatlog']
-    else: ## chats without chatid
-        chatlogs = chats
-    # return the last message of chats only
-    if last_message_only:
-        data = [None] * len(chatlogs)
-        for i, log in enumerate(chatlogs):
-            if log is None: continue
-            data[i] = log[-1]['content'] if len(log) else "" # empty log, like []
-        return data
-    # return chat log only
-    if chat_log_only: return chatlogs
+            chatlogs[idx] = log['chatlog']
+    else: ## logs without chatid
+        chatlogs = logs
     # return Chat class
     return [Chat(chatlog) if chatlog is not None else None for chatlog in chatlogs]
 

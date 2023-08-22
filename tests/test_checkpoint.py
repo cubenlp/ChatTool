@@ -11,13 +11,12 @@ def test_with_checkpoint():
     chat.assistant("你好, how can I assist you today?")
     chat.save(checkpath) # append
     ## load chats
-    chat_logs = load_chats(checkpath, chat_log_only=True)
-    assert chat_logs == [[], [{'role': 'user', 'content': 'hello!'}],
-                          [{'role': 'user', 'content': 'hello!'}, 
-                           {'role': 'assistant', 'content': '你好, how can I assist you today?'}]]
-    chat_msgs = load_chats(checkpath, last_message_only=True)
-    assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
     chats = load_chats(checkpath)
+    chat_logs = [
+        [],
+        [{"role": "user", "content": "hello!"}],
+        [{"role": "user", "content": "hello!"}, {"role": "assistant", "content": "你好, how can I assist you today?"}],
+    ]
     assert chats == [Chat(log) for log in chat_logs]
 
     # save chats with chatid
@@ -29,13 +28,13 @@ def test_with_checkpoint():
     chat.assistant("你好, how can I assist you today?")
     chat.savewithid(checkpath, chatid=2)
     ## load chats
-    chat_logs = load_chats(checkpath, chat_log_only=True, withid=True)
-    assert chat_logs == [[], None, 
-                         [{'role': 'user', 'content': 'hello!'}, {'role': 'assistant', 'content': '你好, how can I assist you today?'}],
-                           [{'role': 'user', 'content': 'hello!'}]]
-    chat_msgs = load_chats(checkpath, last_message_only=True, withid=True)
-    assert chat_msgs == ["", None, "你好, how can I assist you today?", "hello!"]
     chats = load_chats(checkpath, withid=True)
+    chat_logs = [
+        [],
+        None,
+        [{"role": "user", "content": "hello!"}, {"role": "assistant", "content": "你好, how can I assist you today?"}],
+        [{"role": "user", "content": "hello!"}],
+    ]
     assert chats == [Chat(log) if log is not None else None for log in chat_logs]
 
 def test_process_chats():

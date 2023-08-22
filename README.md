@@ -159,14 +159,6 @@ Load the chat history from a file:
 # load chats(default)
 chats = load_chats(checkpoint)
 assert chats == [Chat(log) for log in chat_logs]
-# load chat log only
-chat_logs = load_chats(checkpoint, chat_log_only=True)
-assert chat_logs == [[], [{'role': 'user', 'content': 'hello!'}],
-                      [{'role': 'user', 'content': 'hello!'}, 
-                       {'role': 'assistant', 'content': '你好, how can I assist you today?'}]]
-# load the last message only
-chat_msgs = load_chats(checkpoint, last_message_only=True)
-assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
 ```
 
 In general, one can create a function `msg2chat` and use `process_chats` to process the data:
