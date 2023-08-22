@@ -16,7 +16,7 @@ test_requirements = ['pytest>=3', 'unittest']
 setup(
     author="Rex Wang",
     author_email='1073853456@qq.com',
-    python_requires='>=3.8',
+    python_requires='>=3.7',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
