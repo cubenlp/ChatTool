@@ -1,13 +1,11 @@
 # The object that stores the chat log
 
-from typing import List, Dict, Union, Callable
+from typing import List, Dict, Union
 import openai_api_call
 from .response import Resp
-from .request import chat_completion, usage_status, valid_models
+from .request import chat_completion, valid_models
 import signal, time, random
-import datetime
 import json
-import warnings
 
 # timeout handler
 def handler(signum, frame):

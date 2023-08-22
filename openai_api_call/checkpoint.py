@@ -56,7 +56,7 @@ def load_chats( checkpoint:str
 def process_chats( data:List[Any]
                  , data2chat:Callable[[Any], Chat]
                  , checkpoint:str
-                 , cleanstart:bool=False
+                 , clearfile:bool=False
                  , isjupyter:bool=False):
     """Process chats and save to a checkpoint file(non-asyncio version)
     
@@ -64,13 +64,13 @@ def process_chats( data:List[Any]
         data (List[Any]): data to be processed
         data2chat (Callable[[Any], Chat]): function to convert data to Chat
         checkpoint (str): path to the checkpoint file
-        cleanstart (bool, optional): whether to use the checkpoint file before processing. Defaults to False.
+        clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
         isjupyter (bool, optional): whether to use tqdm in Jupiter Notebook. Defaults to False.
 
     Returns:
         list: chats or last messages of chats
     """
-    if cleanstart and os.path.exists(checkpoint):
+    if clearfile and os.path.exists(checkpoint):
         # Warning: You are about to delete the checkpoint file
         os.system(f"rm {checkpoint}")
     ## load chats from the checkpoint file
