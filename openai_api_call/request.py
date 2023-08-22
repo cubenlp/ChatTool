@@ -2,10 +2,8 @@
 
 from typing import List, Dict, Union
 import requests, json
-import datetime, os, warnings
+import os
 from urllib.parse import urlparse, urlunparse
-
-url = None # Deprecated
 
 # Read base_url from the environment
 if os.environ.get('OPENAI_BASE_URL') is not None:
@@ -50,12 +48,12 @@ def normalize_url(url: str) -> str:
         parsed_url = parsed_url._replace(scheme="https")
     return urlunparse(parsed_url).replace("///", "//")
 
+base_url = normalize_url(base_url) # normalize base_url
+
 def chat_completion( api_key:str
                    , messages:List[Dict]
                    , model:str
                    , chat_url:Union[str, None]=None
-                   , function_call:Union[str, None]=None
-                   , functions:Union[List[str], None]=None
                    , **options) -> Dict:
     """Chat completion API call
     
@@ -64,8 +62,6 @@ def chat_completion( api_key:str
         messages (List[Dict]): prompt message
         model (str): model to use
         chat_url (Union[str, None], optional): chat url. Defaults to None.
-        function_call (Union[str, None], optional): function call. Defaults to None.
-        functions (Union[List[str], None], optional): functions. Defaults to None.
         **options : options inherited from the `openai.ChatCompletion.create` function.
     
     Returns:
@@ -76,10 +72,6 @@ def chat_completion( api_key:str
         "model": model,
         "messages": messages
     }
-    if function_call is not None:
-        payload.update({"function_call": function_call})
-    if functions is not None:
-        payload.update({"functions": functions})
     # inherit options
     payload.update(options)
     # request headers
@@ -88,12 +80,8 @@ def chat_completion( api_key:str
         'Authorization': 'Bearer ' + api_key
     }
     # initialize chat url
-    if not chat_url:
-        if url is not None: # deprecated warning
-            warnings.warn("The `url` parameter is deprecated. Please use `base_url` instead.", DeprecationWarning)
-            chat_url = url
-        else:
-            chat_url = os.path.join(base_url, "v1/chat/completions")
+    if chat_url is None:
+        chat_url = os.path.join(base_url, "v1/chat/completions")
     
     chat_url = normalize_url(chat_url)
     # get response
@@ -101,47 +89,6 @@ def chat_completion( api_key:str
     if response.status_code != 200:
         raise Exception(response.text)
     return response.json()
-
-def usage_status(api_key:str, duration:int=99, url:Union[str, None]=None):
-    """Get usage status
-    
-    Args:
-        api_key (str): API key
-        duration (int, optional): duration to check. Defaults to 99, which is the maximum duration.
-        url (Union[str, None], optional): base url. Defaults to None.
-    
-    Returns:
-        Tuple[float, float, List[float]]: total storage, total usage, daily costs
-    """
-    headers = {
-        "Authorization": "Bearer " + api_key,
-        "Content-Type": "application/json"
-    }
-    if url is None: url = base_url
-    url = normalize_url(base_url)
-    # Get storage limit
-    subscription_url = os.path.join(url, "v1/dashboard/billing/subscription")
-    subscription_response = requests.get(subscription_url, headers=headers)
-    if subscription_response.status_code == 200:
-        data = subscription_response.json()
-        total_storage = data.get("hard_limit_usd")
-    else:
-        raise Exception(subscription_response.text)
-    # start_date
-    today = datetime.datetime.now()
-    start_date = (today - datetime.timedelta(days=duration)).strftime("%Y-%m-%d")
-    # end_date = today + 1
-    end_date = (today + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-    billing_url = os.path.join(url, f"v1/dashboard/billing/usage?start_date={start_date}&end_date={end_date}")
-    billing_response = requests.get(billing_url, headers=headers)
-    # Get usage status
-    if billing_response.status_code == 200:
-        data = billing_response.json()
-        total_usage = data.get("total_usage") / 100
-        daily_costs = data.get("daily_costs")
-        return total_storage, total_usage, daily_costs
-    else:
-        raise Exception(billing_response.text)
 
 def valid_models(api_key:str, gpt_only:bool=True, url:Union[str, None]=None):
     """Get valid models

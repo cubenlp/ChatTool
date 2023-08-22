@@ -136,18 +136,6 @@ chat.save("chat_history.log", mode="w") # default to "a"
 chat.print_log()
 ```
 
-Moreover, you can check the usage status of the API key:
-
-```py
-# show usage status of the default API key
-chat = Chat()
-chat.show_usage_status()
-
-# show usage status of the specified API key
-chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-chat.show_usage_status()
-```
-
 ### Advance usage
 
 Save the chat history to a file:
@@ -171,14 +159,6 @@ Load the chat history from a file:
 # load chats(default)
 chats = load_chats(checkpoint)
 assert chats == [Chat(log) for log in chat_logs]
-# load chat log only
-chat_logs = load_chats(checkpoint, chat_log_only=True)
-assert chat_logs == [[], [{'role': 'user', 'content': 'hello!'}],
-                      [{'role': 'user', 'content': 'hello!'}, 
-                       {'role': 'assistant', 'content': '你好, how can I assist you today?'}]]
-# load the last message only
-chat_msgs = load_chats(checkpoint, last_message_only=True)
-assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
 ```
 
 In general, one can create a function `msg2chat` and use `process_chats` to process the data:

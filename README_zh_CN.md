@@ -133,18 +133,6 @@ chat.save("chat_history.log", mode="w") # 默认为 "a"
 chat.print_log()
 ```
 
-此外，你可以使用 `Chat` 类的 `show_usage_status` 方法来查看 API 的使用情况：
-
-```py
-# 查看默认 API 的使用情况
-chat = Chat()
-chat.show_usage_status()
-
-# 查看指定 API 的使用情况
-chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-chat.show_usage_status()
-```
-
 ### 进阶用法
 将对话历史保存到文件中：
 
@@ -167,11 +155,6 @@ chat.save(checkpoint)
 # 加载 Chat 对象（默认）
 chats = load_chats(checkpoint)
 assert chats == [Chat(log) for log in chat_logs]
-# 仅加载对话历史
-chat_logs = load_chats(checkpoint, chat_log_only=True)
-# 仅加载最后一条消息
-chat_msgs = load_chats(checkpoint, last_message_only=True)
-assert chat_msgs == ["", "hello!", "你好, how can I assist you today?"]
 ```
 
 一般来说，你可以定义函数 `msg2chat` 并使用 `process_chats` 来处理数据：

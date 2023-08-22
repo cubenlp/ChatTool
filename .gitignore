@@ -1,3 +1,9 @@
+##### user defined ######
+*.jsonl 
+
+
+##### seperated line ######
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -5,7 +5,7 @@ __email__ = '1073853456@qq.com'
 __version__ = '0.6.0'
 
 import os, requests
-from .chattool import Chat, Resp, chat_completion, usage_status
+from .chattool import Chat, Resp, chat_completion
 from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
 from . import request
@@ -44,7 +44,7 @@ def show_base_url():
 def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
              , message:str="hello world! 你好！"
-             , test_usage:bool=True
+             , test_apikey:bool=True
              , test_response:bool=True
              , test_model:bool=True):
     """Debug the API call
@@ -58,41 +58,32 @@ def debug_log( net_url:str="https://www.baidu.com"
     Returns:
         bool: True if the debug is finished.
     """
-    # 1. Test whether the network is available
+    # Network test
     try:
         requests.get(net_url, timeout=timeout)
     except:
         print("Warning: Network is not available.")
         return False
     
-    print("Your network is available.")
-    
-    # 2. Check the API key
-    print("\nPlease verify the API key:")
-    show_apikey()
-
-    # 3. Check the proxy status
-    print("\nYour proxy status:")
+    ## Check the proxy status
+    print("\nPlease check your proxy:")
     proxy_status()
-    print("Note that, you don't need to set proxy if your `base_url` has done it!")
 
-    # 4. Base url
+    ## Base url
     print("\nCheck your base url:")
     show_base_url()
-    if request.url is not None:
-        print("Warning: the `url` parameter is deprecated, please use `base_url` instead.")
+    
+    ## Please check your API key
+    if test_apikey:
+        print("\nPlease verify your API key:")
+        show_apikey()
 
-    # 5. Get usage status
-    if test_usage:
-        print("\nThe usage status of your API key:")
-        Chat().show_usage_status(recent=3)
-
-    # 6. Get model list
+    # Get model list
     if test_model:
         print("\nThe model list:")
         print(Chat().get_valid_models())
         
-    # 7. Test hello world
+    # Test hello world
     if test_response:
         print("\nTest message:", message)
         chat = Chat(message)

@@ -1,25 +1,18 @@
 # Response class for OpenAI API call
 
 from typing import Dict
-import json
 
 class Resp():
     
-    def __init__(self, response:Dict, strip:bool=True) -> None:
+    def __init__(self, response:Dict) -> None:
         self.response = response
-        if strip and self.is_valid() and self.content is not None:
-            self._strip_content()
     
-    def _strip_content(self):
-        """Strip the content"""
-        self.response['choices'][0]['message']['content'] = \
-            self.content.strip()
+    def is_valid(self):
+        """Check if the response is an error"""
+        return 'error' not in self.response
     
     def __repr__(self) -> str:
-        if self.finish_reason == "function_call":
-            return f"`Resp(call)`: {self.function_call}"
-        else:
-            return f"`Resp`: {self.content}"
+        return f"`Resp`: {self.content}"
     
     def __str__(self) -> str:
         return self.content
@@ -27,10 +20,6 @@ class Resp():
     @property
     def id(self):
         return self.response['id']
-    
-    @property
-    def object(self):
-        return self.response['object']
     
     @property
     def model(self):
@@ -61,11 +50,6 @@ class Resp():
         return self.usage['completion_tokens']
     
     @property
-    def finish_reason(self):
-        """Finish reason"""
-        return self.response['choices'][0]['finish_reason']
-    
-    @property
     def message(self):
         """Message"""
         return self.response['choices'][0]['message']
@@ -74,26 +58,10 @@ class Resp():
     def content(self):
         """Content of the response"""
         return self.message['content']
-
-    @property
-    def function_call(self):
-        """Function call"""
-        if self.is_function_call:
-            args = {}
-            args['name'] = self.message['function_call']['name']
-            args['arguments'] = self.message['function_call']['arguments']
-            return args
-        else:
-            return None
-
-    def is_function_call(self):
-        """Check if the response is a function call"""
-        return self.finish_reason == 'function_call' and \
-            self.content is None
     
-    def is_valid(self):
-        """Check if the response is an error"""
-        return 'error' not in self.response and 'choices' in self.response
+    @property
+    def object(self):
+        return self.response['object']
     
     @property
     def error(self):
@@ -120,4 +88,7 @@ class Resp():
         """Error code"""
         return self.error['code']
 
-    
+    @property
+    def finish_reason(self):
+        """Finish reason"""
+        return self.response['choices'][0]['finish_reason']

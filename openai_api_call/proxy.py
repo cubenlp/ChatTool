@@ -39,8 +39,8 @@ def proxy_status():
         print(f"https_proxy:\t{https}")
 
 def proxy_test(url:str="www.facebook.com"):
-    url = url.replace("http://", "").replace("https://", "")
-    if os.system("curl -I https://"+url) != 0:
-        print("Https: Curl to "+url+" failed!")
-    if os.system("curl -I http://"+url) != 0:
-        print("Http: Curl to "+url+" failed!")
+    rawurl = url.replace("http://", "").replace("https://", "")
+    if os.system("curl -I https://" + rawurl) != 0:
+        print("Https: Curl to " + rawurl + " failed!")
+    if os.system("curl -I http://" + rawurl) != 0:
+        print("Http: Curl to " + rawurl + " failed!")
