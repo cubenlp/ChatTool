@@ -162,25 +162,39 @@ class Chat():
     def copy(self):
         """Copy the chat log"""
         return Chat(self._chat_log)
+    
+    def last(self):
+        """Get the last message"""
+        return self._chat_log[-1]['content']
 
-    def save(self, path:str, mode:str='a', chatid:int=-1):
+    def save(self, path:str, mode:str='a'):
         """
         Save the chat log to a file. Each line is a json string.
 
         Args:
             path (str): path to the file
             mode (str, optional): mode to open the file. Defaults to 'a'.
-            chatid (int, optional): chat id. Defaults to -1. 
-                If chatid >= 0, the chat log will be saved as a dict with key 'chatid'.
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         data = self.chat_log
-        if chatid >= 0:
-            data = {'chatid': chatid, 'chatlog': data}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
         return
-        
+    
+    def savewithid(self, path:str, chatid:int, mode:str='a'):
+        """Save the chat log with chat id. Each line is a json string.
+
+        Args:
+            path (str): path to the file
+            chatid (int): chat id
+            mode (str, optional): mode to open the file. Defaults to 'a'.
+        """
+        assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
+        data = {"chatid": chatid, "chatlog": self.chat_log}
+        with open(path, mode, encoding='utf-8') as f:
+            f.write(json.dumps(data, ensure_ascii=False) + '\n')
+        return
+
     def print_log(self, sep: Union[str, None]=None):
         """Print the chat log"""
         if sep is None:

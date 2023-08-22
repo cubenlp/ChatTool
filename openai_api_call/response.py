@@ -4,23 +4,15 @@ from typing import Dict
 
 class Resp():
     
-    def __init__(self, response:Dict, strip:bool=True) -> None:
+    def __init__(self, response:Dict) -> None:
         self.response = response
-        if strip and self.is_valid() and self.content is not None:
-            self._strip_content()
     
-    def _strip_content(self):
-        """Strip the content"""
-        self.response['choices'][0]['message']['content'] = \
-            self.response['choices'][0]['message']['content'].strip()
+    def is_valid(self):
+        """Check if the response is an error"""
+        return 'error' not in self.response
     
     def __repr__(self) -> str:
-        if self.finish_reason == 'stop':
-            return f"`Resp`: {self.content}"
-        elif self.finish_reason == "function call":
-            return f"`Resp`: {self.function_call}"
-        else:
-            return f"`Resp`: {self.content}"
+        return f"`Resp`: {self.content}"
     
     def __str__(self) -> str:
         return self.content
@@ -67,10 +59,6 @@ class Resp():
         """Content of the response"""
         return self.message['content']
     
-    def is_valid(self):
-        """Check if the response is an error"""
-        return 'error' not in self.response and 'choices' in self.response
-    
     @property
     def error_message(self):
         """Error message"""
@@ -95,9 +83,3 @@ class Resp():
     def finish_reason(self):
         """Finish reason"""
         return self.response['choices'][0]['finish_reason']
-
-    @property
-    def function_call(self):
-        """Function call"""
-        msg = self.message
-        return None if 'function_call' not in msg else msg['function_call']
