@@ -10,3 +10,4 @@ def test_simple():
     chat.print_log()
     assert chat.chat_log[0] == {"role": "user", "content": "Hello!"}
     assert len(chat.chat_log) == 2
+    

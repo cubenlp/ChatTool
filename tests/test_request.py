@@ -1,6 +1,10 @@
-from openai_api_call import debug_log, api_key, Resp
+from openai_api_call import debug_log, Resp
 from openai_api_call.request import normalize_url, is_valid_url, valid_models
-    
+import openai_api_call
+openai_api_call.api_key="free-123"
+openai_api_call.request.base_url = "api.wzhecnu.cn"
+api_key = openai_api_call.api_key
+
 def test_valid_models():
     models = valid_models(api_key=api_key, gpt_only=False)
     assert len(models) >= 1

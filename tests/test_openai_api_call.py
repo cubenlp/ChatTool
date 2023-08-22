@@ -180,7 +180,6 @@ def test_with_template():
     chat = Chat("hello!")
     assert chat.chat_log == [{"role": "user", "content": "hello!"}]
 
-
 def test_error_message():
     resp = Resp(response=err_api_key_resp)
     assert resp.error_message == "Incorrect API key provided: sk-132. You can find your API key at https://platform.openai.com/account/api-keys."
@@ -188,7 +187,6 @@ def test_error_message():
     assert resp.error_param == None
     assert resp.error_code == "invalid_api_key"
     assert resp.is_valid() == False
-
 
 
 def test_usage():

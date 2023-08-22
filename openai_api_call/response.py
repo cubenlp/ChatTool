@@ -60,24 +60,33 @@ class Resp():
         return self.message['content']
     
     @property
+    def object(self):
+        return self.response['object']
+    
+    @property
+    def error(self):
+        """Error"""
+        return self.response['error']
+    
+    @property
     def error_message(self):
         """Error message"""
-        return self.response['error']['message']
+        return self.error['message']
     
     @property
     def error_type(self):
         """Error type"""
-        return self.response['error']['type']
+        return self.error['type']
     
     @property
     def error_param(self):
         """Error parameter"""
-        return self.response['error']['param']
+        return self.error['param']
     
     @property
     def error_code(self):
         """Error code"""
-        return self.response['error']['code']
+        return self.error['code']
 
     @property
     def finish_reason(self):
