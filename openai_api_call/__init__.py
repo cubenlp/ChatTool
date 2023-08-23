@@ -8,7 +8,7 @@ import os, requests
 from .chattool import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
-from .async_process import async_chat_completion
+from .asynctool import async_chat_completion
 from . import request
 
 # read API key from the environment variable
