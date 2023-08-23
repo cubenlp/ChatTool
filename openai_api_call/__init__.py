@@ -2,23 +2,27 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '0.6.0'
+__version__ = '1.0.0'
 
 import os, requests
-from .chattool import Chat, Resp, chat_completion
+from .chattool import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
+from .async_process import async_chat_completion
 from . import request
 
-
 # read API key from the environment variable
-if os.environ.get('OPENAI_API_KEY') is not None:
-    api_key = os.environ.get('OPENAI_API_KEY')
-    # skip checking the validity of the API key
-    # if not api_key.startswith("sk-"):
-    #     print("Warning: The default environment variable `OPENAI_API_KEY` is not a valid API key.")
+api_key = os.environ.get('OPENAI_API_KEY')
+
+# Read base_url from the environment
+if os.environ.get('OPENAI_BASE_URL') is not None:
+    base_url = os.environ.get("OPENAI_BASE_URL")
+elif os.environ.get('OPENAI_API_BASE_URL') is not None:
+    # adapt to the environment variable of chatgpt-web
+    base_url = os.environ.get("OPENAI_API_BASE_URL")
 else:
-    api_key = None
+    base_url = "https://api.openai.com"
+base_url = request.normalize_url(base_url)
 
 def show_apikey():
     if api_key is not None:
@@ -39,7 +43,7 @@ def default_prompt(msg:str):
 
 def show_base_url():
     """Show the base url of the API call"""
-    print(f"Base url:\t{request.base_url}")
+    print(f"Base url:\t{base_url}")
 
 def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5

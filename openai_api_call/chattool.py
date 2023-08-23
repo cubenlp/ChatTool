@@ -4,12 +4,8 @@ from typing import List, Dict, Union
 import openai_api_call
 from .response import Resp
 from .request import chat_completion, valid_models
-import signal, time, random
+import time, random
 import json
-
-# timeout handler
-def handler(signum, frame):
-    raise Exception("API call timed out!")
 
 class Chat():
     def __init__( self
@@ -97,15 +93,12 @@ class Chat():
         # make request
         resp = None
         numoftries = 0
-        # Set the timeout handler
-        signal.signal(signal.SIGALRM, handler)
         while max_requests:
             try:
-                # Set the alarm to trigger after `timeout` seconds
-                signal.alarm(timeout)
                 # Make the API call
                 response = chat_completion(
-                    api_key=api_key, messages=msg, model=model, chat_url=self.chat_url, **options)
+                    api_key=api_key, messages=msg, model=model,
+                    chat_url=self.chat_url, timeout=timeout, **options)
                 time.sleep(random.random() * timeinterval)
                 resp = Resp(response)
                 assert resp.is_valid(), "Invalid response with message: " + resp.error_message
@@ -114,9 +107,6 @@ class Chat():
                 max_requests -= 1
                 numoftries += 1
                 print(f"Try again ({numoftries}):{e}\n")
-            finally:
-                # Disable the alarm after execution
-                signal.alarm(0)
         else:
             raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
                             "or increase the `max_requests`.")
