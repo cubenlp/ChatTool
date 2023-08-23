@@ -10,7 +10,7 @@
 [![Updates](https://pyup.io/repos/github/cubenlp/openai_api_call/shield.svg)](https://pyup.io/repos/github/cubenlp/openai_api_call/) 
 -->
 
-A simple wrapper for OpenAI API, which can be used to send requests and get responses.
+A Python wrapper for OpenAI API, supporting multi-turn dialogue, proxy, and asynchronous data processing.
 
 ## Installation
 
@@ -20,165 +20,74 @@ pip install openai-api-call --upgrade
 
 ## Usage
 
-### Set API Key
+### Set API Key and Base URL
 
-```py
-import openai_api_call as apicall
-apicall.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+Method 1, write in Python code:
+
+```python
+import openai_api_call
+openai_api_call.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+openai_api_call.base_url = "https://api.example.com"
 ```
 
-Or set `OPENAI_API_KEY` in `~/.bashrc` to avoid setting the API key every time:
+Method 2, set environment variables in `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-# Add the following code to ~/.bashrc
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+export OPENAI_BASE_URL="https://api.example.com"
 ```
 
-Also, you might set different `api_key` for each `Chat` object:
+## Examples
 
-```py
-from openai_api_call import Chat
-chat = Chat("hello")
-chat.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-```
-
-### Set Proxy (Optional)
-
-```py
-from openai_api_call import proxy_on, proxy_off, proxy_status
-# Check the current proxy
-proxy_status()
-
-# Set proxy(example)
-proxy_on(http="127.0.0.1:7890", https="127.0.0.1:7890")
-
-# Check the updated proxy
-proxy_status()
-
-# Turn off proxy
-proxy_off() 
-```
-
-Alternatively, you can use a proxy URL to send requests from restricted network, as shown below:
-
-```py
-from openai_api_call import request
-
-# set request url
-request.base_url = "https://api.example.com"
-```
-
-You can set `OPENAI_BASE_URL` in `~/.bashrc` as well.
-
-### Basic Usage
-
-Example 1, send prompt and return response:
+Example 1, simulate multi-turn dialogue:
 
 ```python
-from openai_api_call import Chat, show_apikey
-
-# Check if API key is set
-show_apikey()
-
-# Check if proxy is enabled
-proxy_status()
-
-# Send prompt and return response
+# first chat
 chat = Chat("Hello, GPT-3.5!")
-resp = chat.getresponse(update=False) # Not update the chat history, default to True
-```
+resp = chat.getresponse()
 
-Example 2, customize the message template and return the information and the number of consumed tokens:
-
-```python
-import openai_api_call as apicall
-
-# Customize the sending template
-apicall.default_prompt = lambda msg: [
-    {"role": "system", "content": "帮我翻译这段文字"},
-    {"role": "user", "content": msg}
-]
-chat = Chat("Hello!")
-# Set the number of retries to Inf
-# The timeout for each request is 10 seconds
-response = chat.getresponse(temperature=0.5, max_requests=-1, timeout=10)
-print("Number of consumed tokens: ", response.total_tokens)
-print("Returned content: ", response.content)
-
-# Reset the default template
-apicall.default_prompt = None
-```
-
-Example 3, continue chatting based on the last response:
-
-```python
-# first call
-chat = Chat("Hello, GPT-3.5!")
-resp = chat.getresponse() # update chat history, default is True
-print(resp.content)
-
-# continue chatting
+# continue the chat
 chat.user("How are you?")
 next_resp = chat.getresponse()
-print(next_resp.content)
 
-# fake response
+# add response manually
 chat.user("What's your name?")
 chat.assistant("My name is GPT-3.5.")
 
-# get the last result
-print(chat[-1])
+# save the chat history
+chat.save("chat.json", mode="w") # default to "a"
 
-# save chat history
-chat.save("chat_history.log", mode="w") # default to "a"
-
-# print chat history
+# print the chat history
 chat.print_log()
 ```
 
-### Advance usage
-
-Save the chat history to a file:
+Example 2, process data in batch, and use a checkpoint file `checkpoint`:
 
 ```python
-checkpoint = "tmp.log"
-# chat 1
-chat = Chat()
-chat.save(checkpoint, mode="w") # default to "a"
-# chat 2
-chat = Chat("hello!")
-chat.save(checkpoint)
-# chat 3
-chat.assistant("你好, how can I assist you today?")
-chat.save(checkpoint)
-```
-
-Load the chat history from a file:
-
-```python
-# load chats(default)
-chats = load_chats(checkpoint)
-assert chats == [Chat(log) for log in chat_logs]
-```
-
-In general, one can create a function `msg2chat` and use `process_chats` to process the data:
-
-```python
+# write a function to process the data
 def msg2chat(msg):
     chat = Chat(api_key=api_key)
     chat.system("You are a helpful translator for numbers.")
     chat.user(f"Please translate the digit to Roman numerals: {msg}")
     chat.getresponse()
 
-checkpath = "tmp.log"
-# first part of the data
-msgs = ["1", "2", "3"]
-chats = process_chats(msgs, msg2chat, checkpath, clearfile=True)
-assert len(chats) == 3
-assert all([len(chat) == 3 for chat in chats])
-# continue the process
-msgs = msgs + ["4", "5", "6"]
-continue_chats = process_chats(msgs, msg2chat, checkpath)
+checkpoint = "chat.jsonl"
+msgs = ["%d" % i for i in range(1, 10)]
+# process the data
+chats = process_chats(msgs[:5], msg2chat, checkpoint, clearfile=True)
+# process the rest data, and read the cache from the last time
+continue_chats = process_chats(msgs, msg2chat, checkpoint)
+```
+
+Example 3, process data in batch (asynchronous), print hello using different languages, and use two coroutines:
+
+```python
+from openai_api_call import async_chat_completion
+
+chatlogs = [
+    {"role":"user", "content":"print hello using %s" % lang} 
+    for lang in ["python", "java", "Julia", "C++"]]
+async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", ncoroutines=2)
 ```
 
 ## License
@@ -187,6 +96,9 @@ This package is licensed under the MIT license. See the LICENSE file for more de
 
 ## update log
 
+Current version `1.0.0` is a stable version, with the redundant feature `function call` removed, and the asynchronous data processing tool added.
+
+### Beta version
 - Since version `0.2.0`, `Chat` type is used to handle data
 - Since version `0.3.0`, you can use different API Key to send requests.
 - Since version `0.4.0`, this package is mantained by [cubenlp](https://github.com/cubenlp).

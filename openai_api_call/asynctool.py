@@ -3,7 +3,7 @@ import time, random, warnings, json, os
 from typing import List, Dict, Union
 from openai_api_call import Chat, Resp, load_chats
 import openai_api_call
-from tqdm.asyncio import tqdm as tq
+from tqdm.asyncio import tqdm
 
 async def async_post( session
                     , sem
@@ -86,6 +86,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                    , max_requests=max_requests
                                    , timeinterval=timeinterval
                                    , timeout=timeout)
+        if response is None:return False
         resp = Resp(json.loads(response))
         if not resp.is_valid():
             warnings.warn(f"Invalid response: {resp.error_message}")
@@ -109,7 +110,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , chatlog=chatlog
                                  , chkpoint=chkpoint
                                  , **options)))
-        responses = await tq.gather(*tasks)
+        responses = await tqdm.gather(*tasks)
         return responses
 
 def async_chat_completion( chatlogs:List[List[Dict]]
@@ -122,6 +123,7 @@ def async_chat_completion( chatlogs:List[List[Dict]]
                          , timeout:int=0
                          , timeinterval:int=0
                          , clearfile:bool=False
+                         , notrun:bool=False
                          , **options
                          ):
     """Asynchronous chat completion
@@ -162,8 +164,7 @@ def async_chat_completion( chatlogs:List[List[Dict]]
         "model": model,
         **options
     }
-    try:
-        asyncio.get_running_loop()
+    if notrun: # when use in Jupyter Notebook
         return async_process_msgs(**args) # return the async object
-    except:
+    else:
         return asyncio.run(async_process_msgs(**args))

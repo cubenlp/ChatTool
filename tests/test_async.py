@@ -1,6 +1,6 @@
 import openai_api_call, time
 from openai_api_call import Chat, process_chats
-from openai_api_call.async_process import async_chat_completion
+from openai_api_call.asynctool import async_chat_completion
 openai_api_call.api_key="free-123"
 openai_api_call.base_url = "https://api.wzhecnu.cn"
 
