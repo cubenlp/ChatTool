@@ -3,6 +3,7 @@ import time, random, warnings, json, os
 from typing import List, Dict, Union
 from openai_api_call import Chat, Resp, load_chats
 import openai_api_call
+from tqdm.asyncio import tqdm as tq
 
 async def async_post( session
                     , sem
@@ -108,7 +109,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , chatlog=chatlog
                                  , chkpoint=chkpoint
                                  , **options)))
-        responses = await asyncio.gather(*tasks)
+        responses = await tq.gather(*tasks)
         return responses
 
 def async_chat_completion( chatlogs:List[List[Dict]]
@@ -149,15 +150,20 @@ def async_chat_completion( chatlogs:List[List[Dict]]
     chat_url = openai_api_call.request.normalize_url(chat_url)
     # run async process
     assert ncoroutines > 0, "ncoroutines must be greater than 0!"
-    responses = asyncio.run(
-        async_process_msgs( chatlogs=chatlogs
-                          , chkpoint=chkpoint
-                          , api_key=api_key
-                          , chat_url=chat_url
-                          , max_requests=max_requests
-                          , ncoroutines=ncoroutines
-                          , timeout=timeout
-                          , timeinterval=timeinterval
-                          , model=model
-                          , **options))
-    return responses
+    args = {
+        "chatlogs": chatlogs,
+        "chkpoint": chkpoint,
+        "api_key": api_key,
+        "chat_url": chat_url,
+        "max_requests": max_requests,
+        "ncoroutines": ncoroutines,
+        "timeout": timeout,
+        "timeinterval": timeinterval,
+        "model": model,
+        **options
+    }
+    try:
+        asyncio.get_running_loop()
+        return async_process_msgs(**args) # return the async object
+    except:
+        return asyncio.run(async_process_msgs(**args))
