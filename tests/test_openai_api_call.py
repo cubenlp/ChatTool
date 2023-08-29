@@ -194,6 +194,7 @@ def test_usage():
     assert resp.total_tokens == 18
     assert resp.prompt_tokens == 8
     assert resp.completion_tokens == 10
+    print(resp.cost())
 
 def test_content():
     resp = Resp(response=response)
