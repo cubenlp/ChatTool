@@ -110,7 +110,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , chatlog=chatlog
                                  , chkpoint=chkpoint
                                  , **options)))
-        responses = await tqdm.gather(*tasks)
+        responses = await tqdm.gather(tasks)
         return responses
 
 def async_chat_completion( chatlogs:List[List[Dict]]

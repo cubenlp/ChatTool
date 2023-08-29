@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 import os, requests
 from .chattool import Chat, Resp
