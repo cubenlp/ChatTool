@@ -27,5 +27,3 @@ def test_normal_process():
     t = time.time()
     process_chats(chatlogs, data2chat, chkpoint, clearfile=True)
     print(f"Time elapsed: {time.time() - t:.2f}s")
-
-test_async_process()
