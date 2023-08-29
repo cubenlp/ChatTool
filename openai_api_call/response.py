@@ -2,6 +2,22 @@
 
 from typing import Dict
 
+# model cost($ per 1K tokens)\
+## https://openai.com/pricing
+## model | input | output
+model_cost_perktoken ={
+    "gpt-3.5-turbo": (0.0015, 0.002),
+    "gpt-3.5-turbo-0613" : (0.0015, 0.002),
+    "gpt-3.5-turbo-0301" : (0.0015, 0.002),
+    "gpt-3.5-turbo-16k-0613" : (0.003, 0.004),
+    "gpt-3.5-turbo-16k" : (0.003, 0.004),
+    "gpt-4": (0.03, 0.06),
+    "gpt-4-0613": (0.03, 0.06),
+    "gpt-4-0301": (0.03, 0.06),
+    "gpt-4-32k-0613": (0.06, 0.12),
+    "gpt-4-32k": (0.06, 0.12),
+}
+
 class Resp():
     
     def __init__(self, response:Dict) -> None:
@@ -10,6 +26,10 @@ class Resp():
     def is_valid(self):
         """Check if the response is an error"""
         return 'error' not in self.response
+    
+    def cost(self):
+        """Calculate the cost of the response"""
+        return response_cost(self.model, self.prompt_tokens, self.completion_tokens)
     
     def __repr__(self) -> str:
         return f"`Resp`: {self.content}"
@@ -92,3 +112,18 @@ class Resp():
     def finish_reason(self):
         """Finish reason"""
         return self.response['choices'][0]['finish_reason']
+
+def response_cost(model:str, prompt_tokens:int, completion_tokens:int):
+    """Calculate the cost of the response
+
+    Args:
+        model (str): model name
+        prompt_tokens (int): number of tokens in the prompt
+        completion_tokens (int): number of tokens of the response
+
+    Returns:
+        float: cost of the response
+    """
+    assert model in model_cost_perktoken, f"Model {model} is not known!"
+    input_price, output_price = model_cost_perktoken[model]
+    return (input_price * prompt_tokens + output_price * completion_tokens) / 1000
