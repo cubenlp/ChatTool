@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Union
 import openai_api_call
-from .response import Resp
+from .response import Resp, num_tokens_from_messages
 from .request import chat_completion, valid_models
 import time, random
 import json
@@ -36,6 +36,17 @@ class Chat():
         self._api_key = openai_api_call.api_key if api_key is None else api_key
         self._chat_url = chat_url
     
+    def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
+        """Get the prompt token for the model
+
+        Args:
+            model (str): model to use
+
+        Returns:
+            str: prompt token
+        """
+        return num_tokens_from_messages(self.chat_log, model=model)
+
     @property
     def api_key(self):
         """Get API key"""
