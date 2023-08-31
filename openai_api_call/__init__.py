@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 import os, requests
 from .chattool import Chat, Resp
@@ -10,6 +10,7 @@ from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
 from .asynctool import async_chat_completion
 from . import request
+from .response import num_tokens_from_messages
 
 # read API key from the environment variable
 api_key = os.environ.get('OPENAI_API_KEY')

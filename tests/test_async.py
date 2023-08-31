@@ -1,5 +1,5 @@
 import openai_api_call, time
-from openai_api_call import Chat, process_chats
+from openai_api_call import Chat, process_chats, num_tokens_from_messages
 from openai_api_call.asynctool import async_chat_completion
 openai_api_call.api_key="free-123"
 openai_api_call.base_url = "https://api.wzhecnu.cn"
@@ -27,3 +27,10 @@ def test_normal_process():
     t = time.time()
     process_chats(chatlogs, data2chat, chkpoint, clearfile=True)
     print(f"Time elapsed: {time.time() - t:.2f}s")
+
+def test_tokencounter():
+    message = [{"role": "user", "content": "hello world!"}]
+    prompttoken = num_tokens_from_messages(message)
+    chat = Chat(message)
+    resp = chat.getresponse()
+    assert resp.prompt_tokens == prompttoken 
