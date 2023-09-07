@@ -4,7 +4,7 @@ __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
 __version__ = '1.1.0'
 
-import os, requests
+import os, sys, requests
 from .chattool import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
@@ -24,6 +24,15 @@ elif os.environ.get('OPENAI_API_BASE_URL') is not None:
 else:
     base_url = "https://api.openai.com"
 base_url = request.normalize_url(base_url)
+
+# get the platform
+platform = sys.platform
+if platform.startswith("win"):
+    platform = "windows"
+elif platform.startswith("linux"):
+    platform = "linux"
+elif platform.startswith("darwin"):
+    platform = "macos"
 
 def show_apikey():
     if api_key is not None:

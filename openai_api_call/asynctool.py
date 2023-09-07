@@ -110,7 +110,10 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , chatlog=chatlog
                                  , chkpoint=chkpoint
                                  , **options)))
-        responses = await tqdm.gather(tasks)
+        if openai_api_call.platform == "macos":
+            responses = await tqdm.gather(tasks)
+        else: # not work for windows yet
+            responses = await asyncio.gather(*tasks)
         return responses
 
 def async_chat_completion( chatlogs:List[List[Dict]]
