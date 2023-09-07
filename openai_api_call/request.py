@@ -33,6 +33,7 @@ def normalize_url(url: str) -> str:
         >>> normalize_url("api.example.com")
         'https://api.example.com'
     """
+    url = url.replace("\\", '/') # compat to windows
     parsed_url = urlparse(url)
     if not parsed_url.scheme:
         # If no scheme is specified, default to https protocol.
