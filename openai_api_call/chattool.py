@@ -11,13 +11,15 @@ class Chat():
     def __init__( self
                 , msg:Union[List[Dict], None, str]=None
                 , api_key:Union[None, str]=None
-                , chat_url:Union[None, str]=None) -> None:
+                , chat_url:Union[None, str]=None
+                , model:Union[None, str]=None):
         """Initialize the chat log
 
         Args:
             msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
             api_key (Union[None, str], optional): API key. Defaults to None.
             chat_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
+            model (Union[None, str], optional): model to use. Defaults to None.
         
         Raises:
             ValueError: msg should be a list of dict, a string or None
@@ -35,7 +37,7 @@ class Chat():
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = openai_api_call.api_key if api_key is None else api_key
         self._chat_url = chat_url
-        self._model = 'gpt-3.5-turbo'
+        self._model = 'gpt-3.5-turbo' if model is None else model
     
     def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
         """Get the prompt token for the model
@@ -235,3 +237,4 @@ class Chat():
     def __getitem__(self, index):
         """Get the message at index"""
         return self._chat_log[index]
+    
