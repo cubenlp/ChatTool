@@ -9,6 +9,7 @@ async def async_post( session
                     , sem
                     , url
                     , data:str
+                    , headers:Dict
                     , max_requests:int=1
                     , timeinterval=0
                     , timeout=0):
@@ -19,6 +20,7 @@ async def async_post( session
         sem : semaphore
         url (str): chat completion url
         data (str): payload of the request
+        headers (Dict): request headers
         max_requests (int, optional): maximum number of requests to make. Defaults to 1.
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
@@ -30,7 +32,7 @@ async def async_post( session
         ntries = 0
         while max_requests > 0:
             try:    
-                async with session.post(url, data=data, timeout=timeout) as response:
+                async with session.post(url, headers=headers, data=data, timeout=timeout) as response:
                     return await response.text()
             except Exception as e:
                 max_requests -= 1
@@ -39,8 +41,8 @@ async def async_post( session
                 print(f"Request Failed({ntries}):{e}")
         else:
             warnings.warn("Maximum number of requests reached!")
-            return None
-
+            return None    
+    
 async def async_process_msgs( chatlogs:List[List[Dict]]
                             , chkpoint:str
                             , api_key:str
@@ -83,6 +85,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                    , sem=sem
                                    , url=chat_url
                                    , data=data
+                                   , headers=headers
                                    , max_requests=max_requests
                                    , timeinterval=timeinterval
                                    , timeout=timeout)
@@ -98,7 +101,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
             chat.savewithid(chkpoint, chatid=ind)
         return True
 
-    async with sem, aiohttp.ClientSession(headers=headers) as session:
+    async with sem, aiohttp.ClientSession() as session:
         tasks = []
         for ind, chatlog in enumerate(chatlogs):
             if ind < len(chats) and chats[ind] is not None: # skip completed chats

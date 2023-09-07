@@ -78,7 +78,12 @@ class Resp():
     @property
     def content(self):
         """Content of the response"""
-        return self.message['content']
+        return "<Resp with finished reason: " + self.finish_reason + ">"
+    
+    @property
+    def delta_content(self):
+        """Content of stream response"""
+        return self.response['choices'][0]['delta']['content']
     
     @property
     def object(self):

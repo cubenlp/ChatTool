@@ -4,8 +4,8 @@ from typing import List, Dict, Union
 import openai_api_call
 from .response import Resp, num_tokens_from_messages
 from .request import chat_completion, valid_models
-import time, random
-import json
+import time, random, json
+import aiohttp
 
 class Chat():
     def __init__( self
@@ -36,7 +36,8 @@ class Chat():
         else:
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = openai_api_call.api_key if api_key is None else api_key
-        self._chat_url = chat_url
+        self._chat_url = chat_url if chat_url is not None else\
+              openai_api_call.base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
     
     def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
@@ -85,52 +86,46 @@ class Chat():
         return self._chat_log
     
     def getresponse( self
+                   , api_key:Union[str, None]=None
+                   , model:str = None
                    , max_requests:int=1
                    , timeout:int = 0
                    , timeinterval:int = 0
-                   , api_key:Union[str, None]=None
-                   , model:str = None
                    , update:bool = True
                    , **options)->Resp:
         """Get the API response
 
         Args:
+            api_key (Union[str, None], optional): API key. Defaults to None.
+            model (str, optional): model to use. Defaults to None.
             max_requests (int, optional): maximum number of requests to make. Defaults to 1.
-            timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).   
+            timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
             timeinterval (int, optional): time interval between two API calls. Defaults to 0.
-            model (str, optional): model to use. Defaults to "gpt-3.5-turbo".
             update (bool, optional): whether to update the chat log. Defaults to True.
-            **options : options inherited from the `openai.ChatCompletion.create` function.
 
         Returns:
             Resp: API response
         """
-        if api_key is None:
-            api_key = self.api_key
+        # initialize data
+        if api_key is None: api_key = self.api_key
         assert api_key is not None, "API key is not set!"
-        if model is None:
-            model = self.model
-
-        # initialize prompt message
-        msg = self.chat_log
-        # default options
+        if model is None: model = self.model
         if not len(options):options = {}
-        # make request
-        resp = None
-        numoftries = 0
+        msg, resp, numoftries = self.chat_log, None, 0
+        # make requests
         while max_requests:
             try:
                 # Make the API call
                 response = chat_completion(
                     api_key=api_key, messages=msg, model=model,
                     chat_url=self.chat_url, timeout=timeout, **options)
-                time.sleep(random.random() * timeinterval)
                 resp = Resp(response)
                 assert resp.is_valid(), "Invalid response with message: " + resp.error_message
                 break
             except Exception as e:
                 max_requests -= 1
                 numoftries += 1
+                time.sleep(random.random() * timeinterval)
                 print(f"Try again ({numoftries}):{e}\n")
         else:
             raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
@@ -138,6 +133,35 @@ class Chat():
         if update: # update the chat log
             self.assistant(resp.content)
         return resp
+    
+    async def async_stream_responses(self, timeout=0):
+        """Post request asynchronously and stream the responses
+
+        Args:
+            timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
+        
+        Returns:
+            str: response text
+        """
+        data = json.dumps({
+            "model" : self.model, "messages" : self.chat_log, "stream":True})
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(self.chat_url, headers=headers, data=data, timeout=timeout) as response:
+                    while True:
+                        line = await response.content.readline()
+                        if not line: break
+                        strline = line.decode().lstrip('data:').strip()
+                        if not strline: continue
+                        line = json.loads(strline)
+                        resp = Resp(line)
+                        if resp.finish_reason == 'stop': break
+                        yield resp
+        except Exception as e:
+            raise Exception(f"Request Failed:{e}")
     
     def get_valid_models(self, gpt_only:bool=True)->List[str]:
         """Get the valid models
