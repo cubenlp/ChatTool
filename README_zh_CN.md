@@ -79,12 +79,14 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 示例三，批量处理数据（异步并行），用不同语言打印 hello，并使用两个协程：
 
 ```python
-from openai_api_call import async_chat_completion
+from openai_api_call import async_chat_completion, load_chats
 
+langs = ["python", "java", "Julia", "C++"]
 chatlogs = [
-    {"role":"user", "content":"print hello using %s" % lang} 
-    for lang in ["python", "java", "Julia", "C++"]]
+    [{"role":"user", "content":"print hello using %s" % lang}]
+    for lang in langs]
 async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", ncoroutines=2)
+chats = load_chats("async_chat.jsonl")
 ```
 
 ## 开源协议

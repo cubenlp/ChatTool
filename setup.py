@@ -7,10 +7,10 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '1.1.1'
+VERSION = '1.2.0'
 
 requirements = [
-    'Click>=7.0', 'requests>=2.20',
+    'Click>=7.0', 'requests>=2.20', "responses>=0.23",
     'tqdm>=4.60', 'aiohttp>=3.8', 'tiktoken>=0.4.0']
 test_requirements = ['pytest>=3', 'unittest']
 
