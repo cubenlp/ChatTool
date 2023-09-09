@@ -99,6 +99,7 @@ class Chat():
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
             timeinterval (int, optional): time interval between two API calls. Defaults to 0.
             update (bool, optional): whether to update the chat log. Defaults to True.
+            options (dict, optional): other options like `temperature`, `top_p`, etc.
 
         Returns:
             Resp: API response

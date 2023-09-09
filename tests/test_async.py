@@ -3,6 +3,7 @@ from openai_api_call import Chat, process_chats, num_tokens_from_messages
 from openai_api_call.asynctool import async_chat_completion
 openai_api_call.api_key="free-123"
 openai_api_call.base_url = "https://api.wzhecnu.cn"
+import asyncio
 
 # langs = ["Python", "Julia", "C++", "C", "Java", "JavaScript", "C#", "Go", "R", "Ruby"]
 langs = ["Python", "Julia", "C++"]

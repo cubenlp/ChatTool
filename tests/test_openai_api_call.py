@@ -210,5 +210,5 @@ def test_valid():
 def test_show():
     resp = Resp(response=response)
     assert str(resp) == resp.content
-    assert repr(resp) == f"`Resp`: {resp.content}"
+    assert repr(resp) == "<Resp with finished reason: stop>"
   

@@ -33,7 +33,7 @@ class Resp():
         return response_cost(self.model, self.prompt_tokens, self.completion_tokens)
     
     def __repr__(self) -> str:
-        return f"`Resp`: {self.content}"
+        return "<Resp with finished reason: " + self.finish_reason + ">"
     
     def __str__(self) -> str:
         return self.content
@@ -78,7 +78,7 @@ class Resp():
     @property
     def content(self):
         """Content of the response"""
-        return "<Resp with finished reason: " + self.finish_reason + ">"
+        return self.message['content']
     
     @property
     def delta_content(self):
