@@ -86,18 +86,15 @@ class Chat():
         return self._chat_log
     
     def getresponse( self
-                   , api_key:Union[str, None]=None
-                   , model:str = None
                    , max_requests:int=1
                    , timeout:int = 0
                    , timeinterval:int = 0
                    , update:bool = True
+                   , stream:bool = False
                    , **options)->Resp:
         """Get the API response
 
         Args:
-            api_key (Union[str, None], optional): API key. Defaults to None.
-            model (str, optional): model to use. Defaults to None.
             max_requests (int, optional): maximum number of requests to make. Defaults to 1.
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
             timeinterval (int, optional): time interval between two API calls. Defaults to 0.
@@ -107,11 +104,12 @@ class Chat():
             Resp: API response
         """
         # initialize data
-        if api_key is None: api_key = self.api_key
+        api_key, model = self.api_key, self.model
         assert api_key is not None, "API key is not set!"
-        if model is None: model = self.model
         if not len(options):options = {}
         msg, resp, numoftries = self.chat_log, None, 0
+        if stream: # TODO: add the `usage` key to the response
+            print("Warning: stream mode is not supported yet! Use `async_stream_responses()` instead.")
         # make requests
         while max_requests:
             try:
