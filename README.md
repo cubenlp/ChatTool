@@ -85,9 +85,7 @@ Example 3, process data in batch (asynchronous), print hello using different lan
 from openai_api_call import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
-chatlogs = [
-    [{"role":"user", "content":"print hello using %s" % lang}]
-    for lang in langs]
+chatlogs = ["print hello using %s" % lang for lang in langs]
 async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", ncoroutines=2)
 chats = load_chats("async_chat.jsonl")
 ```
@@ -98,7 +96,7 @@ This package is licensed under the MIT license. See the LICENSE file for more de
 
 ## update log
 
-Current version `1.0.0` is a stable version, with the redundant feature `function call` removed, and the asynchronous data processing tool added.
+Current version `1.0.0` is a stable version, with the redundant feature `function call` removed, and the asynchronous processing tool added.
 
 ### Beta version
 - Since version `0.2.0`, `Chat` type is used to handle data

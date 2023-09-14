@@ -82,9 +82,7 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 from openai_api_call import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
-chatlogs = [
-    [{"role":"user", "content":"print hello using %s" % lang}]
-    for lang in langs]
+chatlogs = ["print hello using %s" % lang for lang in langs]
 async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", ncoroutines=2)
 chats = load_chats("async_chat.jsonl")
 ```

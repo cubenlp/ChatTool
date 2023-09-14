@@ -119,7 +119,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
             responses = await asyncio.gather(*tasks)
         return responses
 
-def async_chat_completion( chatlogs:List[List[Dict]]
+def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
                          , chkpoint:str
                          , model:str='gpt-3.5-turbo'
                          , api_key:Union[str, None]=None
@@ -135,7 +135,7 @@ def async_chat_completion( chatlogs:List[List[Dict]]
     """Asynchronous chat completion
 
     Args:
-        chatlogs (List[List[Dict]]): list of chat logs
+        chatlogs (Union[List[List[Dict]], str]): list of chat logs or chat message
         chkpoint (str): checkpoint file
         model (str, optional): model to use. Defaults to 'gpt-3.5-turbo'.
         api_key (Union[str, None], optional): API key. Defaults to None.
@@ -144,10 +144,14 @@ def async_chat_completion( chatlogs:List[List[Dict]]
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
         clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
+        notrun (bool, optional): whether to run the async process. It should be True
+          when use in Jupyter Notebook. Defaults to False.
 
     Returns:
         List[Dict]: list of responses
     """
+    # read chatlogs | use method from the Chat object
+    chatlogs = [Chat(log).chat_log for log in chatlogs]
     if clearfile and os.path.exists(chkpoint):
         os.remove(chkpoint)
     if api_key is None:
