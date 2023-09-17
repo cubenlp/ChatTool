@@ -2,7 +2,8 @@
 
 from typing import List, Dict, Union
 import openai_api_call
-from .response import Resp, num_tokens_from_messages
+from .response import Resp
+from .tokencalc import num_tokens_from_messages, token2cost
 from .request import chat_completion, valid_models
 import time, random, json
 import aiohttp
@@ -39,6 +40,7 @@ class Chat():
         self._chat_url = chat_url if chat_url is not None else\
               openai_api_call.base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
+        self._resp = None
     
     def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
         """Get the prompt token for the model
@@ -131,6 +133,7 @@ class Chat():
                             "or increase the `max_requests`.")
         if update: # update the chat log
             self.assistant(resp.content)
+            self._resp = resp
         return resp
     
     async def async_stream_responses(self, timeout=0):
@@ -197,11 +200,19 @@ class Chat():
     
     def copy(self):
         """Copy the chat log"""
-        return Chat(self._chat_log)
+        return Chat(self._chat_log, api_key=self.api_key, chat_url=self.chat_url, model=self.model)
     
-    def last(self):
+    def last_message(self):
         """Get the last message"""
         return self._chat_log[-1]['content']
+
+    def latest_response(self):
+        """Get the latest response"""
+        return self._resp
+    
+    def latest_cost(self):
+        """Get the latest cost"""
+        return self._resp.cost() if self._resp is not None else None
 
     def save(self, path:str, mode:str='a'):
         """
