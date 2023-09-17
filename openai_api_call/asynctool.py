@@ -69,6 +69,8 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
     """
     # load from checkpoint
     chats = load_chats(chkpoint, withid=True) if os.path.exists(chkpoint) else []
+    chats.extend([None] * (len(chatlogs) - len(chats)))
+    costs = [0] * len(chatlogs)
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + api_key
@@ -99,12 +101,12 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         chat = Chat(chatlog)
         async with locker: # locker | not necessary for normal IO
             chat.savewithid(chkpoint, chatid=ind)
-        return True
+        return ind, resp.cost()
 
     async with sem, aiohttp.ClientSession() as session:
         tasks = []
         for ind, chatlog in enumerate(chatlogs):
-            if ind < len(chats) and chats[ind] is not None: # skip completed chats
+            if chats[ind] is not None: # skip completed chats
                 continue
             tasks.append(
                 asyncio.create_task(
@@ -117,7 +119,9 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
             responses = await tqdm.gather(tasks)
         else: # for windows and linux
             responses = await asyncio.gather(*tasks)
-        return responses
+        for ind, cost in responses:
+            costs[ind] = cost
+        return costs
 
 def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
                          , chkpoint:str
