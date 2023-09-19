@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '1.4.0'
+VERSION = '2.0.0'
 
 requirements = [
     'Click>=7.0', 'requests>=2.20', "responses>=0.23",
@@ -27,10 +27,10 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10'
     ],
-    description="A short wrapper of the OpenAI api call.",
+    description="A short wrapper of the Chatapi Toolkit.",
     entry_points={
         'console_scripts': [
-            'openai_api_call=openai_api_call.cli:main',
+            'chatapi_toolkit=chatapi_toolkit.cli:main',
         ],
     },
     install_requires=requirements,
@@ -38,12 +38,12 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     include_package_data=True,
-    keywords='openai_api_call',
-    name='openai_api_call',
-    packages=find_packages(include=['openai_api_call', 'openai_api_call.*']),
+    keywords='chatapi_toolkit',
+    name='chatapi_toolkit',
+    packages=find_packages(include=['chatapi_toolkit', 'chatapi_toolkit.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/cubenlp/openai_api_call',
+    url='https://github.com/cubenlp/chatapi_toolkit',
     version=VERSION,
     zip_safe=False,
 )

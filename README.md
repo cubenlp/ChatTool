@@ -1,21 +1,21 @@
 > **中文文档移步[这里](README_zh_CN.md)。**
 
-# Openai API call
-[![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
-[![Tests](https://github.com/cubenlp/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/openai_api_call/actions/workflows/test.yml/)
+# Chatapi Toolkit
+[![PyPI version](https://img.shields.io/pypi/v/chatapi_toolkit.svg)](https://pypi.python.org/pypi/chatapi_toolkit)
+[![Tests](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/)
 [![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
-[![Coverage](https://codecov.io/gh/cubenlp/openai_api_call/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/openai_api_call.jl)
+[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit.jl)
 
 <!-- 
-[![Updates](https://pyup.io/repos/github/cubenlp/openai_api_call/shield.svg)](https://pyup.io/repos/github/cubenlp/openai_api_call/) 
+[![Updates](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/shield.svg)](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/) 
 -->
 
-A Python wrapper for OpenAI API, supporting multi-turn dialogue, proxy, and asynchronous data processing.
+A Python wrapper for ChatAPI Toolkit, supporting multi-turn dialogue, proxy, and asynchronous data processing.
 
 ## Installation
 
 ```bash
-pip install openai-api-call --upgrade
+pip install chatapi-toolkit --upgrade
 ```
 
 ## Usage
@@ -25,9 +25,9 @@ pip install openai-api-call --upgrade
 Method 1, write in Python code:
 
 ```python
-import openai_api_call
-openai_api_call.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-openai_api_call.base_url = "https://api.example.com"
+import chatapi_toolkit
+chatapi_toolkit.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chatapi_toolkit.base_url = "https://api.example.com"
 ```
 
 Method 2, set environment variables in `~/.bashrc` or `~/.zshrc`:
@@ -82,7 +82,7 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 Example 3, process data in batch (asynchronous), print hello using different languages, and use two coroutines:
 
 ```python
-from openai_api_call import async_chat_completion, load_chats
+from chatapi_toolkit import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
 chatlogs = ["print hello using %s" % lang for lang in langs]

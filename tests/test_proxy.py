@@ -1,4 +1,4 @@
-from openai_api_call import proxy_off, proxy_on, proxy_status
+from chatapi_toolkit import proxy_off, proxy_on, proxy_status
 import os
 
 def test_proxy():

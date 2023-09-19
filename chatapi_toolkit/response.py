@@ -1,4 +1,4 @@
-# Response class for OpenAI API call
+# Response class for Chatapi Toolkit
 
 from typing import Dict
 from .tokencalc import token2cost

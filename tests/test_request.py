@@ -1,7 +1,7 @@
-from openai_api_call import debug_log, Resp
-from openai_api_call.request import normalize_url, is_valid_url, valid_models
-import openai_api_call
-api_key = openai_api_call.api_key
+from chatapi_toolkit import debug_log, Resp
+from chatapi_toolkit.request import normalize_url, is_valid_url, valid_models
+import chatapi_toolkit
+api_key = chatapi_toolkit.api_key
 
 def test_valid_models():
     models = valid_models(api_key=api_key, gpt_only=False)

@@ -1,4 +1,4 @@
-Welcome to Openai API call's documentation!
+Welcome to Chatapi Toolkit's documentation!
 ======================================
 
 .. toctree::

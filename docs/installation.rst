@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install Openai API call, run this command in your terminal:
+To install Chatapi Toolkit, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install openai_api_call
+    $ pip install chatapi_toolkit
 
-This is the preferred method to install Openai API call, as it will always install the most recent stable release.
+This is the preferred method to install Chatapi Toolkit, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,19 +26,19 @@ you through the process.
 From sources
 ------------
 
-The sources for Openai API call can be downloaded from the `Github repo`_.
+The sources for Chatapi Toolkit can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/cubenlp/openai_api_call
+    $ git clone git://github.com/cubenlp/chatapi_toolkit
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/cubenlp/openai_api_call/tarball/master
+    $ curl -OJL https://github.com/cubenlp/chatapi_toolkit/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/cubenlp/openai_api_call
-.. _tarball: https://github.com/cubenlp/openai_api_call/tarball/master
+.. _Github repo: https://github.com/cubenlp/chatapi_toolkit
+.. _tarball: https://github.com/cubenlp/chatapi_toolkit/tarball/master
