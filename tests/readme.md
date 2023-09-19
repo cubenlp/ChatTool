@@ -1,4 +1,4 @@
-# test for openai api
+# test for ChatAPI Toolkit
 
 ## Urls
 

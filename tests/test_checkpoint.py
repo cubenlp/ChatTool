@@ -1,5 +1,5 @@
 import os, responses
-from openai_api_call import Chat, load_chats, process_chats, api_key
+from chatapi_toolkit import Chat, load_chats, process_chats, api_key
 
 def test_with_checkpoint():
     # save chats without chatid

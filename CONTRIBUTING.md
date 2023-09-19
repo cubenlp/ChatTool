@@ -8,7 +8,7 @@ You can contribute in many ways:
 
 ### Report Bugs
 
-Report bugs at https://github.com/cubenlp/openai_api_call/issues.
+Report bugs at https://github.com/cubenlp/chatapi_toolkit/issues.
 
 If you are reporting a bug, please include:
 
@@ -26,13 +26,13 @@ Look through the GitHub issues for features. Anything tagged with "enhancement" 
 
 ### Write Documentation
 
-Openai API call could always use more documentation, whether as part of the
-official Openai API call docs, in docstrings, or even on the web in blog posts,
+Chatapi Toolkit could always use more documentation, whether as part of the
+official Chatapi Toolkit docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at https://github.com/cubenlp/openai_api_call/issues.
+The best way to send feedback is to file an issue at https://github.com/cubenlp/chatapi_toolkit/issues.
 
 If you are proposing a feature:
 
@@ -42,9 +42,9 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up `openai_api_call` for local development.
+Ready to contribute? Here's how to set up `chatapi_toolkit` for local development.
 
-1. Fork the `openai_api_call` repo on GitHub.
+1. Fork the `chatapi_toolkit` repo on GitHub.
 2. Clone your fork locally:
 
    ```shell
@@ -54,8 +54,8 @@ Ready to contribute? Here's how to set up `openai_api_call` for local developmen
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
 
    ```shell
-   $ mkvirtualenv openai_api_call
-   $ cd openai_api_call/
+   $ mkvirtualenv chatapi_toolkit
+   $ cd chatapi_toolkit/
    $ python setup.py develop
    ```
 
@@ -70,7 +70,7 @@ Ready to contribute? Here's how to set up `openai_api_call` for local developmen
 5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox:
 
    ```shell
-   $ flake8 openai_api_call tests 
+   $ flake8 chatapi_toolkit tests 
    $ python setup.py test or pytest
    $ tox
    ```
@@ -93,14 +93,14 @@ Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
 2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring, and add the feature to the list in README.rst.
-3. The pull request should work for Python 3.8 and 3.9, and for PyPy. Check https://github.com/cubenlp/openai_api_call/actions and make sure that the tests pass for all supported Python versions.
+3. The pull request should work for Python 3.8 and 3.9, and for PyPy. Check https://github.com/cubenlp/chatapi_toolkit/actions and make sure that the tests pass for all supported Python versions.
 
 ## Tips
 
 To run a subset of tests:
 
 ```shell
-$ pytest tests.test_openai_api_call
+$ pytest tests.test_chatapi_toolkit
 ```
 
 ## Deploying
@@ -117,4 +117,4 @@ Travis will then deploy to PyPI if tests pass.
 
 ---
 
-Thank you for reading and considering contributing to `openai_api_call`!
+Thank you for reading and considering contributing to `chatapi_toolkit`!

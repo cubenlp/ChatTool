@@ -1,7 +1,7 @@
 # The object that stores the chat log
 
 from typing import List, Dict, Union
-import openai_api_call
+import chatapi_toolkit
 from .response import Resp
 from .tokencalc import num_tokens_from_messages, token2cost
 from .request import chat_completion, valid_models
@@ -28,17 +28,17 @@ class Chat():
         if msg is None:
             self._chat_log = []
         elif isinstance(msg, str):
-            if openai_api_call.default_prompt is None:
+            if chatapi_toolkit.default_prompt is None:
                 self._chat_log = [{"role": "user", "content": msg}]
             else:
-                self._chat_log = openai_api_call.default_prompt(msg)
+                self._chat_log = chatapi_toolkit.default_prompt(msg)
         elif isinstance(msg, list):
             self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
-        self._api_key = openai_api_call.api_key if api_key is None else api_key
+        self._api_key = chatapi_toolkit.api_key if api_key is None else api_key
         self._chat_url = chat_url if chat_url is not None else\
-              openai_api_call.base_url.rstrip('/') + '/v1/chat/completions'
+              chatapi_toolkit.base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
         self._resp = None
     

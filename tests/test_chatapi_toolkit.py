@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-"""Tests for `openai_api_call` package."""
+"""Tests for `chatapi_toolkit` package."""
 
 from click.testing import CliRunner
-import openai_api_call, json
-from openai_api_call import cli
-from openai_api_call import Chat, Resp
+import chatapi_toolkit, json
+from chatapi_toolkit import cli
+from chatapi_toolkit import Chat, Resp
 
 
 def test_command_line_interface():
@@ -13,7 +13,7 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert 'openai_api_call.cli.main' in result.output
+    assert 'chatapi_toolkit.cli.main' in result.output
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output
@@ -169,14 +169,14 @@ def test_long_talk():
 def test_with_template():
     chat = Chat("hello!")
     assert chat.chat_log == [{"role": "user", "content": "hello!"}]
-    openai_api_call.default_prompt = lambda msg: [
+    chatapi_toolkit.default_prompt = lambda msg: [
         {"role": "system", "content": "I am a system message"},
         {"role": "user", "content": msg}]
     chat = Chat("hello!")
     assert chat.chat_log == [
         {"role": "system", "content": "I am a system message"},
         {"role": "user", "content": "hello!"}]
-    openai_api_call.default_prompt = None
+    chatapi_toolkit.default_prompt = None
     chat = Chat("hello!")
     assert chat.chat_log == [{"role": "user", "content": "hello!"}]
 

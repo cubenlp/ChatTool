@@ -1,4 +1,4 @@
-* Openai API call version:
+* Chatapi Toolkit version:
 * Python version:
 * Operating System:
 

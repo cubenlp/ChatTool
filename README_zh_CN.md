@@ -1,19 +1,19 @@
-# OpenAI API 
-[![PyPI version](https://img.shields.io/pypi/v/openai_api_call.svg)](https://pypi.python.org/pypi/openai_api_call)
-[![Tests](https://github.com/cubenlp/openai_api_call/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/openai_api_call/actions/workflows/test.yml/)
+# ChatAPI Toolkit 
+[![PyPI version](https://img.shields.io/pypi/v/chatapi_toolkit.svg)](https://pypi.python.org/pypi/chatapi_toolkit)
+[![Tests](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/)
 [![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
-[![Coverage](https://codecov.io/gh/cubenlp/openai_api_call/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/openai_api_call.jl)
+[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit.jl)
 
 <!-- 
-[![Updates](https://pyup.io/repos/github/cubenlp/openai_api_call/shield.svg)](https://pyup.io/repos/github/cubenlp/openai_api_call/) 
+[![Updates](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/shield.svg)](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/) 
 -->
 
-OpenAI API 的 Python 封装工具，支持多轮对话，代理，以及异步处理数据等。
+ChatAPI Toolkit 的 Python 封装工具，支持多轮对话，代理，以及异步处理数据等。
 
 ## 安装方法
 
 ```bash
-pip install openai-api-call --upgrade
+pip install chatapi-toolkit --upgrade
 ```
 
 ## 使用方法
@@ -22,9 +22,9 @@ pip install openai-api-call --upgrade
 
 方法一，在代码中修改
 ```python
-import openai_api_call
-openai_api_call.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-openai_api_call.base_url = "https://api.example.com"
+import chatapi_toolkit
+chatapi_toolkit.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chatapi_toolkit.base_url = "https://api.example.com"
 ```
 
 方法二，设置环境变量，在 `~/.bashrc` 或者 `~/.zshrc` 中追加
@@ -79,7 +79,7 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 示例三，批量处理数据（异步并行），用不同语言打印 hello，并使用两个协程：
 
 ```python
-from openai_api_call import async_chat_completion, load_chats
+from chatapi_toolkit import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
 chatlogs = ["print hello using %s" % lang for lang in langs]

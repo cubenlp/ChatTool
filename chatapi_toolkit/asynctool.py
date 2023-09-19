@@ -1,8 +1,8 @@
 import asyncio, aiohttp
 import time, random, warnings, json, os
 from typing import List, Dict, Union
-from openai_api_call import Chat, Resp, load_chats
-import openai_api_call
+from chatapi_toolkit import Chat, Resp, load_chats
+import chatapi_toolkit
 from tqdm.asyncio import tqdm
 
 async def async_post( session
@@ -115,7 +115,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , chatlog=chatlog
                                  , chkpoint=chkpoint
                                  , **options)))
-        if openai_api_call.platform == "macos":
+        if chatapi_toolkit.platform == "macos":
             responses = await tqdm.gather(tasks)
         else: # for windows and linux
             responses = await asyncio.gather(*tasks)
@@ -159,11 +159,11 @@ def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
     if clearfile and os.path.exists(chkpoint):
         os.remove(chkpoint)
     if api_key is None:
-        api_key = openai_api_call.api_key
+        api_key = chatapi_toolkit.api_key
     assert api_key is not None, "API key is not provided!"
     if chat_url is None:
-        chat_url = os.path.join(openai_api_call.base_url, "v1/chat/completions")
-    chat_url = openai_api_call.request.normalize_url(chat_url)
+        chat_url = os.path.join(chatapi_toolkit.base_url, "v1/chat/completions")
+    chat_url = chatapi_toolkit.request.normalize_url(chat_url)
     # run async process
     assert ncoroutines > 0, "ncoroutines must be greater than 0!"
     args = {

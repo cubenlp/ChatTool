@@ -1,8 +1,8 @@
-import openai_api_call, time
-from openai_api_call import Chat, process_chats, num_tokens_from_messages
-from openai_api_call.asynctool import async_chat_completion
-openai_api_call.api_key="free-123"
-openai_api_call.base_url = "https://api.wzhecnu.cn"
+import chatapi_toolkit, time
+from chatapi_toolkit import Chat, process_chats, num_tokens_from_messages
+from chatapi_toolkit.asynctool import async_chat_completion
+chatapi_toolkit.api_key="free-123"
+chatapi_toolkit.base_url = "https://api.wzhecnu.cn"
 import asyncio
 
 # langs = ["Python", "Julia", "C++", "C", "Java", "JavaScript", "C#", "Go", "R", "Ruby"]
