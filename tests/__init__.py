@@ -1,6 +1,6 @@
-"""Unit test package for chatapi_toolkit."""
+"""Unit test package for chattool."""
 
-from chatapi_toolkit import Chat
+from chattool import Chat
 
 def test_simple():
     # set api_key in the environment variable

@@ -3,7 +3,7 @@
 from typing import List, Dict, Union
 import requests, json, os
 from urllib.parse import urlparse, urlunparse
-import chatapi_toolkit
+import chattool
 
 def is_valid_url(url: str) -> bool:
     """Check if the given URL is valid.
@@ -72,7 +72,7 @@ def chat_completion( api_key:str
     }
     # initialize chat url
     if chat_url is None:
-        base_url = chatapi_toolkit.base_url
+        base_url = chattool.base_url
         chat_url = os.path.join(base_url, "v1/chat/completions")
     
     chat_url = normalize_url(chat_url)
@@ -102,7 +102,7 @@ def valid_models(api_key:str, gpt_only:bool=True, base_url:Union[str, None]=None
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    if base_url is None: base_url = chatapi_toolkit.base_url
+    if base_url is None: base_url = chattool.base_url
     models_url = normalize_url(os.path.join(base_url, "v1/models"))
     models_response = requests.get(models_url, headers=headers)
     if models_response.status_code == 200:

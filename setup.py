@@ -27,10 +27,10 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10'
     ],
-    description="A short wrapper of the Chatapi Toolkit.",
+    description="Toolkit for Chat API",
     entry_points={
         'console_scripts': [
-            'chatapi_toolkit=chatapi_toolkit.cli:main',
+            'chattool=chattool.cli:main',
         ],
     },
     install_requires=requirements,
@@ -38,9 +38,9 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     include_package_data=True,
-    keywords='chatapi_toolkit',
-    name='chatapi_toolkit',
-    packages=find_packages(include=['chatapi_toolkit', 'chatapi_toolkit.*']),
+    keywords='chattool',
+    name='chattool',
+    packages=find_packages(include=['chattool', 'chattool.*']),
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/cubenlp/chatapi_toolkit',

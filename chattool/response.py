@@ -1,4 +1,4 @@
-# Response class for Chatapi Toolkit
+# Response class for Chattool
 
 from typing import Dict
 from .tokencalc import token2cost

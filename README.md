@@ -1,21 +1,21 @@
 > **中文文档移步[这里](README_zh_CN.md)。**
 
-# Chatapi Toolkit
-[![PyPI version](https://img.shields.io/pypi/v/chatapi_toolkit.svg)](https://pypi.python.org/pypi/chatapi_toolkit)
+# ChatAPI Toolkit
+[![PyPI version](https://img.shields.io/pypi/v/chattool.svg)](https://pypi.python.org/pypi/chattool)
 [![Tests](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/)
 [![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
-[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit.jl)
+[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit)
 
 <!-- 
-[![Updates](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/shield.svg)](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/) 
+[![Updates](https://pyup.io/repos/github/cubenlp/chattool/shield.svg)](https://pyup.io/repos/github/cubenlp/chattool/) 
 -->
 
-A Python wrapper for ChatAPI Toolkit, supporting multi-turn dialogue, proxy, and asynchronous data processing.
+Toolkit for Chat API, supporting multi-turn dialogue, proxy, and asynchronous data processing.
 
 ## Installation
 
 ```bash
-pip install chatapi-toolkit --upgrade
+pip install chattool --upgrade
 ```
 
 ## Usage
@@ -25,9 +25,9 @@ pip install chatapi-toolkit --upgrade
 Method 1, write in Python code:
 
 ```python
-import chatapi_toolkit
-chatapi_toolkit.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-chatapi_toolkit.base_url = "https://api.example.com"
+import chattool
+chattool.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chattool.base_url = "https://api.example.com"
 ```
 
 Method 2, set environment variables in `~/.bashrc` or `~/.zshrc`:
@@ -82,7 +82,7 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 Example 3, process data in batch (asynchronous), print hello using different languages, and use two coroutines:
 
 ```python
-from chatapi_toolkit import async_chat_completion, load_chats
+from chattool import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
 chatlogs = ["print hello using %s" % lang for lang in langs]

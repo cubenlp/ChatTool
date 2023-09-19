@@ -1,5 +1,5 @@
 import os, responses
-from chatapi_toolkit import Chat, load_chats, process_chats, api_key
+from chattool import Chat, load_chats, process_chats, api_key
 
 def test_with_checkpoint():
     # save chats without chatid

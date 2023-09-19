@@ -1,19 +1,19 @@
-# ChatAPI Toolkit 
-[![PyPI version](https://img.shields.io/pypi/v/chatapi_toolkit.svg)](https://pypi.python.org/pypi/chatapi_toolkit)
+# ChatAPI Toolkit
+[![PyPI version](https://img.shields.io/pypi/v/chattool.svg)](https://pypi.python.org/pypi/chattool)
 [![Tests](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/)
 [![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
-[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit.jl)
+[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit)
 
 <!-- 
-[![Updates](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/shield.svg)](https://pyup.io/repos/github/cubenlp/chatapi_toolkit/) 
+[![Updates](https://pyup.io/repos/github/cubenlp/chattool/shield.svg)](https://pyup.io/repos/github/cubenlp/chattool/) 
 -->
 
-ChatAPI Toolkit 的 Python 封装工具，支持多轮对话，代理，以及异步处理数据等。
+基于对话 API 的工具包，支持多轮对话，代理，以及异步处理数据等，当前支持 openai 的 API。
 
 ## 安装方法
 
 ```bash
-pip install chatapi-toolkit --upgrade
+pip install chattool --upgrade
 ```
 
 ## 使用方法
@@ -22,9 +22,9 @@ pip install chatapi-toolkit --upgrade
 
 方法一，在代码中修改
 ```python
-import chatapi_toolkit
-chatapi_toolkit.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-chatapi_toolkit.base_url = "https://api.example.com"
+import chattool
+chattool.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chattool.base_url = "https://api.example.com"
 ```
 
 方法二，设置环境变量，在 `~/.bashrc` 或者 `~/.zshrc` 中追加
@@ -79,7 +79,7 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 示例三，批量处理数据（异步并行），用不同语言打印 hello，并使用两个协程：
 
 ```python
-from chatapi_toolkit import async_chat_completion, load_chats
+from chattool import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
 chatlogs = ["print hello using %s" % lang for lang in langs]

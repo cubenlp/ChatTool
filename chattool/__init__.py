@@ -1,4 +1,4 @@
-"""Top-level package for Chatapi Toolkit."""
+"""Top-level package for Chattool."""
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
