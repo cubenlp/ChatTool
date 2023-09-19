@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install Chatapi Toolkit, run this command in your terminal:
+To install chattool, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install chatapi_toolkit
+    $ pip install chattool
 
-This is the preferred method to install Chatapi Toolkit, as it will always install the most recent stable release.
+This is the preferred method to install chattool, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,13 +26,13 @@ you through the process.
 From sources
 ------------
 
-The sources for Chatapi Toolkit can be downloaded from the `Github repo`_.
+The sources for chattool can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/cubenlp/chatapi_toolkit
+    $ git clone git://github.com/cubenlp/chattool
 
 Or download the `tarball`_:
 

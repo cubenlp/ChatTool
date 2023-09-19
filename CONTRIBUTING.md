@@ -26,8 +26,8 @@ Look through the GitHub issues for features. Anything tagged with "enhancement" 
 
 ### Write Documentation
 
-Chatapi Toolkit could always use more documentation, whether as part of the
-official Chatapi Toolkit docs, in docstrings, or even on the web in blog posts,
+chattool could always use more documentation, whether as part of the
+official chattool docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 ### Submit Feedback
@@ -42,9 +42,9 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up `chatapi_toolkit` for local development.
+Ready to contribute? Here's how to set up `chattool` for local development.
 
-1. Fork the `chatapi_toolkit` repo on GitHub.
+1. Fork the `chattool` repo on GitHub.
 2. Clone your fork locally:
 
    ```shell
@@ -54,8 +54,8 @@ Ready to contribute? Here's how to set up `chatapi_toolkit` for local developmen
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
 
    ```shell
-   $ mkvirtualenv chatapi_toolkit
-   $ cd chatapi_toolkit/
+   $ mkvirtualenv chattool
+   $ cd chattool/
    $ python setup.py develop
    ```
 
@@ -70,7 +70,7 @@ Ready to contribute? Here's how to set up `chatapi_toolkit` for local developmen
 5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox:
 
    ```shell
-   $ flake8 chatapi_toolkit tests 
+   $ flake8 chattool tests 
    $ python setup.py test or pytest
    $ tox
    ```
@@ -100,7 +100,7 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```shell
-$ pytest tests.test_chatapi_toolkit
+$ pytest tests.test_chattool
 ```
 
 ## Deploying
@@ -117,4 +117,4 @@ Travis will then deploy to PyPI if tests pass.
 
 ---
 
-Thank you for reading and considering contributing to `chatapi_toolkit`!
+Thank you for reading and considering contributing to `chattool`!

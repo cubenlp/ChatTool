@@ -1,4 +1,4 @@
-Welcome to Chatapi Toolkit's documentation!
+Welcome to chattool's documentation!
 ======================================
 
 .. toctree::

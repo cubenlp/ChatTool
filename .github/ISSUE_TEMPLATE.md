@@ -1,4 +1,4 @@
-* Chatapi Toolkit version:
+* Chattool version:
 * Python version:
 * Operating System:
 
