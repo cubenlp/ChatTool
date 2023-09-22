@@ -14,7 +14,9 @@ class Chat():
                 , api_key:Union[None, str]=None
                 , chat_url:Union[None, str]=None
                 , base_url:Union[None, str]=None
-                , model:Union[None, str]=None):
+                , model:Union[None, str]=None
+                , functions:Union[None, List[Dict]]=None
+                , function_call:Union[None, str]=None):
         """Initialize the chat log
 
         Args:
@@ -23,6 +25,8 @@ class Chat():
             chat_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
             base_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com"
             model (Union[None, str], optional): model to use. Defaults to None.
+            functions (Union[None, List[Dict]], optional): functions to use, each function is a JSON Schema. Defaults to None.
+            function_call (str, optional): method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
         
         Raises:
             ValueError: msg should be a list of dict, a string or None
@@ -43,7 +47,9 @@ class Chat():
         self._chat_url = chat_url if chat_url is not None else\
               self._base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
-        self._resp = None
+        if functions is not None:
+            assert isinstance(functions, list), "functions should be a list of dict"
+        self._functions, self._function_call, self._resp = functions, function_call, None
     
     def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
         """Get the prompt token for the model
@@ -80,6 +86,16 @@ class Chat():
         """Get base url"""
         return self._base_url
     
+    @property
+    def functions(self):
+        """Get functions"""
+        return self._functions
+    
+    @property
+    def function_call(self):
+        """Get function call"""
+        return self._function_call
+    
     @api_key.setter
     def api_key(self, api_key:str):
         """Set API key"""
@@ -94,6 +110,17 @@ class Chat():
     def base_url(self, base_url:str):
         """Set base url"""
         self._base_url = base_url
+
+    @functions.setter
+    def functions(self, functions:List[Dict]):
+        """Set functions"""
+        assert isinstance(functions, list), "functions should be a list of dict"
+        self._functions = functions
+    
+    @function_call.setter
+    def function_call(self, function_call:str):
+        """Set function call"""
+        self._function_call = function_call
 
     @property
     def chat_log(self):
@@ -121,15 +148,17 @@ class Chat():
         """
         # initialize data
         api_key, model = self.api_key, self.model
+        funcs, func_call = self.functions, self.function_call
         assert api_key is not None, "API key is not set!"
-        if not len(options):options = {}
         msg, resp, numoftries = self.chat_log, None, 0
         if stream: # TODO: add the `usage` key to the response
             print("Warning: stream mode is not supported yet! Use `async_stream_responses()` instead.")
         # make requests
         while max_requests:
             try:
-                # Make the API call
+                # Use function call from predefined functions
+                if funcs is not None: options['functions'] = funcs
+                if func_call is not None: options['function_call'] = func_call
                 response = chat_completion(
                     api_key=api_key, messages=msg, model=model,
                     chat_url=self.chat_url, timeout=timeout, **options)
@@ -158,25 +187,23 @@ class Chat():
         Returns:
             str: response text
         """
+        # TODO: Support other options
         data = json.dumps({
             "model" : self.model, "messages" : self.chat_log, "stream":True})
         headers = {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + self.api_key}
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(self.chat_url, headers=headers, data=data, timeout=timeout) as response:
-                    while True:
-                        line = await response.content.readline()
-                        if not line: break
-                        strline = line.decode().lstrip('data:').strip()
-                        if not strline: continue
-                        line = json.loads(strline)
-                        resp = Resp(line)
-                        if resp.finish_reason == 'stop': break
-                        yield resp
-        except Exception as e:
-            raise Exception(f"Request Failed:{e}")
+        async with aiohttp.ClientSession() as session:
+            async with session.post(self.chat_url, headers=headers, data=data, timeout=timeout) as response:
+                while True:
+                    line = await response.content.readline()
+                    if not line: break
+                    strline = line.decode().lstrip('data:').strip()
+                    if not strline: continue
+                    line = json.loads(strline)
+                    resp = Resp(line)
+                    if resp.finish_reason == 'stop': break
+                    yield resp
     
     def get_valid_models(self, gpt_only:bool=True)->List[str]:
         """Get the valid models
@@ -225,15 +252,18 @@ class Chat():
         """Copy the chat log"""
         return Chat(self._chat_log, api_key=self.api_key, chat_url=self.chat_url, model=self.model)
     
+    @property
     def last_message(self):
         """Get the last message"""
         return self._chat_log[-1]['content']
 
-    def latest_response(self):
+    @property
+    def last_response(self):
         """Get the latest response"""
         return self._resp
     
-    def latest_cost(self):
+    @property
+    def last_cost(self):
         """Get the latest cost"""
         return self._resp.cost() if self._resp is not None else None
 
@@ -261,6 +291,19 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         data = {"chatid": chatid, "chatlog": self.chat_log}
+        with open(path, mode, encoding='utf-8') as f:
+            f.write(json.dumps(data, ensure_ascii=False) + '\n')
+        return
+    
+    def savewithmsg(self, path:str, mode:str='a'):
+        """Save the chat log with message.
+
+        Args:
+            path (str): path to the file
+            mode (str, optional): mode to open the file. Defaults to 'a'.
+        """
+        assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
+        data = {"messages": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
         return
