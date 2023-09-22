@@ -13,6 +13,7 @@ class Chat():
                 , msg:Union[List[Dict], None, str]=None
                 , api_key:Union[None, str]=None
                 , chat_url:Union[None, str]=None
+                , base_url:Union[None, str]=None
                 , model:Union[None, str]=None):
         """Initialize the chat log
 
@@ -20,6 +21,7 @@ class Chat():
             msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
             api_key (Union[None, str], optional): API key. Defaults to None.
             chat_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
+            base_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com"
             model (Union[None, str], optional): model to use. Defaults to None.
         
         Raises:
@@ -37,8 +39,9 @@ class Chat():
         else:
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = chattool.api_key if api_key is None else api_key
+        self._base_url = chattool.base_url if base_url is None else base_url
         self._chat_url = chat_url if chat_url is not None else\
-              chattool.base_url.rstrip('/') + '/v1/chat/completions'
+              self._base_url.rstrip('/') + '/v1/chat/completions'
         self._model = 'gpt-3.5-turbo' if model is None else model
         self._resp = None
     
@@ -72,6 +75,11 @@ class Chat():
         """Get base url"""
         return self._chat_url
     
+    @property
+    def base_url(self):
+        """Get base url"""
+        return self._base_url
+    
     @api_key.setter
     def api_key(self, api_key:str):
         """Set API key"""
@@ -81,6 +89,11 @@ class Chat():
     def chat_url(self, chat_url:str):
         """Set base url"""
         self._chat_url = chat_url
+
+    @base_url.setter
+    def base_url(self, base_url:str):
+        """Set base url"""
+        self._base_url = base_url
 
     @property
     def chat_log(self):
@@ -132,7 +145,7 @@ class Chat():
             raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
                             "or increase the `max_requests`.")
         if update: # update the chat log
-            self.assistant(resp.content)
+            self._chat_log.append(resp.message)
             self._resp = resp
         return resp
     
@@ -174,25 +187,35 @@ class Chat():
         Returns:
             List[str]: valid models
         """
-        return valid_models(self.api_key, gpt_only=gpt_only)
+        return valid_models(self.api_key, self.base_url, gpt_only=gpt_only)
 
-    def add(self, role:str, msg:str):
+    def add(self, role:str, **kwargs):
         """Add a message to the chat log"""
-        assert role in ['user', 'assistant', 'system'], "role should be 'user', 'assistant' or 'system'"
-        self._chat_log.append({"role": role, "content": msg})
+        assert role in ['user', 'assistant', 'system', 'function'],\
+            f"role should be one of ['user', 'assistant', 'system', 'function'], but got {role}"
+        self._chat_log.append({'role':role, **kwargs})
         return self
 
-    def user(self, msg:str):
+    def user(self, content:str):
         """User message"""
-        return self.add('user', msg)
+        return self.add(r'user', content=content)
     
-    def assistant(self, msg:str):
+    def assistant(self, content:Union[None, str], function_call:Union[None, Dict]=None):
         """Assistant message"""
-        return self.add('assistant', msg)
+        if function_call is not None:
+            assert isinstance(function_call, dict), "function_call should be a dict"
+            return self.add('assistant', content=content, function_call=function_call)
+        return self.add('assistant', content=content)
     
-    def system(self, msg:str):
+    def function(self, content:str, name:str):
+        """Add a message to the chat log"""
+        if not isinstance(content, str):
+            content = json.dumps(content)
+        return self.add('function', content=content, name=name)
+        
+    def system(self, content:str):
         """System message"""
-        return self.add('system', msg)
+        return self.add('system', content=content)
     
     def clear(self):
         """Clear the chat log"""
@@ -246,8 +269,17 @@ class Chat():
         """Print the chat log"""
         if sep is None:
             sep = '\n' + '-'*15 + '\n'
-        for d in self._chat_log:
-            print(sep, d['role'], sep, d['content'])
+        for resp in self._chat_log:
+            role, content = resp['role'], resp['content']
+            if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in resp):
+                print(sep, role, sep, content)
+            elif role == 'function':
+                print(sep, role, sep, f"function:\n{resp['name']}\nparams:\n{content}")
+            elif role == 'assistant':
+                print(sep, role, sep, f"calling function:\n{resp['function_call']}",
+                      "\ncontent:\n", content)
+            else:
+                raise Exception(f"Unknown role {role}")
     
     def pop(self, ind:int=-1):
         """Pop the last message"""
