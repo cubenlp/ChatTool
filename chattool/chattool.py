@@ -3,7 +3,7 @@
 from typing import List, Dict, Union
 import chattool
 from .response import Resp
-from .tokencalc import num_tokens_from_messages, token2cost
+from .tokencalc import num_tokens_from_messages, findcost
 from .request import chat_completion, valid_models
 import time, random, json
 import aiohttp

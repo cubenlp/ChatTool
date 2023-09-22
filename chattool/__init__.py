@@ -9,7 +9,7 @@ from .chattool import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
 from . import request
-from .tokencalc import num_tokens_from_messages, model_cost_perktoken, token2cost
+from .tokencalc import num_tokens_from_messages, model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 
 # read API key from the environment variable
