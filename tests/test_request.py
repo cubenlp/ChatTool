@@ -2,11 +2,12 @@ from chattool import debug_log, Resp
 from chattool.request import normalize_url, is_valid_url, valid_models
 import chattool
 api_key = chattool.api_key
+base_url = chattool.base_url
 
 def test_valid_models():
-    models = valid_models(api_key=api_key, gpt_only=False)
+    models = valid_models(api_key, base_url, gpt_only=False)
     assert len(models) >= 1
-    models = valid_models(api_key=api_key, gpt_only=True)
+    models = valid_models(api_key, base_url, gpt_only=True)
     assert len(models) >= 1
     assert 'gpt-3.5-turbo' in models
 

@@ -14,9 +14,10 @@ model_cost_perktoken ={
     "gpt-4-0301": (0.03, 0.06),
     "gpt-4-32k-0613": (0.06, 0.12),
     "gpt-4-32k": (0.06, 0.12),
+    'ft-gpt-3.5': (0.012, 0.016)
 }
 
-def token2cost(model:str, prompt_tokens:int, completion_tokens:int=0):
+def findcost(model:str, prompt_tokens:int, completion_tokens:int=0):
     """Calculate the cost of the response
 
     Args:
@@ -27,9 +28,20 @@ def token2cost(model:str, prompt_tokens:int, completion_tokens:int=0):
     Returns:
         float: cost of the response
     """
-    assert model in model_cost_perktoken, f"Model {model} is not known!"
-    input_price, output_price = model_cost_perktoken[model]
-    return (input_price * prompt_tokens + output_price * completion_tokens) / 1000
+    assert "gpt-" in model, "model name must contain 'gpt-'"
+    if 'ft' in model: # finetuned model
+        inprice, outprice = model_cost_perktoken['ft-gpt-3.5']
+    elif 'gpt-3.5-turbo' in model:
+        if '16k' in model:
+            inprice, outprice = model_cost_perktoken['gpt-3.5-turbo-16k']
+        else:
+            inprice, outprice = model_cost_perktoken['gpt-3.5-turbo']
+    elif 'gpt-4' in model:
+        if '32k' in model:
+            inprice, outprice = model_cost_perktoken['gpt-4-32k']
+        else:
+            inprice, outprice = model_cost_perktoken['gpt-4']
+    return (inprice * prompt_tokens + outprice * completion_tokens) / 1000
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     """Return the number of tokens used by a list of messages."""

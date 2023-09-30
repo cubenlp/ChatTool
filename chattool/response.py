@@ -1,7 +1,7 @@
 # Response class for Chattool
 
 from typing import Dict
-from .tokencalc import token2cost
+from .tokencalc import findcost
 
 class Resp():
     
@@ -14,7 +14,7 @@ class Resp():
     
     def cost(self):
         """Calculate the cost of the response"""
-        return token2cost(self.model, self.prompt_tokens, self.completion_tokens)
+        return findcost(self.model, self.prompt_tokens, self.completion_tokens)
     
     def __repr__(self) -> str:
         return "<Resp with finished reason: " + self.finish_reason + ">"
@@ -63,6 +63,11 @@ class Resp():
     def content(self):
         """Content of the response"""
         return self.message['content']
+    
+    @property
+    def function_call(self):
+        """Function call"""
+        return self.message['function_call']
     
     @property
     def delta_content(self):
