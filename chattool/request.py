@@ -4,7 +4,6 @@
 from typing import List, Dict, Union
 import requests, json, os
 from urllib.parse import urlparse, urlunparse
-import chattool
 
 def is_valid_url(url: str) -> bool:
     """Check if the given URL is valid.
@@ -105,3 +104,146 @@ def valid_models(api_key:str, base_url:str, gpt_only:bool=True):
         return [model for model in model_list if "gpt" in model] if gpt_only else model_list
     else:
         raise Exception(models_response.text)
+
+def loadfile(api_key:str, base_url:str, file:str, purpose:str='fine-tune'):
+    """Upload a file that can be used across various endpoints/features. 
+    Currently, the size of all the files uploaded by one organization can be up to 1 GB.
+    """
+    assert purpose == 'fine-tune', "Currently only support fine-tune purpose"
+    headers = {"Authorization": "Bearer " + api_key}
+    loadfile_url = normalize_url(os.path.join(base_url, "v1/files"))
+    resp = requests.post(loadfile_url, headers=headers, data={"purpose": purpose}, files={"file": open(file, "rb")})
+    if resp.status_code == 200:
+        return resp.json()
+    else:
+        raise Exception(resp.text)
+
+def filelist(api_key:str, base_url:str):
+    """"Returns a list of files that belong to the user's organization"""
+    headers = {"Authorization": "Bearer " + api_key}
+    filelist_url = normalize_url(os.path.join(base_url, "v1/files"))
+    resp = requests.get(filelist_url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()['data']
+    else:
+        raise Exception(resp.text)
+
+def filecontent(api_key:str, base_url:str, fileid:str):
+    """Returns the contents of the specified file"""
+    headers = {
+        "Authorization": "Bearer " + api_key,
+        "Content-Type": "application/json"
+    }
+    fileurl = normalize_url(os.path.join(base_url, "v1/files", fileid, "content"))
+    resp = requests.get(fileurl, headers=headers)
+    if resp.status_code == 200:
+        return [json.loads(msg) for msg in resp.content.decode().split('\n') if msg]
+    else:
+        raise Exception(resp.text)
+
+def deletefile(api_key:str, base_url:str, fileid:str):
+    """Delete file"""
+    headers = {"Authorization": "Bearer " + api_key}
+    fileurl = normalize_url(os.path.join(base_url, "v1/files", fileid))
+    resp = requests.delete(fileurl, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()['deleted']
+    else:
+        raise Exception(resp.text)
+
+def create_finetune_job( api_key:str
+                       , base_url:str
+                       , model:str
+                       , trainingid:str
+                       , validationid:Union[str, None] = None
+                       , suffix:Union[str, None] = None
+                       , **hyperparameters):
+    """Creates a job that fine-tunes a specified model from a given dataset.
+    Response includes details of the enqueued job including job status 
+    and the name of the fine-tuned models once complete.
+    
+    Args:
+        api_key (str): API key
+        base_url (str): base url
+        model (str): model to use
+        trainingid (str): training file id
+        validationid (Union[str, None], optional): validation file id. Defaults to None.
+        **hyperparameters : hyperparameters to use, example: n_epochs=5
+    """
+    headers = {
+        "Authorization": "Bearer " + api_key,
+        "Content-Type": "application/json"
+    }
+    createjob_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs"))
+    payload = {
+        "model": model,
+        "training_file": trainingid,
+    }
+    if validationid is not None:
+        payload["validation_file"] = validationid
+    if suffix is not None:
+        payload["suffix"] = suffix
+    if hyperparameters:
+        payload["hyperparameters"] = hyperparameters
+    resp = requests.post(createjob_url, headers=headers, data=json.dumps(payload))
+    if resp.status_code == 200:
+        return resp.json()
+    else:
+        raise Exception(resp.text)
+
+def list_finetune_job(api_key:str, base_url:str, limit:int=0):
+    """List your organization's fine-tuning jobs."""
+    headers = {"Authorization": "Bearer " + api_key}
+    if limit == 0: # default to 20
+        listjob_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs"))
+    else:
+        listjob_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs?limit=" + str(limit)))
+    resp = requests.get(listjob_url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()['data']
+    else:
+        raise Exception(resp.text)
+
+def retrievejob(api_key:str, base_url:str, jobid:str):
+    """Get info about a fine-tuning job"""
+    headers = {"Authorization": "Bearer " + api_key}
+    retrieve_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs", jobid))
+    resp = requests.get(retrieve_url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()
+    else:
+        raise Exception(resp.text)
+    
+def listevents(api_key:str, base_url:str, jobid:str, limit:int=0):
+    """Get status updates for a fine-tuning job"""
+    headers = {"Authorization": "Bearer " + api_key}
+    if limit == 0: # default to 20
+        listevents_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs", jobid, "events"))
+    else:
+        listevents_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs", jobid, "events?limit=" + str(limit)))
+    resp = requests.get(listevents_url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()['data']
+    else:
+        raise Exception(resp.text)
+    
+def canceljob(api_key:str, base_url:str, jobid:str):
+    """Immediately cancel a fine-tune job."""
+    headers = {"Authorization": "Bearer " + api_key}
+    cancel_url = normalize_url(os.path.join(base_url, "v1/fine_tuning/jobs", jobid, "cancel"))
+    resp = requests.post(cancel_url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()['data']
+    else:
+        raise Exception(resp.text)
+
+def deletemodel(api_key:str, base_url:str, modelid:str):
+    """Delete a fine-tuned model. 
+    You must have the Owner role in your organization to delete a model"""
+    headers = {"Authorization": "Bearer " + api_key}
+    delete_url = normalize_url(os.path.join(base_url, "v1/models/", modelid))
+    resp = requests.delete(delete_url, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()['deleted']
+    else:
+        raise Exception(resp.text)

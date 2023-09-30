@@ -3,7 +3,7 @@
 from typing import List, Dict, Union
 import chattool
 from .response import Resp
-from .tokencalc import num_tokens_from_messages, findcost
+from .tokencalc import num_tokens_from_messages
 from .request import chat_completion, valid_models
 import time, random, json
 import aiohttp
@@ -45,11 +45,10 @@ class Chat():
             self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
-        self._api_key = chattool.api_key if api_key is None else api_key
-        self._base_url = chattool.base_url if base_url is None else base_url
-        self._chat_url = chat_url if chat_url is not None else\
-              self._base_url.rstrip('/') + '/v1/chat/completions'
-        self._model = 'gpt-3.5-turbo' if model is None else model
+        self._api_key = api_key or chattool.api_key
+        self._base_url = base_url or chattool.base_url
+        self._chat_url = chat_url or self._base_url.rstrip('/') + '/v1/chat/completions'
+        self._model = model or 'gpt-3.5-turbo'
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
         self._functions, self._function_call = functions, function_call
