@@ -27,6 +27,9 @@ weatherinfo =  {
     "forecast": ["sunny", "windy"],
     "unit":"celsius"
 }
+name2func = {
+    'get_current_weather': lambda *kargs, **kwargs: weatherinfo
+}
 
 def test_function_call():
     chat = Chat("What's the weather like in Boston?")
@@ -46,3 +49,10 @@ def test_function_call():
     else:
         print("No function call found.")
         assert True
+
+def test_function_call2():
+    chat = Chat("What's the weather like in Boston?")
+    chat.functions, chat.function_call = functions, 'auto'
+    chat.name2func = name2func
+    chat.autoresponse(max_requests=2)
+    chat.print_log()

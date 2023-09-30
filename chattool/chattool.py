@@ -16,7 +16,8 @@ class Chat():
                 , base_url:Union[None, str]=None
                 , model:Union[None, str]=None
                 , functions:Union[None, List[Dict]]=None
-                , function_call:Union[None, str]=None):
+                , function_call:Union[None, str]=None
+                , name2func:Union[None, Dict]=None):
         """Initialize the chat log
 
         Args:
@@ -27,6 +28,7 @@ class Chat():
             model (Union[None, str], optional): model to use. Defaults to None.
             functions (Union[None, List[Dict]], optional): functions to use, each function is a JSON Schema. Defaults to None.
             function_call (str, optional): method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
+            name2func (Union[None, Dict], optional): name to function mapping. Defaults to None.
         
         Raises:
             ValueError: msg should be a list of dict, a string or None
@@ -49,7 +51,8 @@ class Chat():
         self._model = 'gpt-3.5-turbo' if model is None else model
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
-        self._functions, self._function_call, self._resp = functions, function_call, None
+        self._functions, self._function_call = functions, function_call
+        self._name2func, self._resp = name2func, None
     
     def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
         """Get the prompt token for the model
@@ -95,6 +98,11 @@ class Chat():
     def function_call(self):
         """Get function call"""
         return self._function_call
+
+    @property
+    def name2func(self):
+        """Get name to function mapping"""
+        return self._name2func
     
     @api_key.setter
     def api_key(self, api_key:str):
@@ -121,12 +129,30 @@ class Chat():
     def function_call(self, function_call:str):
         """Set function call"""
         self._function_call = function_call
+    
+    @name2func.setter
+    def name2func(self, name2func:Dict):
+        """Set name to function mapping"""
+        assert isinstance(name2func, dict), "name2func should be a dict"
+        self._name2func = name2func
 
     @property
     def chat_log(self):
         """Chat history"""
         return self._chat_log
     
+    def autoresponse(self, **options):
+        """Get the response automatically"""
+        options['functions'], options['function_call'] = self.functions, self.function_call
+        resp = self.getresponse(**options)
+        while resp.finish_reason == 'function_call':
+            name, args = resp.function_call['name'], json.loads(resp.function_call['arguments'])
+            assert name in self.name2func, f"function {name} is not defined, you should define it in `self.name2func`"
+            result = self.name2func[name](**args)
+            self.function(result, name)
+            resp = self.getresponse(**options)
+        return resp
+
     def getresponse( self
                    , max_requests:int=1
                    , timeout:int = 0

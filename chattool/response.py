@@ -65,6 +65,11 @@ class Resp():
         return self.message['content']
     
     @property
+    def function_call(self):
+        """Function call"""
+        return self.message['function_call']
+    
+    @property
     def delta_content(self):
         """Content of stream response"""
         return self.response['choices'][0]['delta']['content']
