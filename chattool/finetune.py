@@ -70,7 +70,6 @@ class FineTune():
         resp = create_finetune_job(**args)
         self.jobid = resp['id']
 
-
     def list_jobs(self, limit:int=0):
         """List your organization's fine-tuning jobs."""
         return list_finetune_job(self.api_key, self.base_url, limit)
@@ -116,7 +115,7 @@ class FineTune():
         return f"<FineTune Job>"
     
     def __str__(self) -> str:
-        return f"<FineTune Job>"
+        return self.__repr__()
 
     @property
     def api_key(self) -> str:
