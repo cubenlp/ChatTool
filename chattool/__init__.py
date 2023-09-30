@@ -11,6 +11,7 @@ from .proxy import proxy_on, proxy_off, proxy_status
 from . import request
 from .tokencalc import num_tokens_from_messages, model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
+from .functioncall import generate_json_schema
 
 # read API key from the environment variable
 api_key = os.environ.get('OPENAI_API_KEY')

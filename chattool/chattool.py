@@ -7,6 +7,7 @@ from .tokencalc import num_tokens_from_messages, findcost
 from .request import chat_completion, valid_models
 import time, random, json
 import aiohttp
+from .functioncall import generate_json_schema
 
 class Chat():
     def __init__( self
@@ -136,6 +137,13 @@ class Chat():
         assert isinstance(name2func, dict), "name2func should be a dict"
         self._name2func = name2func
 
+    def setfuncs(self, funcs:List):
+        """Initialize function for function call"""
+        self.functions = [generate_json_schema(func) for func in funcs]
+        self.function_call = 'auto'
+        self.name2func = {func.__name__:func for func in funcs}
+        return True
+    
     @property
     def chat_log(self):
         """Chat history"""

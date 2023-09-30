@@ -1,6 +1,6 @@
 # tests for function call
 
-from chattool import Chat
+from chattool import Chat, generate_json_schema
 import json
 
 # schema of functions
@@ -55,4 +55,44 @@ def test_function_call2():
     chat.functions, chat.function_call = functions, 'auto'
     chat.name2func = name2func
     chat.autoresponse(max_requests=2)
+    chat.print_log()
+
+# generate docstring from functions
+def add(a: int, b: int) -> int:
+    """
+    This function adds two numbers.
+
+    Parameters:
+        a (int): The first number.
+        b (int): The second number.
+
+    Returns:
+        int: The sum of the two numbers.
+    """
+    return a + b
+
+def mult(a:int, b:int) -> int:
+    """
+    This function multiplies two numbers.
+
+    Parameters:
+        a (int): The first number.
+        b (int): The second number.
+
+    Returns:
+        int: The product of the two numbers.
+    """
+    return a * b
+
+def test_generate_docstring():
+    functions = [generate_json_schema(add)]
+    chat = Chat("find the sum of 784359345 and 345345345")
+    chat.functions, chat.function_call = functions, 'auto'
+    chat.name2func = {'add': add}
+    chat.autoresponse(max_requests=2)
+    chat.print_log()
+    # use the setfuncs method
+    chat = Chat("find the value of 124842 * 3423424")
+    chat.setfuncs([add, mult])
+    chat.autoresponse()
     chat.print_log()
