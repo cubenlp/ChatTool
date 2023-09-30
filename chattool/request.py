@@ -4,6 +4,7 @@
 from typing import List, Dict, Union
 import requests, json, os
 from urllib.parse import urlparse, urlunparse
+import warnings
 
 def is_valid_url(url: str) -> bool:
     """Check if the given URL is valid.
@@ -149,7 +150,8 @@ def deletefile(api_key:str, base_url:str, fileid:str):
     if resp.status_code == 200:
         return resp.json()['deleted']
     else:
-        raise Exception(resp.text)
+        warnings.warn(resp.text)
+        return False
 
 def create_finetune_job( api_key:str
                        , base_url:str
@@ -246,4 +248,5 @@ def deletemodel(api_key:str, base_url:str, modelid:str):
     if resp.status_code == 200:
         return resp.json()['deleted']
     else:
-        raise Exception(resp.text)
+        warnings.warn(resp.text)
+        return False

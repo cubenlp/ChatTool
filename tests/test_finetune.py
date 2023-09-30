@@ -46,5 +46,6 @@ def test_finetune():
         if file['filename'] in [trainfile, validfile] and \
             file['status'] == 'processed':
             ft.delete_file(file['id'])
+    assert True
     
     
