@@ -1,15 +1,21 @@
-import chattool, time
+import chattool, time, os
 from chattool import Chat, process_chats, num_tokens_from_messages
 from chattool.asynctool import async_chat_completion
-chattool.api_key="free-123"
-chattool.base_url = "https://api.wzhecnu.cn"
 import asyncio
+chattool.api_key = os.environ.get("OPENAI_API_KEY")
+chattool.base_url = os.environ.get("OPENAI_API_BASE_URL")
 
 # langs = ["Python", "Julia", "C++", "C", "Java", "JavaScript", "C#", "Go", "R", "Ruby"]
 langs = ["Python", "Julia", "C++"]
 chatlogs = [
     [{"role": "user", "content": f"Print hello using {lang}"}] for lang in langs
 ]
+
+def test_apikey():
+    assert chattool.api_key.startswith("sk-")
+
+def test_base_url():
+    assert chattool.base_url == "http"
 
 def test_stream():
     chat = Chat("hello")
