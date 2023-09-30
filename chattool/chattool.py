@@ -182,7 +182,8 @@ class Chat():
         """
         # initialize data
         api_key, model = self.api_key, self.model
-        funcs, func_call = self.functions, self.function_call
+        funcs = options.get('functions', self.functions)
+        func_call = options.get('function_call', self.function_call)
         assert api_key is not None, "API key is not set!"
         msg, resp, numoftries = self.chat_log, None, 0
         if stream: # TODO: add the `usage` key to the response
@@ -190,7 +191,7 @@ class Chat():
         # make requests
         while max_requests:
             try:
-                # Use function call from predefined functions
+                # make API Call
                 if funcs is not None: options['functions'] = funcs
                 if func_call is not None: options['function_call'] = func_call
                 response = chat_completion(
@@ -259,7 +260,7 @@ class Chat():
 
     def user(self, content:str):
         """User message"""
-        return self.add(r'user', content=content)
+        return self.add('user', content=content)
     
     def assistant(self, content:Union[None, str], function_call:Union[None, Dict]=None):
         """Assistant message"""
@@ -268,10 +269,9 @@ class Chat():
             return self.add('assistant', content=content, function_call=function_call)
         return self.add('assistant', content=content)
     
-    def function(self, content:str, name:str):
+    def function(self, content, name:str, dump:bool=True):
         """Add a message to the chat log"""
-        if not isinstance(content, str):
-            content = json.dumps(content)
+        if dump: content = json.dumps(content)
         return self.add('function', content=content, name=name)
         
     def system(self, content:str):
