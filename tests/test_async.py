@@ -69,5 +69,3 @@ def test_tokencounter():
     chat = Chat(message)
     resp = chat.getresponse()
     assert resp.prompt_tokens == prompttoken
-
-test_async_process_withfunc()
