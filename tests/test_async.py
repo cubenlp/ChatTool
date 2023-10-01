@@ -8,6 +8,7 @@ langs = ["Python", "Julia", "C++"]
 chatlogs = [
     [{"role": "user", "content": f"Print hello using {lang}"}] for lang in langs
 ]
+testpath = 'tests/testfiles/'
 
 def test_apikey():
     assert chattool.api_key.startswith("sk-")
@@ -34,14 +35,14 @@ def test_async_typewriter():
     asyncio.run(show_resp(chat))
 
 def test_async_process():
-    chkpoint = "test_async.jsonl"
+    chkpoint = testpath + "test_async.jsonl"
     t = time.time()
     resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, ncoroutines=3)
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
 def test_normal_process():
-    chkpoint = "test_nomal.jsonl"
+    chkpoint = testpath + "test_nomal.jsonl"
     def data2chat(data):
         chat = Chat(data)
         chat.getresponse()

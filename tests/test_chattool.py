@@ -7,7 +7,7 @@ import chattool, json
 from chattool import cli
 from chattool import Chat, Resp
 import pytest
-
+testpath = 'tests/testfiles/'
 
 def test_command_line_interface():
     """Test the CLI."""
@@ -107,8 +107,8 @@ def test_chat():
         {"role": "assistant", "content": "Hello, how can I assist you today?"}]
     
     # save json
-    chat.save("test.log", mode="w")
-    with open("test.log", "r") as f:
+    chat.save(testpath + "test.log", mode="w")
+    with open(testpath + "test.log", "r") as f:
         data = json.loads(f.read())
     chat2 = Chat(data)
     assert chat2.chat_log == chat.chat_log
