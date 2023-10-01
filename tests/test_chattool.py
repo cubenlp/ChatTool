@@ -6,6 +6,7 @@ from click.testing import CliRunner
 import chattool, json
 from chattool import cli
 from chattool import Chat, Resp
+import pytest
 
 
 def test_command_line_interface():
@@ -115,16 +116,22 @@ def test_chat():
     # print log
     chat.print_log()
     chat.print_log(sep='\n')
-    assert True
     print(chat)
     repr(chat)
-    assert True
 
     # len
     assert len(chat) == 2
     chat.pop()
     assert len(chat) == 1
 
+def test_chat_broken():
+    # invalid initialization
+    with pytest.raises(ValueError):
+        Chat(123)
+    # invalid functions
+    with pytest.raises(AssertionError):
+        Chat(functions={})
+    
 # test for long chatting
 response = {
     "id":"chatcmpl-6wXDUIbYzNkmqSF9UnjPuKLP1hHls",
