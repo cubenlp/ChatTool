@@ -84,7 +84,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         payload = {"messages": chatlog}
         payload.update(options)
         if max_tokens is not None:
-            payload['max_tokens'] = int(max_tokens(chatlog))
+            payload['max_tokens'] = max_tokens(chatlog)
         data = json.dumps(payload)
         response = await async_post( session=session
                                    , sem=sem
