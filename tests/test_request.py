@@ -7,6 +7,7 @@ from chattool.request import (
 )
 import pytest, chattool, os
 api_key, base_url = chattool.api_key, chattool.base_url
+testpath = 'tests/testfiles/'
 
 def test_valid_models():
     models = valid_models(api_key, base_url, gpt_only=False)
@@ -37,7 +38,7 @@ def test_normalize_url():
 
 def test_broken_requests():
     """Test the broken requests"""
-    with open("test.txt", "w") as f:
+    with open(testpath + "test.txt", "w") as f:
         f.write("hello world")
     # invalid file uploading
     with pytest.raises(Exception): # the file should be JSONL format

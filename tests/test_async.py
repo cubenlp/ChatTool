@@ -41,6 +41,18 @@ def test_async_process():
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
+def test_async_process_withfunc():
+    chkpoint = testpath + "test_async_withfunc.jsonl"
+    words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
+    def msg2log(msg):
+        chat = Chat()
+        chat.system("translate the words from English to Chinese")
+        chat.user(msg)
+        return chat.chat_log
+    def max_tokens(chatlog):
+        return Chat(chatlog).prompt_token()
+    async_chat_completion(words, chkpoint, clearfile=True, ncoroutines=3, max_tokens=max_tokens, msg2log=msg2log)
+
 def test_normal_process():
     chkpoint = testpath + "test_nomal.jsonl"
     def data2chat(data):
@@ -57,3 +69,5 @@ def test_tokencounter():
     chat = Chat(message)
     resp = chat.getresponse()
     assert resp.prompt_tokens == prompttoken
+
+test_async_process_withfunc()
