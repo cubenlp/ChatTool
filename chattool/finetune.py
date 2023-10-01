@@ -100,7 +100,7 @@ class FineTune():
         assert modelid is not None, "modelid must be specified"
         return deletemodel(self.api_key, self.base_url, modelid)
 
-    def get_valid_model(self, gpt_only:bool=True):
+    def list_models(self, gpt_only:bool=True):
         """Get the valid models
 
         Args:
