@@ -8,6 +8,7 @@ langs = ["Python", "Julia", "C++"]
 chatlogs = [
     [{"role": "user", "content": f"Print hello using {lang}"}] for lang in langs
 ]
+testpath = 'tests/testfiles/'
 
 def test_apikey():
     assert chattool.api_key.startswith("sk-")
@@ -34,14 +35,26 @@ def test_async_typewriter():
     asyncio.run(show_resp(chat))
 
 def test_async_process():
-    chkpoint = "test_async.jsonl"
+    chkpoint = testpath + "test_async.jsonl"
     t = time.time()
     resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, ncoroutines=3)
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
+def test_async_process_withfunc():
+    chkpoint = testpath + "test_async_withfunc.jsonl"
+    words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
+    def msg2log(msg):
+        chat = Chat()
+        chat.system("translate the words from English to Chinese")
+        chat.user(msg)
+        return chat.chat_log
+    def max_tokens(chatlog):
+        return Chat(chatlog).prompt_token()
+    async_chat_completion(words, chkpoint, clearfile=True, ncoroutines=3, max_tokens=max_tokens, msg2log=msg2log)
+
 def test_normal_process():
-    chkpoint = "test_nomal.jsonl"
+    chkpoint = testpath + "test_nomal.jsonl"
     def data2chat(data):
         chat = Chat(data)
         chat.getresponse()
@@ -56,3 +69,5 @@ def test_tokencounter():
     chat = Chat(message)
     resp = chat.getresponse()
     assert resp.prompt_tokens == prompttoken
+
+test_async_process_withfunc()

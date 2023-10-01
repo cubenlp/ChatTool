@@ -1,6 +1,12 @@
 """Unit test package for chattool."""
 
 from chattool import Chat
+import os
+
+if not os.path.exists('tests'):
+    os.mkdir('tests')
+if not os.path.exists('tests/testfiles'):
+    os.mkdir('tests/testfiles')
 
 def test_simple():
     # set api_key in the environment variable

@@ -1,6 +1,6 @@
 import asyncio, aiohttp
 import time, random, warnings, json, os
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Callable
 from chattool import Chat, Resp, load_chats
 import chattool
 from tqdm.asyncio import tqdm
@@ -51,6 +51,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                             , ncoroutines:int=1
                             , timeout:int=0
                             , timeinterval:int=0
+                            , max_tokens:Union[Callable, None]=None
                             , **options
                             )->List[bool]:
     """Process messages asynchronously
@@ -82,6 +83,8 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
     async def chat_complete(ind, locker, chatlog, chkpoint, **options):
         payload = {"messages": chatlog}
         payload.update(options)
+        if max_tokens is not None:
+            payload['max_tokens'] = int(max_tokens(chatlog))
         data = json.dumps(payload)
         response = await async_post( session=session
                                    , sem=sem
@@ -123,7 +126,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
             costs[ind] = cost
         return costs
 
-def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
+def async_chat_completion( msgs:Union[List[List[Dict]], str]
                          , chkpoint:str
                          , model:str='gpt-3.5-turbo'
                          , api_key:Union[str, None]=None
@@ -134,12 +137,14 @@ def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
                          , timeinterval:int=0
                          , clearfile:bool=False
                          , notrun:bool=False
+                         , msg2log:Union[Callable, None]=None
+                         , max_tokens:Union[Callable, int, None]=None
                          , **options
                          ):
     """Asynchronous chat completion
 
     Args:
-        chatlogs (Union[List[List[Dict]], str]): list of chat logs or chat message
+        msgs (Union[List[List[Dict]], str]): list of chat logs or chat message
         chkpoint (str): checkpoint file
         model (str, optional): model to use. Defaults to 'gpt-3.5-turbo'.
         api_key (Union[str, None], optional): API key. Defaults to None.
@@ -150,12 +155,18 @@ def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
         clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
         notrun (bool, optional): whether to run the async process. It should be True
           when use in Jupyter Notebook. Defaults to False.
+        msg2log (Union[Callable, None], optional): function to convert message to chat log.
+            Defaults to None.
+        max_tokens (Union[Callable, int, None], optional): function to calculate the maximum
+            number of tokens for the API call. Defaults to None.
 
     Returns:
         List[Dict]: list of responses
     """
     # read chatlogs | use method from the Chat object
-    chatlogs = [Chat(log).chat_log for log in chatlogs]
+    if msg2log is None:
+        msg2log = lambda msg: Chat(msg).chat_log
+    chatlogs = [msg2log(log) for log in msgs]
     if clearfile and os.path.exists(chkpoint):
         os.remove(chkpoint)
     if api_key is None:
@@ -166,6 +177,8 @@ def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
     chat_url = chattool.request.normalize_url(chat_url)
     # run async process
     assert ncoroutines > 0, "ncoroutines must be greater than 0!"
+    if isinstance(max_tokens, int):
+         max_tokens = lambda chatlog: max_tokens
     args = {
         "chatlogs": chatlogs,
         "chkpoint": chkpoint,
@@ -176,6 +189,7 @@ def async_chat_completion( chatlogs:Union[List[List[Dict]], str]
         "timeout": timeout,
         "timeinterval": timeinterval,
         "model": model,
+        "max_tokens": max_tokens,
         **options
     }
     if notrun: # when use in Jupyter Notebook

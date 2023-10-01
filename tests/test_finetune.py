@@ -1,12 +1,12 @@
 from chattool.finetune import FineTune
 from chattool import Chat
-import time
+testpath = 'tests/testfiles/'
 
 def test_finetune():
     # create test files
     chat = Chat("hello")
     chat.assistant("Hi, how can I help you?")
-    trainfile, validfile = "githubtest_training.jsonl", "githubtest_validation.jsonl"
+    trainfile, validfile = testpath+"githubtest_training.jsonl", testpath+"githubtest_validation.jsonl"
     chat.savewithmsg(trainfile, mode='w')
     chat.clear()
     chat.user("hi")
@@ -42,8 +42,8 @@ def test_finetune():
     models = ft.list_models()
     # delete files
     for file in files:
-        if file['filename'] in [trainfile, validfile] and \
-            file['status'] == 'processed':
+        if file['filename'] in ["githubtest_training.jsonl", 
+            "githubtest_validation.jsonl"] and file['status'] == 'processed':
             ft.delete_file(file['id'])
     
 def test_finetune_initialize():

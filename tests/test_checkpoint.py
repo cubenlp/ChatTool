@@ -1,10 +1,11 @@
 import os, responses
 from chattool import Chat, load_chats, process_chats, api_key
+testpath = 'tests/testfiles/'
 
 def test_with_checkpoint():
     # save chats without chatid
     chat = Chat()
-    checkpath = "tmp.jsonl"
+    checkpath = testpath + "tmp.jsonl"
     chat.save(checkpath, mode="w")
     chat = Chat("hello!")
     chat.save(checkpath) # append
@@ -21,7 +22,7 @@ def test_with_checkpoint():
 
     # save chats with chatid
     chat = Chat()
-    checkpath = "tmp_withid.jsonl"
+    checkpath = testpath + "tmp_withid.jsonl"
     chat.savewithid(checkpath, mode="w", chatid=0)
     chat = Chat("hello!")
     chat.savewithid(checkpath, chatid=3)
@@ -45,7 +46,7 @@ def test_process_chats():
         # chat.getresponse()
         chat.assistant("III")
         return chat
-    checkpath = "tmp_process.jsonl"
+    checkpath = testpath + "tmp_process.jsonl"
     # process part of the data
     msgs = [str(i) for i in range(6)]
     chats = process_chats(msgs[:3], msg2chat, checkpath, clearfile=True)
