@@ -128,7 +128,13 @@ class Chat():
     @function_call.setter
     def function_call(self, function_call:str):
         """Set function call"""
-        self._function_call = function_call
+        if function_call in ['auto', None, 'none']:
+            self._function_call = function_call
+        elif isinstance(function_call, str):
+            self.function_call = {'name':function_call}
+        elif isinstance(function_call, dict):
+            assert 'name' in function_call
+            self._function_call = function_call
     
     @name2func.setter
     def name2func(self, name2func:Dict):
@@ -148,17 +154,57 @@ class Chat():
         """Chat history"""
         return self._chat_log
     
-    def autoresponse(self, **options):
+    def autoresponse(self, display:bool=False, maxturns:int=3, **options):
         """Get the response automatically"""
         options['functions'], options['function_call'] = self.functions, self.function_call
+        show = lambda msg: print(self.display_role_content(msg))
         resp = self.getresponse(**options)
-        while resp.finish_reason == 'function_call':
-            name, args = resp.function_call['name'], json.loads(resp.function_call['arguments'])
-            assert name in self.name2func, f"function {name} is not defined, you should define it in `self.name2func`"
-            result = self.name2func[name](**args)
-            self.function(result, name)
+        if display: show(resp.message)
+        while resp.finish_reason == 'function_call' and maxturns != 0:
+            assert self.callfunction(), "function call failed!"
+            if display: show(self.chat_log[-1])
             resp = self.getresponse(**options)
+            if display: show(resp.message)
+            maxturns -= 1
         return resp
+
+    @staticmethod
+    def get_name_and_params(dic:dict):
+        """Get the name and parameters of the function call"""
+        if 'role' in dic and 'function_call' in dic:
+            dic = dic['function_call']
+        name, params = dic['name'], json.loads(dic['arguments'])
+        return name, params
+    
+    @staticmethod
+    def delete_dialogue_assist(chat_log:List[Dict]):
+        """Delete the auto-generated dialogue"""
+        ind = 0
+        while ind < len(chat_log) - 1:
+            log = chat_log[ind]
+            if log['role'] == 'assistant' and 'function_call' in log:
+                nextind = ind + 1
+                nextlog = chat_log[nextind]
+                if nextlog['role'] == 'function':
+                    chat_log.pop(nextind)
+                    chat_log.pop(ind)
+            else:
+                ind += 1
+        return chat_log
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    def callfunction(self):
+        """Calling function"""
+        msg = self.chat_log[-1]
+        if msg['role'] != 'assistant' or 'function_call' not in msg:
+            print("No function call found.")
+            return False
+        name, args = self.get_name_and_params(msg)
+        if name not in self.name2func:
+            print(f"Function {name} not found.")
+            return False
+        result = self.name2func[name](**args)
+        self.function(result, name)
+        return True
 
     def getresponse( self
                    , max_requests:int=1
@@ -309,9 +355,8 @@ class Chat():
             mode (str, optional): mode to open the file. Defaults to 'a'.
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
-        data = self.chat_log
         with open(path, mode, encoding='utf-8') as f:
-            f.write(json.dumps(data, ensure_ascii=False) + '\n')
+            f.write(json.dumps(self.chat_log, ensure_ascii=False) + '\n')
         return
     
     def savewithid(self, path:str, chatid:int, mode:str='a'):
@@ -343,20 +388,23 @@ class Chat():
 
     def print_log(self, sep: Union[str, None]=None):
         """Print the chat log"""
-        if sep is None:
-            sep = '\n' + '-'*15 + '\n'
         for resp in self._chat_log:
-            role, content = resp['role'], resp['content']
-            if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in resp):
-                print(sep, role, sep, content)
-            elif role == 'function':
-                print(sep, role, sep, f"function:\n{resp['name']}\nparams:\n{content}")
-            elif role == 'assistant':
-                print(sep, role, sep, f"calling function:\n{resp['function_call']}",
-                      "\ncontent:\n", content)
-            else:
-                raise Exception(f"Unknown role {role}")
+            print(self.display_role_content(resp, sep=sep))
     
+    @staticmethod
+    def display_role_content(dic:dict, sep:Union[str, None]=None):
+        """Show the role and content of the message"""
+        if sep is None: sep = '\n' + '-'*15 + '\n'
+        role, content = dic['role'], dic['content']
+        if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in dic):
+            return f"{sep}{role}{sep}{dic['content']}"
+        elif role == 'function':
+            return f"{sep}{role}{sep}function:\n\t{dic['name']}\nparams:\n\t{content}"
+        elif role == 'assistant':
+            return f"{sep}{role}{sep}calling function:\n\t{dic['function_call']}\ncontent:\n\t{content}"
+        else:
+            raise Exception(f"Unknown role {role}")
+
     def pop(self, ind:int=-1):
         """Pop the last message"""
         return self._chat_log.pop(ind)

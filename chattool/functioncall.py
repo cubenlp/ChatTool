@@ -37,6 +37,8 @@ def generate_json_schema(func):
     # generate description
     if parsed_docstring.short_description is not None:
         schema['description'] = parsed_docstring.short_description
+        if parsed_docstring.long_description is not None:
+            schema['description'] += '\n' + parsed_docstring.long_description
     # return info
     if parsed_docstring.returns is not None:
         returns = parsed_docstring.returns

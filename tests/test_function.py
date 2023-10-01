@@ -1,7 +1,8 @@
 # tests for function call
 
 from chattool import Chat, generate_json_schema
-import json
+import json, sys
+from io import StringIO
 
 # schema of functions
 functions = [
@@ -71,13 +72,14 @@ def add(a: int, b: int) -> int:
     """
     return a + b
 
-def mult(a:int, b:int) -> int:
+# with optional parameters
+def mult(a:int, b:int=1) -> int:
     """
     This function multiplies two numbers.
 
-    Parameters:
+    Args:
         a (int): The first number.
-        b (int): The second number.
+        b (int, optional): The second number. Defaults to 1.
 
     Returns:
         int: The product of the two numbers.
@@ -89,10 +91,26 @@ def test_generate_docstring():
     chat = Chat("find the sum of 784359345 and 345345345")
     chat.functions, chat.function_call = functions, 'auto'
     chat.name2func = {'add': add}
-    chat.autoresponse(max_requests=2)
+    chat.autoresponse(max_requests=2, display=True)
     chat.print_log()
     # use the setfuncs method
     chat = Chat("find the value of 124842 * 3423424")
-    chat.setfuncs([add, mult])
+    chat.setfuncs([add, mult]) # multi choice
     chat.autoresponse()
     chat.print_log()
+
+def exec_python_code(code:str)->dict:
+    """Execute the code and return the namespace or error message
+    
+    Args:
+        code (str): code to execute
+
+    Returns:
+        dict: namespace or error message
+    """
+    try:
+        namespace = {}
+        exec(code, namespace)
+        return namespace
+    except Exception as e:
+        return {'error': str(e)}
