@@ -2,6 +2,7 @@
 # Json Schema: https://json-schema.org/understanding-json-schema/
 
 from docstring_parser import parse
+from typing import List, Dict
 
 typemap = {
     'str': 'string',
@@ -37,6 +38,8 @@ def generate_json_schema(func):
     # generate description
     if parsed_docstring.short_description is not None:
         schema['description'] = parsed_docstring.short_description
+        if parsed_docstring.long_description is not None:
+            schema['description'] += '\n' + parsed_docstring.long_description
     # return info
     if parsed_docstring.returns is not None:
         returns = parsed_docstring.returns
@@ -56,3 +59,18 @@ def generate_json_schema(func):
         if not param.is_optional:
             schema["parameters"]["required"].append(param.arg_name)
     return schema
+
+def delete_dialogue_assist(chat_log:List[Dict]):
+    """Delete the auto-generated dialogue"""
+    ind = 0
+    while ind < len(chat_log) - 1:
+        log = chat_log[ind]
+        if log['role'] == 'assistant' and 'function_call' in log:
+            nextind = ind + 1
+            nextlog = chat_log[nextind]
+            if nextlog['role'] == 'function':
+                chat_log.pop(nextind)
+                chat_log.pop(ind)
+        else:
+            ind += 1
+    return chat_log

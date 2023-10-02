@@ -7,7 +7,7 @@ from .tokencalc import num_tokens_from_messages
 from .request import chat_completion, valid_models
 import time, random, json
 import aiohttp
-from .functioncall import generate_json_schema
+from .functioncall import generate_json_schema, delete_dialogue_assist
 
 class Chat():
     def __init__( self
@@ -128,7 +128,13 @@ class Chat():
     @function_call.setter
     def function_call(self, function_call:str):
         """Set function call"""
-        self._function_call = function_call
+        if function_call in ['auto', None, 'none']:
+            self._function_call = function_call
+        elif isinstance(function_call, str):
+            self.function_call = {'name':function_call}
+        elif isinstance(function_call, dict):
+            assert 'name' in function_call
+            self._function_call = function_call
     
     @name2func.setter
     def name2func(self, name2func:Dict):
@@ -148,17 +154,58 @@ class Chat():
         """Chat history"""
         return self._chat_log
     
-    def autoresponse(self, **options):
+    def iswaiting(self):
+        """Whether the response is waiting"""
+        if len(self) == 0: return False
+        return self[-1]['role'] == 'assistant' and 'function_call' in self[-1]
+
+    def autoresponse( self
+                    , display:bool=False
+                    , maxturns:int=3
+                    , capturerr:bool=True
+                    , **options):
         """Get the response automatically"""
         options['functions'], options['function_call'] = self.functions, self.function_call
+        show = lambda msg: print(self.display_role_content(msg))
         resp = self.getresponse(**options)
-        while resp.finish_reason == 'function_call':
-            name, args = resp.function_call['name'], json.loads(resp.function_call['arguments'])
-            assert name in self.name2func, f"function {name} is not defined, you should define it in `self.name2func`"
-            result = self.name2func[name](**args)
-            self.function(result, name)
+        if display: show(resp.message)
+        while self.iswaiting() and maxturns != 0:
+            # call api and update the result
+            status, msg = self.callfunction()
+            if not status: # update the error msg instead
+                if not capturerr: return False
+                self.function(msg, 'error')
+            if display: show(self[-1])
             resp = self.getresponse(**options)
-        return resp
+            if display: show(resp.message)
+            maxturns -= 1
+        return True
+
+    @staticmethod
+    def get_name_and_params(dic:dict):
+        """Get the name and parameters of the function call"""
+        if 'role' in dic and 'function_call' in dic:
+            dic = dic['function_call']
+        name, params = dic['name'], json.loads(dic['arguments'])
+        return name, params
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    def callfunction(self):
+        """Calling function"""
+        if not self.iswaiting():
+            return False, "Not waiting for function call."
+        name = self[-1]['function_call']['name']
+        if name not in self.name2func:
+            return False, f"Function {name} not found."
+        try:
+            args = json.loads(self[-1]['function_call']['arguments'])
+        except Exception as e:
+            return False, f"Cannot parse the arguments, error: {e}"
+        try:
+            result = self.name2func[name](**args)
+        except Exception as e:
+            return False, f"Function {name} failed with error: {e}"
+        self.function(result, name)
+        return True, "Function called successfully."
 
     def getresponse( self
                    , max_requests:int=1
@@ -283,7 +330,18 @@ class Chat():
     
     def copy(self):
         """Copy the chat log"""
-        return Chat(self._chat_log, api_key=self.api_key, chat_url=self.chat_url, model=self.model)
+        return Chat(self._chat_log)
+    
+    def deepcopy(self):
+        """Deep copy the Chat object"""
+        return Chat( self._chat_log
+                   , api_key=self.api_key
+                   , chat_url=self.chat_url
+                   , model=self.model
+                   , functions=self.functions
+                   , function_call=self.function_call
+                   , name2func=self.name2func
+                   , base_url=self.base_url)
     
     @property
     def last_message(self):
@@ -309,9 +367,8 @@ class Chat():
             mode (str, optional): mode to open the file. Defaults to 'a'.
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
-        data = self.chat_log
         with open(path, mode, encoding='utf-8') as f:
-            f.write(json.dumps(data, ensure_ascii=False) + '\n')
+            f.write(json.dumps(self.chat_log, ensure_ascii=False) + '\n')
         return
     
     def savewithid(self, path:str, chatid:int, mode:str='a'):
@@ -343,20 +400,28 @@ class Chat():
 
     def print_log(self, sep: Union[str, None]=None):
         """Print the chat log"""
-        if sep is None:
-            sep = '\n' + '-'*15 + '\n'
-        for resp in self._chat_log:
-            role, content = resp['role'], resp['content']
-            if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in resp):
-                print(sep, role, sep, content)
-            elif role == 'function':
-                print(sep, role, sep, f"function:\n{resp['name']}\nparams:\n{content}")
-            elif role == 'assistant':
-                print(sep, role, sep, f"calling function:\n{resp['function_call']}",
-                      "\ncontent:\n", content)
-            else:
-                raise Exception(f"Unknown role {role}")
+        for resp in self.chat_log:
+            print(self.display_role_content(resp, sep=sep))
     
+    @staticmethod
+    def display_role_content(dic:dict, sep:Union[str, None]=None):
+        """Show the role and content of the message"""
+        if sep is None: sep = '\n' + '-'*15 + '\n'
+        role, content = dic['role'], dic['content']
+        if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in dic):
+            return f"{sep}{role}{sep}{dic['content']}"
+        elif role == 'function':
+            return f"{sep}{role}{sep}function:\n\t{dic['name']}\nparams:\n\t{content}"
+        elif role == 'assistant':
+            return f"{sep}{role}{sep}calling function:\n\t{dic['function_call']}\ncontent:\n\t{content}"
+        else:
+            raise Exception(f"Unknown role {role}")
+    
+    def simplify(self):
+        """Simplify the chat log"""
+        delete_dialogue_assist(self.chat_log)
+        return self
+
     def pop(self, ind:int=-1):
         """Pop the last message"""
         return self._chat_log.pop(ind)
