@@ -5,7 +5,7 @@ from chattool.request import (
     create_finetune_job, list_finetune_job, retrievejob,
     listevents, canceljob, deletemodel
 )
-import pytest, chattool, os
+import pytest, chattool
 api_key, base_url = chattool.api_key, chattool.base_url
 testpath = 'tests/testfiles/'
 
@@ -20,6 +20,9 @@ def test_debug_log():
     """Test the debug log"""
     assert debug_log(net_url="https://www.baidu.com") or debug_log(net_url="https://www.google.com")
     assert not debug_log(net_url="https://baidu123.com") # invalid url
+    chattool.api_key = None
+    chattool.show_apikey()
+    chattool.api_key = api_key
 
 # normalize base url
 def test_is_valid_url():

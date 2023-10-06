@@ -1,7 +1,7 @@
 import chattool, time, os
 from chattool import Chat, process_chats, num_tokens_from_messages
 from chattool.asynctool import async_chat_completion
-import asyncio
+import asyncio, pytest
 
 # langs = ["Python", "Julia", "C++", "C", "Java", "JavaScript", "C#", "Go", "R", "Ruby"]
 langs = ["Python", "Julia", "C++"]
@@ -37,6 +37,7 @@ def test_async_typewriter():
 def test_async_process():
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
+    resp = async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, ncoroutines=3)
     resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, ncoroutines=3)
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")

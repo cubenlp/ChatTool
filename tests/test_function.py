@@ -1,6 +1,6 @@
 # tests for function call
 
-from chattool import Chat, generate_json_schema
+from chattool import Chat, generate_json_schema, exec_python_code
 import json
 
 # schema of functions
@@ -31,9 +31,9 @@ name2func = {
     'get_current_weather': lambda *kargs, **kwargs: weatherinfo
 }
 
-def test_function_call():
+def test_call_weather():
     chat = Chat("What's the weather like in Boston?")
-    resp = chat.getresponse(functions=functions, function_call='auto')
+    resp = chat.getresponse(functions=functions, function_call='auto', max_requests=3)
     # TODO: wrap the response
     if resp.finish_reason == 'function_call':
         # test response from chat api
@@ -50,12 +50,16 @@ def test_function_call():
         print("No function call found.")
         assert True
 
-def test_function_call2():
+def test_auto_response():
     chat = Chat("What's the weather like in Boston?")
     chat.functions, chat.function_call = functions, 'auto'
     chat.name2func = name2func
     chat.autoresponse(max_requests=2)
     chat.print_log()
+    chat.clear()
+    # response with nonempty content
+    chat.user("what is the result of 1+1, and What's the weather like in Boston?")
+    chat.autoresponse(max_requests=2)
 
 # generate docstring from functions
 def add(a: int, b: int) -> int:
@@ -85,7 +89,7 @@ def mult(a:int, b:int=1) -> int:
     """
     return a * b
 
-def test_generate_docstring():
+def test_add_and_mult():
     functions = [generate_json_schema(add)]
     chat = Chat("find the sum of 784359345 and 345345345")
     chat.functions = functions
@@ -93,7 +97,7 @@ def test_generate_docstring():
     chat.function_call = 'none'
     chat.function_call = {'name':'add'}
     chat.function_call = 'add' # specify the function(convert to dict)
-    chat.name2func = {'add': add}
+    chat.name2func = {'add': add} # dictionary of functions
     chat.function_call = 'auto' # auto decision
     # run until success: maxturns=-1
     chat.autoresponse(max_requests=2, display=True, maxturns=-1)
@@ -106,27 +110,32 @@ def test_generate_docstring():
     chat.autoresponse()
     chat.simplify() # simplify the chat log
     chat.print_log()
+    # test multichoice
+    chat.clear()
+    chat.user("find the value of 23723 + 12312, and 23723 * 12312")
+    chat.autoresponse()
 
-def exec_python_code(code:str)->dict:
-    """Execute the code and return the namespace or error message
+def test_mock_resp():
+    chat = Chat("find the sum of 1235 and 3423")
+    chat.setfuncs([add, mult])
+    # mock result of the resp
+    para = {'name': 'add', 'arguments': '{\n  "a": 1235,\n  "b": 3423\n}'}
+    chat.assistant(content=None, function_call=para)
+    chat.callfunction()
+    chat.getresponse(max_requests=2)
+
+def test_use_exec_function():
+    chat = Chat("find the result of sqrt(121314)")
+    chat.setfuncs([exec_python_code])
+    chat.autoresponse(max_requests=2)
     
-    Args:
-        code (str): code to execute
+def test_find_permutation_group():
+    pass
 
-    Returns:
-        dict: namespace or error message
-    """
-    try:
-        namespace = {}
-        exec(code, globals(), namespace)
-        for key, val in namespace.items():
-            namespace[key] = str(val)
-        return namespace
-    except Exception as e:
-        return {'error': str(e)}
+def test_interact_with_leandojo():
+    pass
 
 # debug area
 # test_generate_docstring()
 # test_function_call()
 # test_function_call2()
-# test_find_permutation_group()

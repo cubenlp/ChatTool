@@ -11,7 +11,7 @@ from .proxy import proxy_on, proxy_off, proxy_status
 from . import request
 from .tokencalc import num_tokens_from_messages, model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
-from .functioncall import generate_json_schema
+from .functioncall import generate_json_schema, exec_python_code
 
 # read API key from the environment variable
 api_key = os.environ.get('OPENAI_API_KEY')
@@ -38,8 +38,10 @@ elif platform.startswith("darwin"):
 def show_apikey():
     if api_key is not None:
         print(f"API key:\t{api_key}")
+        return True
     else:
         print("API key is not set!")
+        return False
 
 def default_prompt(msg:str):
     """Default prompt message for the API call
