@@ -20,19 +20,15 @@ pip install chattool --upgrade
 
 ### 设置密钥和代理链接
 
-方法一，在代码中修改
-```python
-import chattool
-chattool.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-chattool.base_url = "https://api.example.com"
-```
-
-方法二，设置环境变量，在 `~/.bashrc` 或者 `~/.zshrc` 中追加
+设置环境变量，在 `~/.bashrc` 或者 `~/.zshrc` 中追加
 
 ```bash
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 export OPENAI_BASE_URL="https://api.example.com"
+export OPENAI_API_BASE="https://api.example.com/v1"
 ```
+
+Win 在系统中设置环境变量。
 
 ### 示例
 
@@ -93,7 +89,7 @@ chats = load_chats("async_chat.jsonl")
 
 ## 更新日志
 
-当前版本 `1.0.0` 为稳定版，删除关于 `function call` 的冗余功能，增加异步处理数据的工具。
+当前版本为 `2.3.0`，支持调用外部工具，异步处理数据，以及模型微调功能。
 
 ### 测试版本
 - 版本 `0.2.0` 改用 `Chat` 类型作为中心交互对象
@@ -103,3 +99,5 @@ chats = load_chats("async_chat.jsonl")
 - 版本 `0.4.0` 开始，工具维护转至 [CubeNLP](https://github.com/cubenlp) 组织账号
 - 版本 `0.5.0` 开始，支持使用 `process_chats` 处理数据，借助 `msg2chat` 函数以及 `checkpoint` 文件
 - 版本 `0.6.0` 开始，支持 [function call](https://platform.openai.com/docs/guides/gpt/function-calling) 功能
+- 版本 `1.0.0` 开始，支持异步处理数据
+- 版本 `2.0.0` 开始，模块更名为 `chattool`
