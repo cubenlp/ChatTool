@@ -290,7 +290,17 @@ class Chat():
                     , maxturns:int=3
                     , capturerr:bool=True
                     , **options):
-        """Get the response automatically"""
+        """Get the response automatically
+        
+        Args:
+            display (bool, optional): whether to display the response. Defaults to False.
+            maxturns (int, optional): maximum number of turns. Defaults to 3.
+            capturerr (bool, optional):  if True, use the error message as the response. Defaults to True.
+            options (dict, optional): other options like `temperature`, `top_p`, etc.
+
+        Returns:
+            bool: whether the response is finished
+        """
         options['functions'], options['function_call'] = self.functions, self.function_call
         show = lambda msg: print(self.display_role_content(msg))
         resp = self.getresponse(**options)
@@ -298,7 +308,7 @@ class Chat():
         while self.iswaiting() and maxturns != 0:
             # call api and update the result
             status, msg = self.callfunction()
-            if not status: # update the error msg instead
+            if not status: # update the error msg
                 if not capturerr: return False
                 self.function(msg, 'error')
             if display: show(self[-1])

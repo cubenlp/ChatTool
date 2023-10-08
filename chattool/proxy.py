@@ -37,10 +37,3 @@ def proxy_status():
         print("`https_proxy` is not set!")
     else:
         print(f"https_proxy:\t{https}")
-
-def proxy_test(url:str="www.facebook.com"):
-    rawurl = url.replace("http://", "").replace("https://", "")
-    if os.system("curl -I https://" + rawurl) != 0:
-        print("Https: Curl to " + rawurl + " failed!")
-    if os.system("curl -I http://" + rawurl) != 0:
-        print("Http: Curl to " + rawurl + " failed!")

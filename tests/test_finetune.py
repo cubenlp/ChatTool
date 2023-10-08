@@ -39,7 +39,8 @@ def test_finetune():
     # default repl
     print(ft)
     # get model list
-    models = ft.list_models()
+    print(ft.list_models())
+    print(ft.model)
     # delete files
     for file in files:
         if file['filename'] in ["githubtest_training.jsonl", 

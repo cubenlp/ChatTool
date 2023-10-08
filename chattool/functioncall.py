@@ -74,3 +74,22 @@ def delete_dialogue_assist(chat_log:List[Dict]):
         else:
             ind += 1
     return chat_log
+
+def exec_python_code(code:str)->dict:
+    """Execute the code and return the namespace or error message
+    
+    Args:
+        code (str): code to execute
+
+    Returns:
+        dict: namespace or error message
+    """
+    try:
+        globalspace, currentspace, newspace = globals().copy(), globals().copy(), {}
+        exec(code, globalspace)
+        for key, val in globalspace.items():
+            if key not in currentspace:
+                newspace[key] = str(val)
+        return newspace
+    except Exception as e:
+        return {'error': str(e)}
