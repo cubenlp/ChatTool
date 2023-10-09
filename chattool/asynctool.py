@@ -98,7 +98,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         resp = Resp(json.loads(response))
         if not resp.is_valid():
             warnings.warn(f"Invalid response: {resp.error_message}")
-            return False
+            return 0, 0
         ## saving files
         chatlog.append(resp.message)
         chat = Chat(chatlog)
