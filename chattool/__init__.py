@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 
 import os, sys, requests
 from .chattool import Chat, Resp
@@ -89,6 +89,8 @@ def debug_log( net_url:str="https://www.baidu.com"
     ## Base url
     print("\nCheck your base url:")
     show_base_url()
+    print("\nCheck the OpenAI Base url:")
+    print(os.environ.get("OPENAI_BASE_URL"))
     
     ## Please check your API key
     if test_apikey:
