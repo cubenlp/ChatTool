@@ -149,7 +149,7 @@ class Chat():
         if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in dic):
             return f"{sep}{role}{sep}{dic['content']}"
         elif role == 'function':
-            return f"{sep}{role}{sep}function:\n\t{dic['name']}\nparams:\n\t{content}"
+            return f"{sep}{role}{sep}function:\n\t{dic['name']}\nresult:\n\t{content}"
         elif role == 'assistant':
             return f"{sep}{role}{sep}calling function:\n\t{dic['function_call']}\ncontent:\n\t{content}"
         else:
