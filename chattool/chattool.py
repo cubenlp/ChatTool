@@ -198,7 +198,7 @@ class Chat():
                     api_key=api_key, messages=msg, model=model,
                     chat_url=self.chat_url, timeout=timeout, **options)
                 resp = Resp(response)
-                assert resp.is_valid(), "Invalid response with message: " + resp.error_message
+                assert resp.is_valid(), resp.error_message
                 break
             except Exception as e:
                 max_requests -= 1
