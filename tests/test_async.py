@@ -58,7 +58,7 @@ def test_normal_process():
     chkpoint = testpath + "test_nomal.jsonl"
     def data2chat(data):
         chat = Chat(data)
-        chat.getresponse()
+        chat.getresponse(max_requests=3)
         return chat
     t = time.time()
     process_chats(chatlogs, data2chat, chkpoint, clearfile=True)

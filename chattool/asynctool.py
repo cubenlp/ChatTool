@@ -3,7 +3,7 @@ import time, random, warnings, json, os
 from typing import List, Dict, Union, Callable
 from chattool import Chat, Resp, load_chats
 import chattool
-from tqdm.asyncio import tqdm
+import tqdm.asyncio
 
 async def async_post( session
                     , sem
@@ -98,6 +98,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                , timeinterval=timeinterval
                                , timeout=timeout)
         ## saving files
+        if resp is None: return False
         chatlog.append(resp.message)
         chat = Chat(chatlog)
         async with locker: # locker | not necessary for normal IO
@@ -116,10 +117,10 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , chatlog=chatlog
                                  , chkpoint=chkpoint
                                  , **options)))
-        if chattool.platform == "macos":
-            responses = await tqdm.gather(tasks)
-        else: # for windows and linux
-            responses = await asyncio.gather(*tasks)
+        try: # for mac or linux
+            responses = await tqdm.asyncio.tqdm.gather(tasks)
+        except TypeError: # for windows or linux 
+            responses = await tqdm.asyncio.tqdm.gather(*tasks)
         for ind, cost in responses:
             costs[ind] = cost
         return costs
