@@ -33,7 +33,10 @@ async def async_post( session
         while max_requests > 0:
             try:    
                 async with session.post(url, headers=headers, data=data, timeout=timeout) as response:
-                    return await response.text()
+                    resp = await response.text()
+                    resp = Resp(json.loads(resp))
+                    assert resp.is_valid(), resp.error_message
+                    return resp
             except Exception as e:
                 max_requests -= 1
                 ntries += 1
@@ -86,19 +89,14 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         if max_tokens is not None:
             payload['max_tokens'] = max_tokens(chatlog)
         data = json.dumps(payload)
-        response = await async_post( session=session
-                                   , sem=sem
-                                   , url=chat_url
-                                   , data=data
-                                   , headers=headers
-                                   , max_requests=max_requests
-                                   , timeinterval=timeinterval
-                                   , timeout=timeout)
-        if response is None:return False
-        resp = Resp(json.loads(response))
-        if not resp.is_valid():
-            warnings.warn(f"Invalid response: {resp.error_message}")
-            return 0, 0
+        resp = await async_post( session=session
+                               , sem=sem
+                               , url=chat_url
+                               , data=data
+                               , headers=headers
+                               , max_requests=max_requests
+                               , timeinterval=timeinterval
+                               , timeout=timeout)
         ## saving files
         chatlog.append(resp.message)
         chat = Chat(chatlog)
