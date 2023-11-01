@@ -98,6 +98,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                , timeinterval=timeinterval
                                , timeout=timeout)
         ## saving files
+        if resp is None: return False
         chatlog.append(resp.message)
         chat = Chat(chatlog)
         async with locker: # locker | not necessary for normal IO
@@ -118,7 +119,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                  , **options)))
         try: # for mac or linux
             responses = await tqdm.asyncio.tqdm.gather(tasks)
-        except TypeError: # for windows or linux | weard bug for linux
+        except TypeError: # for windows or linux 
             responses = await tqdm.asyncio.tqdm.gather(*tasks)
         for ind, cost in responses:
             costs[ind] = cost
