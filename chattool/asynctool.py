@@ -98,7 +98,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                , timeinterval=timeinterval
                                , timeout=timeout)
         ## saving files
-        if resp is None: return False
+        if resp is None: return 0, 0
         chatlog.append(resp.message)
         chat = Chat(chatlog)
         async with locker: # locker | not necessary for normal IO
