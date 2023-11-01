@@ -100,7 +100,7 @@ def test_add_and_mult():
     chat.name2func = {'add': add} # dictionary of functions
     chat.function_call = 'auto' # auto decision
     # run until success: maxturns=-1
-    chat.autoresponse(max_requests=2, display=True, maxturns=-1)
+    chat.autoresponse(max_requests=2, display=True)
     # response should be finished
     chat.simplify()
     chat.print_log()
