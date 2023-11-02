@@ -132,11 +132,13 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
                          , chat_url:Union[str, None]=None
                          , max_requests:int=1
                          , ncoroutines:int=1
+                         , nproc:int=1
                          , timeout:int=0
                          , timeinterval:int=0
                          , clearfile:bool=False
                          , notrun:bool=False
                          , msg2log:Union[Callable, None]=None
+                         , data2chat:Union[Callable, None]=None
                          , max_tokens:Union[Callable, int, None]=None
                          , **options
                          ):
@@ -148,13 +150,16 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         model (str, optional): model to use. Defaults to 'gpt-3.5-turbo'.
         api_key (Union[str, None], optional): API key. Defaults to None.
         max_requests (int, optional): maximum number of requests to make. Defaults to 1.
-        ncoroutines (int, optional): number of coroutines. Defaults to 5.
+        ncoroutines (int, optional): (Deprecated)number of coroutines. Defaults to 1.
+        nproc (int, optional): number of coroutines. Defaults to 1.
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
         clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
         notrun (bool, optional): whether to run the async process. It should be True
           when use in Jupyter Notebook. Defaults to False.
-        msg2log (Union[Callable, None], optional): function to convert message to chat log.
+        msg2log (Union[Callable, None], optional): (Deprecated)function to convert message 
+            to chat log. Defaults to None.
+        data2chat (Union[Callable, None], optional): function to convert data to Chat object.
             Defaults to None.
         max_tokens (Union[Callable, int, None], optional): function to calculate the maximum
             number of tokens for the API call. Defaults to None.
@@ -162,9 +167,13 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
     Returns:
         List[Dict]: list of responses
     """
-    # read chatlogs | use method from the Chat object
-    if msg2log is None:
-        msg2log = lambda msg: Chat(msg).chat_log
+    # read chatlogs. By default, use method from the Chat object
+    if data2chat is None:
+        msg2log = lambda data: Chat(data).chat_log
+    elif msg2log is not None: # deprecated warning
+        warnings.warn("msg2log is deprecated, use data2chat instead!")
+    # use nproc instead of ncoroutines
+    nproc = max(nproc, ncoroutines)
     chatlogs = [msg2log(log) for log in msgs]
     if clearfile and os.path.exists(chkpoint):
         os.remove(chkpoint)
@@ -184,7 +193,7 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         "api_key": api_key,
         "chat_url": chat_url,
         "max_requests": max_requests,
-        "ncoroutines": ncoroutines,
+        "ncoroutines": nproc,
         "timeout": timeout,
         "timeinterval": timeinterval,
         "model": model,

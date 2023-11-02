@@ -42,6 +42,15 @@ def test_async_process():
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
+# broken test
+def test_failed_async():
+    api_key = chattool.api_key
+    chattool.api_key = "sk-invalid"
+    chkpoint = testpath + "test_async_fail.jsonl"
+    words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
+    resp = async_chat_completion(words, chkpoint, clearfile=True, ncoroutines=3)
+    chattool.api_key = api_key
+
 def test_async_process_withfunc():
     chkpoint = testpath + "test_async_withfunc.jsonl"
     words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
