@@ -7,6 +7,7 @@ from .tokencalc import num_tokens_from_messages
 from .request import chat_completion, valid_models
 import time, random, json
 import aiohttp
+import os
 from .functioncall import generate_json_schema, delete_dialogue_assist
 
 class Chat():
@@ -110,6 +111,8 @@ class Chat():
             mode (str, optional): mode to open the file. Defaults to 'a'.
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
+        # make path if not exists
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(self.chat_log, ensure_ascii=False) + '\n')
         return
@@ -123,6 +126,8 @@ class Chat():
             mode (str, optional): mode to open the file. Defaults to 'a'.
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
+        # make path if not exists
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         data = {"chatid": chatid, "chatlog": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
@@ -130,12 +135,15 @@ class Chat():
     
     def savewithmsg(self, path:str, mode:str='a'):
         """Save the chat log with message.
+        This is for fine-tuning the model.
 
         Args:
             path (str): path to the file
             mode (str, optional): mode to open the file. Defaults to 'a'.
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
+        # make path if not exists
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         data = {"messages": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
@@ -213,11 +221,12 @@ class Chat():
             self._resp = resp
         return resp
     
-    async def async_stream_responses(self, timeout=0):
+    async def async_stream_responses(self, timeout:int=0, textonly:bool=False):
         """Post request asynchronously and stream the responses
 
         Args:
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
+            textonly (bool, optional): whether to only return the text. Defaults to True.
         
         Returns:
             str: response text
@@ -238,7 +247,10 @@ class Chat():
                     line = json.loads(strline)
                     resp = Resp(line)
                     if resp.finish_reason == 'stop': break
-                    yield resp
+                    if textonly:
+                        yield resp.delta_content
+                    else:
+                        yield resp
     
     # Part3: function call
     def iswaiting(self):
