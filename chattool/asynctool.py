@@ -167,10 +167,12 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
     Returns:
         List[Dict]: list of responses
     """
-    # read chatlogs. By default, use method from the Chat object
-    if data2chat is None:
+    # convert chatlogs
+    if data2chat is not None:
+        msg2log = lambda data: data2chat(data).chat_log
+    elif msg2log is None: # By default, use method from the Chat object
         msg2log = lambda data: Chat(data).chat_log
-    elif msg2log is not None: # deprecated warning
+    else: # deprecated
         warnings.warn("msg2log is deprecated, use data2chat instead!")
     # use nproc instead of ncoroutines
     nproc = max(nproc, ncoroutines)
