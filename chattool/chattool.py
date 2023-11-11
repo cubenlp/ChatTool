@@ -221,7 +221,7 @@ class Chat():
             self._resp = resp
         return resp
     
-    async def async_stream_responses(self, timeout:int=0, textonly:bool=True):
+    async def async_stream_responses(self, timeout:int=0, textonly:bool=False):
         """Post request asynchronously and stream the responses
 
         Args:
@@ -248,7 +248,7 @@ class Chat():
                     resp = Resp(line)
                     if resp.finish_reason == 'stop': break
                     if textonly:
-                        yield resp.content
+                        yield resp.delta_content
                     else:
                         yield resp
     

@@ -157,8 +157,8 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
         notrun (bool, optional): whether to run the async process. It should be True
           when use in Jupyter Notebook. Defaults to False.
-        msg2log (Union[Callable, None], optional): (Deprecated)function to convert message 
-            to chat log. Defaults to None.
+        msg2log (Union[Callable, None], optional): function to convert message to chat log.
+            Defaults to None.
         data2chat (Union[Callable, None], optional): function to convert data to Chat object.
             Defaults to None.
         max_tokens (Union[Callable, int, None], optional): function to calculate the maximum
@@ -172,8 +172,6 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         msg2log = lambda data: data2chat(data).chat_log
     elif msg2log is None: # By default, use method from the Chat object
         msg2log = lambda data: Chat(data).chat_log
-    else: # deprecated
-        warnings.warn("msg2log is deprecated, use data2chat instead!")
     # use nproc instead of ncoroutines
     nproc = max(nproc, ncoroutines)
     chatlogs = [msg2log(log) for log in msgs]
