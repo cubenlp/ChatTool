@@ -226,7 +226,7 @@ class Chat():
 
         Args:
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
-            textonly (bool, optional): whether to only return the text. Defaults to True.
+            textonly (bool, optional): whether to only return the text. Defaults to False.
         
         Returns:
             str: response text
@@ -242,11 +242,18 @@ class Chat():
                 while True:
                     line = await response.content.readline()
                     if not line: break
+                    # strip the prefix of `data: {...}`
                     strline = line.decode().lstrip('data:').strip()
+                    # skip empty line
                     if not strline: continue
+                    # read the json string
                     line = json.loads(strline)
+                    # wrap the response
                     resp = Resp(line)
+                    # stop if the response is finished
                     if resp.finish_reason == 'stop': break
+                    # deal with the message
+                    if 'content' not in resp.delta: continue
                     if textonly:
                         yield resp.delta_content
                     else:
