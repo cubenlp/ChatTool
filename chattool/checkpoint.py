@@ -9,7 +9,7 @@ def load_chats( checkpoint:str
     
     Args:
         checkpoint (str): path to the checkpoint file
-        withid (bool, optional): whether the checkpoint file contains chatid. Defaults to False.
+        withid (bool, optional): Deprecated. It is not needed anymore. Defaults to False.
 
     Returns:
         list: chats
@@ -27,7 +27,7 @@ def load_chats( checkpoint:str
     # get the chatlogs
     logs = [json.loads(txt) for txt in txts]
     ## chatlogs with chatid
-    if withid:
+    if 'chatid' in logs[0]:
         chat_size, chatlogs = 1, [None]
         for log in logs:
             idx = log['chatid']
@@ -35,6 +35,9 @@ def load_chats( checkpoint:str
                 chatlogs.extend([None] * (idx - chat_size + 1))
                 chat_size = idx + 1
             chatlogs[idx] = log['chatlog']
+        # check if there are missing chatlogs
+        if None in chatlogs:
+            warnings.warn(f"checkpoint file {checkpoint} has unfinished chats")
     else: ## logs without chatid
         chatlogs = logs
     # return Chat class
