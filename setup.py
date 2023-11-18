@@ -43,7 +43,7 @@ setup(
     packages=find_packages(include=['chattool', 'chattool.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/cubenlp/chatapi_toolkit',
+    url='https://github.com/cubenlp/chattool',
     version=VERSION,
     zip_safe=False,
 )

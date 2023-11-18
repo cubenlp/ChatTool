@@ -1,8 +1,8 @@
 # ChatAPI Toolkit
 [![PyPI version](https://img.shields.io/pypi/v/chattool.svg)](https://pypi.python.org/pypi/chattool)
-[![Tests](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chatapi_toolkit/actions/workflows/test.yml/)
+[![Tests](https://github.com/cubenlp/chattool/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chattool/actions/workflows/test.yml/)
 [![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://apicall.wzhecnu.cn)
-[![Coverage](https://codecov.io/gh/cubenlp/chatapi_toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chatapi_toolkit)
+[![Coverage](https://codecov.io/gh/cubenlp/chattool/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chattool)
 
 <!-- 
 [![Updates](https://pyup.io/repos/github/cubenlp/chattool/shield.svg)](https://pyup.io/repos/github/cubenlp/chattool/) 
