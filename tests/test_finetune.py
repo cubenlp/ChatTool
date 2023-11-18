@@ -29,13 +29,14 @@ def test_finetune():
     # get job list
     jobs = ft.list_jobs()
     jobs = ft.list_jobs(limit=1)
-    jobid = jobs[0]['id']
-    # TODO: create job/cancel job/delete job
-    # retrieve job
-    ft.retrieve_job(jobid)
-    # list events
-    ft.list_events(jobid)
-    ft.list_events(jobid, limit=20)
+    if len(jobs):
+        jobid = jobs[0]['id']
+        # TODO: create job/cancel job/delete job
+        # retrieve job
+        ft.retrieve_job(jobid)
+        # list events
+        ft.list_events(jobid)
+        ft.list_events(jobid, limit=20)
     # default repl
     print(ft)
     # get model list
