@@ -111,10 +111,8 @@ def test_chat():
     newchat = copychat.deepcopy()
     assert newchat.functions == copychat.functions
     # save json
-    chat.save(testpath + "test.log", mode="w")
-    with open(testpath + "test.log", "r") as f:
-        data = json.loads(f.read())
-    chat2 = Chat(data)
+    chat.save(testpath + "test.json", mode="w")
+    chat2 = Chat.load(testpath + "test.json")
     assert chat2.chat_log == chat.chat_log
 
     # print log

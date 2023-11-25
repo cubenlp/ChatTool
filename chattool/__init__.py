@@ -17,14 +17,18 @@ from .functioncall import generate_json_schema, exec_python_code
 api_key = os.environ.get('OPENAI_API_KEY')
 
 # Read base_url from the environment
-if os.environ.get('OPENAI_BASE_URL') is not None:
-    base_url = os.environ.get("OPENAI_BASE_URL")
-elif os.environ.get('OPENAI_API_BASE_URL') is not None:
+if os.environ.get('OPENAI_API_BASE_URL') is not None:
     # adapt to the environment variable of chatgpt-web
     base_url = os.environ.get("OPENAI_API_BASE_URL")
 else:
     base_url = "https://api.openai.com"
 base_url = request.normalize_url(base_url)
+
+# Read model from the environment
+if os.environ.get('OPENAI_API_MODEL') is not None:
+    model = os.environ.get('OPENAI_API_MODEL')
+else:
+    model = "gpt-3.5-turbo"
 
 # get the platform
 platform = sys.platform
@@ -83,7 +87,7 @@ def debug_log( net_url:str="https://www.baidu.com"
         return False
     
     ## Check the proxy status
-    print("\nPlease check your proxy:")
+    print("\nCheck your proxy:")
     proxy_status()
 
     ## Base url
@@ -99,12 +103,12 @@ def debug_log( net_url:str="https://www.baidu.com"
 
     # Get model list
     if test_model:
-        print("\nThe model list:")
+        print("\nThe model list(contains gpt):")
         print(Chat().get_valid_models())
         
     # Test hello world
     if test_response:
-        print("\nTest message:", message)
+        print("\nTest response:", message)
         chat = Chat(message)
         chat.getresponse(max_requests=3)
         chat.print_log()
