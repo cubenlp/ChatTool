@@ -49,7 +49,7 @@ class Chat():
         self._api_key = api_key or chattool.api_key
         self._base_url = base_url or chattool.base_url
         self._chat_url = chat_url or self._base_url.rstrip('/') + '/v1/chat/completions'
-        self._model = model or 'gpt-3.5-turbo'
+        self._model = model or chattool.model
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
         self._functions, self._function_call = functions, function_call
@@ -148,6 +148,17 @@ class Chat():
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
         return
+    
+    @staticmethod
+    def load(path:str):
+        """Load the chat log from a file. Each line is a json string.
+
+        Args:
+            path (str): path to the file
+        """
+        with open(path, 'r', encoding='utf-8') as f:
+            chatlog = json.loads(f.read())
+        return Chat(chatlog)
     
     @staticmethod
     def display_role_content(dic:dict, sep:Union[str, None]=None):
