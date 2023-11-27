@@ -12,23 +12,30 @@ from . import request
 from .tokencalc import num_tokens_from_messages, model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
+from typing import Union
+from dotenv import load_dotenv
 
-# read API key from the environment variable
-api_key = os.environ.get('OPENAI_API_KEY')
+def load_envs(env_file:Union[None, str]=None):
+    """Read the environment variables for the API call"""
+    global api_key, base_url, model
+    if env_file is not None:
+        # load the environment file
+        load_dotenv(env_file, override=True)
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if os.environ.get('OPENAI_API_BASE_URL') is not None:
+        # adapt to the environment variable of chatgpt-web
+        base_url = os.environ.get("OPENAI_API_BASE_URL")
+    else:
+        base_url = "https://api.openai.com"
+    base_url = request.normalize_url(base_url)
+    if os.environ.get('OPENAI_API_MODEL') is not None:
+        model = os.environ.get('OPENAI_API_MODEL')
+    else:
+        model = "gpt-3.5-turbo"
+    return True
 
-# Read base_url from the environment
-if os.environ.get('OPENAI_API_BASE_URL') is not None:
-    # adapt to the environment variable of chatgpt-web
-    base_url = os.environ.get("OPENAI_API_BASE_URL")
-else:
-    base_url = "https://api.openai.com"
-base_url = request.normalize_url(base_url)
-
-# Read model from the environment
-if os.environ.get('OPENAI_API_MODEL') is not None:
-    model = os.environ.get('OPENAI_API_MODEL')
-else:
-    model = "gpt-3.5-turbo"
+# load the environment variables
+load_envs()
 
 # get the platform
 platform = sys.platform
