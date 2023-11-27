@@ -3,11 +3,25 @@
 """Tests for `chattool` package."""
 
 from click.testing import CliRunner
-import chattool, json
+import chattool, json, os
 from chattool import cli
-from chattool import Chat, Resp, findcost
+from chattool import Chat, Resp, findcost, load_envs, save_envs
 import pytest
 testpath = 'tests/testfiles/'
+
+def test_env_file():
+    save_envs(testpath + "chattool.env")
+    with open(testpath + "test.env", "w") as f:
+        f.write("OPENAI_API_KEY=sk-132\n")
+        f.write("OPENAI_API_BASE_URL=https://api.example.com\n")
+        f.write("OPENAI_API_MODEL=gpt-3.5-turbo-0301\n")
+    load_envs(testpath + "test.env")
+    assert chattool.api_key == "sk-132"
+    assert chattool.base_url == "https://api.example.com"
+    assert chattool.model == "gpt-3.5-turbo-0301"
+    # reset the environment variables
+    load_envs(testpath + "chattool.env")
+
 
 def test_command_line_interface():
     """Test the CLI."""

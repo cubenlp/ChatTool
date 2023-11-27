@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '2.6.0'
+__version__ = '2.6.1'
 
 import os, sys, requests
 from .chattool import Chat, Resp
@@ -13,14 +13,14 @@ from .tokencalc import num_tokens_from_messages, model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
 from typing import Union
-from dotenv import load_dotenv
+import dotenv
 
 def load_envs(env_file:Union[None, str]=None):
     """Read the environment variables for the API call"""
     global api_key, base_url, model
     if env_file is not None:
         # load the environment file
-        load_dotenv(env_file, override=True)
+        dotenv.load_dotenv(env_file, override=True)
     api_key = os.environ.get('OPENAI_API_KEY')
     if os.environ.get('OPENAI_API_BASE_URL') is not None:
         # adapt to the environment variable of chatgpt-web
@@ -32,6 +32,15 @@ def load_envs(env_file:Union[None, str]=None):
         model = os.environ.get('OPENAI_API_MODEL')
     else:
         model = "gpt-3.5-turbo"
+    return True
+
+def save_envs(env_file):
+    """Save the environment variables for the API call"""
+    global api_key, base_url, model
+    with open(env_file, "w") as f:
+        f.write(f"OPENAI_API_KEY={api_key}\n")
+        f.write(f"OPENAI_API_BASE_URL={base_url}\n")
+        f.write(f"OPENAI_API_MODEL={model}\n")
     return True
 
 # load the environment variables
