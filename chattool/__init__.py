@@ -15,12 +15,15 @@ from .functioncall import generate_json_schema, exec_python_code
 from typing import Union
 import dotenv
 
-def load_envs(env_file:Union[None, str]=None):
+def load_envs(env:Union[None, str, dict]=None):
     """Read the environment variables for the API call"""
     global api_key, base_url, model
-    if env_file is not None:
+    if isinstance(env, str):
         # load the environment file
-        dotenv.load_dotenv(env_file, override=True)
+        dotenv.load_dotenv(env, override=True)
+    elif isinstance(env, dict):
+        for key, value in env.items():
+            os.environ[key] = value
     api_key = os.environ.get('OPENAI_API_KEY')
     if os.environ.get('OPENAI_API_BASE_URL') is not None:
         # adapt to the environment variable of chatgpt-web
@@ -34,7 +37,7 @@ def load_envs(env_file:Union[None, str]=None):
         model = "gpt-3.5-turbo"
     return True
 
-def save_envs(env_file):
+def save_envs(env_file:str):
     """Save the environment variables for the API call"""
     global api_key, base_url, model
     with open(env_file, "w") as f:

@@ -112,7 +112,9 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         # make path if not exists
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        pathname = os.path.dirname(path).strip()
+        if pathname != '':
+            os.makedirs(pathname, exist_ok=True)
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(self.chat_log, ensure_ascii=False) + '\n')
         return
@@ -127,7 +129,9 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         # make path if not exists
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        pathname = os.path.dirname(path).strip()
+        if pathname != '':
+            os.makedirs(pathname, exist_ok=True)
         data = {"chatid": chatid, "chatlog": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
@@ -143,7 +147,9 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         # make path if not exists
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        pathname = os.path.dirname(path).strip()
+        if pathname != '':
+            os.makedirs(pathname, exist_ok=True)
         data = {"messages": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
