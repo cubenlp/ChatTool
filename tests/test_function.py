@@ -76,13 +76,13 @@ def add(a: int, b: int) -> int:
     return a + b
 
 # with optional parameters
-def mult(a:int, b:int=1) -> int:
+def mult(a:int, b:int) -> int:
     """This function multiplies two numbers.
     It is a useful calculator!
 
     Args:
         a (int): The first number.
-        b (int, optional): The second number. Defaults to 1.
+        b (int): The second number.
 
     Returns:
         int: The product of the two numbers.
@@ -100,20 +100,20 @@ def test_add_and_mult():
     chat.name2func = {'add': add} # dictionary of functions
     chat.function_call = 'auto' # auto decision
     # run until success: maxturns=-1
-    chat.autoresponse(max_requests=2, display=True)
+    chat.autoresponse(max_requests=3, display=True, timeinterval=2)
     # response should be finished
     chat.simplify()
     chat.print_log()
     # use the setfuncs method
     chat = Chat("find the value of 124842 * 3423424")
     chat.setfuncs([add, mult]) # multi choice
-    chat.autoresponse()
+    chat.autoresponse(max_requests=3, timeinterval=2)
     chat.simplify() # simplify the chat log
     chat.print_log()
     # test multichoice
     chat.clear()
     chat.user("find the value of 23723 + 12312, and 23723 * 12312")
-    chat.autoresponse()
+    chat.autoresponse(max_requests=3, timeinterval=2)
 
 def test_mock_resp():
     chat = Chat("find the sum of 1235 and 3423")
