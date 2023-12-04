@@ -5,7 +5,7 @@ import chattool
 from .response import Resp
 from .tokencalc import num_tokens_from_messages
 from .request import chat_completion, valid_models
-import time, random, json
+import time, random, json, warnings
 import aiohttp
 import os
 from .functioncall import generate_json_schema, delete_dialogue_assist
@@ -112,7 +112,9 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         # make path if not exists
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        pathname = os.path.dirname(path).strip()
+        if pathname != '':
+            os.makedirs(pathname, exist_ok=True)
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(self.chat_log, ensure_ascii=False) + '\n')
         return
@@ -127,7 +129,9 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         # make path if not exists
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        pathname = os.path.dirname(path).strip()
+        if pathname != '':
+            os.makedirs(pathname, exist_ok=True)
         data = {"chatid": chatid, "chatlog": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
@@ -143,7 +147,9 @@ class Chat():
         """
         assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
         # make path if not exists
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        pathname = os.path.dirname(path).strip()
+        if pathname != '':
+            os.makedirs(pathname, exist_ok=True)
         data = {"messages": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
@@ -203,10 +209,10 @@ class Chat():
         api_key, model = self.api_key, self.model
         funcs = options.get('functions', self.functions)
         func_call = options.get('function_call', self.function_call)
-        assert api_key is not None, "API key is not set!"
+        if api_key is None: warnings.warn("API key is not set!")
         msg, resp, numoftries = self.chat_log, None, 0
         if stream: # TODO: add the `usage` key to the response
-            print("Warning: stream mode is not supported yet! Use `async_stream_responses()` instead.")
+            warnings.warn("stream mode is not supported yet! Use `async_stream_responses()` instead.")
         # make requests
         while max_requests:
             try:
