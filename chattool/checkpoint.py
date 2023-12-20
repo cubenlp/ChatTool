@@ -3,13 +3,11 @@ from typing import List, Dict, Union, Callable, Any
 from .chattool import Chat
 import tqdm
 
-def load_chats( checkpoint:str
-              , withid:bool=False):
+def load_chats( checkpoint:str):
     """Load chats from a checkpoint file
     
     Args:
         checkpoint (str): path to the checkpoint file
-        withid (bool, optional): Deprecated. It is not needed anymore. Defaults to False.
 
     Returns:
         list: chats
@@ -23,25 +21,20 @@ def load_chats( checkpoint:str
         txts = f.read().strip().split('\n')
     ## empty file
     if len(txts) == 1 and txts[0] == '': return []
-
     # get the chatlogs
     logs = [json.loads(txt) for txt in txts]
-    ## chatlogs with chatid
-    if 'chatid' in logs[0]:
-        chat_size, chatlogs = 1, [None]
-        for log in logs:
-            idx = log['chatid']
-            if idx >= chat_size: # extend chatlogs
-                chatlogs.extend([None] * (idx - chat_size + 1))
-                chat_size = idx + 1
-            chatlogs[idx] = log['chatlog']
-        # check if there are missing chatlogs
-        if None in chatlogs:
-            warnings.warn(f"checkpoint file {checkpoint} has unfinished chats")
-    else: ## logs without chatid
-        chatlogs = logs
+    chat_size, chatlogs = 1, [None]
+    for log in logs:
+        idx = log['index']
+        if idx >= chat_size: # extend chatlogs
+            chatlogs.extend([None] * (idx - chat_size + 1))
+            chat_size = idx + 1
+        chatlogs[idx] = log['chat_log']
+    # check if there are missing chatlogs
+    if None in chatlogs:
+        warnings.warn(f"checkpoint file {checkpoint} has unfinished chats")
     # return Chat class
-    return [Chat(chatlog) if chatlog is not None else None for chatlog in chatlogs]
+    return [Chat(chat_log) if chat_log is not None else None for chat_log in chatlogs]
 
 def process_chats( data:List[Any]
                  , data2chat:Callable[[Any], Chat]
@@ -68,13 +61,12 @@ def process_chats( data:List[Any]
     if len(chats) > len(data):
         warnings.warn(f"checkpoint file {checkpoint} has more chats than the data to be processed")
         return chats[:len(data)]
-    
     chats.extend([None] * (len(data) - len(chats)))
     ## process chats
     tq = tqdm.tqdm if not isjupyter else tqdm.notebook.tqdm
     for i in tq(range(len(data))):
         if chats[i] is not None: continue
         chat = data2chat(data[i])
-        chat.save(checkpoint, mode='a')
+        chat.save(checkpoint, mode='a', index=i)
         chats[i] = chat
     return chats

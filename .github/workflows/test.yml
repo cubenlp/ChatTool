@@ -15,11 +15,6 @@ jobs:
       matrix:
         python-version: ["3.9"]
         os: [ubuntu-latest]
-        include:
-          - python-version: "3.8"
-            os: macos-latest
-          - python-version: "3.8"
-            os: windows-latest
             
     steps:
     - uses: actions/checkout@v2

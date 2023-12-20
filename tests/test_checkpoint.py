@@ -6,11 +6,11 @@ def test_with_checkpoint():
     # save chats without chatid
     chat = Chat()
     checkpath = testpath + "tmp.jsonl"
-    chat.save(checkpath, mode="w")
+    chat.save(checkpath, mode="w", index=0)
     chat = Chat("hello!")
-    chat.save(checkpath) # append
+    chat.save(checkpath, index=1) # append
     chat.assistant("你好, how can I assist you today?")
-    chat.save(checkpath) # append
+    chat.save(checkpath, index=2) # append
     ## load chats
     chats = load_chats(checkpath)
     chat_logs = [
@@ -23,13 +23,13 @@ def test_with_checkpoint():
     # save chats with chatid
     chat = Chat()
     checkpath = testpath + "tmp_withid.jsonl"
-    chat.savewithid(checkpath, mode="w", chatid=0)
+    chat.save(checkpath, mode="w", index=0)
     chat = Chat("hello!")
-    chat.savewithid(checkpath, chatid=3)
+    chat.save(checkpath, index=3)
     chat.assistant("你好, how can I assist you today?")
-    chat.savewithid(checkpath, chatid=2)
+    chat.save(checkpath, index=2)
     ## load chats
-    chats = load_chats(checkpath, withid=True)
+    chats = load_chats(checkpath)
     chat_logs = [
         [],
         None,
