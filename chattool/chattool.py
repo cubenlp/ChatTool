@@ -102,7 +102,7 @@ class Chat():
                    , name2func=self.name2func
                    , base_url=self.base_url)
 
-    def save(self, path:str, mode:str='a'):
+    def save(self, path:str, mode:str='a', index:int=0):
         """
         Save the chat log to a file. Each line is a json string.
 
@@ -115,24 +115,7 @@ class Chat():
         pathname = os.path.dirname(path).strip()
         if pathname != '':
             os.makedirs(pathname, exist_ok=True)
-        with open(path, mode, encoding='utf-8') as f:
-            f.write(json.dumps(self.chat_log, ensure_ascii=False) + '\n')
-        return
-    
-    def savewithid(self, path:str, chatid:int, mode:str='a'):
-        """Save the chat log with chat id. Each line is a json string.
-
-        Args:
-            path (str): path to the file
-            chatid (int): chat id
-            mode (str, optional): mode to open the file. Defaults to 'a'.
-        """
-        assert mode in ['a', 'w'], "saving mode should be 'a' or 'w'"
-        # make path if not exists
-        pathname = os.path.dirname(path).strip()
-        if pathname != '':
-            os.makedirs(pathname, exist_ok=True)
-        data = {"chatid": chatid, "chatlog": self.chat_log}
+        data = {"index": index, "chat_log": self.chat_log}
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
         return
@@ -163,8 +146,8 @@ class Chat():
             path (str): path to the file
         """
         with open(path, 'r', encoding='utf-8') as f:
-            chatlog = json.loads(f.read())
-        return Chat(chatlog)
+            chat_log = json.loads(f.read())
+        return Chat(chat_log['chat_log'])
     
     @staticmethod
     def display_role_content(dic:dict, sep:Union[str, None]=None):

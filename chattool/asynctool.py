@@ -83,11 +83,11 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
     sem = asyncio.Semaphore(ncoroutines)
     locker = asyncio.Lock()
 
-    async def chat_complete(ind, locker, chatlog, chkpoint, **options):
-        payload = {"messages": chatlog}
+    async def chat_complete(ind, locker, chat_log, chkpoint, **options):
+        payload = {"messages": chat_log}
         payload.update(options)
         if max_tokens is not None:
-            payload['max_tokens'] = max_tokens(chatlog)
+            payload['max_tokens'] = max_tokens(chat_log)
         data = json.dumps(payload)
         resp = await async_post( session=session
                                , sem=sem
@@ -99,22 +99,22 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                                , timeout=timeout)
         ## saving files
         if resp is None: return 0, 0
-        chatlog.append(resp.message)
-        chat = Chat(chatlog)
+        chat_log.append(resp.message)
+        chat = Chat(chat_log)
         async with locker: # locker | not necessary for normal IO
-            chat.savewithid(chkpoint, chatid=ind)
+            chat.save(chkpoint, index=ind)
         return ind, resp.cost()
 
     async with sem, aiohttp.ClientSession() as session:
         tasks = []
-        for ind, chatlog in enumerate(chatlogs):
+        for ind, chat_log in enumerate(chatlogs):
             if chats[ind] is not None: # skip completed chats
                 continue
             tasks.append(
                 asyncio.create_task(
                     chat_complete( ind=ind
                                  , locker=locker
-                                 , chatlog=chatlog
+                                 , chat_log=chat_log
                                  , chkpoint=chkpoint
                                  , **options)))
         try: # for mac or linux
@@ -186,7 +186,7 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
     # run async process
     assert ncoroutines > 0, "ncoroutines must be greater than 0!"
     if isinstance(max_tokens, int):
-         max_tokens = lambda chatlog: max_tokens
+         max_tokens = lambda chat_log: max_tokens
     args = {
         "chatlogs": chatlogs,
         "chkpoint": chkpoint,

@@ -66,8 +66,8 @@ def test_async_process_withfunc():
         chat.system("translate the words from English to Chinese")
         chat.user(msg)
         return chat.chat_log
-    def max_tokens(chatlog):
-        return Chat(chatlog).prompt_token()
+    def max_tokens(chat_log):
+        return Chat(chat_log).prompt_token()
     async_chat_completion(words, chkpoint, clearfile=True, ncoroutines=3, max_tokens=max_tokens, msg2log=msg2log)
 
 def test_normal_process():
