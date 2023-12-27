@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.0.0'
+__version__ = '3.0.1'
 
 import os, sys, requests
 from .chattool import Chat, Resp
@@ -129,7 +129,7 @@ def debug_log( net_url:str="https://www.baidu.com"
     if test_response:
         print("\nTest response:", message)
         chat = Chat(message)
-        chat.getresponse(max_requests=3)
+        chat.getresponse(max_tries=3)
         chat.print_log()
 
     print("\nDebug is finished.")

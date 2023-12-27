@@ -44,8 +44,8 @@ def test_async_typewriter2():
 def test_async_process():
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
-    resp = async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, ncoroutines=3)
-    resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, ncoroutines=3)
+    resp = async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
+    resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, nproc=3)
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
@@ -55,7 +55,7 @@ def test_failed_async():
     chattool.api_key = "sk-invalid"
     chkpoint = testpath + "test_async_fail.jsonl"
     words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
-    resp = async_chat_completion(words, chkpoint, clearfile=True, ncoroutines=3)
+    resp = async_chat_completion(words, chkpoint, clearfile=True, nproc=3)
     chattool.api_key = api_key
 
 def test_async_process_withfunc():
@@ -66,15 +66,13 @@ def test_async_process_withfunc():
         chat.system("translate the words from English to Chinese")
         chat.user(msg)
         return chat.chat_log
-    def max_tokens(chat_log):
-        return Chat(chat_log).prompt_token()
-    async_chat_completion(words, chkpoint, clearfile=True, ncoroutines=3, max_tokens=max_tokens, msg2log=msg2log)
+    async_chat_completion(words, chkpoint, clearfile=True, nproc=3,  msg2log=msg2log)
 
 def test_normal_process():
     chkpoint = testpath + "test_nomal.jsonl"
     def data2chat(data):
         chat = Chat(data)
-        chat.getresponse(max_requests=3)
+        chat.getresponse(max_tries=3)
         return chat
     t = time.time()
     process_chats(chatlogs, data2chat, chkpoint, clearfile=True)

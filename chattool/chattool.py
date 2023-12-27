@@ -170,20 +170,22 @@ class Chat():
     
     # Part2: response and async response
     def getresponse( self
-                   , max_requests:int=1
+                   , max_tries:int = 1
                    , timeout:int = 0
                    , timeinterval:int = 0
                    , update:bool = True
                    , stream:bool = False
+                   , max_requests:int=-1
                    , **options)->Resp:
         """Get the API response
 
         Args:
-            max_requests (int, optional): maximum number of requests to make. Defaults to 1.
+            max_tries (int, optional): maximum number of requests to make. Defaults to 1.
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
             timeinterval (int, optional): time interval between two API calls. Defaults to 0.
             update (bool, optional): whether to update the chat log. Defaults to True.
             options (dict, optional): other options like `temperature`, `top_p`, etc.
+            max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit
 
         Returns:
             Resp: API response
@@ -194,10 +196,11 @@ class Chat():
         func_call = options.get('function_call', self.function_call)
         if api_key is None: warnings.warn("API key is not set!")
         msg, resp, numoftries = self.chat_log, None, 0
+        max_tries = max(max_tries, max_requests)
         if stream: # TODO: add the `usage` key to the response
             warnings.warn("stream mode is not supported yet! Use `async_stream_responses()` instead.")
         # make requests
-        while max_requests:
+        while max_tries:
             try:
                 # make API Call
                 if funcs is not None: options['functions'] = funcs
@@ -209,7 +212,7 @@ class Chat():
                 assert resp.is_valid(), resp.error_message
                 break
             except Exception as e:
-                max_requests -= 1
+                max_tries -= 1
                 numoftries += 1
                 time.sleep(random.random() * timeinterval)
                 print(f"Try again ({numoftries}):{e}\n")
