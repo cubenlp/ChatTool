@@ -212,7 +212,7 @@ class Chat():
                 assert resp.is_valid(), resp.error_message
                 break
             except Exception as e:
-                max_tries-= 1
+                max_tries -= 1
                 numoftries += 1
                 time.sleep(random.random() * timeinterval)
                 print(f"Try again ({numoftries}):{e}\n")
