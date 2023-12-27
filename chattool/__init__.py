@@ -129,7 +129,7 @@ def debug_log( net_url:str="https://www.baidu.com"
     if test_response:
         print("\nTest response:", message)
         chat = Chat(message)
-        chat.getresponse(max_requests=3)
+        chat.getresponse(max_tries=3)
         chat.print_log()
 
     print("\nDebug is finished.")

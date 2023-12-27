@@ -10,7 +10,7 @@ async def async_post( session
                     , url
                     , data:str
                     , headers:Dict
-                    , max_requests:int=1
+                    , max_tries:int=1
                     , timeinterval=0
                     , timeout=0):
     """Asynchronous post request
@@ -21,7 +21,7 @@ async def async_post( session
         url (str): chat completion url
         data (str): payload of the request
         headers (Dict): request headers
-        max_requests (int, optional): maximum number of requests to make. Defaults to 1.
+        max_tries (int, optional): maximum number of requests to make. Defaults to 1.
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
     
@@ -30,7 +30,7 @@ async def async_post( session
     """
     async with sem:
         ntries = 0
-        while max_requests > 0:
+        while max_tries > 0:
             try:    
                 async with session.post(url, headers=headers, data=data, timeout=timeout) as response:
                     resp = await response.text()
@@ -38,7 +38,7 @@ async def async_post( session
                     assert resp.is_valid(), resp.error_message
                     return resp
             except Exception as e:
-                max_requests -= 1
+                max_tries -= 1
                 ntries += 1
                 time.sleep(random.random() * timeinterval)
                 print(f"Request Failed({ntries}):{e}")
@@ -50,11 +50,10 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                             , chkpoint:str
                             , api_key:str
                             , chat_url:str
-                            , max_requests:int=1
-                            , ncoroutines:int=1
+                            , max_tries:int=1
+                            , nproc:int=1
                             , timeout:int=0
                             , timeinterval:int=0
-                            , max_tokens:Union[Callable, None]=None
                             , **options
                             )->List[bool]:
     """Process messages asynchronously
@@ -63,8 +62,8 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         chatlogs (List[List[Dict]]): list of chat logs
         chkpoint (str): checkpoint file
         api_key (Union[str, None], optional): API key. Defaults to None.
-        max_requests (int, optional): maximum number of requests to make. Defaults to 1.
-        ncoroutines (int, optional): number of coroutines. Defaults to 5.
+        max_tries (int, optional): maximum number of requests to make. Defaults to 1.
+        nproc (int, optional): number of coroutines. Defaults to 5.
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
 
@@ -72,29 +71,27 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         List[bool]: list of responses
     """
     # load from checkpoint
-    chats = load_chats(chkpoint, withid=True) if os.path.exists(chkpoint) else []
+    chats = load_chats(chkpoint) if os.path.exists(chkpoint) else []
     chats.extend([None] * (len(chatlogs) - len(chats)))
     costs = [0] * len(chatlogs)
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + api_key
     }
-    ncoroutines += 1 # add one for the main coroutine
-    sem = asyncio.Semaphore(ncoroutines)
+    nproc += 1 # add one for the main coroutine
+    sem = asyncio.Semaphore(nproc)
     locker = asyncio.Lock()
 
     async def chat_complete(ind, locker, chat_log, chkpoint, **options):
         payload = {"messages": chat_log}
         payload.update(options)
-        if max_tokens is not None:
-            payload['max_tokens'] = max_tokens(chat_log)
         data = json.dumps(payload)
         resp = await async_post( session=session
                                , sem=sem
                                , url=chat_url
                                , data=data
                                , headers=headers
-                               , max_requests=max_requests
+                               , max_tries=max_tries
                                , timeinterval=timeinterval
                                , timeout=timeout)
         ## saving files
@@ -130,8 +127,7 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
                          , model:str='gpt-3.5-turbo'
                          , api_key:Union[str, None]=None
                          , chat_url:Union[str, None]=None
-                         , max_requests:int=1
-                         , ncoroutines:int=1
+                         , max_tries:int=1
                          , nproc:int=1
                          , timeout:int=0
                          , timeinterval:int=0
@@ -139,7 +135,8 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
                          , notrun:bool=False
                          , msg2log:Union[Callable, None]=None
                          , data2chat:Union[Callable, None]=None
-                         , max_tokens:Union[Callable, int, None]=None
+                         , max_requests:int=-1
+                         , ncoroutines:int=1
                          , **options
                          ):
     """Asynchronous chat completion
@@ -149,8 +146,7 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         chkpoint (str): checkpoint file
         model (str, optional): model to use. Defaults to 'gpt-3.5-turbo'.
         api_key (Union[str, None], optional): API key. Defaults to None.
-        max_requests (int, optional): maximum number of requests to make. Defaults to 1.
-        ncoroutines (int, optional): (Deprecated)number of coroutines. Defaults to 1.
+        max_tries (int, optional): maximum number of requests to make. Defaults to 1.
         nproc (int, optional): number of coroutines. Defaults to 1.
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
@@ -161,8 +157,8 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
             Defaults to None.
         data2chat (Union[Callable, None], optional): function to convert data to Chat object.
             Defaults to None.
-        max_tokens (Union[Callable, int, None], optional): function to calculate the maximum
-            number of tokens for the API call. Defaults to None.
+        max_requests (int, optional): (Deprecated)maximum number of requests to make. Defaults to -1.
+        ncoroutines (int, optional): (Deprecated)number of coroutines. Defaults to 1.
 
     Returns:
         List[Dict]: list of responses
@@ -184,20 +180,18 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         chat_url = os.path.join(chattool.base_url, "v1/chat/completions")
     chat_url = chattool.request.normalize_url(chat_url)
     # run async process
-    assert ncoroutines > 0, "ncoroutines must be greater than 0!"
-    if isinstance(max_tokens, int):
-         max_tokens = lambda chat_log: max_tokens
+    assert nproc > 0, "nproc must be greater than 0!"
+    max_tries = max(max_tries, max_requests)
     args = {
         "chatlogs": chatlogs,
         "chkpoint": chkpoint,
         "api_key": api_key,
         "chat_url": chat_url,
-        "max_requests": max_requests,
-        "ncoroutines": nproc,
+        "max_tries": max_tries,
+        "nproc": nproc,
         "timeout": timeout,
         "timeinterval": timeinterval,
         "model": model,
-        "max_tokens": max_tokens,
         **options
     }
     if notrun: # when use in Jupyter Notebook
