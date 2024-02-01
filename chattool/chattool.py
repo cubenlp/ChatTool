@@ -3,7 +3,6 @@
 from typing import List, Dict, Union
 import chattool
 from .response import Resp
-from .tokencalc import num_tokens_from_messages
 from .request import chat_completion, valid_models
 import time, random, json, warnings
 import aiohttp
@@ -350,17 +349,6 @@ class Chat():
             List[str]: valid models
         """
         return valid_models(self.api_key, self.base_url, gpt_only=gpt_only)
-
-    def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
-        """Get the prompt token for the model
-
-        Args:
-            model (str): model to use
-
-        Returns:
-            str: prompt token
-        """
-        return num_tokens_from_messages(self.chat_log, model=model)
     
     # Part5: properties and setters
     @property

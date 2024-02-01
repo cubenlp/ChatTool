@@ -1,5 +1,5 @@
 import chattool, time, os
-from chattool import Chat, process_chats, num_tokens_from_messages
+from chattool import Chat, process_chats
 from chattool.asynctool import async_chat_completion
 import asyncio, pytest
 
@@ -78,9 +78,3 @@ def test_normal_process():
     process_chats(chatlogs, data2chat, chkpoint, clearfile=True)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
-def test_tokencounter():
-    message = [{"role": "user", "content": "hello world!"}]
-    prompttoken = num_tokens_from_messages(message)
-    chat = Chat(message)
-    resp = chat.getresponse()
-    assert resp.prompt_tokens == prompttoken
