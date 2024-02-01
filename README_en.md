@@ -60,6 +60,7 @@ def msg2chat(msg):
     chat = Chat()
     chat.system("You are a helpful translator for numbers.")
     chat.user(f"Please translate the digit to Roman numerals: {msg}")
+    # We need to call `getresponse` here to get the response
     chat.getresponse()
     return chat
 
@@ -77,8 +78,13 @@ Example 3, process data in batch (asynchronous), print hello using different lan
 from chattool import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
-chatlogs = ["print hello using %s" % lang for lang in langs]
-async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", nproc=2)
+def data2chat(msg):
+    chat = Chat()
+    chat.user("Please print hello world using %s" % msg)
+    # Note that we don't need to call `getresponse` here, and leave it to the asynchronous processing
+    return chat
+
+async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
 ```
 

@@ -3,7 +3,6 @@
 from typing import List, Dict, Union
 import chattool
 from .response import Resp
-from .tokencalc import num_tokens_from_messages
 from .request import chat_completion, valid_models
 import time, random, json, warnings
 import aiohttp
@@ -16,6 +15,7 @@ class Chat():
                 , api_key:Union[None, str]=None
                 , chat_url:Union[None, str]=None
                 , base_url:Union[None, str]=None
+                , api_base:Union[None, str]=None
                 , model:Union[None, str]=None
                 , functions:Union[None, List[Dict]]=None
                 , function_call:Union[None, str]=None
@@ -35,20 +35,24 @@ class Chat():
         Raises:
             ValueError: msg should be a list of dict, a string or None
         """
+        # initial message
         if msg is None:
             self._chat_log = []
         elif isinstance(msg, str):
-            if chattool.default_prompt is None:
-                self._chat_log = [{"role": "user", "content": msg}]
-            else:
-                self._chat_log = chattool.default_prompt(msg)
+            self._chat_log = chattool.default_prompt(msg)
         elif isinstance(msg, list):
+            assert all(isinstance(m, dict) for m in msg), "msg should be a list of dict"
             self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
         self._api_key = api_key or chattool.api_key
-        self._base_url = base_url or chattool.base_url
-        self._chat_url = chat_url or self._base_url.rstrip('/') + '/v1/chat/completions'
+        # try: api_base => base_url => chattool.api_base => chattool.base_url
+        if api_base is None:
+            api_base = os.path.join(base_url, 'v1') if base_url is not None else chattool.api_base
+        base_url = base_url or chattool.base_url
+        self._base_url = base_url
+        self._api_base = api_base or os.path.join(base_url, "v1")
+        self._chat_url = chat_url or self._api_base.rstrip('/') + '/chat/completions'
         self._model = model or chattool.model
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
@@ -191,7 +195,7 @@ class Chat():
             Resp: API response
         """
         # initialize data
-        api_key, model = self.api_key, self.model
+        api_key, model, chat_url = self.api_key, self.model, self.chat_url
         funcs = options.get('functions', self.functions)
         func_call = options.get('function_call', self.function_call)
         if api_key is None: warnings.warn("API key is not set!")
@@ -207,7 +211,7 @@ class Chat():
                 if func_call is not None: options['function_call'] = func_call
                 response = chat_completion(
                     api_key=api_key, messages=msg, model=model,
-                    chat_url=self.chat_url, timeout=timeout, **options)
+                    chat_url=chat_url, timeout=timeout, **options)
                 resp = Resp(response)
                 assert resp.is_valid(), resp.error_message
                 break
@@ -350,17 +354,6 @@ class Chat():
             List[str]: valid models
         """
         return valid_models(self.api_key, self.base_url, gpt_only=gpt_only)
-
-    def prompt_token(self, model:str="gpt-3.5-turbo-0613"):
-        """Get the prompt token for the model
-
-        Args:
-            model (str): model to use
-
-        Returns:
-            str: prompt token
-        """
-        return num_tokens_from_messages(self.chat_log, model=model)
     
     # Part5: properties and setters
     @property

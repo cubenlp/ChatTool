@@ -199,9 +199,7 @@ def test_with_template():
     assert chat.chat_log == [
         {"role": "system", "content": "I am a system message"},
         {"role": "user", "content": "hello!"}]
-    chattool.default_prompt = None
-    chat = Chat("hello!")
-    assert chat.chat_log == [{"role": "user", "content": "hello!"}]
+    chattool.default_prompt = lambda msg: [{"role": "user", "content": msg}]
 
 def test_error_message():
     resp = Resp(response=err_api_key_resp)
@@ -236,16 +234,10 @@ def test_show():
     assert repr(resp) == "<Resp with finished reason: stop>"
   
 def test_token():
-    chat = Chat()
-    chat.user("hello!")
-    chat.assistant("Hello, how can I assist you today?")
-    print(f'gpt-3.5-cost: {findcost(chat.model, chat.prompt_token())}')
-    chat.model = "gpt-3.5-turbo-16k"
-    print(f'gpt-3.5 16k cost: {findcost(chat.model, chat.prompt_token())}')
-    chat.model = "gpt-4"
-    print(f'gpt-4 cost: {findcost(chat.model, chat.prompt_token())}')
-    chat.model = "gpt-4-32k"
-    print(f'gpt-4 32k cost: {findcost(chat.model, chat.prompt_token())}')
-    chat.model = "ft:gpt-3.5-turbo-0613:personal:recipe-ner:819klqSI"
+    models = ["gpt-3.5-turbo-0301", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k",
+              "ft:gpt-3.5-turbo-0613:personal:recipe-ner:819klqSI"]
+    ntokens = 1000
+    for model in models:
+        print(f"model: {model}", "ntokens:", ntokens, "cost:", findcost(model, ntokens))
     with pytest.raises(AssertionError):
         findcost("test-model", 100)

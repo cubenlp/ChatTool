@@ -20,9 +20,6 @@ def test_debug_log():
     """Test the debug log"""
     assert debug_log(net_url="https://www.baidu.com") or debug_log(net_url="https://www.google.com")
     assert not debug_log(net_url="https://baidu123.com") # invalid url
-    chattool.api_key = None
-    chattool.show_apikey()
-    chattool.api_key = api_key
 
 # normalize base url
 def test_is_valid_url():

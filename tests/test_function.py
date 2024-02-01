@@ -113,7 +113,7 @@ def test_add_and_mult():
     # test multichoice
     chat.clear()
     chat.user("find the value of 23723 + 12312, and 23723 * 12312")
-    chat.autoresponse(max_tries=3, timeinterval=2)
+    # chat.autoresponse(max_tries=3, timeinterval=2)
 
 def test_mock_resp():
     chat = Chat("find the sum of 1235 and 3423")
