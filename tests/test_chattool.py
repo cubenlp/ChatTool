@@ -199,6 +199,7 @@ def test_with_template():
     assert chat.chat_log == [
         {"role": "system", "content": "I am a system message"},
         {"role": "user", "content": "hello!"}]
+    chattool.default_prompt = lambda msg: [{"role": "user", "content": msg}]
 
 def test_error_message():
     resp = Resp(response=err_api_key_resp)
