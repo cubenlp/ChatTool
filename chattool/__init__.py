@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.0.1'
+__version__ = '3.1.0'
 
 import os, sys, requests
 from .chattool import Chat, Resp
@@ -25,12 +25,12 @@ def load_envs(env:Union[None, str, dict]=None):
         for key, value in env.items():
             os.environ[key] = value
     # else: load from environment variables
-    api_key = os.environ.get('OPENAI_API_KEY')
-    base_url = os.environ.get('OPENAI_API_BASE_URL', "https://api.openai.com")
-    api_base = os.environ.get('OPENAI_API_BASE', os.path.join(base_url, 'v1'))
+    api_key = os.getenv('OPENAI_API_KEY')
+    base_url = os.getenv('OPENAI_API_BASE_URL') or "https://api.openai.com"
+    api_base = os.getenv('OPENAI_API_BASE', os.path.join(base_url, 'v1'))
     base_url = request.normalize_url(base_url)
     api_base = request.normalize_url(api_base)
-    model = os.environ.get('OPENAI_API_MODEL', "gpt-3.5-turbo")
+    model = os.getenv('OPENAI_API_MODEL', "gpt-3.5-turbo")
     return True
 
 def save_envs(env_file:str):

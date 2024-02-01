@@ -85,6 +85,7 @@ langs = ["python", "java", "Julia", "C++"]
 def data2chat(msg):
     chat = Chat()
     chat.user("请用语言 %s 打印 hello world" % msg)
+    # 注意，这里不需要 getresponse 而交给异步处理
     return chat
 
 async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
