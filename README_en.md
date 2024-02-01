@@ -77,8 +77,12 @@ Example 3, process data in batch (asynchronous), print hello using different lan
 from chattool import async_chat_completion, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
-chatlogs = ["print hello using %s" % lang for lang in langs]
-async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", nproc=2)
+def data2chat(msg):
+    chat = Chat()
+    chat.user("Please print hello world using %s" % msg)
+    return chat
+
+async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
 ```
 

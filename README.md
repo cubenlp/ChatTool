@@ -26,7 +26,8 @@ pip install chattool --upgrade
 
 ```bash
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export OPENAI_BASE_URL="https://api.example.com"
+export OPENAI_API_BASEL="https://api.example.com/v1"
+export OPENAI_API_BASE_URL="https://api.example.com" # 可选
 ```
 
 Win 在系统中设置环境变量。
@@ -63,6 +64,7 @@ def msg2chat(msg):
     chat = Chat()
     chat.system("你是一个熟练的数字翻译家。")
     chat.user(f"请将该数字翻译为罗马数字：{msg}")
+    # 注意，在函数内获取返回
     chat.getresponse()
     return chat
 
@@ -77,11 +79,15 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 示例3，批量处理数据（异步并行），用不同语言打印 hello，并使用两个协程：
 
 ```python
-from chattool import async_chat_completion, load_chats
+from chattool import async_chat_completion, load_chats, Chat
 
 langs = ["python", "java", "Julia", "C++"]
-chatlogs = ["请用语言 %s 打印 hello world" % lang for lang in langs]
-async_chat_completion(chatlogs, chkpoint="async_chat.jsonl", nproc=2)
+def data2chat(msg):
+    chat = Chat()
+    chat.user("请用语言 %s 打印 hello world" % msg)
+    return chat
+
+async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
 ```
 
