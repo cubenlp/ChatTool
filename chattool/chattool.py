@@ -251,20 +251,24 @@ class Chat():
                     if not line: break
                     # strip the prefix of `data: {...}`
                     strline = line.decode().lstrip('data:').strip()
+                    if strline == '[DONE]': break
                     # skip empty line
                     if not strline: continue
                     # read the json string
-                    line = json.loads(strline)
-                    # wrap the response
-                    resp = Resp(line)
-                    # stop if the response is finished
-                    if resp.finish_reason == 'stop': break
-                    # deal with the message
-                    if 'content' not in resp.delta: continue
-                    if textonly:
-                        yield resp.delta_content
-                    else:
-                        yield resp
+                    try:
+                        # wrap the response
+                        resp = Resp(json.loads(strline))
+                        # stop if the response is finished
+                        if resp.finish_reason == 'stop': break
+                        # deal with the message
+                        if 'content' not in resp.delta: continue
+                        if textonly:
+                            yield resp.delta_content
+                        else:
+                            yield resp
+                    except Exception as e:
+                        print(f"Error: {e}, line: {strline}")
+                        break
     
     # Part3: function call
     def iswaiting(self):

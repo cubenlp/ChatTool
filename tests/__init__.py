@@ -1,6 +1,6 @@
 """Unit test package for chattool."""
 
-from chattool import Chat
+from chattool import Chat, debug_log
 import os
 
 if not os.path.exists('tests'):
@@ -13,7 +13,7 @@ def test_simple():
     chat = Chat()
     chat.user("Hello!")
     chat.getresponse()
-    chat.print_log()
+    debug_log()
     assert chat.chat_log[0] == {"role": "user", "content": "Hello!"}
     assert len(chat.chat_log) == 2
     
