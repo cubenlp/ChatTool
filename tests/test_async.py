@@ -12,10 +12,10 @@ testpath = 'tests/testfiles/'
 
 def test_simple():
     # set api_key in the environment variable
+    debug_log()
     chat = Chat()
     chat.user("Hello!")
     chat.getresponse()
-    debug_log()
     assert chat.chat_log[0] == {"role": "user", "content": "Hello!"}
     assert len(chat.chat_log) == 2
 
@@ -54,7 +54,7 @@ def test_async_process():
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
     resp = async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
-    resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, nproc=3)
+    resp = async_chat_completion(chatlogs, chkpoint, nproc=3)
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 

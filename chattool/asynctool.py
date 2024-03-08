@@ -177,7 +177,12 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         api_key = chattool.api_key
     assert api_key is not None, "API key is not provided!"
     if chat_url is None:
-        chat_url = os.path.join(chattool.base_url, "v1/chat/completions")
+        if chattool.api_base:
+            chat_url = os.path.join(chattool.api_base, "chat/completions")
+        elif chattool.base_url:
+            chat_url = os.path.join(chattool.base_url, "v1/chat/completions")
+        else:
+            raise Exception("chat_url is not provided!")
     chat_url = chattool.request.normalize_url(chat_url)
     # run async process
     assert nproc > 0, "nproc must be greater than 0!"

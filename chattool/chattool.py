@@ -357,7 +357,8 @@ class Chat():
         Returns:
             List[str]: valid models
         """
-        return valid_models(self.api_key, self.base_url, gpt_only=gpt_only)
+        model_url = os.path.join(self.api_base, 'models')
+        return valid_models(self.api_key, model_url, gpt_only=gpt_only)
     
     # Part5: properties and setters
     @property
@@ -400,6 +401,11 @@ class Chat():
         return self._base_url
     
     @property
+    def api_base(self):
+        """Get base url"""
+        return self._api_base
+    
+    @property
     def functions(self):
         """Get functions"""
         return self._functions
@@ -428,6 +434,11 @@ class Chat():
     def base_url(self, base_url:str):
         """Set base url"""
         self._base_url = base_url
+    
+    @api_base.setter
+    def api_base(self, api_base:str):
+        """Set base url"""
+        self._api_base = api_base
 
     @functions.setter
     def functions(self, functions:List[Dict]):
