@@ -1,5 +1,5 @@
 import chattool, time, os
-from chattool import Chat, process_chats
+from chattool import Chat, process_chats, debug_log
 from chattool.asynctool import async_chat_completion
 import asyncio, pytest
 
@@ -9,6 +9,15 @@ chatlogs = [
     [{"role": "user", "content": f"Print hello using {lang}"}] for lang in langs
 ]
 testpath = 'tests/testfiles/'
+
+def test_simple():
+    # set api_key in the environment variable
+    debug_log()
+    chat = Chat()
+    chat.user("Hello!")
+    chat.getresponse()
+    assert chat.chat_log[0] == {"role": "user", "content": "Hello!"}
+    assert len(chat.chat_log) == 2
 
 def test_apikey():
     assert chattool.api_key.startswith("sk-")
@@ -45,7 +54,7 @@ def test_async_process():
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
     resp = async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
-    resp = async_chat_completion(chatlogs, chkpoint, clearfile=True, nproc=3)
+    resp = async_chat_completion(chatlogs, chkpoint, nproc=3)
     assert all(resp)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 

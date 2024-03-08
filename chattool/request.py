@@ -81,7 +81,7 @@ def chat_completion( api_key:str
         raise Exception(response.text)
     return response.json()
 
-def valid_models(api_key:str, base_url:str, gpt_only:bool=True):
+def valid_models(api_key:str, model_url:str, gpt_only:bool=True):
     """Get valid models
     Request url: https://api.openai.com/v1/models
 
@@ -97,14 +97,13 @@ def valid_models(api_key:str, base_url:str, gpt_only:bool=True):
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/json"
     }
-    models_url = normalize_url(os.path.join(base_url, "v1/models"))
-    models_response = requests.get(models_url, headers=headers)
-    if models_response.status_code == 200:
-        data = models_response.json()
+    model_response = requests.get(normalize_url(model_url), headers=headers)
+    if model_response.status_code == 200:
+        data = model_response.json()
         model_list = [model.get("id") for model in data.get("data")]
         return [model for model in model_list if "gpt" in model] if gpt_only else model_list
     else:
-        raise Exception(models_response.text)
+        raise Exception(model_response.text)
 
 def loadfile(api_key:str, base_url:str, file:str, purpose:str='fine-tune'):
     """Upload a file that can be used across various endpoints/features. 

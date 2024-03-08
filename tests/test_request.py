@@ -5,14 +5,18 @@ from chattool.request import (
     create_finetune_job, list_finetune_job, retrievejob,
     listevents, canceljob, deletemodel
 )
-import pytest, chattool
-api_key, base_url = chattool.api_key, chattool.base_url
+import pytest, chattool, os
+api_key, base_url, api_base = chattool.api_key, chattool.base_url, chattool.api_base
 testpath = 'tests/testfiles/'
 
 def test_valid_models():
-    models = valid_models(api_key, base_url, gpt_only=False)
+    if chattool.api_base:
+        model_url = os.path.join(chattool.api_base, 'models')
+    else:
+        model_url = os.path.join(chattool.base_url, 'v1/models')
+    models = valid_models(api_key, model_url, gpt_only=False)
     assert len(models) >= 1
-    models = valid_models(api_key, base_url, gpt_only=True)
+    models = valid_models(api_key, model_url, gpt_only=True)
     assert len(models) >= 1
     assert 'gpt-3.5-turbo' in models
 

@@ -26,11 +26,13 @@ pip install chattool --upgrade
 
 ```bash
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export OPENAI_API_BASEL="https://api.example.com/v1"
+export OPENAI_API_BASE="https://api.example.com/v1"
 export OPENAI_API_BASE_URL="https://api.example.com" # 可选
 ```
 
 Win 在系统中设置环境变量。
+
+注：环境变量中，`OPENAI_API_BASE` 优先于 `OPENAI_API_BASE_URL`，二者选其一即可。
 
 ### 示例
 

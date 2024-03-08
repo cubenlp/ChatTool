@@ -251,20 +251,24 @@ class Chat():
                     if not line: break
                     # strip the prefix of `data: {...}`
                     strline = line.decode().lstrip('data:').strip()
+                    if strline == '[DONE]': break
                     # skip empty line
                     if not strline: continue
                     # read the json string
-                    line = json.loads(strline)
-                    # wrap the response
-                    resp = Resp(line)
-                    # stop if the response is finished
-                    if resp.finish_reason == 'stop': break
-                    # deal with the message
-                    if 'content' not in resp.delta: continue
-                    if textonly:
-                        yield resp.delta_content
-                    else:
-                        yield resp
+                    try:
+                        # wrap the response
+                        resp = Resp(json.loads(strline))
+                        # stop if the response is finished
+                        if resp.finish_reason == 'stop': break
+                        # deal with the message
+                        if 'content' not in resp.delta: continue
+                        if textonly:
+                            yield resp.delta_content
+                        else:
+                            yield resp
+                    except Exception as e:
+                        print(f"Error: {e}, line: {strline}")
+                        break
     
     # Part3: function call
     def iswaiting(self):
@@ -353,7 +357,8 @@ class Chat():
         Returns:
             List[str]: valid models
         """
-        return valid_models(self.api_key, self.base_url, gpt_only=gpt_only)
+        model_url = os.path.join(self.api_base, 'models')
+        return valid_models(self.api_key, model_url, gpt_only=gpt_only)
     
     # Part5: properties and setters
     @property
@@ -396,6 +401,11 @@ class Chat():
         return self._base_url
     
     @property
+    def api_base(self):
+        """Get base url"""
+        return self._api_base
+    
+    @property
     def functions(self):
         """Get functions"""
         return self._functions
@@ -424,6 +434,11 @@ class Chat():
     def base_url(self, base_url:str):
         """Set base url"""
         self._base_url = base_url
+    
+    @api_base.setter
+    def api_base(self, api_base:str):
+        """Set base url"""
+        self._api_base = api_base
 
     @functions.setter
     def functions(self, functions:List[Dict]):
