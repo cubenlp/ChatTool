@@ -1,6 +1,6 @@
 import json, warnings, os
 from typing import List, Dict, Union, Callable, Any
-from .chattool import Chat
+from .chattype import Chat
 import tqdm
 
 def load_chats( checkpoint:str):

@@ -2,10 +2,10 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.1.1'
+__version__ = '3.1.2'
 
 import os, sys, requests
-from .chattool import Chat, Resp
+from .chattype import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from .proxy import proxy_on, proxy_off, proxy_status
 from . import request
@@ -100,14 +100,20 @@ def debug_log( net_url:str="https://www.baidu.com"
         return False
     
     ## Check the proxy status
-    print("\nCheck your proxy:")
+    print("\nCheck your proxy:" +\
+          "This is not necessary if the base url is already a proxy link.")
     proxy_status()
 
     ## Base url
-    print("\nCheck your base url:")
+    print("\nCheck the value OPENAI_API_BASE_URL:")
     print(base_url)
-    print("\nCheck the OpenAI Base url:")
+    print("\nCheck the value OPENAI_API_BASE:" +\
+          "This will override OPENAI_API_BASE_URL if both are set.")
     print(api_base)
+
+    ## Model
+    print("\nYour default OPENAI_API_MODEL:")
+    print(model)
     
     ## Please check your API key
     if test_apikey:
