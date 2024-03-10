@@ -1,14 +1,23 @@
-# ChatAPI Toolkit
-[![PyPI version](https://img.shields.io/pypi/v/chattool.svg)](https://pypi.python.org/pypi/chattool)
-[![Tests](https://github.com/cubenlp/chattool/actions/workflows/test.yml/badge.svg)](https://github.com/cubenlp/chattool/actions/workflows/test.yml/)
-[![Documentation Status](https://img.shields.io/badge/docs-github_pages-blue.svg)](https://chattool.cubenlp.com)
-[![Coverage](https://codecov.io/gh/cubenlp/chattool/branch/master/graph/badge.svg)](https://codecov.io/gh/cubenlp/chattool)
+<div align="center">
+    <a href="https://pypi.python.org/pypi/chattool">
+        <img src="https://img.shields.io/pypi/v/chattool.svg" alt="PyPI version" />
+    </a>
+    <a href="https://github.com/cubenlp/chattool/actions/workflows/test.yml">
+        <img src="https://github.com/cubenlp/chattool/actions/workflows/test.yml/badge.svg" alt="Tests" />
+    </a>
+    <a href="https://chattool.cubenlp.com">
+        <img src="https://img.shields.io/badge/docs-github_pages-blue.svg" alt="Documentation Status" />
+    </a>
+    <a href="https://codecov.io/gh/cubenlp/chattool">
+        <img src="https://codecov.io/gh/cubenlp/chattool/branch/master/graph/badge.svg" alt="Coverage" />
+    </a>
+</div>
 
-<!-- 
-[![Updates](https://pyup.io/repos/github/cubenlp/chattool/shield.svg)](https://pyup.io/repos/github/cubenlp/chattool/) 
--->
+<div align="center">
+    <img src="https://qiniu.wzhecnu.cn/PicBed6/picgo/chattool.jpeg" alt="ChatAPI Toolkit" width="360", style="border-radius: 20px;">
 
 [English](README_en.md) | [简体中文](README.md)
+</div>
 
 基于 API 的简单封装，支持多轮对话，代理，以及异步处理数据等。
 
