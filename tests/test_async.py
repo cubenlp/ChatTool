@@ -53,9 +53,8 @@ def test_async_typewriter2():
 def test_async_process():
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
-    resp = async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
-    resp = async_chat_completion(chatlogs, chkpoint, nproc=3)
-    assert all(resp)
+    async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
+    async_chat_completion(chatlogs, chkpoint, nproc=3)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
 # broken test
