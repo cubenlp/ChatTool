@@ -67,7 +67,7 @@ class Resp():
     @property
     def function_call(self):
         """Function call"""
-        return self.message['function_call']
+        return self.message.get('function_call')
     
     @property
     def delta(self):
@@ -111,4 +111,4 @@ class Resp():
     @property
     def finish_reason(self):
         """Finish reason"""
-        return self.response['choices'][0]['finish_reason']
+        return self.response['choices'][0].get('finish_reason')
