@@ -228,47 +228,23 @@ class Chat():
             self._resp = resp
         return resp
     
-    async def async_stream_responses(self, timeout:int=0, textonly:bool=False):
+    async def async_stream_responses( self
+                                    , timeout:int=0
+                                    , textonly:bool=False
+                                    , **options):
         """Post request asynchronously and stream the responses
 
         Args:
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
             textonly (bool, optional): whether to only return the text. Defaults to False.
+            options (dict, optional): other options like `temperature`, `top_p`, etc.
         
         Returns:
             str: response text
         """
-        # TODO: Support other options
-        data = json.dumps({
-            "model" : self.model, "messages" : self.chat_log, "stream":True})
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key}
-        async with aiohttp.ClientSession() as session:
-            async with session.post(self.chat_url, headers=headers, data=data, timeout=timeout) as response:
-                while True:
-                    line = await response.content.readline()
-                    if not line: break
-                    # strip the prefix of `data: {...}`
-                    strline = line.decode().lstrip('data:').strip()
-                    if strline == '[DONE]': break
-                    # skip empty line
-                    if not strline: continue
-                    # read the json string
-                    try:
-                        # wrap the response
-                        resp = Resp(json.loads(strline))
-                        # stop if the response is finished
-                        if resp.finish_reason == 'stop': break
-                        # deal with the message
-                        if 'content' not in resp.delta: continue
-                        if textonly:
-                            yield resp.delta_content
-                        else:
-                            yield resp
-                    except Exception as e:
-                        print(f"Error: {e}, line: {strline}")
-                        break
+        async for resp in _async_stream_responses(
+            self.api_key, self.chat_url, self.chat_log, self.model, timeout=timeout, **options):
+            yield resp.delta_content if textonly else resp
     
     # Part3: function call
     def iswaiting(self):
@@ -490,3 +466,38 @@ class Chat():
     def __getitem__(self, index):
         """Get the message at index"""
         return self._chat_log[index]
+
+async def _async_stream_responses( api_key:str
+                                 , chat_url:str
+                                 , chat_log:str
+                                 , model:str
+                                 , timeout:int=0
+                                 , **options):
+    """Post request asynchronously and stream the responses"""
+    options.update({'model':model, 'messages':chat_log, 'stream':True})
+    data = json.dumps(options)
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + api_key}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(chat_url, headers=headers, data=data, timeout=timeout) as response:
+            while True:
+                line = await response.content.readline()
+                if not line: break
+                # strip the prefix of `data: {...}`
+                strline = line.decode().lstrip('data:').strip()
+                if strline == '[DONE]': break
+                # skip empty line
+                if not strline: continue
+                # read the json string
+                try:
+                    # wrap the response
+                    resp = Resp(json.loads(strline))
+                    # stop if the response is finished
+                    if resp.finish_reason == 'stop': break
+                    # deal with the message
+                    if 'content' not in resp.delta: continue
+                    yield resp
+                except Exception as e:
+                    print(f"Error: {e}, line: {strline}")
+                    break

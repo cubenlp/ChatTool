@@ -45,7 +45,7 @@ def test_async_typewriter():
 
 def test_async_typewriter2():
     async def show_resp(chat):
-        async for txt in chat.async_stream_responses(textonly=True):
+        async for txt in chat.async_stream_responses(textonly=True, top_p=0):
             print(txt, end='')
     chat = Chat("Print hello using Python")
     asyncio.run(show_resp(chat))
