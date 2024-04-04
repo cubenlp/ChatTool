@@ -95,7 +95,6 @@ def valid_models(api_key:str, model_url:str, gpt_only:bool=True):
     """
     headers = {
         "Authorization": "Bearer " + api_key,
-        "Content-Type": "application/json"
     }
     model_response = requests.get(normalize_url(model_url), headers=headers)
     if model_response.status_code == 200:
@@ -132,7 +131,6 @@ def filecontent(api_key:str, base_url:str, fileid:str):
     """Returns the contents of the specified file"""
     headers = {
         "Authorization": "Bearer " + api_key,
-        "Content-Type": "application/json"
     }
     fileurl = normalize_url(os.path.join(base_url, "v1/files", fileid, "content"))
     resp = requests.get(fileurl, headers=headers)
