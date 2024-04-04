@@ -54,6 +54,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
                             , nproc:int=1
                             , timeout:int=0
                             , timeinterval:int=0
+                            , showcost:bool=False
                             , **options
                             )->List[bool]:
     """Process messages asynchronously
@@ -100,7 +101,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
         chat = Chat(chat_log)
         async with locker: # locker | not necessary for normal IO
             chat.save(chkpoint, index=ind)
-        return ind, resp.cost()
+        return ind, resp.cost() if showcost else 0
 
     async with sem, aiohttp.ClientSession() as session:
         tasks = []
@@ -124,7 +125,6 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
 
 def async_chat_completion( msgs:Union[List[List[Dict]], str]
                          , chkpoint:str
-                         , model:str='gpt-3.5-turbo'
                          , api_key:Union[str, None]=None
                          , chat_url:Union[str, None]=None
                          , max_tries:int=1
@@ -132,11 +132,13 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
                          , timeout:int=0
                          , timeinterval:int=0
                          , clearfile:bool=False
-                         , notrun:bool=False
-                         , msg2log:Union[Callable, None]=None
+                         , wait:bool=False
+                         , showcost:bool=False
                          , data2chat:Union[Callable, None]=None
+                         , msg2log:Union[Callable, None]=None
                          , max_requests:int=-1
                          , ncoroutines:int=1
+                         , notrun:bool=False
                          , **options
                          ):
     """Asynchronous chat completion
@@ -151,24 +153,24 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
         timeinterval (int, optional): time interval between two API calls. Defaults to 0.
         clearfile (bool, optional): whether to clear the checkpoint file. Defaults to False.
-        notrun (bool, optional): whether to run the async process. It should be True
-          when use in Jupyter Notebook. Defaults to False.
+        wait (bool, optional): wait for the `await` command. Defaults to False.
         msg2log (Union[Callable, None], optional): function to convert message to chat log.
             Defaults to None.
         data2chat (Union[Callable, None], optional): function to convert data to Chat object.
             Defaults to None.
+        notrun (bool, optional): (Deprecated) wait for the `await` command. Defaults to False.
         max_requests (int, optional): (Deprecated)maximum number of requests to make. Defaults to -1.
         ncoroutines (int, optional): (Deprecated)number of coroutines. Defaults to 1.
 
     Returns:
         List[Dict]: list of responses
     """
-    # convert chatlogs
+    # convert msg to chatlogs
     if data2chat is not None:
         msg2log = lambda data: data2chat(data).chat_log
     elif msg2log is None: # By default, use method from the Chat object
         msg2log = lambda data: Chat(data).chat_log
-    # use nproc instead of ncoroutines
+    # number of coroutines
     nproc = max(nproc, ncoroutines)
     chatlogs = [msg2log(log) for log in msgs]
     if clearfile and os.path.exists(chkpoint):
@@ -184,6 +186,8 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         else:
             raise Exception("chat_url is not provided!")
     chat_url = chattool.request.normalize_url(chat_url)
+    if 'model' not in options:
+        options['model'] = chattool.model if chattool.model else "gpt-3.5-turbo"
     # run async process
     assert nproc > 0, "nproc must be greater than 0!"
     max_tries = max(max_tries, max_requests)
@@ -193,13 +197,13 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
         "api_key": api_key,
         "chat_url": chat_url,
         "max_tries": max_tries,
+        "showcost": showcost,
         "nproc": nproc,
         "timeout": timeout,
         "timeinterval": timeinterval,
-        "model": model,
         **options
     }
-    if notrun: # when use in Jupyter Notebook
+    if notrun or wait: # when use in Jupyter Notebook
         return async_process_msgs(**args) # return the async object
     else:
         return asyncio.run(async_process_msgs(**args))
