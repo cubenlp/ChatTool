@@ -13,9 +13,9 @@ class Chat():
     def __init__( self
                 , msg:Union[List[Dict], None, str]=None
                 , api_key:Union[None, str]=None
-                , chat_url:Union[None, str]=None
-                , base_url:Union[None, str]=None
                 , api_base:Union[None, str]=None
+                , base_url:Union[None, str]=None
+                , chat_url:Union[None, str]=None
                 , model:Union[None, str]=None
                 , functions:Union[None, List[Dict]]=None
                 , function_call:Union[None, str]=None
@@ -25,8 +25,9 @@ class Chat():
         Args:
             msg (Union[List[Dict], None, str], optional): chat log. Defaults to None.
             api_key (Union[None, str], optional): API key. Defaults to None.
-            chat_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
-            base_url (Union[None, str], optional): base url. Defaults to None. Example: "https://api.openai.com"
+            api_base (Union[None, str], optional): base url with suffix "/v1". Defaults to None. Example: "https://api.openai.com/v1"
+            base_url (Union[None, str], optional): base url without suffix "/v1". Defaults to None. Example: "https://api.openai.com"
+            chat_url (Union[None, str], optional): chat completion url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
             model (Union[None, str], optional): model to use. Defaults to None.
             functions (Union[None, List[Dict]], optional): functions to use, each function is a JSON Schema. Defaults to None.
             function_call (str, optional): method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
@@ -45,15 +46,23 @@ class Chat():
             self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
-        self._api_key = api_key or chattool.api_key
-        # try: api_base => base_url => chattool.api_base => chattool.base_url
-        if api_base is None:
-            api_base = os.path.join(base_url, 'v1') if base_url is not None else chattool.api_base
-        base_url = base_url or chattool.base_url
-        self._base_url = base_url
-        self._api_base = api_base or os.path.join(base_url, "v1")
-        self._chat_url = chat_url or self._api_base.rstrip('/') + '/chat/completions'
-        self._model = model or chattool.model
+        self.api_key = api_key or chattool.api_key
+        # chat_url > api_base > base_url > chattool.api_base > chattool.base_url
+        self.api_base = api_base or chattool.api_base
+        self.base_url = base_url or chattool.base_url
+        self.model = model or chattool.model or "gpt-3.5-turbo"
+        if chat_url:
+            self.chat_url = chat_url
+        elif api_base:
+            self.chat_url = os.path.join(self.api_base, "chat/completions")
+        elif base_url:
+            self.chat_url = os.path.join(self.base_url, "v1/chat/completions")
+        elif chattool.api_base:
+            self.chat_url = os.path.join(chattool.api_base, "chat/completions")
+        elif chattool.base_url:
+            self.chat_url = os.path.join(chattool.base_url, "v1/chat/completions")
+        else:
+            self.chat_url = "https://api.openai.com/v1/chat/completions"
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
         self._functions, self._function_call = functions, function_call
@@ -104,6 +113,7 @@ class Chat():
                    , functions=self.functions
                    , function_call=self.function_call
                    , name2func=self.name2func
+                   , api_base=self.api_base
                    , base_url=self.base_url)
 
     def save(self, path:str, mode:str='a', index:int=0):
@@ -333,7 +343,11 @@ class Chat():
         Returns:
             List[str]: valid models
         """
-        model_url = os.path.join(self.api_base, 'models')
+        model_url = "https://api.openai.com/v1/models"
+        if self.api_base:
+            model_url = os.path.join(self.api_base, 'models')
+        elif self.base_url:
+            model_url = os.path.join(self.base_url, 'v1/models')
         return valid_models(self.api_key, model_url, gpt_only=gpt_only)
     
     # Part5: properties and setters
@@ -407,13 +421,17 @@ class Chat():
         self._chat_url = chat_url
 
     @base_url.setter
-    def base_url(self, base_url:str):
+    def base_url(self, base_url:Union[None, str]):
         """Set base url"""
+        if base_url:
+            self.chat_url = base_url.rstrip('/') + '/v1/chat/completions'
         self._base_url = base_url
     
     @api_base.setter
-    def api_base(self, api_base:str):
+    def api_base(self, api_base:Union[None, str]):
         """Set base url"""
+        if api_base:
+            self.chat_url = api_base.rstrip('/') + '/chat/completions'
         self._api_base = api_base
 
     @functions.setter

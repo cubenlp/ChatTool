@@ -82,9 +82,7 @@ def msg2chat(msg):
 
 checkpoint = "chat.jsonl"
 msgs = ["%d" % i for i in range(1, 10)]
-# process the data
-chats = process_chats(msgs[:5], msg2chat, checkpoint)
-# process the rest data, and read the cache from the last time
+# process the data in batch, if the checkpoint file exists, it will continue from the last checkpoint
 continue_chats = process_chats(msgs, msg2chat, checkpoint)
 ```
 
@@ -102,6 +100,12 @@ def data2chat(msg):
 
 async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
+```
+
+when using `async_chat_completion` in Jupyter notebook, you should use the `await` keyword and the `wait=True` parameter:
+
+```python
+await async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
 ```
 
 ## License

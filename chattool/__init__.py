@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.1.4'
+__version__ = '3.1.5'
 
 import os, sys, requests
 from .chattype import Chat, Resp
@@ -13,7 +13,24 @@ from .tokencalc import model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
 from typing import Union
-import dotenv
+import dotenv 
+
+raw_env_text = f"""# Description: Env file for ChatTool.
+# Current version: {__version__}
+
+# The base url of the API (with suffix /v1)
+# This will override OPENAI_API_BASE_URL if both are set.
+OPENAI_API_BASE=''
+
+# The base url of the API (without suffix /v1)
+OPENAI_API_BASE_URL=''
+
+# Your API key
+OPENAI_API_KEY=''
+
+# The default model name
+OPENAI_API_MODEL=''
+"""
 
 def load_envs(env:Union[None, str, dict]=None):
     """Read the environment variables for the API call"""
@@ -26,21 +43,21 @@ def load_envs(env:Union[None, str, dict]=None):
             os.environ[key] = value
     # else: load from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
-    base_url = os.getenv('OPENAI_API_BASE_URL') or "https://api.openai.com"
-    api_base = os.getenv('OPENAI_API_BASE') or os.path.join(base_url, 'v1')
-    base_url = request.normalize_url(base_url)
-    api_base = request.normalize_url(api_base)
-    model = os.getenv('OPENAI_API_MODEL') or "gpt-3.5-turbo"
+    base_url = os.getenv('OPENAI_API_BASE_URL') # or "https://api.openai.com"
+    api_base = os.getenv('OPENAI_API_BASE') # or os.path.join(base_url, 'v1')
+    model = os.getenv('OPENAI_API_MODEL') # or "gpt-3.5-turbo"
     return True
 
 def save_envs(env_file:str):
     """Save the environment variables for the API call"""
-    global api_key, base_url, model
+    global api_key, base_url, model, api_base
+    set_key = lambda key, value: dotenv.set_key(env_file, key, value) if value else None
     with open(env_file, "w") as f:
-        f.write(f"OPENAI_API_KEY={api_key}\n")
-        f.write(f"OPENAI_API_BASE_URL={base_url}\n")
-        f.write(f"OPENAI_API_BASE={api_base}\n")
-        f.write(f"OPENAI_API_MODEL={model}\n")
+        f.write(raw_env_text)
+    set_key('OPENAI_API_KEY', api_key)
+    set_key('OPENAI_API_BASE_URL', base_url)
+    set_key('OPENAI_API_BASE', api_base)
+    set_key('OPENAI_API_MODEL', model)
     return True
 
 # load the environment variables
@@ -100,14 +117,14 @@ def debug_log( net_url:str="https://www.baidu.com"
         return False
     
     ## Check the proxy status
-    print("\nCheck your proxy:" +\
+    print("\nCheck your proxy: " +\
           "This is not necessary if the base url is already a proxy link.")
     proxy_status()
 
     ## Base url
     print("\nCheck the value OPENAI_API_BASE_URL:")
     print(base_url)
-    print("\nCheck the value OPENAI_API_BASE:" +\
+    print("\nCheck the value OPENAI_API_BASE: " +\
           "This will override OPENAI_API_BASE_URL if both are set.")
     print(api_base)
 
