@@ -71,7 +71,7 @@ chat.print_log()
 
 ```python
 # 编写处理函数
-def msg2chat(msg):
+def data2chat(msg):
     chat = Chat()
     chat.system("你是一个熟练的数字翻译家。")
     chat.user(f"请将该数字翻译为罗马数字：{msg}")
@@ -81,10 +81,8 @@ def msg2chat(msg):
 
 checkpoint = "chat.jsonl" # 缓存文件的名称
 msgs = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-# 处理部分数据
-chats = process_chats(msgs[:5], msg2chat, checkpoint)
-# 处理所有数据，从上一次处理的位置继续
-continue_chats = process_chats(msgs, msg2chat, checkpoint)
+# 处理数据，如果 checkpoint 存在，则从上次中断处继续
+continue_chats = process_chats(msgs, data2chat, checkpoint)
 ```
 
 示例3，批量处理数据（异步并行），用不同语言打印 hello，并使用两个协程：
@@ -101,6 +99,12 @@ def data2chat(msg):
 
 async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
+```
+
+在 Jupyter Notebook 中运行，需要使用 `await` 关键字和 `wait=True` 参数：
+
+```python
+await async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
 ```
 
 示例4，使用工具（自定义函数）：
