@@ -40,9 +40,19 @@ Set environment variables in `~/.bashrc` or `~/.zshrc`:
 
 ```bash
 export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export OPENAI_API_BASE_URL="https://api.example.com"
-export OPENAI_API_BASE="https://api.example.com/v1"
+export OPENAI_API_BASE="https://api.example.com/v1" 
+export OPENAI_API_BASE_URL="https://api.example.com" # optional
 ```
+
+Or in Python code:
+
+```py
+import chattool
+chattool.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+chattool.api_base = "https://api.example.com/v1"
+```
+
+Note: `OPENAI_API_BASE` is prior to `OPENAI_API_BASE_URL`, and you only need to set one of them.
 
 ## Examples
 
