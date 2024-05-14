@@ -19,7 +19,7 @@
 [English](README_en.md) | [简体中文](README.md)
 </div>
 
-基于 API 的简单封装，支持多轮对话，代理，以及异步处理数据等。
+基于 OpenAI API 的 `Chat` 对象，支持多轮对话，代理，以及异步处理数据等。
 
 ## 安装方法
 
@@ -39,9 +39,7 @@ export OPENAI_API_BASE="https://api.example.com/v1"
 export OPENAI_API_BASE_URL="https://api.example.com" # 可选
 ```
 
-Win 在系统中设置环境变量。
-
-也可以在代码中设置：
+或者在代码中设置：
 
 ```py
 import chattool
@@ -49,11 +47,11 @@ chattool.api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 chattool.api_base = "https://api.example.com/v1"
 ```
 
-注：`OPENAI_API_BASE` 优先于 `OPENAI_API_BASE_URL`，二者选其一即可。
+注：环境变量 `OPENAI_API_BASE` 优先于 `OPENAI_API_BASE_URL`，二者选其一即可。
 
 ### 示例
 
-示例1，模拟多轮对话：
+示例1，多轮对话：
 
 ```python
 # 初次对话
@@ -75,7 +73,7 @@ chat.save("chat.json", mode="w") # 默认为 "a"
 chat.print_log()
 ```
 
-示例2，批量处理数据（串行），并使用缓存文件 `checkpoint`：
+示例2，批量处理数据（串行），并使用缓存文件 `chat.jsonl`：
 
 ```python
 # 编写处理函数
@@ -109,7 +107,7 @@ async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=dat
 chats = load_chats("async_chat.jsonl")
 ```
 
-在 Jupyter Notebook 中运行，需要使用 `await` 关键字和 `wait=True` 参数：
+在 Jupyter Notebook 中运行，因其[特殊机制](https://stackoverflow.com/questions/47518874/how-do-i-run-python-asyncio-code-in-a-jupyter-notebook)，需使用 `await` 关键字和 `wait=True` 参数：
 
 ```python
 await async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
@@ -145,15 +143,13 @@ chat.autoresponse(display=True)
 
 ## 更新日志
 
-当前版本为 `2.3.0`，支持调用外部工具，异步处理数据，以及模型微调功能。
-
-### 测试版本
-- 版本 `0.2.0` 改用 `Chat` 类型作为中心交互对象
+- 版本 `2.3.0`，支持调用外部工具，异步处理数据，以及模型微调功能
+- 版本 `2.0.0` 开始，更名为 `chattool`
+- 版本 `1.0.0` 开始，支持异步处理数据
+- 版本 `0.6.0` 开始，支持 [function call](https://platform.openai.com/docs/guides/gpt/function-calling) 功能
+- 版本 `0.5.0` 开始，支持使用 `process_chats` 处理数据，借助 `msg2chat` 函数以及 `checkpoint` 文件
+- 版本 `0.4.0` 开始，工具维护转至 [CubeNLP](https://github.com/cubenlp) 组织账号
 - 版本 `0.3.0` 开始不依赖模块 `openai.py` ，而是直接使用 `requests` 发送请求
     - 支持对每个 `Chat` 使用不同 API 密钥
     - 支持使用代理链接
-- 版本 `0.4.0` 开始，工具维护转至 [CubeNLP](https://github.com/cubenlp) 组织账号
-- 版本 `0.5.0` 开始，支持使用 `process_chats` 处理数据，借助 `msg2chat` 函数以及 `checkpoint` 文件
-- 版本 `0.6.0` 开始，支持 [function call](https://platform.openai.com/docs/guides/gpt/function-calling) 功能
-- 版本 `1.0.0` 开始，支持异步处理数据
-- 版本 `2.0.0` 开始，模块更名为 `chattool`
+- 版本 `0.2.0` 改用 `Chat` 类型作为中心交互对象

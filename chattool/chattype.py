@@ -76,7 +76,7 @@ class Chat():
         self._chat_log.append({'role':role, **kwargs})
         return self
 
-    def user(self, content:str):
+    def user(self, content: Union[List, str]):
         """User message"""
         return self.add('user', content=content)
     
@@ -511,11 +511,11 @@ async def _async_stream_responses( api_key:str
                 try:
                     # wrap the response
                     resp = Resp(json.loads(strline))
-                    # stop if the response is finished
-                    if resp.finish_reason == 'stop': break
                     # deal with the message
                     if 'content' not in resp.delta: continue
                     yield resp
+                    # stop if the response is finished
+                    if resp.finish_reason == 'stop': break
                 except Exception as e:
                     print(f"Error: {e}, line: {strline}")
                     break

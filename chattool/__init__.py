@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.1.5'
+__version__ = '3.1.6'
 
 import os, sys, requests
 from .chattype import Chat, Resp
@@ -64,6 +64,7 @@ def save_envs(env_file:str):
 load_envs()
 
 # get the platform
+# tqdm.asyncio.tqdm.gather differs on different platforms
 platform = sys.platform
 if platform.startswith("win"):
     platform = "windows"
@@ -90,6 +91,24 @@ def get_valid_models(api_key:str=api_key, base_url:str=base_url):
         List[str]: list of valid models
     """
     return request.valid_models(api_key, base_url)
+
+def print_secure_api_key(api_key):
+    if api_key:
+        length = len(api_key)
+        if length == 1 or length == 2:
+            masked_key = '*' * length
+        elif 3 <= length <= 6:
+            masked_key = api_key[0] + '*' * (length - 2) + api_key[-1]
+        elif 7 <= length <= 14:
+            masked_key = api_key[:2] + '*' * (length - 4) + api_key[-2:]
+        elif 15 <= length <= 30:
+            masked_key = api_key[:4] + '*' * (length - 8) + api_key[-4:]
+        else:
+            masked_key = api_key[:8] + '*' * (length - 12) + api_key[-8:]
+        print("\nPlease verify your API key:")
+        print(masked_key)
+    else:
+        print("No API key provided.")
 
 def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
@@ -134,8 +153,7 @@ def debug_log( net_url:str="https://www.baidu.com"
     
     ## Please check your API key
     if test_apikey:
-        print("\nPlease verify your API key:")
-        print(api_key)
+        print_secure_api_key(api_key)
 
     # Get model list
     if test_model:
@@ -151,4 +169,3 @@ def debug_log( net_url:str="https://www.baidu.com"
 
     print("\nDebug is finished.")
     return True
-
