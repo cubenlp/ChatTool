@@ -4,6 +4,17 @@ import chattool
 from chattool import Chat, save_envs, load_envs
 testpath = 'tests/testfiles/'
 
+def test_model_api_key():
+    api_key, model = chattool.api_key, chattool.model
+    chattool.api_key, chattool.model = None, None
+    chat = Chat()
+    assert chat.api_key == ''
+    assert chat.model == ''
+    chattool.api_key, chattool.model = api_key, model
+    chat = Chat(api_key="sk-123", model="gpt-3.5-turbo")
+    assert chat.api_key == "sk-123"
+    assert chat.model == "gpt-3.5-turbo"
+
 def test_apibase():
     api_base, base_url = chattool.api_base, chattool.base_url
     chattool.api_base, chattool.base_url = None, None

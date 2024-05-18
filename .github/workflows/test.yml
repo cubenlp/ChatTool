@@ -10,6 +10,11 @@ on:
 
 jobs:
   build:
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
+      OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+      OPENAI_API_MODEL: ${{ secrets.OPENAI_API_MODEL }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,9 +33,6 @@ jobs:
         python -m pip install .[test]
         python -m pip install -r requirements_dev.txt
     - name: Test with pytest and coverage
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
       run: |
         pip install coverage
         coverage run -m pytest tests/

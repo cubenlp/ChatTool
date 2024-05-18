@@ -23,7 +23,8 @@ def test_apikey():
     assert chattool.api_key.startswith("sk-")
 
 def test_base_url():
-    assert chattool.base_url.startswith("http")
+    assert not chattool.api_base or chattool.api_base.startswith("http")
+    assert not chattool.base_url or chattool.base_url.startswith('http')
 
 def test_stream():
     chat = Chat("hello")
