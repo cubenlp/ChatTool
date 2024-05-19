@@ -46,11 +46,11 @@ class Chat():
             self._chat_log = msg.copy() # avoid changing the original list
         else:
             raise ValueError("msg should be a list of dict, a string or None")
-        self.api_key = api_key or chattool.api_key
+        self.api_key = api_key or chattool.api_key or ''
+        self.model = model or chattool.model or ''
         # chat_url > api_base > base_url > chattool.api_base > chattool.base_url
         self.api_base = api_base or chattool.api_base
         self.base_url = base_url or chattool.base_url
-        self.model = model or chattool.model or "gpt-3.5-turbo"
         if chat_url:
             self.chat_url = chat_url
         elif api_base:

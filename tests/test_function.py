@@ -127,7 +127,7 @@ def test_mock_resp():
 def test_use_exec_function():
     chat = Chat("find the result of sqrt(121314)")
     chat.setfuncs([exec_python_code])
-    chat.autoresponse(max_tries=2)
+    chat.autoresponse(max_tries=2, display=True)
     
 def test_find_permutation_group():
     pass
