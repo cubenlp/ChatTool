@@ -205,7 +205,8 @@ class Chat():
             Resp: API response
         """
         # initialize data
-        api_key, model, chat_url = self.api_key, self.model, self.chat_url
+        api_key, chat_url = self.api_key, self.chat_url
+        if 'model' not in options: options['model'] = self.model
         funcs = options.get('functions', self.functions)
         func_call = options.get('function_call', self.function_call)
         if api_key is None: warnings.warn("API key is not set!")
@@ -220,7 +221,7 @@ class Chat():
                 if funcs is not None: options['functions'] = funcs
                 if func_call is not None: options['function_call'] = func_call
                 response = chat_completion(
-                    api_key=api_key, messages=msg, model=model,
+                    api_key=api_key, messages=msg,
                     chat_url=chat_url, timeout=timeout, **options)
                 resp = Resp(response)
                 assert resp.is_valid(), resp.error_message
