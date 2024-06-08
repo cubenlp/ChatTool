@@ -176,8 +176,7 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
     if clearfile and os.path.exists(chkpoint):
         os.remove(chkpoint)
     if api_key is None:
-        api_key = chattool.api_key
-    assert api_key is not None, "API key is not provided!"
+        api_key = chattool.api_key or ""
     if chat_url is None:
         if chattool.api_base:
             chat_url = os.path.join(chattool.api_base, "chat/completions")
@@ -187,7 +186,7 @@ def async_chat_completion( msgs:Union[List[List[Dict]], str]
             raise Exception("chat_url is not provided!")
     chat_url = chattool.request.normalize_url(chat_url)
     if 'model' not in options:
-        options['model'] = chattool.model if chattool.model else "gpt-3.5-turbo"
+        options['model'] = chattool.model or ""
     # run async process
     assert nproc > 0, "nproc must be greater than 0!"
     max_tries = max(max_tries, max_requests)

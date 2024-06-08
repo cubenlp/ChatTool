@@ -54,12 +54,12 @@ def test_auto_response():
     chat = Chat("What's the weather like in Boston?")
     chat.functions, chat.function_call = functions, 'auto'
     chat.name2func = name2func
-    chat.autoresponse(max_tries=2)
+    chat.autoresponse(max_tries=2, use_tool=False)
     chat.print_log()
     chat.clear()
     # response with nonempty content
     chat.user("what is the result of 1+1, and What's the weather like in Boston?")
-    chat.autoresponse(max_tries=2)
+    chat.autoresponse(max_tries=2, use_tool=False)
 
 # generate docstring from functions
 def add(a: int, b: int) -> int:
@@ -89,6 +89,17 @@ def mult(a:int, b:int) -> int:
     """
     return a * b
 
+def test_mix_function_tool():
+    chat = Chat("find the sum of 784359345 and 345345345")
+    chat.setfuncs([add])
+    chat.autoresponse(max_tries=3, display=True, timeinterval=2)
+    chat.clear()
+    chat.user("find the sum of 784359345 and 345345345")
+    chat.autoresponse(use_tool=False)
+    newchat = Chat("find the product of 123124 and 399090")
+    newchat.settools([mult])
+    newchat.autoresponse()
+
 def test_add_and_mult():
     functions = [generate_json_schema(add)]
     chat = Chat("find the sum of 784359345 and 345345345")
@@ -100,35 +111,26 @@ def test_add_and_mult():
     chat.name2func = {'add': add} # dictionary of functions
     chat.function_call = 'auto' # auto decision
     # run until success: maxturns=-1
-    chat.autoresponse(max_tries=3, display=True, timeinterval=2)
+    chat.autoresponse(max_tries=3, display=True, timeinterval=2, use_tool=False)
     # response should be finished
     chat.simplify()
     chat.print_log()
     # use the setfuncs method
     chat = Chat("find the value of 124842 * 3423424")
     chat.setfuncs([add, mult]) # multi choice
-    chat.autoresponse(max_tries=3, timeinterval=2)
+    chat.autoresponse(max_tries=3, timeinterval=2, use_tool=False)
     chat.simplify() # simplify the chat log
     chat.print_log()
     # test multichoice
     chat.clear()
-    chat.user("find the value of 23723 + 12312, and 23723 * 12312")
-    # chat.autoresponse(max_tries=3, timeinterval=2)
-
-def test_mock_resp():
-    chat = Chat("find the sum of 1235 and 3423")
-    chat.setfuncs([add, mult])
-    # mock result of the resp
-    para = {'name': 'add', 'arguments': '{\n  "a": 1235,\n  "b": 3423\n}'}
-    chat.assistant(content=None, function_call=para)
-    chat.callfunction()
-    chat.getresponse(max_tries=2)
+    chat.user("find the value of (23723 * 1322312 ) + 12312")
+    chat.autoresponse(max_tries=3, timeinterval=2, use_tool=False)
 
 def test_use_exec_function():
     chat = Chat("find the result of sqrt(121314)")
     chat.setfuncs([exec_python_code])
-    chat.autoresponse(max_tries=2, display=True)
-    
+    # chat.autoresponse(max_tries=2, display=True, use_tool=False)
+
 def test_find_permutation_group():
     pass
 
