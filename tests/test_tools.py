@@ -30,7 +30,7 @@ weatherinfo =  {
     "forecast": ["sunny", "windy"],
     "unit":"celsius"
 }
-name2tool = {
+name2func = {
     'get_current_weather': lambda *kargs, **kwargs: weatherinfo
 }
 
@@ -55,7 +55,7 @@ def test_call_weather():
 def test_auto_response():
     chat = Chat("What's the weather like in Boston?")
     chat.tools, chat.tool_choice = tools, 'auto'
-    chat.name2tool = name2tool
+    chat.name2func = name2func
     chat.autoresponse(max_tries=2, display=True)
     chat.print_log()
     newchat = chat.deepcopy()
@@ -103,7 +103,7 @@ def test_add_and_mult():
     chat.tool_choice = {'name':'add'}
     chat.tool_choice = 'add' # specify the function(convert to dict)
     chat.tools = tools
-    chat.name2tool = {'add': add} # dictionary of functions
+    chat.name2func = {'add': add} # dictionary of functions
     chat.tool_choice = 'auto' # auto decision
     # run until success: maxturns=-1
     chat.autoresponse(max_tries=3, display=True, timeinterval=2)

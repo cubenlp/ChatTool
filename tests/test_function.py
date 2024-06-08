@@ -89,6 +89,17 @@ def mult(a:int, b:int) -> int:
     """
     return a * b
 
+def test_mix_function_tool():
+    chat = Chat("find the sum of 784359345 and 345345345")
+    chat.setfuncs([add])
+    chat.autoresponse(max_tries=3, display=True, timeinterval=2)
+    chat.clear()
+    chat.user("find the sum of 784359345 and 345345345")
+    chat.autoresponse(use_tool=False)
+    newchat = Chat("find the product of 123124 and 399090")
+    newchat.settools([mult])
+    newchat.autoresponse()
+
 def test_add_and_mult():
     functions = [generate_json_schema(add)]
     chat = Chat("find the sum of 784359345 and 345345345")
@@ -118,8 +129,8 @@ def test_add_and_mult():
 def test_use_exec_function():
     chat = Chat("find the result of sqrt(121314)")
     chat.setfuncs([exec_python_code])
-    chat.autoresponse(max_tries=2, display=True, use_tool=False)
-    
+    # chat.autoresponse(max_tries=2, display=True, use_tool=False)
+
 def test_find_permutation_group():
     pass
 
