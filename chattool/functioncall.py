@@ -65,10 +65,10 @@ def delete_dialogue_assist(chat_log:List[Dict]):
     ind = 0
     while ind < len(chat_log) - 1:
         log = chat_log[ind]
-        if log['role'] == 'assistant' and 'function_call' in log:
+        if log['role'] == 'assistant' and 'tool_calls' in log:
             nextind = ind + 1
             nextlog = chat_log[nextind]
-            if nextlog['role'] == 'function':
+            if nextlog['role'] == 'tool':
                 chat_log.pop(nextind)
                 chat_log.pop(ind)
         else:

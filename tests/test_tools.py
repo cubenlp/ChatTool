@@ -4,23 +4,6 @@ from chattool import Chat, generate_json_schema, exec_python_code
 import json
 
 # schema of functions
-functions = [
-{
-    "name": "get_current_weather",
-    "description": "Get the current weather in a given location",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "The city and state, e.g. San Francisco, CA",
-            },
-            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-        },
-        "required": ["location", "unit"],
-    },
-}]
-
 tools = [
     {
         "type": "function",
@@ -53,19 +36,7 @@ name2tool = {
 
 def test_call_weather():
     chat = Chat("What's the weather like in Boston?")
-    # resp = chat.getresponse(functions=functions, function_call='auto', max_tries=3)
     resp = chat.getresponse(tools=tools, tool_choice='auto', max_tries=3)
-    # if resp.finish_reason == 'function_call':
-        # test response from chat api
-        # parainfo = chat[-1]['function_call']
-        # func_name, func_args = parainfo['name'], json.loads(parainfo['arguments'])
-        # assert func_name == 'get_current_weather'
-        # assert 'location' in func_args and 'unit' in func_args
-        # # continue the chat
-        # chat.function(weatherinfo, func_name)
-        # chat.getresponse()
-        # # chat.save("testweather.json")
-        # chat.print_log()
     if resp.finish_reason == 'tool_calls':
         last_tool = chat[-1]['tool_calls'][0] # get the last tool call
         parainfo, tool_call_id = last_tool['function'], last_tool['id']
@@ -76,7 +47,6 @@ def test_call_weather():
         # tool call result: weatherinfo
         chat.tool(weatherinfo, tool_name, tool_call_id)
         chat.getresponse()
-        # chat.save("testweather.json")
         chat.print_log()
     else:
         print("No function call found.")
@@ -122,32 +92,6 @@ def mult(a:int, b:int) -> int:
     """
     return a * b
 
-# def test_add_and_mult():
-#     functions = [generate_json_schema(add)]
-#     chat = Chat("find the sum of 784359345 and 345345345")
-#     chat.functions = functions
-#     chat.function_call = None # unset keyword equivalent to "auto"
-#     chat.function_call = 'none'
-#     chat.function_call = {'name':'add'}
-#     chat.function_call = 'add' # specify the function(convert to dict)
-#     chat.name2func = {'add': add} # dictionary of functions
-#     chat.function_call = 'auto' # auto decision
-#     # run until success: maxturns=-1
-#     chat.autoresponse(max_tries=3, display=True, timeinterval=2)
-#     # response should be finished
-#     chat.simplify()
-#     chat.print_log()
-#     # use the setfuncs method
-#     chat = Chat("find the value of 124842 * 3423424")
-#     chat.setfuncs([add, mult]) # multi choice
-#     chat.autoresponse(max_tries=3, timeinterval=2)
-#     chat.simplify() # simplify the chat log
-#     chat.print_log()
-#     # test multichoice
-#     chat.clear()
-#     chat.user("find the value of 23723 + 12312, and 23723 * 12312")
-#     # chat.autoresponse(max_tries=3, timeinterval=2)
-
 def test_add_and_mult():
     tools = [{
     'type':'function', 
@@ -183,15 +127,6 @@ def test_add_and_mult():
     chat4.user("find the value of (23723 * 1322312 ) + 12312")
     chat4.autoresponse(max_tries=3, display=True, timeinterval=2)
 
-
-# def test_mock_resp():
-#     chat = Chat("find the sum of 1235 and 3423")
-#     chat.setfuncs([add, mult])
-#     # mock result of the resp
-#     para = {'name': 'add', 'arguments': '{\n  "a": 1235,\n  "b": 3423\n}'}
-#     chat.assistant(content=None, function_call=para)
-#     chat.callfunction()
-#     chat.getresponse(max_tries=2)
 
 def test_use_exec_function():
     chat = Chat("find the result of sqrt(121314)")

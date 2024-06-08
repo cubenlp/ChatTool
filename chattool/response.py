@@ -70,6 +70,11 @@ class Resp():
         return self.message.get('function_call')
     
     @property
+    def tool_calls(self):
+        """Tool calls"""
+        return self.message.get('tool_calls')
+    
+    @property
     def delta(self):
         """Delta"""
         return self.response['choices'][0]['delta']

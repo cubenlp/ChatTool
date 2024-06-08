@@ -8,6 +8,7 @@ import time, random, json, warnings
 import aiohttp
 import os
 from .functioncall import generate_json_schema, delete_dialogue_assist
+from pprint import pformat
 
 class Chat():
     def __init__( self
@@ -17,6 +18,9 @@ class Chat():
                 , base_url:Union[None, str]=None
                 , chat_url:Union[None, str]=None
                 , model:Union[None, str]=None
+                , tools:Union[None, List[Dict]]=None
+                , tool_choice:Union[None, str]=None
+                , name2tool:Union[None, Dict]=None
                 , functions:Union[None, List[Dict]]=None
                 , function_call:Union[None, str]=None
                 , name2func:Union[None, Dict]=None):
@@ -29,9 +33,9 @@ class Chat():
             base_url (Union[None, str], optional): base url without suffix "/v1". Defaults to None. Example: "https://api.openai.com"
             chat_url (Union[None, str], optional): chat completion url. Defaults to None. Example: "https://api.openai.com/v1/chat/completions"
             model (Union[None, str], optional): model to use. Defaults to None.
-            functions (Union[None, List[Dict]], optional): functions to use, each function is a JSON Schema. Defaults to None.
-            function_call (str, optional): method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
-            name2func (Union[None, Dict], optional): name to function mapping. Defaults to None.
+            functions (Union[None, List[Dict]], optional): Decrpcated. functions to use, each function is a JSON Schema. Defaults to None.
+            function_call (str, optional): Decrpcated. method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
+            name2func (Union[None, Dict], optional): Decrpcated. name to function mapping. Defaults to None.
         
         Raises:
             ValueError: msg should be a list of dict, a string or None
@@ -65,14 +69,17 @@ class Chat():
             self.chat_url = "https://api.openai.com/v1/chat/completions"
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
+        if tools is not None:
+            assert isinstance(tools, list), "tools should be a list of dict"
         self._functions, self._function_call = functions, function_call
-        self._name2func, self._resp = name2func, None
+        self._tools, self._tool_choice = tools, tool_choice
+        self._name2func, self._resp, self._name2tool = name2func, None, name2tool
     
     # Part1: basic operation of the chat object
     def add(self, role:str, **kwargs):
         """Add a message to the chat log"""
-        assert role in ['user', 'assistant', 'system', 'function'],\
-            f"role should be one of ['user', 'assistant', 'system', 'function'], but got {role}"
+        assert role in ['user', 'assistant', 'system', 'tool'],\
+            f"role should be one of ['user', 'assistant', 'system', 'tool'], but got {role}"
         self._chat_log.append({'role':role, **kwargs})
         return self
 
@@ -80,17 +87,26 @@ class Chat():
         """User message"""
         return self.add('user', content=content)
     
-    def assistant(self, content:Union[None, str], function_call:Union[None, Dict]=None):
+    # def assistant(self, content:Union[None, str], function_call:Union[None, Dict]=None):
+    #     """Assistant message"""
+    #     if function_call is not None:
+    #         assert isinstance(function_call, dict), "function_call should be a dict"
+    #         return self.add('assistant', content=content, function_call=function_call)
+    #     return self.add('assistant', content=content)
+    
+    def assistant(self, content:Union[None, str]):
         """Assistant message"""
-        if function_call is not None:
-            assert isinstance(function_call, dict), "function_call should be a dict"
-            return self.add('assistant', content=content, function_call=function_call)
         return self.add('assistant', content=content)
     
     def function(self, content, name:str, dump:bool=True):
         """Add a message to the chat log"""
         if dump: content = json.dumps(content)
         return self.add('function', content=content, name=name)
+    
+    def tool(self, content, name:str, tool_call_id:str, dump:bool=True):
+        """Add a message to the chat log"""
+        if dump: content = json.dumps(content)
+        return self.add('tool', content=content, name=name, tool_call_id=tool_call_id)
         
     def system(self, content:str):
         """System message"""
@@ -112,7 +128,10 @@ class Chat():
                    , model=self.model
                    , functions=self.functions
                    , function_call=self.function_call
+                   , tools=self.tools
+                   , tool_choice=self.tool_choice
                    , name2func=self.name2func
+                   , name2tool=self.name2tool
                    , api_base=self.api_base
                    , base_url=self.base_url)
 
@@ -167,13 +186,15 @@ class Chat():
     def display_role_content(dic:dict, sep:Union[str, None]=None):
         """Show the role and content of the message"""
         if sep is None: sep = '\n' + '-'*15 + '\n'
-        role, content = dic['role'], dic['content']
-        if role == 'user' or role == 'system' or (role == 'assistant' and 'function_call' not in dic):
-            return f"{sep}{role}{sep}{dic['content']}"
-        elif role == 'function':
-            return f"{sep}{role}{sep}function:\n\t{dic['name']}\nresult:\n\t{content}"
+        role, content, name, tools = dic['role'], dic.get('content'), dic.get('name'), dic.get('tool_calls')
+        if role == 'user' or role == 'system':
+            return f"{sep}{role}{sep}{content}"
+        elif role == 'tool':
+            return f"{sep}{role}{sep}tool:\n\t{name}\nresult:\n\t{content}"
         elif role == 'assistant':
-            return f"{sep}{role}{sep}calling function:\n\t{dic['function_call']}\ncontent:\n\t{content}"
+            if 'tool_calls' not in dic:
+                return f"{sep}{role}{sep}{content}"
+            return f"{sep}{role}{sep}calling tool:\n{pformat(tools)}"
         else:
             raise Exception(f"Unknown role {role}")
     
@@ -209,7 +230,9 @@ class Chat():
         if 'model' not in options: options['model'] = self.model
         funcs = options.get('functions', self.functions)
         func_call = options.get('function_call', self.function_call)
-        if api_key is None: warnings.warn("API key is not set!")
+        tools = options.get('tools', self._tools)
+        tool_choice = options.get('tool_choice', self._tool_choice)
+        # if api_key is None: warnings.warn("API key is not set!")
         msg, resp, numoftries = self.chat_log, None, 0
         max_tries = max(max_tries, max_requests)
         if stream: # TODO: add the `usage` key to the response
@@ -220,6 +243,8 @@ class Chat():
                 # make API Call
                 if funcs is not None: options['functions'] = funcs
                 if func_call is not None: options['function_call'] = func_call
+                if tools is not None: options['tools'] = tools
+                if tool_choice is not None: options['tool_choice'] = tool_choice
                 response = chat_completion(
                     api_key=api_key, messages=msg,
                     chat_url=chat_url, timeout=timeout, **options)
@@ -257,17 +282,17 @@ class Chat():
             self.api_key, self.chat_url, self.chat_log, self.model, timeout=timeout, **options):
             yield resp.delta_content if textonly else resp
     
-    # Part3: function call
+    # Part3: tool call
     def iswaiting(self):
         """Whether the response is waiting"""
         if len(self) == 0: return False
-        return self[-1]['role'] == 'assistant' and 'function_call' in self[-1]
+        return self[-1]['role'] == 'assistant' and 'tool_calls' in self[-1]
 
     @staticmethod
     def get_name_and_params(dic:dict):
-        """Get the name and parameters of the function call"""
-        if 'role' in dic and 'function_call' in dic:
-            dic = dic['function_call']
+        """Get the name and parameters of the tool call"""
+        if 'role' in dic and 'tool_calls' in dic:
+            dic = dic['tool_calls']
         name, params = dic['name'], json.loads(dic['arguments'])
         return name, params
     
@@ -277,11 +302,50 @@ class Chat():
         return self
     
     def setfuncs(self, funcs:List):
-        """Initialize function for function call"""
+        """Initialize function for tool calls"""
         self.functions = [generate_json_schema(func) for func in funcs]
         self.function_call = 'auto'
         self.name2func = {func.__name__:func for func in funcs}
         return True
+    
+    def settools(self, tools:List):
+        """Initialize tools for tool calls"""
+        self.tools = [{
+            'type':'function', 
+            'function': generate_json_schema(tool)} for tool in tools]
+        self.tool_choice = 'auto'
+        self.name2tool = {tool.__name__:tool for tool in tools}
+        return True
+    
+    def calltools(self, display:bool=False):
+        """Call all the tools"""
+        if not self.iswaiting():
+            return False, "Not waiting for tool call."
+        tool_calls = self[-1]['tool_calls']
+        allright = True
+        for tool in tool_calls:
+            result, name, tool_call_id, status = self.calltool(tool)
+            self.tool(result, name, tool_call_id)
+            if display: print(self.display_role_content(self[-1]))
+            allright = allright and status
+        return allright
+        
+    def calltool(self, tool):
+        """Call the tool"""
+        tool_call_id, success = tool['id'], False
+        tool_name, tool_para = tool['function']['name'], tool['function']['arguments']
+        if tool_name not in self.name2tool:
+            return f"Tool {tool_name} not found.", tool_name, tool_call_id, success
+        try:
+            tool_args = json.loads(tool_para)
+        except Exception as e:
+            return f"Argument parsing failed with error: {e}", tool_name, tool_call_id, success
+        try:
+            result = self.name2tool[tool_name](**tool_args)
+        except Exception as e:
+            return f"Tool {tool_name} failed with error: {e}", tool_name, tool_call_id, success
+        # succeed finally!
+        return result, tool_name, tool_call_id, True
 
     def callfunction(self):
         """Calling function"""
@@ -305,30 +369,26 @@ class Chat():
     def autoresponse( self
                     , display:bool=False
                     , maxturns:int=3
-                    , capturerr:bool=True
+                    , checkstatus:bool=False
                     , **options):
         """Get the response automatically
         
         Args:
             display (bool, optional): whether to display the response. Defaults to False.
             maxturns (int, optional): maximum number of turns. Defaults to 3.
-            capturerr (bool, optional):  if True, use the error message as the response. Defaults to True.
             options (dict, optional): other options like `temperature`, `top_p`, etc.
 
         Returns:
             bool: whether the response is finished
         """
-        options['functions'], options['function_call'] = self.functions, self.function_call
+        # options['functions'], options['function_call'] = self.functions, self.function_call
+        options['tools'], options['tool_choice'] = self.tools, self.tool_choice
         show = lambda msg: print(self.display_role_content(msg))
         resp = self.getresponse(**options)
         if display: show(resp.message)
         while self.iswaiting() and maxturns != 0:
             # call api and update the result
-            status, msg = self.callfunction()
-            if not status: # update the error msg
-                if not capturerr: return False
-                self.function(msg, 'error')
-            if display: show(self[-1])
+            self.calltools(display=display)
             resp = self.getresponse(**options)
             if display: show(resp.message)
             maxturns -= 1
@@ -405,11 +465,26 @@ class Chat():
     def function_call(self):
         """Get function call"""
         return self._function_call
+    
+    @property
+    def tools(self):
+        """Get tools"""
+        return self._tools
+    
+    @property
+    def tool_choice(self):
+        """Get tool choice"""
+        return self._tool_choice
 
     @property
     def name2func(self):
         """Get name to function mapping"""
         return self._name2func
+
+    @property
+    def name2tool(self):
+        """Get name to tool mapping"""
+        return self._name2tool
     
     @api_key.setter
     def api_key(self, api_key:str):
@@ -452,11 +527,34 @@ class Chat():
             assert 'name' in function_call
             self._function_call = function_call
     
+    @tools.setter
+    def tools(self, tools:List[Dict]):
+        """Set tools"""
+        assert isinstance(tools, list), "tools should be a list of dict"
+        self._tools = tools
+
+    @tool_choice.setter
+    def tool_choice(self, tool_choice:str):
+        """Set tool choice"""
+        if tool_choice in ['auto', None, 'none']:
+            self._tool_choice = tool_choice
+        elif isinstance(tool_choice, str):
+            self.tool_choice = {'name':tool_choice}
+        elif isinstance(tool_choice, dict):
+            assert 'name' in tool_choice
+            self._tool_choice = tool_choice
+    
     @name2func.setter
     def name2func(self, name2func:Dict):
         """Set name to function mapping"""
         assert isinstance(name2func, dict), "name2func should be a dict"
         self._name2func = name2func
+    
+    @name2tool.setter
+    def name2tool(self, name2tool:Dict):
+        """Set name to tool mapping"""
+        assert isinstance(name2tool, dict), "name2tool should be a dict"
+        self._name2tool = name2tool
     
     @property
     def chat_log(self):
