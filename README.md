@@ -129,20 +129,32 @@ def add(a: int, b: int) -> int:
         int: The sum of the two numbers.
     """
     return a + b
+
+def mult(a:int, b:int) -> int:
+    """This function multiplies two numbers.
+    It is a useful calculator!
+
+    Args:
+        a (int): The first number.
+        b (int): The second number.
+
+    Returns:
+        int: The product of the two numbers.
+    """
+    return a * b
 # 传输函数
-chat = Chat()
-chat.setfuncs([add]) # 传入函数列表，可以是多个函数
-chat.user("请计算 1 + 2")
-# 自动调用工具
-chat.autoresponse(display=True)
+chat = Chat("find the value of (23723 * 1322312 ) + 12312") # 传入函数列表，可以是多个函数
+# 自动调用工具，默认使用 tool_choice
+chat.autoresponse(display=True, tool_choice='tool_choice') # 或者用 function_call
 ```
 
 ## 开源协议
 
-这个项目使用 MIT 协议开源。
+使用 MIT 协议开源。
 
 ## 更新日志
 
+- 当前版本 `3.2.1`，简化异步处理和串行处理的接口，更新子模块名称，避免冲突
 - 版本 `2.3.0`，支持调用外部工具，异步处理数据，以及模型微调功能
 - 版本 `2.0.0` 开始，更名为 `chattool`
 - 版本 `1.0.0` 开始，支持异步处理数据

@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.2.0'
+__version__ = '3.2.1'
 
 import os, sys, requests
 from .chattype import Chat, Resp
@@ -13,7 +13,8 @@ from .tokencalc import model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
 from typing import Union
-import dotenv 
+import dotenv
+import loguru
 
 raw_env_text = f"""# Description: Env file for ChatTool.
 # Current version: {__version__}
@@ -33,11 +34,24 @@ OPENAI_API_MODEL=''
 """
 
 def load_envs(env:Union[None, str, dict]=None):
-    """Read the environment variables for the API call"""
+    """Load the environment variables for the API call
+    
+    Args:
+        env (Union[None, str, dict], optional): The environment file or the environment variables. Defaults to None.
+    
+    Returns:
+        bool: True if the environment variables are loaded successfully.
+    
+    Examples:
+        load_envs("envfile.env")
+        load_envs({"OPENAI_API_KEY":"your_api_key"})
+        load_envs() # load from the environment variables
+    """
     global api_key, base_url, api_base, model
     # update the environment variables
-    if isinstance(env, str):
-        dotenv.load_dotenv(env, override=True)
+    if isinstance(env, str) and not dotenv.load_dotenv(env, override=True):
+        loguru.logger.warning(f"Failed to load the environment file: {env}")
+        return False
     elif isinstance(env, dict):
         for key, value in env.items():
             os.environ[key] = value
@@ -157,8 +171,8 @@ def debug_log( net_url:str="https://www.baidu.com"
 
     # Get model list
     if test_model:
-        print("\nThe model list(contains gpt):")
-        print(Chat().get_valid_models())
+        print("\nThe model list:")
+        print(Chat().get_valid_models(gpt_only=False))
         
     # Test hello world
     if test_response:
