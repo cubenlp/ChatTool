@@ -75,7 +75,6 @@ def add(a: int, b: int) -> int:
     """
     return a + b
 
-# with optional parameters
 def mult(a:int, b:int) -> int:
     """This function multiplies two numbers.
     It is a useful calculator!

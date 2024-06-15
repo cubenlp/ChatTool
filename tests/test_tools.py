@@ -78,7 +78,6 @@ def add(a: int, b: int) -> int:
     """
     return a + b
 
-# with optional parameters
 def mult(a:int, b:int) -> int:
     """This function multiplies two numbers.
     It is a useful calculator!
@@ -91,6 +90,21 @@ def mult(a:int, b:int) -> int:
         int: The product of the two numbers.
     """
     return a * b
+
+def test_func_and_tool():
+    chat = Chat("find the value of 124842 * 3423424 + 121312")
+    chat.settools([add, mult]) # multi choice
+    chat1 = chat.deepcopy()
+    chat1.autoresponse(tool_type='tool_choice')
+    chat2 = chat.deepcopy()
+    chat2.autoresponse(tool_type='function_call')
+    # setfuncs
+    chat.setfuncs([add, mult])
+    chat1 = chat.deepcopy()
+    chat1.autoresponse(tool_type='tool_choice')
+    chat2 = chat.deepcopy()
+    chat2.autoresponse(tool_type='function_call')
+
 
 def test_add_and_mult():
     tools = [{
@@ -126,7 +140,6 @@ def test_add_and_mult():
     chat4.clear()
     chat4.user("find the value of (23723 * 1322312 ) + 12312")
     chat4.autoresponse(max_tries=3, display=True, timeinterval=2)
-
 
 def test_use_exec_function():
     chat = Chat("find the result of sqrt(121314)")

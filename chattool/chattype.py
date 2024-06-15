@@ -9,6 +9,7 @@ import aiohttp
 import os
 from .functioncall import generate_json_schema, delete_dialogue_assist
 from pprint import pformat
+from loguru import logger
 
 class Chat():
     def __init__( self
@@ -113,11 +114,11 @@ class Chat():
     
     def copy(self):
         """Copy the chat log"""
-        return Chat(self._chat_log)
+        return Chat(self.chat_log)
     
     def deepcopy(self):
         """Deep copy the Chat object"""
-        return Chat( self._chat_log
+        return Chat( self.chat_log
                    , api_key=self.api_key
                    , chat_url=self.chat_url
                    , model=self.model
@@ -210,6 +211,7 @@ class Chat():
                    , tools:Union[None, List[Dict]]=None
                    , tool_choice:Union[None, str]=None
                    , max_requests:int=-1
+                   , tool_type:str='tool_choice'
                    , functions:Union[None, List[Dict]]=None
                    , function_call:Union[None, str]=None
                    , **options)->Resp:
@@ -221,7 +223,8 @@ class Chat():
             timeinterval (int, optional): time interval between two API calls. Defaults to 0.
             update (bool, optional): whether to update the chat log. Defaults to True.
             options (dict, optional): other options like `temperature`, `top_p`, etc.
-            max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit
+            max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit)
+            tool_type (str, optional): type of the tool. Defaults to 'tool_choice'.
 
         Returns:
             Resp: API response
@@ -232,10 +235,14 @@ class Chat():
         # function call & tool call
         tool_choice, tools = tool_choice or self.tool_choice, tools or self.tools
         function_call, functions = function_call or self.function_call, functions or self.functions
-        if tool_choice is not None:
-            options['tool_choice'], options['tools'] = tool_choice, tools
-        elif function_call is not None:
-            options['function_call'], options['functions'] = function_call, functions
+        if tool_type == 'function_call':
+            if function_call is not None:
+                options['function_call'], options['functions'] = function_call, functions
+        else:
+            if tool_choice is not None:
+                if tool_type != 'tool_choice':
+                    logger.warning(f"Unknown tool type {tool_type}, use 'tool_choice' by default.")
+                options['tool_choice'], options['tools'] = tool_choice, tools
         # if api_key is None: warnings.warn("API key is not set!")
         msg, resp, numoftries = self.chat_log, None, 0
         max_tries = max(max_tries, max_requests)
@@ -312,8 +319,8 @@ class Chat():
     
     def settools(self, tools:List):
         """Initialize tools for tool calls"""
-        self._functions =[generate_json_schema(func) for func in tools]
-        self.tool_choice = 'auto'
+        self.functions =[generate_json_schema(func) for func in tools]
+        self.tool_choice = 'auto' # the only difference from setfuncs
         self.name2func = {tool.__name__:tool for tool in tools}
         return True
     
@@ -368,7 +375,7 @@ class Chat():
     def autoresponse( self
                     , display:bool=False
                     , maxturns:int=3
-                    , use_tool:bool=True
+                    , tool_type:str='tool_choice'
                     , **options):
         """Get the response automatically
         
@@ -380,22 +387,22 @@ class Chat():
         Returns:
             bool: whether the response is finished
         """
-        if use_tool:
-            options['tools'], options['tool_choice'] = self.tools, self.tool_choice or 'auto'
-        else:
+        if tool_type == 'function_call':
             options['functions'], options['function_call'] = self.functions, self.function_call or 'auto'
+        else:
+            options['tools'], options['tool_choice'] = self.tools, self.tool_choice or 'auto'
         show = lambda msg: print(self.display_role_content(msg))
-        resp = self.getresponse(**options)
+        resp = self.getresponse(tool_type=tool_type, **options)
         if display: show(resp.message)
         while self.iswaiting() and maxturns != 0:
             # call api and update the result
-            if use_tool:
+            if tool_type != 'function_call':
                 self.calltools(display=display)
             else:
                 result, name, _ = self.callfunction()
                 self.function(result, name)
                 if display: show(self[-1])
-            resp = self.getresponse(**options)
+            resp = self.getresponse(tool_type=tool_type, **options)
             if display: show(resp.message)
             maxturns -= 1
         return True
@@ -552,7 +559,6 @@ class Chat():
         """Set name to function mapping"""
         assert isinstance(name2func, dict), "name2func should be a dict"
         self._name2func = name2func
-    
     
     @property
     def chat_log(self):
