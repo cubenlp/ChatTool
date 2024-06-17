@@ -3,7 +3,7 @@
 from typing import List, Dict, Union
 import chattool
 from .response import Resp
-from .request import chat_completion, valid_models
+from .request import chat_completion, valid_models, curl_cmd_of_chat_completion
 import time, random, json, warnings
 import aiohttp
 import os
@@ -21,6 +21,7 @@ class Chat():
                 , model:Union[None, str]=None
                 , tools:Union[None, List[Dict]]=None
                 , tool_choice:Union[None, str]=None
+                , tool_type:str='tool_choice'
                 , functions:Union[None, List[Dict]]=None
                 , function_call:Union[None, str]=None
                 , name2func:Union[None, Dict]=None):
@@ -70,10 +71,12 @@ class Chat():
             self.chat_url = os.path.join(chattool.base_url, "v1/chat/completions")
         else:
             self.chat_url = "https://api.openai.com/v1/chat/completions"
+        # functions and tools
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
         if tools is not None:
             assert isinstance(tools, list), "tools should be a list of dict"
+        self.tool_type = tool_type
         self.functions, self.tools = functions or [], tools or []
         self._function_call, self._tool_choice = function_call, tool_choice
         self._name2func, self._resp = name2func, None
@@ -205,13 +208,13 @@ class Chat():
     def getresponse( self
                    , max_tries:int = 1
                    , timeout:int = 0
-                   , timeinterval:int = 0
+                   , timeinterval:Union[float, int] = 0
                    , update:bool = True
-                   , stream:bool = False
                    , tools:Union[None, List[Dict]]=None
                    , tool_choice:Union[None, str]=None
+                   , tool_type:Union[str, None]=None
+                   , get_curl_only:bool=False
                    , max_requests:int=-1
-                   , tool_type:str='tool_choice'
                    , functions:Union[None, List[Dict]]=None
                    , function_call:Union[None, str]=None
                    , **options)->Resp:
@@ -224,15 +227,17 @@ class Chat():
             update (bool, optional): whether to update the chat log. Defaults to True.
             options (dict, optional): other options like `temperature`, `top_p`, etc.
             max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit)
-            tool_type (str, optional): type of the tool. Defaults to 'tool_choice'.
+            tool_type (str, optional): type of the tool. Defaults to None.
+            get_curl_only (bool, optional): whether to only get the curl command. Defaults to False.
+
 
         Returns:
             Resp: API response
         """
         # initialize data
-        api_key, chat_url = self.api_key, self.chat_url
         if 'model' not in options: options['model'] = self.model
         # function call & tool call
+        tool_type = tool_type or self.tool_type
         tool_choice, tools = tool_choice or self.tool_choice, tools or self.tools
         function_call, functions = function_call or self.function_call, functions or self.functions
         if tool_type == 'function_call':
@@ -243,29 +248,17 @@ class Chat():
                 if tool_type != 'tool_choice':
                     logger.warning(f"Unknown tool type {tool_type}, use 'tool_choice' by default.")
                 options['tool_choice'], options['tools'] = tool_choice, tools
-        # if api_key is None: warnings.warn("API key is not set!")
-        msg, resp, numoftries = self.chat_log, None, 0
+        if options.get('stream'):
+            options['stream'] = False
+            warnings.warn("Use `async_stream_responses()` instead.")
+        # other options
+        options['timeout'] = timeout
         max_tries = max(max_tries, max_requests)
-        if stream: # TODO: add the `usage` key to the response
-            warnings.warn("stream mode is not supported yet! Use `async_stream_responses()` instead.")
         # make requests
-        while max_tries:
-            try:
-                # make API Call
-                response = chat_completion(
-                    api_key=api_key, messages=msg,
-                    chat_url=chat_url, timeout=timeout, **options)
-                resp = Resp(response)
-                assert resp.is_valid(), resp.error_message
-                break
-            except Exception as e:
-                max_tries -= 1
-                numoftries += 1
-                time.sleep(random.random() * timeinterval)
-                print(f"Try again ({numoftries}):{e}\n")
-        else:
-            raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
-                            "or increase the `max_requests`.")
+        api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
+        if get_curl_only:
+            return self._get_curl(api_key, chat_url, chat_log, **options)
+        resp = self._getresponse(api_key, chat_url, chat_log, max_tries, timeinterval, **options)
         if update: # update the chat log
             self._chat_log.append(resp.message)
             self._resp = resp
@@ -339,7 +332,7 @@ class Chat():
         
     def calltool(self, tool):
         """Call the tool"""
-        tool_call_id = tool['id']
+        tool_call_id = tool.get('id')
         tool_name, tool_para = tool['function']['name'], tool['function']['arguments']
         if tool_name not in self.name2func:
             return f"Tool {tool_name} not found.", tool_name, tool_call_id, False
@@ -423,6 +416,14 @@ class Chat():
         elif self.base_url:
             model_url = os.path.join(self.base_url, 'v1/models')
         return valid_models(self.api_key, model_url, gpt_only=gpt_only)
+
+    def get_curl(self):
+        """Print the curl command"""
+        return self.getresponse(get_curl_only=True)
+    
+    def print_curl(self):
+        """Print the curl command"""
+        print(self.get_curl())
     
     # Part5: properties and setters
     @property
@@ -468,6 +469,11 @@ class Chat():
     def api_base(self):
         """Get base url"""
         return self._api_base
+    
+    @property
+    def tool_type(self):
+        """Get tool type"""
+        return self._tool_type
     
     @property
     def functions(self):
@@ -519,6 +525,12 @@ class Chat():
         if api_base:
             self.chat_url = api_base.rstrip('/') + '/chat/completions'
         self._api_base = api_base
+
+    @tool_type.setter
+    def tool_type(self, tool_type:str):
+        """Set tool type"""
+        assert tool_type in ['tool_choice', 'function_call']
+        self._tool_type = tool_type
 
     @functions.setter
     def functions(self, functions:List[Dict]):
@@ -587,6 +599,43 @@ class Chat():
     def __getitem__(self, index):
         """Get the message at index"""
         return self._chat_log[index]
+        
+    def _getresponse( self
+                    , api_key:str
+                    , chat_url:str
+                    , msg:List[Dict]
+                    , max_tries:int
+                    , timeinterval:Union[float, int]
+                    , **options)->Resp:
+        resp, numoftries = None, 0
+        # make requests
+        while max_tries:
+            try:
+                # make API Call
+                response = chat_completion(
+                    api_key=api_key, messages=msg,
+                    chat_url=chat_url, **options)
+                resp = Resp(response)
+                assert resp.is_valid(), resp.error_message
+                break
+            except Exception as e:
+                max_tries -= 1
+                numoftries += 1
+                time.sleep(random.random() * timeinterval)
+                print(f"Try again ({numoftries}):{e}\n")
+        else:
+            raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
+                            "or increase the `max_requests`.")
+        return resp
+
+    def _get_curl( self
+                 , api_key:str
+                 , chat_url:str
+                 , chat_log:List[Dict]
+                 , **options):
+        """Get the curl command"""
+        return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
+
 
 async def _async_stream_responses( api_key:str
                                  , chat_url:str

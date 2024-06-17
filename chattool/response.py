@@ -1,43 +1,53 @@
 # Response class for Chattool
 
-from typing import Dict
+from typing import Dict, Any, Union
 from .tokencalc import findcost
+import chattool
 
 class Resp():
     
-    def __init__(self, response:Dict) -> None:
-        self.response = response
+    def __init__(self, response:Union[Dict, Any]) -> None:
+        if isinstance(response, Dict):
+            self.response = response
+            self._raw_response = None
+        else:
+            self._raw_response = response
+            self.response = response.json()
+        
+    def get_curl(self):
+        """Convert the response to a cURL command"""
+        if self._raw_response is None:
+            return "No cURL command available"
+        return chattool.resp2curl(self._raw_response)
+    
+    def print_curl(self):
+        """Print the cURL command"""
+        print(self.get_curl())
     
     def is_valid(self):
         """Check if the response is an error"""
         return 'error' not in self.response
     
     def cost(self):
-        """Calculate the cost of the response"""
+        """Calculate the cost of the response(Deprecated)"""
         return findcost(self.model, self.prompt_tokens, self.completion_tokens)
-    
-    def __repr__(self) -> str:
-        return "<Resp with finished reason: " + self.finish_reason + ">"
-    
-    def __str__(self) -> str:
-        return self.content
 
     @property
     def id(self):
-        return self.response['id']
+        return self['id']
     
     @property
     def model(self):
-        return self.response['model']
+        return self['model']
     
     @property
     def created(self):
-        return self.response['created']
+        return self['created']
     
     @property
     def usage(self):
         """Token usage"""
-        return self.response['usage']
+        return self['usage']
     
     @property
     def total_tokens(self):
@@ -57,7 +67,7 @@ class Resp():
     @property
     def message(self):
         """Message"""
-        return self.response['choices'][0]['message']
+        return self['choices'][0]['message']
     
     @property
     def content(self):
@@ -77,7 +87,7 @@ class Resp():
     @property
     def delta(self):
         """Delta"""
-        return self.response['choices'][0]['delta']
+        return self['choices'][0]['delta']
     
     @property
     def delta_content(self):
@@ -86,12 +96,12 @@ class Resp():
     
     @property
     def object(self):
-        return self.response['object']
+        return self['object']
     
     @property
     def error(self):
         """Error"""
-        return self.response['error']
+        return self['error']
     
     @property
     def error_message(self):
@@ -116,4 +126,16 @@ class Resp():
     @property
     def finish_reason(self):
         """Finish reason"""
-        return self.response['choices'][0].get('finish_reason')
+        return self['choices'][0].get('finish_reason')
+
+    def __repr__(self) -> str:
+        return "<Resp with finished reason: " + self.finish_reason + ">"
+    
+    def __str__(self) -> str:
+        return self.content
+    
+    def __getitem__(self, key):
+        return self.response[key]
+    
+    def __contains__(self, key):
+        return key in self.response

@@ -79,7 +79,41 @@ def chat_completion( api_key:str
         data=json.dumps(payload), timeout=timeout)
     if response.status_code != 200:
         raise Exception(response.text)
-    return response.json()
+    return response
+
+def curl_cmd_of_chat_completion( api_key:str
+                               , chat_url:str
+                               , messages:List[Dict]
+                               , model:str
+                               , timeout:int = 0
+                               , **options) -> str:
+    """Chat completion API call
+    Request url: https://api.openai.com/v1/chat/completions
+    
+    Args:
+        apikey (str): API key
+        chat_url (str): chat url
+        messages (List[Dict]): prompt message
+        model (str): model to use
+        **options : options inherited from the `openai.ChatCompletion.create` function.
+    
+    Returns:
+        Dict: API response
+    """
+    chat_url = normalize_url(chat_url)
+    curl_cmd = f"curl -X POST '{chat_url}' \\"
+    # request data
+    payload = {
+        "model": model,
+        "messages": messages,
+        **options
+    }
+    curl_cmd += f"\n    -H 'Content-Type: application/json' \\"
+    curl_cmd += f"\n    -H 'Authorization: Bearer {api_key}' \\"
+    curl_cmd += f"\n    -d '{json.dumps(payload, indent=4)}' \\"
+    if isinstance(timeout, int) and timeout > 0:
+        curl_cmd += f"\n    --max-time {timeout} \\"
+    return curl_cmd.rstrip(" \\")
 
 def valid_models(api_key:str, model_url:str, gpt_only:bool=True):
     """Get valid models

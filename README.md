@@ -113,10 +113,11 @@ chats = load_chats("async_chat.jsonl")
 await async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
 ```
 
-示例4，使用工具（自定义函数）：
+### 工具调用
+
+定义函数：
 
 ```python
-# 定义函数
 def add(a: int, b: int) -> int:
     """
     This function adds two numbers.
@@ -142,11 +143,32 @@ def mult(a:int, b:int) -> int:
         int: The product of the two numbers.
     """
     return a * b
-# 传输函数
-chat = Chat("find the value of (23723 * 1322312 ) + 12312") # 传入函数列表，可以是多个函数
-# 自动调用工具，默认使用 tool_choice
-chat.autoresponse(display=True, tool_choice='tool_choice') # 或者用 function_call
 ```
+
+添加函数到 `Chat` 对象：
+
+```py
+from chattool import Chat
+chat = Chat("find the value of (23723 * 1322312 ) + 12312")
+chat.settools([add, mult])
+```
+
+自动执行工具，根据返回信息判断是否结束，`maxturns` 默认为 3：
+
+```py
+chat.autoresponse(display=True, tool_type='tool_choice', maxturns=3) 
+```
+
+使用通用函数 `python`
+
+```py
+from chattool.functioncall import python
+chat = Chat("find the value of (23723 * 1322312 ) + 12312")
+chat.settools([python])
+chat.autoresponse(display=True, tool_type='tool_choice', maxturns=3) 
+```
+
+注意，执行模型生成的任意代码有潜在风险。
 
 ## 开源协议
 

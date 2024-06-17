@@ -93,3 +93,27 @@ def exec_python_code(code:str)->dict:
         return newspace
     except Exception as e:
         return {'error': str(e)}
+
+def python(code: str):
+    """Execute the code and return the result or error message
+    
+    Args:
+        code (str): code to execute
+
+    Returns:
+        result or error message
+    """
+    local_vars = {}
+    # Split the code into lines
+    lines = code.strip().split('\n')
+
+    try:
+        # Execute all lines except the last one
+        exec('\n'.join(lines[:-1]), {}, local_vars)
+
+        # Evaluate the last expression
+        result = eval(lines[-1], {}, local_vars)
+        
+        return result
+    except Exception as e:
+        return str(e)
