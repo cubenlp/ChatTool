@@ -397,10 +397,14 @@ class Chat():
             model_url = os.path.join(self.base_url, 'v1/models')
         return valid_models(self.api_key, model_url, gpt_only=gpt_only)
 
-    def get_curl(self, **options):
+    def get_curl(self, hide_api_key:bool=False, hide_api_base:bool=False, **options):
         """Print the curl command"""
         options = self._init_options(**options)
         api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
+        if hide_api_key:
+            api_key = "$OPENAI_API_KEY"
+        if hide_api_base:
+            chat_url = "$OPENAI_API_BASE/chat/completions"
         return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
     
     def print_curl(self, **options):
