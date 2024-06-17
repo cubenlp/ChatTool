@@ -3,7 +3,7 @@
 from typing import List, Dict, Union
 import chattool
 from .response import Resp
-from .request import chat_completion, valid_models
+from .request import chat_completion, valid_models, curl_cmd_of_chat_completion
 import time, random, json, warnings
 import aiohttp
 import os
@@ -205,13 +205,13 @@ class Chat():
     def getresponse( self
                    , max_tries:int = 1
                    , timeout:int = 0
-                   , timeinterval:int = 0
+                   , timeinterval:Union[float, int] = 0
                    , update:bool = True
-                   , stream:bool = False
                    , tools:Union[None, List[Dict]]=None
                    , tool_choice:Union[None, str]=None
-                   , max_requests:int=-1
                    , tool_type:str='tool_choice'
+                   , test_curl:bool=False
+                   , max_requests:int=-1
                    , functions:Union[None, List[Dict]]=None
                    , function_call:Union[None, str]=None
                    , **options)->Resp:
@@ -225,12 +225,12 @@ class Chat():
             options (dict, optional): other options like `temperature`, `top_p`, etc.
             max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit)
             tool_type (str, optional): type of the tool. Defaults to 'tool_choice'.
+            check_curl (bool, optional): print the curl command. Defaults to False.
 
         Returns:
             Resp: API response
         """
         # initialize data
-        api_key, chat_url = self.api_key, self.chat_url
         if 'model' not in options: options['model'] = self.model
         # function call & tool call
         tool_choice, tools = tool_choice or self.tool_choice, tools or self.tools
@@ -243,29 +243,17 @@ class Chat():
                 if tool_type != 'tool_choice':
                     logger.warning(f"Unknown tool type {tool_type}, use 'tool_choice' by default.")
                 options['tool_choice'], options['tools'] = tool_choice, tools
-        # if api_key is None: warnings.warn("API key is not set!")
-        msg, resp, numoftries = self.chat_log, None, 0
+        if options.get('stream'):
+            options['stream'] = False
+            warnings.warn("Use `async_stream_responses()` instead.")
+        # other options
+        options['timeout'] = timeout
         max_tries = max(max_tries, max_requests)
-        if stream: # TODO: add the `usage` key to the response
-            warnings.warn("stream mode is not supported yet! Use `async_stream_responses()` instead.")
         # make requests
-        while max_tries:
-            try:
-                # make API Call
-                response = chat_completion(
-                    api_key=api_key, messages=msg,
-                    chat_url=chat_url, timeout=timeout, **options)
-                resp = Resp(response)
-                assert resp.is_valid(), resp.error_message
-                break
-            except Exception as e:
-                max_tries -= 1
-                numoftries += 1
-                time.sleep(random.random() * timeinterval)
-                print(f"Try again ({numoftries}):{e}\n")
-        else:
-            raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
-                            "or increase the `max_requests`.")
+        api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
+        if test_curl:
+            return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
+        resp = self._getresponse(api_key, chat_url, chat_log, max_tries, timeinterval, **options)
         if update: # update the chat log
             self._chat_log.append(resp.message)
             self._resp = resp
@@ -339,7 +327,7 @@ class Chat():
         
     def calltool(self, tool):
         """Call the tool"""
-        tool_call_id = tool['id']
+        tool_call_id = tool.get('id')
         tool_name, tool_para = tool['function']['name'], tool['function']['arguments']
         if tool_name not in self.name2func:
             return f"Tool {tool_name} not found.", tool_name, tool_call_id, False
@@ -587,6 +575,42 @@ class Chat():
     def __getitem__(self, index):
         """Get the message at index"""
         return self._chat_log[index]
+        
+    def _getresponse( self
+                    , api_key:str
+                    , chat_url:str
+                    , msg:List[Dict]
+                    , max_tries:int
+                    , timeinterval:Union[float, int]
+                    , **options)->Resp:
+        resp, numoftries = None, 0
+        # make requests
+        while max_tries:
+            try:
+                # make API Call
+                response = chat_completion(
+                    api_key=api_key, messages=msg,
+                    chat_url=chat_url, **options)
+                resp = Resp(response)
+                assert resp.is_valid(), resp.error_message
+                break
+            except Exception as e:
+                max_tries -= 1
+                numoftries += 1
+                time.sleep(random.random() * timeinterval)
+                print(f"Try again ({numoftries}):{e}\n")
+        else:
+            raise Exception("Request failed! Try using `debug_log()` to find out the problem " +
+                            "or increase the `max_requests`.")
+        return resp
+
+    def curl_command(self):
+        """Print the curl command"""
+        return self.getresponse(test_curl=True)
+    
+    def print_curl(self):
+        """Print the curl command"""
+        print(self.curl_command())
 
 async def _async_stream_responses( api_key:str
                                  , chat_url:str
