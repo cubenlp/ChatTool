@@ -12,7 +12,7 @@ from . import request
 from .tokencalc import model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
-from typing import Union
+from typing import Union, List
 import dotenv
 import loguru
 
@@ -184,12 +184,16 @@ def debug_log( net_url:str="https://www.baidu.com"
     print("\nDebug is finished.")
     return True
 
-def resp2curl(resp:requests.Response):
+def resp2curl( resp:requests.Response
+            , include_headers:Union[List[str], None]=None
+            , exclude_headers:Union[List[str], None]=None):
     """
     Convert a Python requests response object to a cURL command.
 
     Args:
         resp (requests.Response): The response object from a requests call.
+        include_headers (Union[List[str], None], optional): A list of headers to include in the cURL command. Defaults to None.
+        exclude_headers (Union[List[str], None], optional): A list of headers to exclude from the cURL command. Defaults to None.
 
     Returns:
         str: A string containing the equivalent cURL command.
@@ -201,11 +205,15 @@ def resp2curl(resp:requests.Response):
     # Start forming the cURL command with method and URL
     curl_cmd = f"curl -X {method} '{url}' \\"
     # List of headers to exclude
-    exclude_headers = ['User-Agent', 'Accept-Encoding', 'Content-Length']
+    if exclude_headers is None:
+        exclude_headers = ['Content-Length']
+    if include_headers is None:
+        include_headers = ['Content-Type', 'Authorization']
     # Add headers to the cURL command, excluding certain headers
     for k, v in headers.items():
-        if k not in exclude_headers:
-            curl_cmd += f"\n    -H '{k}: {v}' \\"
+        if k in exclude_headers or (include_headers is not None and k not in include_headers):
+            continue
+        curl_cmd += f"\n    -H '{k}: {v}' \\"
     # Add body to the cURL command, formatted as pretty JSON if possible
     if body:
         try:

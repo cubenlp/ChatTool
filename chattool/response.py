@@ -14,7 +14,7 @@ class Resp():
             self._raw_response = response
             self.response = response.json()
         
-    def curl_command(self):
+    def get_curl(self):
         """Convert the response to a cURL command"""
         if self._raw_response is None:
             return "No cURL command available"
@@ -22,7 +22,7 @@ class Resp():
     
     def print_curl(self):
         """Print the cURL command"""
-        print(self.curl_command())
+        print(self.get_curl())
     
     def is_valid(self):
         """Check if the response is an error"""

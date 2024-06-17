@@ -21,6 +21,7 @@ class Chat():
                 , model:Union[None, str]=None
                 , tools:Union[None, List[Dict]]=None
                 , tool_choice:Union[None, str]=None
+                , tool_type:str='tool_choice'
                 , functions:Union[None, List[Dict]]=None
                 , function_call:Union[None, str]=None
                 , name2func:Union[None, Dict]=None):
@@ -70,10 +71,12 @@ class Chat():
             self.chat_url = os.path.join(chattool.base_url, "v1/chat/completions")
         else:
             self.chat_url = "https://api.openai.com/v1/chat/completions"
+        # functions and tools
         if functions is not None:
             assert isinstance(functions, list), "functions should be a list of dict"
         if tools is not None:
             assert isinstance(tools, list), "tools should be a list of dict"
+        self.tool_type = tool_type
         self.functions, self.tools = functions or [], tools or []
         self._function_call, self._tool_choice = function_call, tool_choice
         self._name2func, self._resp = name2func, None
@@ -209,8 +212,8 @@ class Chat():
                    , update:bool = True
                    , tools:Union[None, List[Dict]]=None
                    , tool_choice:Union[None, str]=None
-                   , tool_type:str='tool_choice'
-                   , test_curl:bool=False
+                   , tool_type:Union[str, None]=None
+                   , get_curl_only:bool=False
                    , max_requests:int=-1
                    , functions:Union[None, List[Dict]]=None
                    , function_call:Union[None, str]=None
@@ -224,8 +227,8 @@ class Chat():
             update (bool, optional): whether to update the chat log. Defaults to True.
             options (dict, optional): other options like `temperature`, `top_p`, etc.
             max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit)
-            tool_type (str, optional): type of the tool. Defaults to 'tool_choice'.
-            check_curl (bool, optional): print the curl command. Defaults to False.
+            tool_type (str, optional): type of the tool. Defaults to None.
+            get_curl_only (bool, optional): whether to only get the curl command. Defaults to False.
 
         Returns:
             Resp: API response
@@ -233,6 +236,7 @@ class Chat():
         # initialize data
         if 'model' not in options: options['model'] = self.model
         # function call & tool call
+        tool_type = tool_type or self.tool_type
         tool_choice, tools = tool_choice or self.tool_choice, tools or self.tools
         function_call, functions = function_call or self.function_call, functions or self.functions
         if tool_type == 'function_call':
@@ -251,7 +255,7 @@ class Chat():
         max_tries = max(max_tries, max_requests)
         # make requests
         api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
-        if test_curl:
+        if get_curl_only:
             return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
         resp = self._getresponse(api_key, chat_url, chat_log, max_tries, timeinterval, **options)
         if update: # update the chat log
@@ -458,6 +462,11 @@ class Chat():
         return self._api_base
     
     @property
+    def tool_type(self):
+        """Get tool type"""
+        return self._tool_type
+    
+    @property
     def functions(self):
         """Get functions"""
         return self._functions
@@ -507,6 +516,12 @@ class Chat():
         if api_base:
             self.chat_url = api_base.rstrip('/') + '/chat/completions'
         self._api_base = api_base
+
+    @tool_type.setter
+    def tool_type(self, tool_type:str):
+        """Set tool type"""
+        assert tool_type in ['tool_choice', 'function_call']
+        self._tool_type = tool_type
 
     @functions.setter
     def functions(self, functions:List[Dict]):
@@ -604,13 +619,13 @@ class Chat():
                             "or increase the `max_requests`.")
         return resp
 
-    def curl_command(self):
+    def get_curl(self):
         """Print the curl command"""
-        return self.getresponse(test_curl=True)
+        return self.getresponse(get_curl_only=True)
     
     def print_curl(self):
         """Print the curl command"""
-        print(self.curl_command())
+        print(self.get_curl())
 
 async def _async_stream_responses( api_key:str
                                  , chat_url:str
