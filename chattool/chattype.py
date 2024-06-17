@@ -230,6 +230,7 @@ class Chat():
             tool_type (str, optional): type of the tool. Defaults to None.
             get_curl_only (bool, optional): whether to only get the curl command. Defaults to False.
 
+
         Returns:
             Resp: API response
         """
@@ -256,7 +257,7 @@ class Chat():
         # make requests
         api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
         if get_curl_only:
-            return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
+            return self._get_curl(api_key, chat_url, chat_log, **options)
         resp = self._getresponse(api_key, chat_url, chat_log, max_tries, timeinterval, **options)
         if update: # update the chat log
             self._chat_log.append(resp.message)
@@ -415,6 +416,14 @@ class Chat():
         elif self.base_url:
             model_url = os.path.join(self.base_url, 'v1/models')
         return valid_models(self.api_key, model_url, gpt_only=gpt_only)
+
+    def get_curl(self):
+        """Print the curl command"""
+        return self.getresponse(get_curl_only=True)
+    
+    def print_curl(self):
+        """Print the curl command"""
+        print(self.get_curl())
     
     # Part5: properties and setters
     @property
@@ -619,13 +628,14 @@ class Chat():
                             "or increase the `max_requests`.")
         return resp
 
-    def get_curl(self):
-        """Print the curl command"""
-        return self.getresponse(get_curl_only=True)
-    
-    def print_curl(self):
-        """Print the curl command"""
-        print(self.get_curl())
+    def _get_curl( self
+                 , api_key:str
+                 , chat_url:str
+                 , chat_log:List[Dict]
+                 , **options):
+        """Get the curl command"""
+        return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
+
 
 async def _async_stream_responses( api_key:str
                                  , chat_url:str
