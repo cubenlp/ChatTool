@@ -207,57 +207,37 @@ class Chat():
     # Part2: response and async response
     def getresponse( self
                    , max_tries:int = 1
-                   , timeout:int = 0
                    , timeinterval:Union[float, int] = 0
                    , update:bool = True
-                   , tools:Union[None, List[Dict]]=None
-                   , tool_choice:Union[None, str]=None
-                   , tool_type:Union[str, None]=None
-                   , get_curl_only:bool=False
                    , max_requests:int=-1
-                   , functions:Union[None, List[Dict]]=None
-                   , function_call:Union[None, str]=None
                    , **options)->Resp:
         """Get the API response
 
         Args:
             max_tries (int, optional): maximum number of requests to make. Defaults to 1.
+            model (str, optional): model to use. Defaults to None.
             timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
             timeinterval (int, optional): time interval between two API calls. Defaults to 0.
             update (bool, optional): whether to update the chat log. Defaults to True.
             options (dict, optional): other options like `temperature`, `top_p`, etc.
+            tool_type (str, optional): type of the tool. Defaults to None. Choices: ['tool_choice', 'function_call']
+            tools (Union[None, List[Dict]], optional): tools to use, each tool is a JSON Schema. Defaults to None.
+            tool_choice (Union[None, str], optional): method to choose the tool. Defaults to None. Choices: ['auto', '$NameOfTheTool', 'none']
+            functions (Union[None, List[Dict]], optional): Decrpcated. functions to use, each function is a JSON Schema. Defaults to None.
+            function_call (str, optional): Decrpcated. method to call the function. Defaults to None. Choices: ['auto', '$NameOfTheFunction', 'none']
             max_requests (int, optional): (deprecated) maximum number of requests to make. Defaults to -1(no limit)
-            tool_type (str, optional): type of the tool. Defaults to None.
-            get_curl_only (bool, optional): whether to only get the curl command. Defaults to False.
-
 
         Returns:
             Resp: API response
         """
-        # initialize data
-        if 'model' not in options: options['model'] = self.model
-        # function call & tool call
-        tool_type = tool_type or self.tool_type
-        tool_choice, tools = tool_choice or self.tool_choice, tools or self.tools
-        function_call, functions = function_call or self.function_call, functions or self.functions
-        if tool_type == 'function_call':
-            if function_call is not None:
-                options['function_call'], options['functions'] = function_call, functions
-        else:
-            if tool_choice is not None:
-                if tool_type != 'tool_choice':
-                    logger.warning(f"Unknown tool type {tool_type}, use 'tool_choice' by default.")
-                options['tool_choice'], options['tools'] = tool_choice, tools
+        # other options
+        max_tries = max(max_tries, max_requests)
         if options.get('stream'):
             options['stream'] = False
             warnings.warn("Use `async_stream_responses()` instead.")
-        # other options
-        options['timeout'] = timeout
-        max_tries = max(max_tries, max_requests)
+        options = self._init_options(**options)
         # make requests
         api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
-        if get_curl_only:
-            return self._get_curl(api_key, chat_url, chat_log, **options)
         resp = self._getresponse(api_key, chat_url, chat_log, max_tries, timeinterval, **options)
         if update: # update the chat log
             self._chat_log.append(resp.message)
@@ -417,13 +397,15 @@ class Chat():
             model_url = os.path.join(self.base_url, 'v1/models')
         return valid_models(self.api_key, model_url, gpt_only=gpt_only)
 
-    def get_curl(self):
+    def get_curl(self, **options):
         """Print the curl command"""
-        return self.getresponse(get_curl_only=True)
+        options = self._init_options(**options)
+        api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
+        return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
     
-    def print_curl(self):
+    def print_curl(self, **options):
         """Print the curl command"""
-        print(self.get_curl())
+        print(self.get_curl(**options))
     
     # Part5: properties and setters
     @property
@@ -628,15 +610,29 @@ class Chat():
                             "or increase the `max_requests`.")
         return resp
 
-    def _get_curl( self
-                 , api_key:str
-                 , chat_url:str
-                 , chat_log:List[Dict]
-                 , **options):
-        """Get the curl command"""
-        return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
-
-
+    def _init_options( self
+                     , tools:Union[None, List[Dict]]=None
+                     , tool_choice:Union[None, str]=None
+                     , tool_type:Union[str, None]=None
+                     , functions:Union[None, List[Dict]]=None
+                     , function_call:Union[None, str]=None
+                     , **options):
+        # initialize data
+        if 'model' not in options: options['model'] = self.model
+        # function call & tool call
+        tool_type = tool_type or self.tool_type
+        tool_choice, tools = tool_choice or self.tool_choice, tools or self.tools
+        function_call, functions = function_call or self.function_call, functions or self.functions
+        if tool_type == 'function_call':
+            if function_call is not None:
+                options['function_call'], options['functions'] = function_call, functions
+        else:
+            if tool_choice is not None:
+                if tool_type != 'tool_choice':
+                    logger.warning(f"Unknown tool type {tool_type}, use 'tool_choice' by default.")
+                options['tool_choice'], options['tools'] = tool_choice, tools
+        return options
+    
 async def _async_stream_responses( api_key:str
                                  , chat_url:str
                                  , chat_log:str
