@@ -23,18 +23,24 @@ def load_chats( checkpoint:str):
     if len(txts) == 1 and txts[0] == '': return []
     # get the chatlogs
     logs = [json.loads(txt) for txt in txts]
-    chat_size, chatlogs = 1, [None]
-    for log in logs:
-        idx = log['index']
-        if idx >= chat_size: # extend chatlogs
-            chatlogs.extend([None] * (idx - chat_size + 1))
-            chat_size = idx + 1
-        chatlogs[idx] = log['chat_log']
+    # mapping from index to chat object
+    idx2chatlog = { 
+        log['index']: Chat(log['chat_log']) 
+        for log in logs 
+    }
+    num_unfinished, chat_objects = 0, [] # count the unfinished num
+    index, max_index = 0, max(idx2chatlog.keys()) 
+    while index <= max_index:
+        chat_object = idx2chatlog.get(index)
+        if chat_object is None:  
+            num_unfinished += 1 
+        chat_objects.append(chat_object)
+        index += 1 
     # check if there are missing chatlogs
-    if None in chatlogs:
-        warnings.warn(f"checkpoint file {checkpoint} has unfinished chats")
+    if num_unfinished > 0:
+        warnings.warn(f"checkpoint file {checkpoint} has {num_unfinished} unfinished chats of {index} in total.")
     # return Chat class
-    return [Chat(chat_log) if chat_log is not None else None for chat_log in chatlogs]
+    return chat_objects
 
 def process_chats( data:List[Any]
                  , data2chat:Callable[[Any], Chat]
