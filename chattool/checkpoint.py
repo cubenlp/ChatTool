@@ -1,7 +1,8 @@
-import json, warnings, os
+import json, os
 from typing import List, Dict, Union, Callable, Any
 from .chattype import Chat
 import tqdm
+from loguru import logger
 
 def load_chats( checkpoint:str):
     """Load chats from a checkpoint file
@@ -23,18 +24,16 @@ def load_chats( checkpoint:str):
     if len(txts) == 1 and txts[0] == '': return []
     # get the chatlogs
     logs = [json.loads(txt) for txt in txts]
-    chat_size, chatlogs = 1, [None]
-    for log in logs:
-        idx = log['index']
-        if idx >= chat_size: # extend chatlogs
-            chatlogs.extend([None] * (idx - chat_size + 1))
-            chat_size = idx + 1
-        chatlogs[idx] = log['chat_log']
+    # mapping from index to chat object
+    idx2chatlog = { log['index']: Chat(log['chat_log'])  for log in logs }
+    max_index = max(idx2chatlog.keys()) 
+    chat_objects = [ idx2chatlog.get(index, None) for index in range(max_index+1)]
+    num_unfinished = chat_objects.count(None)
     # check if there are missing chatlogs
-    if None in chatlogs:
-        warnings.warn(f"checkpoint file {checkpoint} has unfinished chats")
+    if num_unfinished > 0:
+        logger.warning(f"checkpoint file {checkpoint} has {num_unfinished}/{max_index+1} unfinished chats")
     # return Chat class
-    return [Chat(chat_log) if chat_log is not None else None for chat_log in chatlogs]
+    return chat_objects
 
 def process_chats( data:List[Any]
                  , data2chat:Callable[[Any], Chat]
@@ -59,7 +58,7 @@ def process_chats( data:List[Any]
     ## load chats from the checkpoint file
     chats = load_chats(checkpoint)
     if len(chats) > len(data):
-        warnings.warn(f"checkpoint file {checkpoint} has more chats than the data to be processed")
+        logger.warning(f"checkpoint file {checkpoint} has more chats than the data to be processed")
         return chats[:len(data)]
     chats.extend([None] * (len(data) - len(chats)))
     ## process chats
