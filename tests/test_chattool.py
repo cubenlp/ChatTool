@@ -196,7 +196,6 @@ def test_error_message():
     assert resp.error_code == "invalid_api_key"
     assert resp.is_valid() == False
 
-
 def test_usage():
     resp = Resp(response=response)
     assert resp.total_tokens == 18
