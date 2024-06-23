@@ -196,6 +196,7 @@ class Chat():
                 return f"{sep}{role}{sep}calling tool:\n{pformat(tools)}"
             if 'function_call' in dic:
                 return f"{sep}{role}{sep}calling function:\n{pformat(dic['function_call'])}"
+            return f"{sep}{role}{sep}{content}"
         else:
             raise Exception(f"Unknown role {role}")
     
