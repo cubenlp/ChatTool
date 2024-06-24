@@ -398,14 +398,26 @@ class Chat():
             model_url = os.path.join(self.base_url, 'v1/models')
         return valid_models(self.api_key, model_url, gpt_only=gpt_only)
 
-    def get_curl(self, **options):
-        """Print the curl command"""
+    def get_curl(self, use_env_key:bool=False, **options):
+        """Get the curl command
+        
+        Args:
+            use_env_key (bool, optional): whether to replace the API key with environment variable. Defaults to False.
+        
+        Returns:
+            str: curl command
+        """
         options = self._init_options(**options)
         api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
+        if use_env_key: api_key = '$OPENAI_API_KEY'
         return curl_cmd_of_chat_completion(api_key, chat_url, chat_log, **options)
     
     def print_curl(self, **options):
-        """Print the curl command"""
+        """Print the curl command
+        
+        Args:
+            use_env_key (bool, optional): whether to use the environment key. Defaults to False.
+        """
         print(self.get_curl(**options))
     
     # Part5: properties and setters

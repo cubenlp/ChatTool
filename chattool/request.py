@@ -110,7 +110,7 @@ def curl_cmd_of_chat_completion( api_key:str
     }
     curl_cmd += f"\n    -H 'Content-Type: application/json' \\"
     curl_cmd += f"\n    -H 'Authorization: Bearer {api_key}' \\"
-    curl_cmd += f"\n    -d '{json.dumps(payload, indent=4)}' \\"
+    curl_cmd += f"\n    -d '{json.dumps(payload, indent=4, ensure_ascii=False)}' \\"
     if isinstance(timeout, int) and timeout > 0:
         curl_cmd += f"\n    --max-time {timeout} \\"
     return curl_cmd.rstrip(" \\")
