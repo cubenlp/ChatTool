@@ -27,7 +27,7 @@ def add(a: int, b: int) -> int:
 def test_tool_call():
     chat = Chat()
     chat.user("find the sum of 784359345 and 345345345")
-    chat.print_curl()
+    chat.print_curl(use_env_key=True)
     chat.settools([add])
     chat.print_curl()
     chat.tool_type = 'function_call'
