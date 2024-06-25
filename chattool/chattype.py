@@ -396,7 +396,9 @@ class Chat():
             model_url = os.path.join(self.api_base, 'models')
         elif self.base_url:
             model_url = os.path.join(self.base_url, 'v1/models')
-        return valid_models(self.api_key, model_url, gpt_only=gpt_only)
+        model_list = valid_models(self.api_key, model_url, gpt_only=gpt_only)
+        model_list.sort()
+        return model_list
 
     def get_curl(self, use_env_key:bool=False, **options):
         """Get the curl command
