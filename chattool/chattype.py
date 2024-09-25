@@ -10,6 +10,7 @@ import os
 from .functioncall import generate_json_schema, delete_dialogue_assist
 from pprint import pformat
 from loguru import logger
+import asyncio
 
 class Chat():
     def __init__( self
@@ -263,6 +264,35 @@ class Chat():
             self.api_key, self.chat_url, self.chat_log, self.model, timeout=timeout, **options):
             yield resp.delta_content if textonly else resp
     
+    def stream_responses(self, timeout:int=0, textonly:bool=False, **options):
+        """Post request synchronously and stream the responses
+
+        Args:
+            timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
+            textonly (bool, optional): whether to only return the text. Defaults to False.
+            options (dict, optional): other options like `temperature`, `top_p`, etc.
+        
+        Returns:
+            str: response text
+        """
+        
+        async_gen = self.async_stream_responses(timeout=timeout, textonly=textonly, **options)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            # Synchronously get responses from the async generator
+            while True:
+                try:
+                    # Run the async generator to get each response
+                    response = loop.run_until_complete(async_gen.__anext__())
+                    yield response
+                except StopAsyncIteration:
+                    # End the generator when the async generator is exhausted
+                    break
+        finally:
+            loop.close()
+
     # Part3: tool call
     def iswaiting(self):
         """Whether the response is waiting"""
@@ -397,8 +427,7 @@ class Chat():
         elif self.base_url:
             model_url = os.path.join(self.base_url, 'v1/models')
         model_list = valid_models(self.api_key, model_url, gpt_only=gpt_only)
-        model_list.sort()
-        return model_list
+        return sorted(set(model_list))
 
     def get_curl(self, use_env_key:bool=False, **options):
         """Get the curl command
