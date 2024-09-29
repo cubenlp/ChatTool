@@ -7,7 +7,6 @@ from chattool.request import (
 )
 import pytest, chattool, os
 api_key, base_url, api_base = chattool.api_key, chattool.base_url, chattool.api_base
-testpath = 'tests/testfiles/'
 
 def test_valid_models():
     if chattool.api_base:
@@ -40,7 +39,7 @@ def test_normalize_url():
     assert normalize_url("api.openai.com") == "https://api.openai.com"
     assert normalize_url("example.com/foo/bar") == "https://example.com/foo/bar"
 
-def test_broken_requests():
+def test_broken_requests(testpath):
     """Test the broken requests"""
     with open(testpath + "test.txt", "w") as f:
         f.write("hello world")

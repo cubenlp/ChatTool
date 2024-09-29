@@ -8,7 +8,6 @@ langs = ["Python", "Julia", "C++"]
 chatlogs = [
     [{"role": "user", "content": f"Print hello using {lang}"}] for lang in langs
 ]
-testpath = 'tests/testfiles/'
 
 def test_simple():
     # set api_key in the environment variable
@@ -32,6 +31,8 @@ def test_stream():
         async for resp in chat.async_stream_responses():
             print(resp.delta_content, end='')
     asyncio.run(show_resp(chat))
+    for resp in chat.stream_responses():
+        print(resp, end='')
 
 def test_async_typewriter():
     def typewriter_effect(text, delay):
@@ -51,7 +52,7 @@ def test_async_typewriter2():
     chat = Chat("Print hello using Python")
     asyncio.run(show_resp(chat))
 
-def test_async_process():
+def test_async_process(testpath):
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
     async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
@@ -59,7 +60,7 @@ def test_async_process():
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
 # broken test
-def test_failed_async():
+def test_failed_async(testpath):
     api_key = chattool.api_key
     chattool.api_key = "sk-invalid"
     chkpoint = testpath + "test_async_fail.jsonl"
@@ -67,7 +68,7 @@ def test_failed_async():
     resp = async_chat_completion(words, chkpoint, clearfile=True, nproc=3)
     chattool.api_key = api_key
 
-def test_async_process_withfunc():
+def test_async_process_withfunc(testpath):
     chkpoint = testpath + "test_async_withfunc.jsonl"
     words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
     def msg2log(msg):
@@ -77,7 +78,7 @@ def test_async_process_withfunc():
         return chat.chat_log
     async_chat_completion(words, chkpoint, clearfile=True, nproc=3,  msg2log=msg2log)
 
-def test_normal_process():
+def test_normal_process(testpath):
     chkpoint = testpath + "test_nomal.jsonl"
     def data2chat(data):
         chat = Chat(data)

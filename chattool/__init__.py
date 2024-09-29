@@ -87,6 +87,13 @@ elif platform.startswith("linux"):
 elif platform.startswith("darwin"):
     platform = "macos"
 
+# is jupyter notebook
+try:
+    get_ipython
+    is_jupyter = True
+except:
+    is_jupyter = False
+
 def default_prompt(msg:str):
     """Default prompt message for the API call
 
