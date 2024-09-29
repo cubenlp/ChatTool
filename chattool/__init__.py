@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.3.3'
+__version__ = '3.3.4'
 
 import os, sys, requests, json
 from .chattype import Chat, Resp
@@ -86,6 +86,13 @@ elif platform.startswith("linux"):
     platform = "linux"
 elif platform.startswith("darwin"):
     platform = "macos"
+
+# is jupyter notebook
+try:
+    get_ipython
+    is_jupyter = True
+except:
+    is_jupyter = False
 
 def default_prompt(msg:str):
     """Default prompt message for the API call

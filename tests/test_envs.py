@@ -2,7 +2,6 @@
 
 import chattool
 from chattool import Chat, save_envs, load_envs
-testpath = 'tests/testfiles/'
 
 def test_model_api_key():
     api_key, model = chattool.api_key, chattool.model
@@ -43,7 +42,7 @@ def test_apibase():
 
     chattool.api_base, chattool.base_url = api_base, base_url
 
-def test_env_file():
+def test_env_file(testpath):
     save_envs(testpath + "chattool.env")
     with open(testpath + "test.env", "w") as f:
         f.write("OPENAI_API_KEY=sk-132\n")

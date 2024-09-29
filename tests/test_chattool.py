@@ -7,7 +7,6 @@ import chattool, json, os
 from chattool import cli
 from chattool import Chat, Resp, findcost
 import pytest
-testpath = 'tests/testfiles/'
 
 
 def test_command_line_interface():
@@ -21,7 +20,7 @@ def test_command_line_interface():
     assert '--help  Show this message and exit.' in help_result.output
 
 # test for the chat class
-def test_chat():
+def test_chat(testpath):
     # initialize
     chat = Chat()
     assert chat.chat_log == []

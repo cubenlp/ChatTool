@@ -10,6 +10,7 @@ import os
 from .functioncall import generate_json_schema, delete_dialogue_assist
 from pprint import pformat
 from loguru import logger
+import asyncio
 
 class Chat():
     def __init__( self
@@ -235,7 +236,7 @@ class Chat():
         max_tries = max(max_tries, max_requests)
         if options.get('stream'):
             options['stream'] = False
-            warnings.warn("Use `async_stream_responses()` instead.")
+            warnings.warn("Use `stream_responses` instead.")
         options = self._init_options(**options)
         # make requests
         api_key, chat_log, chat_url = self.api_key, self.chat_log, self.chat_url
@@ -258,11 +259,49 @@ class Chat():
         
         Returns:
             str: response text
+        
+        Examples:
+            >>> chat = Chat("Hello")
+            >>> # in Jupyter notebook
+            >>> async for resp in chat.async_stream_responses():
+            >>>     print(resp)
         """
         async for resp in _async_stream_responses(
             self.api_key, self.chat_url, self.chat_log, self.model, timeout=timeout, **options):
             yield resp.delta_content if textonly else resp
     
+    def stream_responses(self, timeout:int=0, textonly:bool=True, **options):
+        """Post request synchronously and stream the responses
+
+        Args:
+            timeout (int, optional): timeout for the API call. Defaults to 0(no timeout).
+            textonly (bool, optional): whether to only return the text. Defaults to True.
+            options (dict, optional): other options like `temperature`, `top_p`, etc.
+        
+        Returns:
+            str: response text
+
+        Examples:
+            >>> chat = Chat("Hello")
+            >>> for resp in chat.stream_responses():
+            >>>     print(resp)
+        """
+        assert not chattool.is_jupyter, "use `await chat.async_stream_responses()` in Jupyter notebook"
+        async_gen = self.async_stream_responses(timeout=timeout, textonly=textonly, **options)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            while True:
+                try:
+                    # Run the async generator to get each response
+                    response = loop.run_until_complete(async_gen.__anext__())
+                    yield response
+                except StopAsyncIteration:
+                    # End the generator when the async generator is exhausted
+                    break
+        finally:
+            loop.close()
+
     # Part3: tool call
     def iswaiting(self):
         """Whether the response is waiting"""
@@ -396,7 +435,8 @@ class Chat():
             model_url = os.path.join(self.api_base, 'models')
         elif self.base_url:
             model_url = os.path.join(self.base_url, 'v1/models')
-        return valid_models(self.api_key, model_url, gpt_only=gpt_only)
+        model_list = valid_models(self.api_key, model_url, gpt_only=gpt_only)
+        return sorted(set(model_list))
 
     def get_curl(self, use_env_key:bool=False, **options):
         """Get the curl command

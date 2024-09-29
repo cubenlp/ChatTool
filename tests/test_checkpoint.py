@@ -1,8 +1,7 @@
 import os, responses
 from chattool import Chat, load_chats, process_chats, api_key
-testpath = 'tests/testfiles/'
 
-def test_with_checkpoint():
+def test_with_checkpoint(testpath):
     # save chats without chatid
     chat = Chat()
     checkpath = testpath + "tmp.jsonl"
@@ -38,7 +37,7 @@ def test_with_checkpoint():
     ]
     assert chats == [Chat(log) if log is not None else None for log in chat_logs]
 
-def test_process_chats():
+def test_process_chats(testpath):
     def msg2chat(msg):
         chat = Chat()
         chat.system("You are a helpful translator for numbers.")
