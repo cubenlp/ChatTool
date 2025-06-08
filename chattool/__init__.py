@@ -55,6 +55,9 @@ def load_envs(env:Union[None, str, dict]=None):
     elif isinstance(env, dict):
         for key, value in env.items():
             os.environ[key] = value
+    elif env is not None:
+        loguru.logger.warning(f"Invalid environment variable: {env}")
+        return False
     # else: load from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
     base_url = os.getenv('OPENAI_API_BASE_URL') # or "https://api.openai.com"
