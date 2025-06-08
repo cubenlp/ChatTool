@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.3.4'
+__version__ = '3.3.5'
 
 import os, sys, requests, json
 from .chattype import Chat, Resp
@@ -12,6 +12,11 @@ from . import request
 from .tokencalc import model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
+from batch_executor import (
+    Executor, batch_executor, batch_process_executor, batch_thread_executor, batch_hybrid_executor, batch_async_executor,
+    Validator, validate_any, validate_groups,
+    setup_logger
+)
 from typing import Union, List
 import dotenv
 import loguru
@@ -49,12 +54,16 @@ def load_envs(env:Union[None, str, dict]=None):
     """
     global api_key, base_url, api_base, model
     # update the environment variables
-    if isinstance(env, str) and not dotenv.load_dotenv(env, override=True):
-        loguru.logger.warning(f"Failed to load the environment file: {env}")
-        return False
-    elif isinstance(env, dict):
+    if isinstance(env, dict):
         for key, value in env.items():
             os.environ[key] = value
+    elif isinstance(env, str):
+        if not dotenv.load_dotenv(env, override=True):
+            loguru.logger.warning(f"Failed to load the environment file: {env}")
+            return False
+    elif env is not None:
+        loguru.logger.warning(f"Invalid environment variable: {env}")
+        return False
     # else: load from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
     base_url = os.getenv('OPENAI_API_BASE_URL') # or "https://api.openai.com"
