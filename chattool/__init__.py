@@ -54,12 +54,13 @@ def load_envs(env:Union[None, str, dict]=None):
     """
     global api_key, base_url, api_base, model
     # update the environment variables
-    if isinstance(env, str) and not dotenv.load_dotenv(env, override=True):
-        loguru.logger.warning(f"Failed to load the environment file: {env}")
-        return False
-    elif isinstance(env, dict):
+    if isinstance(env, dict):
         for key, value in env.items():
             os.environ[key] = value
+    elif isinstance(env, str):
+        if not dotenv.load_dotenv(env, override=True):
+            loguru.logger.warning(f"Failed to load the environment file: {env}")
+            return False
     elif env is not None:
         loguru.logger.warning(f"Invalid environment variable: {env}")
         return False
