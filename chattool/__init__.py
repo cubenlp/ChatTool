@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '3.3.4'
+__version__ = '3.3.5'
 
 import os, sys, requests, json
 from .chattype import Chat, Resp
@@ -12,6 +12,11 @@ from . import request
 from .tokencalc import model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
 from .functioncall import generate_json_schema, exec_python_code
+from batch_executor import (
+    Executor, batch_executor, batch_process_executor, batch_thread_executor, batch_hybrid_executor, batch_async_executor,
+    Validator, validate_any, validate_groups,
+    setup_logger
+)
 from typing import Union, List
 import dotenv
 import loguru

@@ -7,12 +7,12 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-VERSION = '3.3.4'
+VERSION = '3.3.5'
 
 requirements = [
     'Click>=7.0', 'requests>=2.20', "responses>=0.23", 'aiohttp>=3.8',
     'tqdm>=4.60', 'docstring_parser>=0.10', "python-dotenv>=0.17.0",
-    'loguru>=0.7']
+    'loguru>=0.7', "batch_executor"]
 test_requirements = ['pytest>=3', 'unittest']
 
 setup(
