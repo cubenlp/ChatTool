@@ -2,10 +2,11 @@ import httpx
 import asyncio
 import logging
 import time
-from chattool.core.config import Config, OpenAIConfig
-from chattool.custom_logger import setup_logger
-from typing import Generator, AsyncGenerator, Union, Dict, Any, Optional, List
 import json
+import hashlib
+from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
+from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
+from chattool.custom_logger import setup_logger
 
 # 基础HTTP客户端类
 class HTTPClient:
@@ -227,11 +228,6 @@ class StreamResponse:
     
     def __repr__(self):
         return f"StreamResponse(content='{self.content}', finish_reason='{self.finish_reason}')"
-
-import json
-from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
-from chattool.core.config import OpenAIConfig
-from chattool.core.request import HTTPClient, StreamResponse
 
 class OpenAIClient(HTTPClient):
     _config_only_attrs = {
@@ -513,4 +509,232 @@ class OpenAIClient(HTTPClient):
     
     def _process_stream_chunk(self, chunk_data: Dict[str, Any]) -> StreamResponse:
         """处理流式响应的单个数据块，返回 StreamResponse 对象"""
+        return StreamResponse(chunk_data)
+
+class AzureOpenAIClient(HTTPClient):
+    """Azure OpenAI 客户端"""
+    
+    _config_only_attrs = {
+        'api_key', 'api_base', 'api_version',
+        'headers', 'timeout', 'max_retries', 'retry_delay'
+    }
+    
+    def __init__(self, config: Optional[AzureOpenAIConfig] = None, logger = None, **kwargs):
+        if config is None:
+            config = AzureOpenAIConfig()
+        super().__init__(config, logger, **kwargs)
+    
+    def _generate_log_id(self, messages: List[Dict[str, str]]) -> str:
+        """生成请求的 log ID"""
+        content = str(messages).encode()
+        return hashlib.sha256(content).hexdigest()
+    
+    def _build_azure_headers(self, messages: List[Dict[str, str]]) -> Dict[str, str]:
+        """构建 Azure 专用请求头"""
+        headers = self.config.headers.copy()
+        headers['X-TT-LOGID'] = self._generate_log_id(messages)
+        return headers
+    
+    def _build_chat_data(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+        """构建聊天完成请求的数据 - Azure 版本"""
+        data = {"messages": messages}
+        
+        # 处理所有可能的参数
+        all_params = set(kwargs.keys()) | {
+            k for k in self.config.__dict__.keys() 
+            if not k.startswith('_')
+        }
+        
+        for param_name in all_params:
+            # 跳过配置专用属性
+            if param_name in self._config_only_attrs:
+                continue
+                
+            value = self._get_param_value(param_name, kwargs)
+            if value is not None:
+                data[param_name] = value
+        
+        # 确保 stream 默认为 False
+        if 'stream' not in data:
+            data['stream'] = False
+                
+        return data
+    
+    def _get_param_value(self, param_name: str, kwargs: Dict[str, Any]):
+        """按优先级获取参数值：kwargs > config > None"""
+        if param_name in kwargs:
+            return kwargs[param_name]
+        return self.config.get(param_name)
+    
+    def chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        **kwargs
+    ) -> Union[Dict[str, Any], Generator[StreamResponse, None, None]]:
+        """
+        Azure OpenAI Chat Completion API (同步版本)
+        
+        Args:
+            messages: 对话消息列表
+            model: 模型名称（Azure 中通常是 deployment name）
+            temperature: 温度参数
+            top_p: top_p 参数
+            max_tokens: 最大token数
+            stream: 是否使用流式响应
+            **kwargs: 其他参数
+        """
+        # 将显式参数合并到 kwargs 中
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
+            **kwargs
+        }
+        
+        # 构建请求数据和头
+        data = self._build_chat_data(messages, **all_kwargs)
+        headers = self._build_azure_headers(messages)
+        
+        if data.get('stream'):
+            return self._stream_chat_completion(data, headers)
+        
+        # Azure 使用特殊的 URL 格式
+        url = self.config.get_request_url()
+        
+        # 直接使用 requests 发送请求（因为 Azure 的 URL 格式特殊）
+        import requests
+        response = requests.post(url, headers=headers, json=data, timeout=self.config.timeout or None)
+        response.raise_for_status()
+        return response.json()
+    
+    async def async_chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        **kwargs
+    ) -> Union[Dict[str, Any], AsyncGenerator[StreamResponse, None]]:
+        """Azure OpenAI Chat Completion API (异步版本)"""
+        import aiohttp
+        
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
+            **kwargs
+        }
+        
+        data = self._build_chat_data(messages, **all_kwargs)
+        headers = self._build_azure_headers(messages)
+        
+        if data.get('stream'):
+            return self._async_stream_chat_completion(data, headers)
+        
+        url = self.config.get_request_url()
+        
+        timeout = aiohttp.ClientTimeout(total=self.config.timeout) if self.config.timeout > 0 else None
+        
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, headers=headers, json=data) as response:
+                response.raise_for_status()
+                return await response.json()
+    
+    def _stream_chat_completion(self, data: Dict[str, Any], headers: Dict[str, str]) -> Generator[StreamResponse, None, None]:
+        """Azure 同步流式聊天完成"""
+        import requests
+        
+        url = self.config.get_request_url()
+        
+        with requests.post(url, headers=headers, json=data, stream=True) as response:
+            response.raise_for_status()
+            
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                
+                line_str = line.decode('utf-8').strip()
+                
+                if not line_str.startswith('data: '):
+                    continue
+                
+                data_str = line_str[6:].strip()
+                
+                if data_str == '[DONE]':
+                    break
+                
+                if not data_str:
+                    continue
+                
+                try:
+                    chunk_data = json.loads(data_str)
+                    stream_response = self._process_stream_chunk(chunk_data)
+                    yield stream_response
+                    
+                    if stream_response.is_finished:
+                        break
+                        
+                except json.JSONDecodeError as e:
+                    self.logger.warning(f"Failed to decode JSON: {e}, data: {data_str}")
+                    continue
+                except Exception as e:
+                    self.logger.error(f"Error processing stream chunk: {e}")
+                    break
+    
+    async def _async_stream_chat_completion(self, data: Dict[str, Any], headers: Dict[str, str]) -> AsyncGenerator[StreamResponse, None]:
+        """Azure 异步流式聊天完成"""
+        import aiohttp
+        
+        url = self.config.get_request_url()
+        timeout = aiohttp.ClientTimeout(total=self.config.timeout) if self.config.timeout > 0 else None
+        
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, headers=headers, json=data) as response:
+                response.raise_for_status()
+                
+                async for line in response.content:
+                    if not line:
+                        continue
+                    
+                    line_str = line.decode('utf-8').strip()
+                    
+                    if not line_str.startswith('data: '):
+                        continue
+                    
+                    data_str = line_str[6:].strip()
+                    
+                    if data_str == '[DONE]':
+                        break
+                    
+                    if not data_str:
+                        continue
+                    
+                    try:
+                        chunk_data = json.loads(data_str)
+                        stream_response = self._process_stream_chunk(chunk_data)
+                        yield stream_response
+                        
+                        if stream_response.is_finished:
+                            break
+                            
+                    except json.JSONDecodeError as e:
+                        self.logger.warning(f"Failed to decode JSON: {e}, data: {data_str}")
+                        continue
+                    except Exception as e:
+                        self.logger.error(f"Error processing stream chunk: {e}")
+                        break
+    
+    def _process_stream_chunk(self, chunk_data: Dict[str, Any]) -> StreamResponse:
+        """处理流式响应的单个数据块"""
         return StreamResponse(chunk_data)

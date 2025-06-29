@@ -88,14 +88,58 @@ class OpenAIConfig(Config):
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             }
+
+# Azure OpenAI 专用配置
+class AzureOpenAIConfig(Config):
+    def __init__(
+        self,
+        api_version: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        frequency_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        stop: Optional[list] = None,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        # Azure 特定参数
+        self.api_version = api_version
+        # OpenAI 兼容参数
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.frequency_penalty = frequency_penalty
+        self.presence_penalty = presence_penalty
+        self.stop = stop
+
+    def __post__init__(self):
+        # 从环境变量获取 Azure 配置
+        if not self.api_key:
+            self.api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
+        if not self.api_base:
+            self.api_base = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+        if not self.api_version:
+            self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+        if not self.model:
+            self.model = os.getenv("AZURE_OPENAI_API_MODEL", "")
         
+        # Azure 使用不同的请求头格式
+        if not self.headers:
+            self.headers = {
+                "Content-Type": "application/json",
+            }
+        
+    def get_request_url(self) -> str:
+        """获取带 API 密钥的请求 URL"""
+        endpoint = self.api_base.rstrip('/')
+        if self.api_version:
+            endpoint = f"{endpoint}?api-version={self.api_version}"
+        if self.api_key:
+            endpoint = f"{endpoint}&ak={self.api_key}"
+        return endpoint
 
 # Anthropic 配置示例
 class AnthropicConfig(Config):
     pass
-
-# Azure OpenAI 配置示例  
-class AzureConfig(Config):
-    pass
-
 
