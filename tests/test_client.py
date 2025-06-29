@@ -14,14 +14,14 @@ class TestHTTPClient:
         assert client._sync_client is None
         assert client._async_client is None
     
-    # def test_client_with_kwargs(self, config):
-    #     """测试使用 kwargs 初始化"""
-    #     client = HTTPClient(config, timeout=30, custom_param="test")
-    #     assert hasattr(client.config, 'timeout')
-    #     assert hasattr(client.config, 'custom_param')
-    #     assert client.config.custom_param == "test"
+    def test_client_with_kwargs(self, config):
+        """测试使用 kwargs 初始化"""
+        client = HTTPClient(config, timeout=30, custom_param="test")
+        assert hasattr(client.config, 'timeout')
+        assert hasattr(client.config, 'custom_param')
+        assert client.config.custom_param == "test"
     
-    def test_get_request(self, http_client):
+    def test_get_request(self, http_client:HTTPClient):
         """测试 GET 请求"""
         response = http_client.get("/test-get")
         assert response.status_code == 200
@@ -31,7 +31,7 @@ class TestHTTPClient:
         assert data["request_info"]["method"] == "GET"
         assert data["request_info"]["path"] == "test-get"
     
-    def test_post_request(self, http_client):
+    def test_post_request(self, http_client:HTTPClient):
         """测试 POST 请求"""
         test_data = {
             "name": "test",
@@ -52,7 +52,7 @@ class TestHTTPClient:
         body_data = json.loads(data["request_info"]["body"])
         assert body_data == test_data
     
-    def test_put_request(self, http_client):
+    def test_put_request(self, http_client:HTTPClient):
         """测试 PUT 请求"""
         test_data = {"update": "value"}
         
@@ -62,7 +62,7 @@ class TestHTTPClient:
         data = response.json()
         assert data["request_info"]["method"] == "PUT"
     
-    def test_delete_request(self, http_client):
+    def test_delete_request(self, http_client:HTTPClient):
         """测试 DELETE 请求"""
         response = http_client.delete("/test-delete")
         assert response.status_code == 200
@@ -70,7 +70,7 @@ class TestHTTPClient:
         data = response.json()
         assert data["request_info"]["method"] == "DELETE"
     
-    def test_request_with_params(self, http_client):
+    def test_request_with_params(self, http_client:HTTPClient):
         """测试带查询参数的请求"""
         params = {
             "page": 1,
@@ -87,7 +87,7 @@ class TestHTTPClient:
         assert query_params["size"] == "10"
         assert query_params["filter"] == "active"
     
-    def test_request_with_headers(self, http_client):
+    def test_request_with_headers(self, http_client:HTTPClient):
         """测试带自定义请求头的请求"""
         custom_headers = {
             "X-Custom-Header": "test-value",
@@ -102,7 +102,7 @@ class TestHTTPClient:
         assert headers["x-custom-header"] == "test-value"  # FastAPI 转换为小写
         assert headers["x-request-id"] == "12345"
     
-    def test_nested_path(self, http_client):
+    def test_nested_path(self, http_client:HTTPClient):
         """测试嵌套路径"""
         response = http_client.get("/api/v1/users/123/profile")
         assert response.status_code == 200
@@ -110,7 +110,7 @@ class TestHTTPClient:
         data = response.json()
         assert data["request_info"]["path"] == "api/v1/users/123/profile"
     
-    def test_root_path(self, http_client):
+    def test_root_path(self, http_client:HTTPClient):
         """测试根路径"""
         response = http_client.get("/")
         assert response.status_code == 200
@@ -124,8 +124,10 @@ class TestHTTPClient:
             response = client.get("/test-context")
             assert response.status_code == 200
     
+    # test_client.py 中修改这些测试：
+
     @pytest.mark.asyncio
-    async def test_async_get_request(self, http_client):
+    async def test_async_get_request(self, http_client:HTTPClient):
         """测试异步 GET 请求"""
         response = await http_client.async_get("/test-async-get")
         assert response.status_code == 200
@@ -133,9 +135,9 @@ class TestHTTPClient:
         data = response.json()
         assert data["status"] == "success"
         assert data["request_info"]["method"] == "GET"
-    
+
     @pytest.mark.asyncio
-    async def test_async_post_request(self, http_client):
+    async def test_async_post_request(self, http_client:HTTPClient):
         """测试异步 POST 请求"""
         test_data = {"async": "test", "timestamp": "2024-01-01"}
         
@@ -144,6 +146,24 @@ class TestHTTPClient:
         
         data = response.json()
         assert data["request_info"]["method"] == "POST"
+
+    # 修改并发测试，使用独立的客户端
+    @pytest.mark.asyncio
+    async def test_concurrent_requests(self, config):
+        """测试并发请求"""
+        async with HTTPClient(config) as client:
+            tasks = []
+            for i in range(5):
+                task = client.async_get(f"/concurrent-test/{i}")
+                tasks.append(task)
+            
+            responses = await asyncio.gather(*tasks)
+            
+            assert len(responses) == 5
+            for response in responses:
+                assert response.status_code == 200
+                data = response.json()
+                assert data["status"] == "success"
     
     @pytest.mark.asyncio
     async def test_async_context_manager(self, config):
@@ -152,7 +172,7 @@ class TestHTTPClient:
             response = await client.async_get("/test-async-context")
             assert response.status_code == 200
     
-    def test_request_info_structure(self, http_client):
+    def test_request_info_structure(self, http_client:HTTPClient):
         """测试返回的请求信息结构"""
         response = http_client.get("/test-structure")
         data = response.json()
@@ -176,7 +196,7 @@ class TestHTTPClient:
         assert "host" in client_info
         assert "port" in client_info
     
-    def test_large_payload(self, http_client):
+    def test_large_payload(self, http_client:HTTPClient):
         """测试大载荷"""
         large_data = {
             "items": [{"id": i, "name": f"item_{i}"} for i in range(100)],
@@ -189,7 +209,7 @@ class TestHTTPClient:
         data = response.json()
         assert data["status"] == "success"
     
-    def test_special_characters(self, http_client):
+    def test_special_characters(self, http_client:HTTPClient):
         """测试特殊字符"""
         test_data = {
             "chinese": "你好世界",
@@ -249,14 +269,14 @@ class TestHTTPClientParametrized:
 class TestHTTPClientPerformance:
     """性能测试"""
     
-    def test_multiple_requests(self, http_client):
+    def test_multiple_requests(self, http_client:HTTPClient):
         """测试多个连续请求"""
         for i in range(10):
             response = http_client.get(f"/perf-test/{i}")
             assert response.status_code == 200
     
     @pytest.mark.asyncio
-    async def test_concurrent_requests(self, http_client):
+    async def test_concurrent_requests(self, http_client:HTTPClient):
         """测试并发请求"""
         tasks = []
         for i in range(5):

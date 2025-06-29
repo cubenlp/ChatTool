@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 from chattool.core import HTTPClient, Config
 from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
@@ -9,6 +10,14 @@ TEST_PATH = 'tests/testfiles/'
 @pytest.fixture(scope="session")
 def testpath():
     return TEST_PATH
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """为每个测试会话创建一个新的事件循环"""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 @pytest.fixture(scope="session", autouse=True)
 def fastapi_server():
@@ -33,7 +42,7 @@ def server_url():
 def config(server_url):
     return Config(api_base=server_url)
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def http_client(config):
+    """同步HTTP客户端"""
     return HTTPClient(config)
-
