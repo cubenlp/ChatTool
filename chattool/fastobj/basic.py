@@ -51,7 +51,7 @@ def generate_curl_command(request_info: dict) -> str:
     return curl_cmd.rstrip(" \\")
 
 class FastAPIManager:
-    def __init__(self, app, host: str = "0.0.0.0", port: int = 8000, **kwargs):
+    def __init__(self, app, host: str = ["0.0.0.0", "::"], port: int = 8000, **kwargs):
         self.app = app
         self.host = host
         self.port = port
