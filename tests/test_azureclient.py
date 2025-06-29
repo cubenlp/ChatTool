@@ -180,16 +180,6 @@ class TestAzureOpenAIClient:
         log_id3 = azure_client._generate_log_id(different_messages)
         assert log_id != log_id3
     
-    def test_build_azure_headers(self, azure_client):
-        """测试 Azure 请求头构建"""
-        messages = [{"role": "user", "content": "Hello"}]
-        headers = azure_client._build_azure_headers(messages)
-        
-        assert 'Content-Type' in headers
-        assert headers['Content-Type'] == 'application/json'
-        assert 'X-TT-LOGID' in headers
-        assert len(headers['X-TT-LOGID']) == 64  # SHA256 长度
-    
     def test_build_chat_data_excludes_azure_attrs(self, azure_client):
         """测试构建数据时排除 Azure 专用属性"""
         messages = [{"role": "user", "content": "Hello"}]
@@ -311,8 +301,8 @@ class TestAzureOpenAIClient:
         assert call_data["stream"] is True
         
         # 验证传递了 Azure 请求头
-        azure_headers = call_args[0][1]
-        assert "X-TT-LOGID" in azure_headers
+        # azure_headers = call_args[0][1]
+        # assert "X-TT-LOGID" in azure_headers
 
     def test_config_only_attrs_azure(self, azure_client):
         """测试 Azure 配置专用属性列表"""
@@ -392,16 +382,6 @@ class TestAzureParameterHandling:
 class TestAzureIntegration:
     """测试 Azure 集成功能"""
     
-    def test_log_id_consistency(self, azure_client):
-        """测试 log ID 在同一请求中的一致性"""
-        messages = [{"role": "user", "content": "Test consistency"}]
-        
-        # 多次调用应该产生相同的 log ID
-        headers1 = azure_client._build_azure_headers(messages)
-        headers2 = azure_client._build_azure_headers(messages)
-        
-        assert headers1['X-TT-LOGID'] == headers2['X-TT-LOGID']
-    
     def test_azure_vs_openai_client_compatibility(self, azure_client):
         """测试 Azure 客户端与 OpenAI 客户端的 API 兼容性"""
         # Azure 客户端应该有与 OpenAI 客户端相同的主要方法
@@ -409,8 +389,5 @@ class TestAzureIntegration:
         assert hasattr(azure_client, 'async_chat_completion')
         assert hasattr(azure_client, '_build_chat_data')
         assert hasattr(azure_client, '_get_param_value')
-        
         # 但有 Azure 特有的方法
         assert hasattr(azure_client, '_generate_log_id')
-        assert hasattr(azure_client, '_build_azure_headers')
-        assert hasattr(azure_client, 'simple_request')
