@@ -3,7 +3,7 @@ import asyncio
 import logging
 import time
 from chattool.core.config import Config, OpenAIConfig
-from batch_executor.custom_logger import setup_logger
+from chattool.custom_logger import setup_logger
 from typing import Generator, AsyncGenerator, Union, Dict, Any, Optional, List
 import json
 
