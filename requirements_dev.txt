@@ -1,7 +1,8 @@
-wheel==0.38.1
-coverage==4.5.4
-twine==1.14.0
-Click==7.1.2
-pytest==6.2.4
-responses==0.23.1
-tqdm==4.60.0
+wheel
+coverage
+twine
+Click
+pytest
+responses
+tqdm
+pytest-asyncio
