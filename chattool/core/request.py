@@ -277,6 +277,7 @@ class OpenAIClient(HTTPClient):
         top_p: Optional[float] = None,
         max_tokens: Optional[int] = None,
         stream: bool = False,
+        uri: str='/chat/completions',
         **kwargs
     ) -> Union[Dict[str, Any], Generator[StreamResponse, None, None]]:
         """
@@ -311,7 +312,7 @@ class OpenAIClient(HTTPClient):
         if data.get('stream'):
             return self._stream_chat_completion(data)
         
-        response = self.post("/chat/completions", data=data)
+        response = self.post(uri, data=data)
         return response.json()
     
     async def async_chat_completion(
@@ -322,6 +323,7 @@ class OpenAIClient(HTTPClient):
         top_p: Optional[float] = None,
         max_tokens: Optional[int] = None,
         stream: bool = False,
+        uri: str='/chat/completions',
         **kwargs
     ) -> Union[Dict[str, Any], AsyncGenerator[StreamResponse, None]]:
         """
@@ -356,16 +358,16 @@ class OpenAIClient(HTTPClient):
         if data.get('stream'):
             return self._async_stream_chat_completion(data)
         
-        response = await self.async_post("/chat/completions", data=data)
+        response = await self.async_post(uri, data=data)
         return response.json()
     
-    def _stream_chat_completion(self, data: Dict[str, Any]) -> Generator[StreamResponse, None, None]:
+    def _stream_chat_completion(self, data: Dict[str, Any], uri:str='/chat/completions') -> Generator[StreamResponse, None, None]:
         """同步流式聊天完成 - 返回生成器"""
         client = self._get_sync_client()
         
         with client.stream(
             "POST",
-            "/chat/completions",
+            uri,
             json=data,
             headers=self.config.headers
         ) as response:
@@ -410,13 +412,13 @@ class OpenAIClient(HTTPClient):
                     self.logger.error(f"Error processing stream chunk: {e}")
                     break
     
-    async def _async_stream_chat_completion(self, data: Dict[str, Any]) -> AsyncGenerator[StreamResponse, None]:
+    async def _async_stream_chat_completion(self, data: Dict[str, Any], uri='/chat/completions') -> AsyncGenerator[StreamResponse, None]:
         """异步流式聊天完成 - 返回异步生成器"""
         client = self._get_async_client()
         
         async with client.stream(
             "POST",
-            "/chat/completions",
+            uri,
             json=data,
             headers=self.config.headers
         ) as response:

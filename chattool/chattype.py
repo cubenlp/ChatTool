@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Union
 import chattool
-from .core.response import Resp
+from .response import Resp
 from .request import chat_completion, valid_models, curl_cmd_of_chat_completion
 import time, random, json, warnings
 import aiohttp
