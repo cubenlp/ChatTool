@@ -228,13 +228,51 @@ class StreamResponse:
     def __repr__(self):
         return f"StreamResponse(content='{self.content}', finish_reason='{self.finish_reason}')"
 
+import json
+from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
+from chattool.core.config import OpenAIConfig
+from chattool.core.request import HTTPClient, StreamResponse
 
 class OpenAIClient(HTTPClient):
-    def __init__(self, config:Optional[OpenAIConfig] = None, logger = None, **kwargs):
+    _config_only_attrs = {
+        'api_key', 'api_base', 'headers', 'timeout', 
+        'max_retries', 'retry_delay'
+    }
+    
+    def __init__(self, config: Optional[OpenAIConfig] = None, logger = None, **kwargs):
         if config is None:
             config = OpenAIConfig()
         super().__init__(config, logger, **kwargs)
+    
+    def _build_chat_data(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+        """构建聊天完成请求的数据"""
+        data = {"messages": messages}
         
+        # 处理所有可能的参数
+        all_params = set(kwargs.keys()) | {
+            k for k in self.config.__dict__.keys() 
+            if not k.startswith('_')  # 排除私有属性
+        }
+        
+        for param_name in all_params:
+            # 跳过配置专用属性
+            if param_name in self._config_only_attrs:
+                continue
+                
+            value = self._get_param_value(param_name, kwargs)
+            if value is not None:
+                data[param_name] = value
+                
+        return data
+    
+    def _get_param_value(self, param_name: str, kwargs: Dict[str, Any]):
+        """按优先级获取参数值：kwargs > config > None"""
+        # 优先使用 kwargs 中的值
+        if param_name in kwargs:
+            return kwargs[param_name]
+        # 其次使用 config 中的值
+        return self.config.get(param_name)
+    
     def chat_completion(
         self,
         messages: List[Dict[str, str]],
@@ -261,21 +299,20 @@ class OpenAIClient(HTTPClient):
             如果 stream=False: 返回完整的响应字典
             如果 stream=True: 返回 Generator，yield StreamResponse 对象
         """
-        data = {
-            "model": model or self.config.model,
-            "messages": messages,
+        # 将显式参数合并到 kwargs 中
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
             **kwargs
         }
         
-        if temperature is not None:
-            data["temperature"] = temperature
-        if top_p is not None:
-            data["top_p"] = top_p 
-        if max_tokens is not None:
-            data["max_tokens"] = max_tokens
+        # 使用统一的参数处理逻辑
+        data = self._build_chat_data(messages, **all_kwargs)
         
-        if stream:
-            data["stream"] = True
+        if data.get('stream'):
             return self._stream_chat_completion(data)
         
         response = self.post("/chat/completions", data=data)
@@ -307,21 +344,20 @@ class OpenAIClient(HTTPClient):
             如果 stream=False: 返回完整的响应字典
             如果 stream=True: 返回 AsyncGenerator，async yield StreamResponse 对象
         """
-        data = {
-            "model": model or self.config.model,
-            "messages": messages,
+        # 将显式参数合并到 kwargs 中
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
             **kwargs
         }
         
-        if temperature is not None:
-            data["temperature"] = temperature
-        if top_p is not None:
-            data["top_p"] = top_p
-        if max_tokens is not None:
-            data["max_tokens"] = max_tokens
+        # 使用统一的参数处理逻辑
+        data = self._build_chat_data(messages, **all_kwargs)
         
-        if stream:
-            data["stream"] = True
+        if data.get('stream'):
             return self._async_stream_chat_completion(data)
         
         response = await self.async_post("/chat/completions", data=data)
@@ -432,15 +468,22 @@ class OpenAIClient(HTTPClient):
     def embeddings(
         self, 
         input_text: Union[str, List[str]], 
-        model: str = "text-embedding-ada-002", 
+        model: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """OpenAI Embeddings API"""
-        data = {
-            "model": model,
-            "input": input_text,
+        # 使用统一的参数处理逻辑
+        all_kwargs = {
+            'model': model or self.config.get('model', 'text-embedding-ada-002'),
+            'input': input_text,
             **kwargs
         }
+        
+        # 构建数据，但排除 input 参数因为它已经单独处理
+        data = {}
+        for key, value in all_kwargs.items():
+            if value is not None:
+                data[key] = value
         
         response = self.post("/embeddings", data=data)
         return response.json()
@@ -448,15 +491,22 @@ class OpenAIClient(HTTPClient):
     async def async_embeddings(
         self, 
         input_text: Union[str, List[str]], 
-        model: str = "text-embedding-ada-002", 
+        model: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """异步 OpenAI Embeddings API"""
-        data = {
-            "model": model,
-            "input": input_text,
+        # 使用统一的参数处理逻辑
+        all_kwargs = {
+            'model': model or self.config.get('model', 'text-embedding-ada-002'),
+            'input': input_text,
             **kwargs
         }
+        
+        # 构建数据
+        data = {}
+        for key, value in all_kwargs.items():
+            if value is not None:
+                data[key] = value
         
         response = await self.async_post("/embeddings", data=data)
         return response.json()

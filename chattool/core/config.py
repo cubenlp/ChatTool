@@ -55,7 +55,27 @@ class Config:
         }
 
 # OpenAI 专用配置
+# core/config.py
 class OpenAIConfig(Config):
+    def __init__(
+        self,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        frequency_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        stop: Optional[list] = None,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        # OpenAI 特定参数
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.frequency_penalty = frequency_penalty
+        self.presence_penalty = presence_penalty
+        self.stop = stop
+
     def __post__init__(self):
         if not self.api_key:
             self.api_key = os.getenv("OPENAI_API_KEY", "")

@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from chattool.core import HTTPClient, Config
+from chattool.core import HTTPClient, Config, OpenAIConfig, OpenAIClient
 from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
 from chattool.tools import ZulipClient
@@ -11,6 +11,16 @@ TEST_PATH = 'tests/testfiles/'
 @pytest.fixture(scope="session")
 def testpath():
     return TEST_PATH
+
+@pytest.fixture(scope="session")
+def oai_config():
+    """OpenAI 配置"""
+    return OpenAIConfig()
+
+@pytest.fixture(scope="session")
+def oai_client(oai_config):
+    """OpenAI 客户端"""
+    return OpenAIClient(oai_config)
 
 @pytest.fixture(scope="session", autouse=True)
 def fastapi_server():
