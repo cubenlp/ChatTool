@@ -18,17 +18,12 @@ class Config:
         self.api_key = api_key
         self.api_base = api_base
         self.model = model
-        self.headers = headers
+        self.headers = headers or {}
         self.timeout = timeout
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         for key, value in kwargs.items():
             setattr(self, key, value)
-        self.__post__init__()
-
-    def __post__init__(self):
-        if self.headers is None:
-            self.headers = {"Content-Type": "application/json"}
     
     def __repr__(self):
         return (
@@ -75,8 +70,7 @@ class OpenAIConfig(Config):
         self.frequency_penalty = frequency_penalty
         self.presence_penalty = presence_penalty
         self.stop = stop
-
-    def __post__init__(self):
+        
         if not self.api_key:
             self.api_key = os.getenv("OPENAI_API_KEY", "")
         if not self.api_base:
@@ -113,7 +107,6 @@ class AzureOpenAIConfig(Config):
         self.presence_penalty = presence_penalty
         self.stop = stop
 
-    def __post__init__(self):
         # 从环境变量获取 Azure 配置
         if not self.api_key:
             self.api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
@@ -130,14 +123,14 @@ class AzureOpenAIConfig(Config):
                 "Content-Type": "application/json",
             }
         
-    def get_request_url(self) -> str:
+        # update api_base
         """获取带 API 密钥的请求 URL"""
         endpoint = self.api_base.rstrip('/')
         if self.api_version:
             endpoint = f"{endpoint}?api-version={self.api_version}"
         if self.api_key:
             endpoint = f"{endpoint}&ak={self.api_key}"
-        return endpoint
+        self.api_base = endpoint
 
 # Anthropic 配置示例
 class AnthropicConfig(Config):
