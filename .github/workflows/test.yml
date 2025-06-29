@@ -15,6 +15,9 @@ jobs:
       OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
       OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
       OPENAI_API_MODEL: ${{ secrets.OPENAI_API_MODEL }}
+      ZULIP_SITE: ${{ secrets.ZULIP_SITE }}
+      ZULIP_BOT_EMAIL: ${{ secrets.ZULIP_BOT_EMAIL }}
+      ZULIP_BOT_API_KEY: ${{ secrets.ZULIP_BOT_API_KEY }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
