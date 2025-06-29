@@ -126,10 +126,12 @@ class AzureOpenAIConfig(Config):
         # update api_base
         """获取带 API 密钥的请求 URL"""
         endpoint = self.api_base.rstrip('/')
+        sym = '?'
         if self.api_version:
-            endpoint = f"{endpoint}?api-version={self.api_version}"
+            endpoint = f"{endpoint}{sym}api-version={self.api_version}"
+            sym = '&'
         if self.api_key:
-            endpoint = f"{endpoint}&ak={self.api_key}"
+            endpoint = f"{endpoint}{sym}ak={self.api_key}"
         self.api_base = endpoint
 
 # Anthropic 配置示例

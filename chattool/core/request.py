@@ -97,7 +97,7 @@ class HTTPClient:
         def _make_request():
             return client.request(
                 method=method,
-                url=endpoint,
+                url=endpoint if endpoint else self.config.api_base,
                 json=data,
                 params=params,
                 headers=merged_headers,
@@ -263,7 +263,7 @@ class OpenAIClient(HTTPClient):
     
     def _get_param_value(self, param_name: str, kwargs: Dict[str, Any]):
         """按优先级获取参数值：kwargs > config > None"""
-        if param_name in kwargs:
+        if kwargs.get(param_name) is not None:
             return kwargs[param_name]
         return self.config.get(param_name)
     
@@ -484,19 +484,6 @@ class OpenAIClient(HTTPClient):
     def _process_stream_chunk(self, chunk_data: Dict[str, Any]) -> StreamResponse:
         """处理流式响应的单个数据块"""
         return StreamResponse(chunk_data)
-    
-    # 通用的简化请求方法
-    def simple_request(self, input_text: Union[str, List[Dict[str, str]]], model_name: Optional[str] = None, **kwargs) -> str:
-        """简化的请求方法，直接返回内容字符串"""
-        if isinstance(input_text, str):
-            messages = [{"role": "user", "content": input_text}]
-        else:
-            messages = input_text
-        
-        response = self.chat_completion(messages, model=model_name, **kwargs)
-        return response['choices'][0]['message']['content']
-
-
 class AzureOpenAIClient(OpenAIClient):
     """Azure OpenAI 客户端"""
     
