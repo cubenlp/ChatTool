@@ -13,7 +13,7 @@ requirements = [
     'Click>=7.0', 'requests>=2.20', "responses>=0.23", 'aiohttp>=3.8',
     'tqdm>=4.60', 'docstring_parser>=0.10', "python-dotenv>=0.17.0",
     'loguru>=0.7', 
-    "batch_executor", "colorama", "fastapi", "uvicorn", "httpx"
+    "batch_executor", "colorama", "fastapi", "uvicorn", "httpx", "python-dotenv"
 ]
 test_requirements = ['pytest>=3', 'unittest']
 

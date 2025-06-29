@@ -3,6 +3,7 @@ import asyncio
 from chattool.core import HTTPClient, Config
 from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
+from chattool.tools import ZulipClient
 import time
 
 TEST_PATH = 'tests/testfiles/'
@@ -10,14 +11,6 @@ TEST_PATH = 'tests/testfiles/'
 @pytest.fixture(scope="session")
 def testpath():
     return TEST_PATH
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """为每个测试会话创建一个新的事件循环"""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 @pytest.fixture(scope="session", autouse=True)
 def fastapi_server():
@@ -46,3 +39,9 @@ def config(server_url):
 def http_client(config):
     """同步HTTP客户端"""
     return HTTPClient(config)
+
+@pytest.fixture
+def zulip_client():
+    """Zulip 客户端"""
+    zulip_client = ZulipClient()
+    return zulip_client
