@@ -18,17 +18,12 @@ class Config:
         self.api_key = api_key
         self.api_base = api_base
         self.model = model
-        self.headers = headers
+        self.headers = headers or {}
         self.timeout = timeout
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         for key, value in kwargs.items():
             setattr(self, key, value)
-        self.__post__init__()
-
-    def __post__init__(self):
-        if self.headers is None:
-            self.headers = {"Content-Type": "application/json"}
     
     def __repr__(self):
         return (
@@ -53,29 +48,101 @@ class Config:
         return {
             key: value for key, value in self.__dict__.items() if key in kwargs
         }
+    
+    def update_kwargs(self, **kwargs):
+        for key, value in kwargs.items():
+            if value is not None:
+                setattr(self, key, value)
 
 # OpenAI 专用配置
+# core/config.py
 class OpenAIConfig(Config):
-    def __post__init__(self):
+    def __init__(
+        self,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        frequency_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        stop: Optional[list] = None,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        # OpenAI 特定参数
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.frequency_penalty = frequency_penalty
+        self.presence_penalty = presence_penalty
+        self.stop = stop
+        
         if not self.api_key:
             self.api_key = os.getenv("OPENAI_API_KEY", "")
         if not self.api_base:
             self.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         if not self.model:
             self.model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo")
+        self._update_header()
+    
+    def _update_header(self):
+        if not self.headers:
+            self.headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            self.headers["Authorization"] = f"Bearer {self.api_key}"
+    
+    def update_kwargs(self, **kwargs):
+        super().update_kwargs(**kwargs)
+        self._update_header()
+
+# Azure OpenAI 专用配置
+class AzureOpenAIConfig(Config):
+    def __init__(
+        self,
+        api_version: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        frequency_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        stop: Optional[list] = None,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        # Azure 特定参数
+        self.api_version = api_version
+        # OpenAI 兼容参数
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.frequency_penalty = frequency_penalty
+        self.presence_penalty = presence_penalty
+        self.stop = stop
+
+        # 从环境变量获取 Azure 配置
+        if not self.api_key:
+            self.api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
+        if not self.api_base:
+            self.api_base = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+        if not self.api_version:
+            self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+        if not self.model:
+            self.model = os.getenv("AZURE_OPENAI_API_MODEL", "")
+        # Azure 使用不同的请求头格式
         if not self.headers:
             self.headers = {
-                "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             }
         
+    def get_request_params(self) -> Dict[str, str]:
+        """获取 Azure API 请求参数"""
+        params = {}
+        if self.api_version:
+            params['api-version'] = self.api_version
+        if self.api_key:
+            params['ak'] = self.api_key
+        return params
 
 # Anthropic 配置示例
 class AnthropicConfig(Config):
     pass
-
-# Azure OpenAI 配置示例  
-class AzureConfig(Config):
-    pass
-
 

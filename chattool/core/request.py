@@ -2,18 +2,18 @@ import httpx
 import asyncio
 import logging
 import time
-from chattool.core.config import Config, OpenAIConfig
-from chattool.custom_logger import setup_logger
-from typing import Generator, AsyncGenerator, Union, Dict, Any, Optional, List
 import json
+import hashlib
+from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
+from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
+from chattool.custom_logger import setup_logger
 
 # 基础HTTP客户端类
 class HTTPClient:
     def __init__(self, config: Optional[Config]=None, logger: Optional[logging.Logger] = None, **kwargs):
         if config is None:
             config = Config()
-        for key, value in kwargs.items():
-            setattr(config, key, value)
+        config.update_kwargs(**kwargs)
         self.config = config
         self._sync_client: Optional[httpx.Client] = None
         self._async_client: Optional[httpx.AsyncClient] = None
@@ -42,6 +42,25 @@ class HTTPClient:
             )
         return self._async_client
     
+    def _build_url(self, endpoint: str) -> str:
+        """构建完整的请求 URL"""
+        if not endpoint:
+            # 如果 endpoint 为空，直接使用 api_base
+            return self.config.api_base
+        
+        # 如果 endpoint 已经是完整 URL，直接返回
+        if endpoint.startswith(('http://', 'https://')):
+            return endpoint
+            
+        # 处理相对路径
+        base = self.config.api_base.rstrip('/')
+        endpoint = endpoint.lstrip('/')
+        
+        if endpoint:
+            return f"{base}/{endpoint}"
+        else:
+            return base
+    
     def _retry_request(self, request_func, *args, **kwargs):
         """重试机制装饰器"""
         last_exception = None
@@ -52,10 +71,10 @@ class HTTPClient:
             except (httpx.RequestError, httpx.HTTPStatusError) as e:
                 last_exception = e
                 if attempt < self.config.max_retries:
-                    self.logger.warning(f"Request failed (attempt {attempt + 1}): {e}")
+                    self.logger.warning(f"请求失败 (尝试 {attempt + 1}/{self.config.max_retries + 1}): {e}")
                     time.sleep(self.config.retry_delay * (2 ** attempt))  # 指数退避
                 else:
-                    self.logger.error(f"Request failed after {self.config.max_retries + 1} attempts")
+                    self.logger.error(f"请求失败，已尝试 {self.config.max_retries + 1} 次")
         
         raise last_exception
     
@@ -69,10 +88,10 @@ class HTTPClient:
             except (httpx.RequestError, httpx.HTTPStatusError) as e:
                 last_exception = e
                 if attempt < self.config.max_retries:
-                    self.logger.warning(f"Request failed (attempt {attempt + 1}): {e}")
+                    self.logger.warning(f"请求失败 (尝试 {attempt + 1}/{self.config.max_retries + 1}): {e}")
                     await asyncio.sleep(self.config.retry_delay * (2 ** attempt))
                 else:
-                    self.logger.error(f"Request failed after {self.config.max_retries + 1} attempts")
+                    self.logger.error(f"请求失败，已尝试 {self.config.max_retries + 1} 次")
         
         raise last_exception
     
@@ -88,6 +107,9 @@ class HTTPClient:
         """同步请求"""
         client = self._get_sync_client()
         
+        # 构建完整 URL
+        url = self._build_url(endpoint)
+        
         # 合并headers
         merged_headers = self.config.headers.copy()
         if headers:
@@ -96,7 +118,7 @@ class HTTPClient:
         def _make_request():
             return client.request(
                 method=method,
-                url=endpoint,
+                url=url,
                 json=data,
                 params=params,
                 headers=merged_headers,
@@ -119,6 +141,9 @@ class HTTPClient:
         """异步请求"""
         client = self._get_async_client()
         
+        # 构建完整 URL
+        url = self._build_url(endpoint)
+        
         # 合并headers
         merged_headers = self.config.headers.copy()
         if headers:
@@ -127,7 +152,7 @@ class HTTPClient:
         async def _make_request():
             return await client.request(
                 method=method,
-                url=endpoint,
+                url=url,
                 json=data,
                 params=params,
                 headers=merged_headers,
@@ -189,52 +214,51 @@ class HTTPClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.aclose()
 
-class StreamResponse:
-    """流式响应包装类"""
-    
-    def __init__(self, chunk_data: Dict[str, Any]):
-        self.raw = chunk_data
-        self.id = chunk_data.get('id')
-        self.object = chunk_data.get('object')
-        self.created = chunk_data.get('created')
-        self.model = chunk_data.get('model')
-        
-        choices = chunk_data.get('choices', [])
-        if choices:
-            choice = choices[0]
-            self.delta = choice.get('delta', {})
-            self.finish_reason = choice.get('finish_reason')
-            self.content = self.delta.get('content', '')
-            self.role = self.delta.get('role')
-        else:
-            self.delta = {}
-            self.finish_reason = None
-            self.content = ''
-            self.role = None
-    
-    @property
-    def has_content(self) -> bool:
-        """是否包含内容"""
-        return bool(self.content)
-    
-    @property
-    def is_finished(self) -> bool:
-        """是否完成"""
-        return self.finish_reason == 'stop'
-    
-    def __str__(self):
-        return self.content
-    
-    def __repr__(self):
-        return f"StreamResponse(content='{self.content}', finish_reason='{self.finish_reason}')"
-
-
 class OpenAIClient(HTTPClient):
-    def __init__(self, config:Optional[OpenAIConfig] = None, logger = None, **kwargs):
+    _config_only_attrs = {
+        'api_key', 'api_base', 'headers', 'timeout', 
+        'max_retries', 'retry_delay'
+    }
+    
+    def __init__(self, config: Optional[OpenAIConfig] = None, logger = None, **kwargs):
         if config is None:
             config = OpenAIConfig()
         super().__init__(config, logger, **kwargs)
+    
+    def _build_chat_data(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+        """构建聊天完成请求的数据"""
+        data = {"messages": messages}
         
+        # 处理所有可能的参数
+        all_params = set(kwargs.keys()) | {
+            k for k in self.config.__dict__.keys() 
+            if not k.startswith('_')  # 排除私有属性
+        }
+        
+        for param_name in all_params:
+            # 跳过配置专用属性
+            if param_name in self._config_only_attrs:
+                continue
+                
+            value = self._get_param_value(param_name, kwargs)
+            if value is not None:
+                data[param_name] = value
+                
+        return data
+    
+    def _get_param_value(self, param_name: str, kwargs: Dict[str, Any]):
+        """按优先级获取参数值：kwargs > config > None"""
+        if kwargs.get(param_name) is not None:
+            return kwargs[param_name]
+        return self.config.get(param_name)
+    
+    def _prepare_headers(self, messages: List[Dict[str, str]], custom_headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """准备请求头 - 子类可以重写此方法"""
+        headers = self.config.headers.copy()
+        if custom_headers:
+            headers.update(custom_headers)
+        return headers
+    
     def chat_completion(
         self,
         messages: List[Dict[str, str]],
@@ -243,8 +267,10 @@ class OpenAIClient(HTTPClient):
         top_p: Optional[float] = None,
         max_tokens: Optional[int] = None,
         stream: bool = False,
+        uri: str = '/chat/completions',
+        headers: Optional[Dict[str, str]] = None,
         **kwargs
-    ) -> Union[Dict[str, Any], Generator[StreamResponse, None, None]]:
+    ) -> Dict[str, Any]:
         """
         OpenAI Chat Completion API (同步版本)
         
@@ -255,30 +281,28 @@ class OpenAIClient(HTTPClient):
             top_p: top_p 参数
             max_tokens: 最大token数
             stream: 是否使用流式响应
+            uri: 请求 URI
+            headers: 自定义请求头
             **kwargs: 其他参数
-            
-        Returns:
-            如果 stream=False: 返回完整的响应字典
-            如果 stream=True: 返回 Generator，yield StreamResponse 对象
         """
-        data = {
-            "model": model or self.config.model,
-            "messages": messages,
+        # 合并参数
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
             **kwargs
         }
         
-        if temperature is not None:
-            data["temperature"] = temperature
-        if top_p is not None:
-            data["top_p"] = top_p 
-        if max_tokens is not None:
-            data["max_tokens"] = max_tokens
+        # 构建数据和请求头
+        data = self._build_chat_data(messages, **all_kwargs)
+        request_headers = self._prepare_headers(messages, headers)
         
-        if stream:
-            data["stream"] = True
-            return self._stream_chat_completion(data)
+        if data.get('stream'):
+            data['stream'] = False #TODO: 流式响应不支持
         
-        response = self.post("/chat/completions", data=data)
+        response = self.post(uri, data=data, headers=request_headers)
         return response.json()
     
     async def async_chat_completion(
@@ -289,158 +313,46 @@ class OpenAIClient(HTTPClient):
         top_p: Optional[float] = None,
         max_tokens: Optional[int] = None,
         stream: bool = False,
+        uri: str = '/chat/completions',
+        headers: Optional[Dict[str, str]] = None,
         **kwargs
-    ) -> Union[Dict[str, Any], AsyncGenerator[StreamResponse, None]]:
-        """
-        OpenAI Chat Completion API (异步版本)
-        
-        Args:
-            messages: 对话消息列表
-            model: 模型名称
-            temperature: 温度参数
-            top_p: top_p 参数
-            max_tokens: 最大token数
-            stream: 是否使用流式响应
-            **kwargs: 其他参数
-            
-        Returns:
-            如果 stream=False: 返回完整的响应字典
-            如果 stream=True: 返回 AsyncGenerator，async yield StreamResponse 对象
-        """
-        data = {
-            "model": model or self.config.model,
-            "messages": messages,
+    ) -> Dict[str, Any]:
+        """OpenAI Chat Completion API (异步版本)"""
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
             **kwargs
         }
         
-        if temperature is not None:
-            data["temperature"] = temperature
-        if top_p is not None:
-            data["top_p"] = top_p
-        if max_tokens is not None:
-            data["max_tokens"] = max_tokens
+        data = self._build_chat_data(messages, **all_kwargs)
+        request_headers = self._prepare_headers(messages, headers)
         
-        if stream:
-            data["stream"] = True
-            return self._async_stream_chat_completion(data)
+        if data.get('stream'):
+            data['stream'] = False #TODO: 流式响应不支持
         
-        response = await self.async_post("/chat/completions", data=data)
+        response = await self.async_post(uri, data=data, headers=request_headers)
         return response.json()
-    
-    def _stream_chat_completion(self, data: Dict[str, Any]) -> Generator[StreamResponse, None, None]:
-        """同步流式聊天完成 - 返回生成器"""
-        client = self._get_sync_client()
-        
-        with client.stream(
-            "POST",
-            "/chat/completions",
-            json=data,
-            headers=self.config.headers
-        ) as response:
-            response.raise_for_status()
-            
-            for line in response.iter_lines():
-                if not line:
-                    continue
-                
-                # 处理 SSE 格式的数据
-                line_str = line.decode('utf-8').strip()
-                
-                # 跳过非数据行
-                if not line_str.startswith('data: '):
-                    continue
-                
-                # 提取数据部分
-                data_str = line_str[6:].strip()  # 去掉 'data: ' 前缀
-                
-                # 检查是否结束
-                if data_str == '[DONE]':
-                    break
-                
-                # 跳过空行
-                if not data_str:
-                    continue
-                
-                try:
-                    # 解析 JSON
-                    chunk_data = json.loads(data_str)
-                    stream_response = self._process_stream_chunk(chunk_data)
-                    yield stream_response
-                    
-                    # 如果完成，退出循环
-                    if stream_response.is_finished:
-                        break
-                        
-                except json.JSONDecodeError as e:
-                    self.logger.warning(f"Failed to decode JSON: {e}, data: {data_str}")
-                    continue
-                except Exception as e:
-                    self.logger.error(f"Error processing stream chunk: {e}")
-                    break
-    
-    async def _async_stream_chat_completion(self, data: Dict[str, Any]) -> AsyncGenerator[StreamResponse, None]:
-        """异步流式聊天完成 - 返回异步生成器"""
-        client = self._get_async_client()
-        
-        async with client.stream(
-            "POST",
-            "/chat/completions",
-            json=data,
-            headers=self.config.headers
-        ) as response:
-            response.raise_for_status()
-            
-            async for line in response.aiter_lines():
-                if not line:
-                    continue
-                
-                # 处理 SSE 格式的数据
-                line_str = line.decode('utf-8').strip()
-                
-                # 跳过非数据行
-                if not line_str.startswith('data: '):
-                    continue
-                
-                # 提取数据部分
-                data_str = line_str[6:].strip()  # 去掉 'data: ' 前缀
-                
-                # 检查是否结束
-                if data_str == '[DONE]':
-                    break
-                
-                # 跳过空行
-                if not data_str:
-                    continue
-                
-                try:
-                    # 解析 JSON
-                    chunk_data = json.loads(data_str)
-                    stream_response = self._process_stream_chunk(chunk_data)
-                    yield stream_response
-                    
-                    # 如果完成，退出循环
-                    if stream_response.is_finished:
-                        break
-                        
-                except json.JSONDecodeError as e:
-                    self.logger.warning(f"Failed to decode JSON: {e}, data: {data_str}")
-                    continue
-                except Exception as e:
-                    self.logger.error(f"Error processing stream chunk: {e}")
-                    break
-    
+
     def embeddings(
         self, 
         input_text: Union[str, List[str]], 
-        model: str = "text-embedding-ada-002", 
+        model: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """OpenAI Embeddings API"""
-        data = {
-            "model": model,
-            "input": input_text,
+        all_kwargs = {
+            'model': model or self.config.get('model', 'text-embedding-ada-002'),
+            'input': input_text,
             **kwargs
         }
+        
+        data = {}
+        for key, value in all_kwargs.items():
+            if value is not None:
+                data[key] = value
         
         response = self.post("/embeddings", data=data)
         return response.json()
@@ -448,19 +360,150 @@ class OpenAIClient(HTTPClient):
     async def async_embeddings(
         self, 
         input_text: Union[str, List[str]], 
-        model: str = "text-embedding-ada-002", 
+        model: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """异步 OpenAI Embeddings API"""
-        data = {
-            "model": model,
-            "input": input_text,
+        all_kwargs = {
+            'model': model or self.config.get('model', 'text-embedding-ada-002'),
+            'input': input_text,
             **kwargs
         }
         
+        data = {}
+        for key, value in all_kwargs.items():
+            if value is not None:
+                data[key] = value
+        
         response = await self.async_post("/embeddings", data=data)
         return response.json()
+
+class AzureOpenAIClient(OpenAIClient):
+    """Azure OpenAI 客户端"""
     
-    def _process_stream_chunk(self, chunk_data: Dict[str, Any]) -> StreamResponse:
-        """处理流式响应的单个数据块，返回 StreamResponse 对象"""
-        return StreamResponse(chunk_data)
+    _config_only_attrs = {
+        'api_key', 'api_base', 'api_version',
+        'headers', 'timeout', 'max_retries', 'retry_delay'
+    }
+    
+    def __init__(self, config: Optional[AzureOpenAIConfig] = None, logger = None, **kwargs):
+        if config is None:
+            config = AzureOpenAIConfig()
+        self.config = config
+        super().__init__(config, logger, **kwargs)
+    
+    def _generate_log_id(self, messages: List[Dict[str, str]]) -> str:
+        """生成请求的 log ID"""
+        content = str(messages).encode()
+        return hashlib.sha256(content).hexdigest()
+    
+    def _prepare_headers(self, messages: List[Dict[str, str]], custom_headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """准备 Azure 专用请求头"""
+        headers = self.config.headers.copy()
+        headers['X-TT-LOGID'] = self._generate_log_id(messages)
+        
+        if custom_headers:
+            headers.update(custom_headers)
+        
+        return headers
+    
+    def _prepare_params(self, custom_params: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """准备 Azure API 请求参数"""
+        params = self.config.get_request_params()
+        if custom_params:
+            params.update(custom_params)
+        return params
+    
+    def chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        uri: str = '',
+        params: Optional[Dict[str, str]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Azure OpenAI Chat Completion API (同步版本)"""
+        
+        # 合并参数
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
+            **kwargs
+        }
+        
+        # 构建数据和请求头
+        data = self._build_chat_data(messages, **all_kwargs)
+        request_headers = self._prepare_headers(messages)
+        request_params = self._prepare_params(params)
+        
+        if data.get('stream'):
+            data['stream'] = False #TODO: 流式响应不支持
+        
+        response = self.post(uri, data=data, headers=request_headers, params=request_params)
+        return response.json()
+    
+    async def async_chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        uri: str = '',
+        params: Optional[Dict[str, str]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Azure OpenAI Chat Completion API (异步版本)"""
+        
+        # 合并参数
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': stream,
+            **kwargs
+        }
+        
+        # 构建数据和请求头
+        data = self._build_chat_data(messages, **all_kwargs)
+        request_headers = self._prepare_headers(messages)
+        request_params = self._prepare_params(params)
+        
+        if data.get('stream'):
+            return self._async_stream_chat_completion(data, uri, request_headers, request_params)
+        
+        response = await self.async_post(uri, data=data, headers=request_headers, params=request_params)
+        return response.json()
+    
+    async def async_embeddings(
+        self, 
+        input_text: Union[str, List[str]], 
+        model: Optional[str] = None,
+        uri: str = '',
+        params: Optional[Dict[str, str]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """异步 Azure OpenAI Embeddings API"""
+        all_kwargs = {
+            'model': model or self.config.get('model', 'text-embedding-ada-002'),
+            'input': input_text,
+            **kwargs
+        }
+        
+        data = {}
+        for key, value in all_kwargs.items():
+            if value is not None:
+                data[key] = value
+        
+        request_params = self._prepare_params(params)
+        response = await self.async_post(uri, data=data, params=request_params)
+        return response.json()

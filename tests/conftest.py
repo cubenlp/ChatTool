@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from chattool.core import HTTPClient, Config
+from chattool.core import HTTPClient, Config, OpenAIConfig, OpenAIClient, AzureOpenAIConfig, AzureOpenAIClient
 from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
 from chattool.tools import ZulipClient
@@ -8,9 +8,34 @@ import time
 
 TEST_PATH = 'tests/testfiles/'
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def testpath():
     return TEST_PATH
+
+@pytest.fixture
+def oai_config():
+    """OpenAI 配置"""
+    return OpenAIConfig()
+
+@pytest.fixture
+def oai_client(oai_config):
+    """OpenAI 客户端"""
+    return OpenAIClient(oai_config)
+
+@pytest.fixture
+def azure_config():
+    """Azure OpenAI 配置 fixture"""
+    return AzureOpenAIConfig(
+        api_key="test-azure-key",
+        api_base="https://test-resource.openai.azure.com",
+        api_version="2024-02-15-preview",
+        model="gpt-35-turbo"
+    )
+
+@pytest.fixture
+def azure_client(azure_config):
+    """Azure OpenAI 客户端 fixture"""
+    return AzureOpenAIClient(azure_config)
 
 @pytest.fixture(scope="session", autouse=True)
 def fastapi_server():
