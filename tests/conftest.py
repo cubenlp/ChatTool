@@ -8,21 +8,21 @@ import time
 
 TEST_PATH = 'tests/testfiles/'
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def testpath():
     return TEST_PATH
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def oai_config():
     """OpenAI 配置"""
     return OpenAIConfig()
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def oai_client(oai_config):
     """OpenAI 客户端"""
     return OpenAIClient(oai_config)
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def azure_config():
     """Azure OpenAI 配置 fixture"""
     return AzureOpenAIConfig(

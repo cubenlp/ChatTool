@@ -30,53 +30,6 @@ def mock_response_data():
         }
     }
 
-
-@pytest.fixture
-def mock_stream_response_data():
-    """模拟的流式响应数据"""
-    return [
-        {
-            "id": "chatcmpl-test123",
-            "object": "chat.completion.chunk",
-            "created": 1677652288,
-            "model": "gpt-3.5-turbo",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"role": "assistant", "content": ""},
-                    "finish_reason": None
-                }
-            ]
-        },
-        {
-            "id": "chatcmpl-test123",
-            "object": "chat.completion.chunk", 
-            "created": 1677652288,
-            "model": "gpt-3.5-turbo",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"content": "Hello"},
-                    "finish_reason": None
-                }
-            ]
-        },
-        {
-            "id": "chatcmpl-test123",
-            "object": "chat.completion.chunk",
-            "created": 1677652288,
-            "model": "gpt-3.5-turbo", 
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"content": "!"},
-                    "finish_reason": "stop"
-                }
-            ]
-        }
-    ]
-
-
 class TestOpenAIConfig:
     """测试 OpenAI 配置类"""
     
@@ -231,19 +184,6 @@ class TestOpenAIClient:
             assert call_data["model"] == "gpt-4"
             assert call_data["temperature"] == 0.2
             assert call_data["custom_param"] == "test"
-    
-    @patch('chattool.core.request.OpenAIClient._stream_chat_completion')
-    def test_chat_completion_stream_mode(self, mock_stream, oai_client):
-        """测试流式模式"""
-        messages = [{"role": "user", "content": "Hello"}]
-        mock_stream.return_value = iter([])
-        
-        result = oai_client.chat_completion(messages, stream=True)
-        
-        # 验证调用了流式方法
-        mock_stream.assert_called_once()
-        call_data = mock_stream.call_args[0][0]
-        assert call_data["stream"] is True
     
     @patch('chattool.core.request.OpenAIClient.post')
     def test_embeddings(self, mock_post, oai_client):

@@ -48,6 +48,11 @@ class Config:
         return {
             key: value for key, value in self.__dict__.items() if key in kwargs
         }
+    
+    def update_kwargs(self, **kwargs):
+        for key, value in kwargs.items():
+            if value is not None:
+                setattr(self, key, value)
 
 # OpenAI 专用配置
 # core/config.py
@@ -77,11 +82,17 @@ class OpenAIConfig(Config):
             self.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         if not self.model:
             self.model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo")
+        self._update_header()
+    
+    def _update_header(self):
         if not self.headers:
-            self.headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            }
+            self.headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            self.headers["Authorization"] = f"Bearer {self.api_key}"
+    
+    def update_kwargs(self, **kwargs):
+        super().update_kwargs(**kwargs)
+        self._update_header()
 
 # Azure OpenAI 专用配置
 class AzureOpenAIConfig(Config):
@@ -116,23 +127,20 @@ class AzureOpenAIConfig(Config):
             self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
         if not self.model:
             self.model = os.getenv("AZURE_OPENAI_API_MODEL", "")
-        
         # Azure 使用不同的请求头格式
         if not self.headers:
             self.headers = {
                 "Content-Type": "application/json",
             }
         
-        # update api_base
-        """获取带 API 密钥的请求 URL"""
-        endpoint = self.api_base.rstrip('/')
-        sym = '?'
+    def get_request_params(self) -> Dict[str, str]:
+        """获取 Azure API 请求参数"""
+        params = {}
         if self.api_version:
-            endpoint = f"{endpoint}{sym}api-version={self.api_version}"
-            sym = '&'
+            params['api-version'] = self.api_version
         if self.api_key:
-            endpoint = f"{endpoint}{sym}ak={self.api_key}"
-        self.api_base = endpoint
+            params['ak'] = self.api_key
+        return params
 
 # Anthropic 配置示例
 class AnthropicConfig(Config):

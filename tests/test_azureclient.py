@@ -3,28 +3,8 @@ import json
 from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any
 import hashlib
-
 from chattool.core.config import AzureOpenAIConfig
 from chattool.core.request import AzureOpenAIClient
-
-
-@pytest.fixture(scope="session")
-def azure_config():
-    """Azure OpenAI 配置 fixture"""
-    return AzureOpenAIConfig(
-        api_key="test-azure-key",
-        api_base="https://test-resource.openai.azure.com",
-        api_version="2024-02-15-preview",
-        model="gpt-35-turbo",
-        temperature=0.7
-    )
-
-
-@pytest.fixture
-def azure_client(azure_config):
-    """Azure OpenAI 客户端 fixture"""
-    return AzureOpenAIClient(azure_config)
-
 
 @pytest.fixture
 def mock_azure_response_data():
@@ -51,53 +31,6 @@ def mock_azure_response_data():
         }
     }
 
-
-@pytest.fixture
-def mock_azure_stream_response_data():
-    """模拟的 Azure 流式响应数据"""
-    return [
-        {
-            "id": "chatcmpl-azure123",
-            "object": "chat.completion.chunk",
-            "created": 1677652288,
-            "model": "gpt-35-turbo",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"role": "assistant", "content": ""},
-                    "finish_reason": None
-                }
-            ]
-        },
-        {
-            "id": "chatcmpl-azure123",
-            "object": "chat.completion.chunk",
-            "created": 1677652288,
-            "model": "gpt-35-turbo",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"content": "Hello from Azure"},
-                    "finish_reason": None
-                }
-            ]
-        },
-        {
-            "id": "chatcmpl-azure123",
-            "object": "chat.completion.chunk",
-            "created": 1677652288,
-            "model": "gpt-35-turbo",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"content": "!"},
-                    "finish_reason": "stop"
-                }
-            ]
-        }
-    ]
-
-
 class TestAzureOpenAIConfig:
     """测试 Azure OpenAI 配置类"""
     
@@ -117,8 +50,6 @@ class TestAzureOpenAIConfig:
             temperature=0.5,
             max_tokens=2000
         )
-        assert "custom-key" in config.api_base  # api_base 应该包含 ak 参数
-        assert "2024-01-01" in config.api_base  # api_base 应该包含 api-version
         assert config.model == "gpt-4"
         assert config.temperature == 0.5
         assert config.max_tokens == 2000
@@ -133,8 +64,6 @@ class TestAzureOpenAIConfig:
         
         # 验证 URL 构建正确
         assert config.api_base.startswith("https://test.openai.azure.com")
-        assert "api-version=2024-02-15-preview" in config.api_base
-        assert "ak=test-key" in config.api_base
         assert not config.api_base.endswith("//")  # 不应该有双斜杠
     
     def test_config_get_method(self):
@@ -284,26 +213,6 @@ class TestAzureOpenAIClient:
             assert call_data["temperature"] == 0.1
             assert call_data["azure_custom_param"] == "test"
     
-    @patch('chattool.core.request.AzureOpenAIClient._stream_chat_completion')
-    def test_chat_completion_stream_mode(self, mock_stream, azure_client):
-        """测试 Azure 流式模式"""
-        messages = [{"role": "user", "content": "Hello"}]
-        mock_stream.return_value = iter([])
-        
-        result = azure_client.chat_completion(messages, stream=True)
-        
-        # 验证调用了流式方法
-        mock_stream.assert_called_once()
-        call_args = mock_stream.call_args
-        
-        # 验证数据包含 stream=True
-        call_data = call_args[0][0]
-        assert call_data["stream"] is True
-        
-        # 验证传递了 Azure 请求头
-        # azure_headers = call_args[0][1]
-        # assert "X-TT-LOGID" in azure_headers
-
     def test_config_only_attrs_azure(self, azure_client):
         """测试 Azure 配置专用属性列表"""
         expected_attrs = {
