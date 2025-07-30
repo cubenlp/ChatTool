@@ -164,6 +164,93 @@ class ZulipClient(HTTPClient):
         else:
             return messages
 
+    async def search_messages_async(self, keyword: str, 
+                                   stream_id: Optional[int] = None,
+                                   topic_name: Optional[str] = None,
+                                   sender_email: Optional[str] = None,
+                                   batch_size: int = 100) -> List[Dict]:
+        """异步搜索包含关键词的消息
+        
+        Args:
+            keyword: 搜索关键词
+            stream_id: 可选，限定在特定频道ID中搜索
+            topic_name: 可选，限定在特定话题中搜索
+            sender_email: 可选，限定特定发送者
+            batch_size: 每次请求获取的消息数量
+        
+        Returns:
+            包含关键词的消息列表
+        """
+        self.logger.info(f"开始搜索包含关键词 '{keyword}' 的消息...")
+        
+        # 构建查询条件
+        narrow = [{"operator": "search", "operand": keyword}]
+        
+        # 添加可选的过滤条件
+        if stream_id is not None:
+            narrow.append({"operator": "stream", "operand": stream_id})
+        if topic_name is not None:
+            narrow.append({"operator": "topic", "operand": topic_name})
+        if sender_email is not None:
+            narrow.append({"operator": "sender", "operand": sender_email})
+        
+        all_messages = []
+        anchor = "newest"
+        request_count = 0
+        
+        try:
+            while True:
+                request_count += 1
+                self.logger.debug(f"第 {request_count} 次请求: anchor='{anchor}'")
+                
+                # 构建参数
+                params = {
+                    "narrow": json.dumps(narrow),
+                    "anchor": anchor,
+                    "num_before": batch_size,
+                    "num_after": 0,
+                    "apply_markdown": 'false'
+                }
+                
+                # 发送请求
+                response = await self.async_get("/messages", params=params)
+                data = self._handle_response(response)
+                
+                if not data or "result" not in data:
+                    self.logger.error(f"搜索消息批次 #{request_count} 失败")
+                    break
+                    
+                messages = data.get("messages", [])
+                if not messages:
+                    self.logger.debug("收到空消息批次，假定已达到最早消息")
+                    break
+                    
+                # 将新消息添加到列表前面
+                all_messages = messages + all_messages
+                
+                # 检查是否到达最早消息
+                if data.get("found_oldest", False):
+                    self.logger.debug("已确认达到最早消息")
+                    break
+                    
+                # 更新锚点为当前批次最早消息的ID
+                anchor = str(messages[0]["id"])
+                
+                # 添加请求延迟
+                await asyncio.sleep(0.5)
+                
+                # 安全检查：限制最大请求次数
+                if request_count >= 100:
+                    self.logger.warning("达到最大请求次数限制，返回可能不完整的结果")
+                    break
+        
+        except Exception as e:
+            self.logger.error(f"搜索消息失败: {e}")
+            return []
+        
+        self.logger.info(f"已完成消息搜索：共 {len(all_messages)} 条消息，用了 {request_count} 次请求")
+        return all_messages
+
     # === 同步方法 ===
     def get_channels(self) -> List[Dict]:
         """同步获取频道列表"""
@@ -214,4 +301,56 @@ class ZulipClient(HTTPClient):
             
         except Exception as e:
             self.logger.error(f"获取话题历史失败: {e}")
+            return []
+
+    def search_messages(self, keyword: str,
+                       stream_id: Optional[int] = None,
+                       topic_name: Optional[str] = None,
+                       sender_email: Optional[str] = None,
+                       batch_size: int = 100) -> List[Dict]:
+        """同步搜索包含关键词的消息
+        
+        Args:
+            keyword: 搜索关键词
+            stream_id: 可选，限定在特定频道ID中搜索
+            topic_name: 可选，限定在特定话题中搜索
+            sender_email: 可选，限定特定发送者
+            batch_size: 每次请求获取的消息数量
+        
+        Returns:
+            包含关键词的消息列表
+        """
+        self.logger.info(f"开始同步搜索包含关键词 '{keyword}' 的消息...")
+        
+        # 构建查询条件
+        narrow = [{"operator": "search", "operand": keyword}]
+        
+        # 添加可选的过滤条件
+        if stream_id is not None:
+            narrow.append({"operator": "stream", "operand": stream_id})
+        if topic_name is not None:
+            narrow.append({"operator": "topic", "operand": topic_name})
+        if sender_email is not None:
+            narrow.append({"operator": "sender", "operand": sender_email})
+        
+        # 构建参数
+        params = {
+            "narrow": json.dumps(narrow),
+            "anchor": "newest",
+            "num_before": batch_size,
+            "num_after": 0,
+            "apply_markdown": 'false'
+        }
+        
+        try:
+            # 发送请求
+            response = self.get("/messages", params=params)
+            data = self._handle_response(response)
+            
+            if data and "messages" in data:
+                return data["messages"]
+            return []
+            
+        except Exception as e:
+            self.logger.error(f"同步搜索消息失败: {e}")
             return []
