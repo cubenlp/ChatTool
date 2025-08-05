@@ -6,6 +6,9 @@ from github import Github
 from github.GithubException import GithubException
 from github.Repository import Repository
 from github.ContentFile import ContentFile
+from github.PullRequest import PullRequest
+from github.Issue import Issue
+from github.Commit import Commit
 from chattool.custom_logger import setup_logger
 # 从chattool导入batch_executor相关功能
 from chattool import batch_executor, batch_thread_executor
@@ -206,3 +209,1639 @@ class GitHubClient:
         # 构建结果字典
         files_content = dict(zip(file_paths, file_contents))
         return files_content
+    
+    def get_pull_requests(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Pull Request列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: PR状态 ("open", "closed", "all")
+            limit: 限制返回的PR数量
+            
+        Returns:
+            List[Dict]: PR信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            prs = repo.get_pulls(state=state)
+            
+            pr_list = []
+            count = 0
+            for pr in prs:
+                if limit and count >= limit:
+                    break
+                    
+                pr_info = {
+                    "number": pr.number,
+                    "title": pr.title,
+                    "body": pr.body,
+                    "state": pr.state,
+                    "user": pr.user.login if pr.user else None,
+                    "created_at": pr.created_at.isoformat() if pr.created_at else None,
+                    "updated_at": pr.updated_at.isoformat() if pr.updated_at else None,
+                    "closed_at": pr.closed_at.isoformat() if pr.closed_at else None,
+                    "merged_at": pr.merged_at.isoformat() if pr.merged_at else None,
+                    "merge_commit_sha": pr.merge_commit_sha,
+                    "head_sha": pr.head.sha if pr.head else None,
+                    "base_sha": pr.base.sha if pr.base else None,
+                    "url": pr.html_url,
+                    "additions": pr.additions,
+                    "deletions": pr.deletions,
+                    "changed_files": pr.changed_files
+                }
+                pr_list.append(pr_info)
+                count += 1
+            
+            return pr_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的PR列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的PR列表失败: {e}")
+            return []
+    
+    def get_pull_request_comments(self, repo_name: str, pr_number: int) -> Dict[str, List[Dict]]:
+        """获取指定PR的所有评论和讨论
+        
+        Args:
+            repo_name: 仓库名称
+            pr_number: PR编号
+            
+        Returns:
+            Dict[str, List[Dict]]: 包含issue评论、review评论和review的字典
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            pr = repo.get_pull(pr_number)
+            
+            result = {
+                "issue_comments": [],
+                "review_comments": [],
+                "reviews": []
+            }
+            
+            # 获取issue评论（PR的一般评论）
+            for comment in pr.get_issue_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                result["issue_comments"].append(comment_info)
+            
+            # 获取review评论（代码行级别的评论）
+            for comment in pr.get_review_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "path": comment.path,
+                    "position": comment.position,
+                    "original_position": comment.original_position,
+                    "commit_id": comment.commit_id,
+                    "original_commit_id": comment.original_commit_id,
+                    "diff_hunk": comment.diff_hunk,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                result["review_comments"].append(comment_info)
+            
+            # 获取reviews
+            for review in pr.get_reviews():
+                review_info = {
+                    "id": review.id,
+                    "user": review.user.login if review.user else None,
+                    "body": review.body,
+                    "state": review.state,
+                    "commit_id": review.commit_id,
+                    "submitted_at": review.submitted_at.isoformat() if review.submitted_at else None
+                }
+                result["reviews"].append(review_info)
+            
+            return result
+        except GithubException as e:
+            self.logger.error(f"获取PR {pr_number} 的评论失败: {e}")
+            return {"issue_comments": [], "review_comments": [], "reviews": []}
+        except Exception as e:
+            self.logger.error(f"获取PR {pr_number} 的评论失败: {e}")
+            return {"issue_comments": [], "review_comments": [], "reviews": []}
+    
+    def get_pull_request_files(self, repo_name: str, pr_number: int) -> List[Dict]:
+        """获取指定PR的文件变更信息
+        
+        Args:
+            repo_name: 仓库名称
+            pr_number: PR编号
+            
+        Returns:
+            List[Dict]: 文件变更信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            pr = repo.get_pull(pr_number)
+            
+            files_info = []
+            for file in pr.get_files():
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "contents_url": file.contents_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            return files_info
+        except GithubException as e:
+            self.logger.error(f"获取PR {pr_number} 的文件变更失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取PR {pr_number} 的文件变更失败: {e}")
+            return []
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+    
+    def get_issues(self, repo_name: str, state: str = "all", limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的Issue列表
+        
+        Args:
+            repo_name: 仓库名称
+            state: Issue状态 ("open", "closed", "all")
+            limit: 限制返回的Issue数量
+            
+        Returns:
+            List[Dict]: Issue信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            issues = repo.get_issues(state=state)
+            
+            issue_list = []
+            count = 0
+            for issue in issues:
+                if limit and count >= limit:
+                    break
+                
+                # 跳过Pull Request（GitHub API中PR也被当作Issue）
+                if issue.pull_request:
+                    continue
+                    
+                issue_info = {
+                    "number": issue.number,
+                    "title": issue.title,
+                    "body": issue.body,
+                    "state": issue.state,
+                    "user": issue.user.login if issue.user else None,
+                    "assignee": issue.assignee.login if issue.assignee else None,
+                    "assignees": [assignee.login for assignee in issue.assignees] if issue.assignees else [],
+                    "labels": [label.name for label in issue.labels] if issue.labels else [],
+                    "milestone": issue.milestone.title if issue.milestone else None,
+                    "created_at": issue.created_at.isoformat() if issue.created_at else None,
+                    "updated_at": issue.updated_at.isoformat() if issue.updated_at else None,
+                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                    "url": issue.html_url,
+                    "comments_count": issue.comments
+                }
+                issue_list.append(issue_info)
+                count += 1
+            
+            return issue_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的Issue列表失败: {e}")
+            return []
+    
+    def get_issue_comments(self, repo_name: str, issue_number: int) -> List[Dict]:
+        """获取指定Issue的所有评论
+        
+        Args:
+            repo_name: 仓库名称
+            issue_number: Issue编号
+            
+        Returns:
+            List[Dict]: 评论信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            issue = repo.get_issue(issue_number)
+            
+            comments_info = []
+            for comment in issue.get_comments():
+                comment_info = {
+                    "id": comment.id,
+                    "user": comment.user.login if comment.user else None,
+                    "body": comment.body,
+                    "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    "updated_at": comment.updated_at.isoformat() if comment.updated_at else None
+                }
+                comments_info.append(comment_info)
+            
+            return comments_info
+        except GithubException as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取Issue {issue_number} 的评论失败: {e}")
+            return []
+    
+    def get_commits(self, repo_name: str, since: Optional[str] = None, until: Optional[str] = None, limit: Optional[int] = None) -> List[Dict]:
+        """获取指定仓库的提交历史
+        
+        Args:
+            repo_name: 仓库名称
+            since: 开始时间（ISO格式字符串）
+            until: 结束时间（ISO格式字符串）
+            limit: 限制返回的提交数量
+            
+        Returns:
+            List[Dict]: 提交信息列表
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            
+            # 构建参数
+            kwargs = {}
+            if since:
+                from datetime import datetime
+                kwargs['since'] = datetime.fromisoformat(since.replace('Z', '+00:00'))
+            if until:
+                from datetime import datetime
+                kwargs['until'] = datetime.fromisoformat(until.replace('Z', '+00:00'))
+            
+            commits = repo.get_commits(**kwargs)
+            
+            commit_list = []
+            count = 0
+            for commit in commits:
+                if limit and count >= limit:
+                    break
+                    
+                commit_info = {
+                    "sha": commit.sha,
+                    "message": commit.commit.message,
+                    "author": {
+                        "name": commit.commit.author.name if commit.commit.author else None,
+                        "email": commit.commit.author.email if commit.commit.author else None,
+                        "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                    },
+                    "committer": {
+                        "name": commit.commit.committer.name if commit.commit.committer else None,
+                        "email": commit.commit.committer.email if commit.commit.committer else None,
+                        "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                    },
+                    "url": commit.html_url,
+                    "stats": {
+                        "additions": commit.stats.additions if commit.stats else None,
+                        "deletions": commit.stats.deletions if commit.stats else None,
+                        "total": commit.stats.total if commit.stats else None
+                    } if hasattr(commit, 'stats') and commit.stats else None
+                }
+                commit_list.append(commit_info)
+                count += 1
+            
+            return commit_list
+        except GithubException as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+        except Exception as e:
+            self.logger.error(f"获取仓库 {repo_name} 的提交历史失败: {e}")
+            return []
+    
+    def get_commit_details(self, repo_name: str, commit_sha: str) -> Optional[Dict]:
+        """获取指定提交的详细信息
+        
+        Args:
+            repo_name: 仓库名称
+            commit_sha: 提交的SHA值
+            
+        Returns:
+            Optional[Dict]: 提交详细信息
+        """
+        try:
+            user = self.github.get_user(self.user_name)
+            repo = user.get_repo(repo_name)
+            commit = repo.get_commit(commit_sha)
+            
+            files_info = []
+            for file in commit.files:
+                file_info = {
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "blob_url": file.blob_url,
+                    "raw_url": file.raw_url,
+                    "patch": file.patch if hasattr(file, 'patch') else None
+                }
+                files_info.append(file_info)
+            
+            commit_detail = {
+                "sha": commit.sha,
+                "message": commit.commit.message,
+                "author": {
+                    "name": commit.commit.author.name if commit.commit.author else None,
+                    "email": commit.commit.author.email if commit.commit.author else None,
+                    "date": commit.commit.author.date.isoformat() if commit.commit.author and commit.commit.author.date else None
+                },
+                "committer": {
+                    "name": commit.commit.committer.name if commit.commit.committer else None,
+                    "email": commit.commit.committer.email if commit.commit.committer else None,
+                    "date": commit.commit.committer.date.isoformat() if commit.commit.committer and commit.commit.committer.date else None
+                },
+                "url": commit.html_url,
+                "stats": {
+                    "additions": commit.stats.additions,
+                    "deletions": commit.stats.deletions,
+                    "total": commit.stats.total
+                },
+                "files": files_info
+            }
+            
+            return commit_detail
+        except GithubException as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"获取提交 {commit_sha} 的详细信息失败: {e}")
+            return None
