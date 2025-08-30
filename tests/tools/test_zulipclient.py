@@ -1,7 +1,6 @@
 from chattool.tools import ZulipClient
 from tests.const import logger
 import pytest
-import asyncio
 
 
 def test_zulip_client(zulip_client:ZulipClient):

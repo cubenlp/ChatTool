@@ -1,7 +1,7 @@
+import os
 import pytest
 from chattool.tools import GitHubClient
 from tests.const import logger
-import os
 from unittest.mock import Mock, patch
 
 
