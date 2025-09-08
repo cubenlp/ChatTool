@@ -250,8 +250,8 @@ def main(domain_name, rr, record_type, ttl, interval, max_retries, retry_delay, 
     
     示例:
     \b
-    python dynamic_ip_updater.py example.com home
-    python dynamic_ip_updater.py example.com www --ttl 600 --interval 60
+    chattool.aliyun-dns-updater example.com home
+    chattool.aliyun-dns-updater example.com www --ttl 600 --interval 60
     """
     logger = setup_logger('dynamic_ip_updater', log_file)
     click.echo(f"启动动态IP更新器...")
