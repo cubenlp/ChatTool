@@ -172,23 +172,21 @@ class AliyunDNSClient:
             self.logger.error(f"查询域名解析记录失败: {e}")
             return []
     
-    def describe_subdomain_records(self, subdomain: str, domain_name:str=None) -> List[Dict[str, Any]]:
+    def describe_subdomain_records(self, sub_domain: str) -> List[Dict[str, Any]]:
         """
         查看子域名解析记录 (Read)
         
         Args:
-            subdomain: 子域名 (如 www.example.com)，当 domain_name 不为空时，拼接为 subdomain.domain_name
-            domain_name: 域名
+            subdomain: 子域名 (如 www.example.com)
             
         Returns:
             解析记录列表
         """
         try:
-            self.logger.info(f"查询子域名 {subdomain} 的解析记录")
+            self.logger.info(f"查询子域名 {sub_domain} 的解析记录")
             # 发送请求
             request = alidns_models.DescribeSubDomainRecordsRequest(
-                sub_domain=subdomain,
-                domain_name=domain_name
+                sub_domain=sub_domain
             )
             response = self.client.describe_sub_domain_records(request)
             
@@ -432,8 +430,8 @@ class AliyunDNSClient:
         """
         try:
             # 先查找现有记录
-            records = self.describe_subdomain_records(domain_name=domain_name, subdomain=rr)
-            records = [record for record in records if record['Type'] == type_]
+            records = self.describe_subdomain_records(sub_domain=f"{rr}.{domain_name}")
+            # records = [record for record in records if record['Type'] == type_]
             if not len(records):
                 return self.add_domain_record(
                     domain_name=domain_name,
@@ -466,7 +464,7 @@ class AliyunDNSClient:
         删除子域名的指定类型解析记录
         """
         try:
-            records = self.describe_subdomain_records(domain_name=domain_name, subdomain=rr)
+            records = self.describe_subdomain_records(sub_domain=f"{rr}.{domain_name}")
             if type_ is not None:
                 records = [record for record in records if record['Type'] == type_]
             if not len(records):

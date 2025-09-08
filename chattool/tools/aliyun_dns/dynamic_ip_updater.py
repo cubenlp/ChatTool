@@ -28,7 +28,7 @@ class DynamicIPUpdater:
                 domain_name: str, 
                 rr: str, 
                 record_type: str = "A",
-                dns_ttl: int=300,
+                dns_ttl: int=600,
                 max_retries: int=3,
                 retry_delay: int=5,
                 logger=None
@@ -59,7 +59,7 @@ class DynamicIPUpdater:
         # 初始化DNS客户端
         self.dns_client = AliyunDNSClient()
         
-        self.logger.info(f"动态IP更新器已启动 - 域名: {self.domain_name}, 子域名: {self.rr}, 记录类型: {self.record_type}")
+        self.logger.info(f"动态IP更新器 -- 域名: {self.domain_name}, 子域名: {self.rr}, 记录类型: {self.record_type}")
 
     async def get_current_ip(self) -> Optional[str]:
         """
@@ -70,9 +70,7 @@ class DynamicIPUpdater:
         """
         # IP检查服务列表（故障切换用）
         ip_services = [
-            "https://ifconfig.me",
             "https://ipinfo.io/ip",
-            "https://api.ipify.org",
             "https://checkip.amazonaws.com"
         ]
         
@@ -120,11 +118,8 @@ class DynamicIPUpdater:
         """
         try:
             records = self.dns_client.describe_subdomain_records(
-                subdomain=self.rr, 
-                domain_name=self.domain_name
+                f"{self.rr}.{self.domain_name}"
             )
-            records = [record for record in records if record['Type'] == self.record_type]
-            
             if len(records) == 1:
                 return records[0]
             elif len(records) > 1:
@@ -137,55 +132,6 @@ class DynamicIPUpdater:
         except Exception as e:
             self.logger.error(f"获取DNS记录失败: {e}")
             return None
-    
-    def update_dns_record(self, new_ip: str) -> bool:
-        """
-        更新DNS记录
-        
-        Args:
-            new_ip: 新的IP地址
-            
-        Returns:
-            是否更新成功
-        """
-        try:
-            # 获取当前DNS记录
-            current_record = self.get_current_dns_record()
-            
-            if current_record:
-                # 更新现有记录
-                success = self.dns_client.update_domain_record(
-                    record_id=current_record['RecordId'],
-                    rr=self.rr,
-                    type_=self.record_type,
-                    value=new_ip,
-                    ttl=self.dns_ttl
-                )
-                if success:
-                    self.logger.info(f"DNS记录更新成功: {self.rr}.{self.domain_name} {self.record_type} {new_ip}")
-                    return True
-                else:
-                    self.logger.error("DNS记录更新失败")
-                    return False
-            else:
-                # 创建新记录
-                record_id = self.dns_client.add_domain_record(
-                    domain_name=self.domain_name,
-                    rr=self.rr,
-                    type_=self.record_type,
-                    value=new_ip,
-                    ttl=self.dns_ttl
-                )
-                if record_id:
-                    self.logger.info(f"DNS记录创建成功: {self.rr}.{self.domain_name} {self.record_type} {new_ip} (ID: {record_id})")
-                    return True
-                else:
-                    self.logger.error("DNS记录创建失败")
-                    return False
-                    
-        except Exception as e:
-            self.logger.error(f"更新DNS记录时发生异常: {e}")
-            return False
     
     async def check_and_update_ip(self) -> bool:
         """
@@ -211,7 +157,7 @@ class DynamicIPUpdater:
         
         # 更新DNS记录
         for attempt in range(self.max_retries):
-            if self.update_dns_record(current_ip):
+            if self.dns_client.set_record_value(self.domain_name, self.rr, self.record_type, current_ip, self.dns_ttl):
                 # 验证DNS记录是否更新成功
                 await asyncio.sleep(2)  # 等待DNS记录生效
                 updated_record = self.get_current_dns_record()
@@ -292,7 +238,7 @@ class DynamicIPUpdater:
 @click.argument('domain_name')
 @click.argument('rr')
 @click.option('--record-type', default='A', help='DNS记录类型，默认为A')
-@click.option('--ttl', type=int, default=300, help='TTL值，默认300秒')
+@click.option('--ttl', type=int, default=600, help='TTL值，默认300秒')
 @click.option('--interval', type=int, default=IP_CHECK_INTERVAL, help=f'检查间隔，默认{IP_CHECK_INTERVAL}秒')
 @click.option('--max-retries', type=int, default=3, help='最大重试次数，默认3次')
 @click.option('--retry-delay', type=int, default=5, help='重试延迟，默认5秒')
