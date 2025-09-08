@@ -13,6 +13,7 @@ requirements = [
     'Click>=7.0', 'requests>=2.20', "responses>=0.23", 'aiohttp>=3.8',
     'tqdm>=4.60', 'docstring_parser>=0.10', "python-dotenv>=0.17.0",
     'loguru>=0.7', 
+    'alibabacloud_alidns20150109==3.5.10',
     "batch_executor", "colorama", "fastapi", "uvicorn", "httpx", "python-dotenv",
     "PyGithub"
 ]
@@ -35,6 +36,7 @@ setup(
     entry_points={
         'console_scripts': [
             'chattool=chattool.cli:main',
+            'aliyun-dns-updater=chattool.tools.aliyun_dns.dynamic_ip_updater:main'
         ],
     },
     install_requires=requirements,
