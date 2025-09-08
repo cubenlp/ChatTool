@@ -289,8 +289,8 @@ class DynamicIPUpdater:
 
 # 命令行入口
 @click.command()
-@click.argument('domain_name', help='域名')
-@click.argument('rr', help='子域名记录')
+@click.argument('domain_name')
+@click.argument('rr')
 @click.option('--record-type', default='A', help='DNS记录类型，默认为A')
 @click.option('--ttl', type=int, default=300, help='TTL值，默认300秒')
 @click.option('--interval', type=int, default=IP_CHECK_INTERVAL, help=f'检查间隔，默认{IP_CHECK_INTERVAL}秒')
