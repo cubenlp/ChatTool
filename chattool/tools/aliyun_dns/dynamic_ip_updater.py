@@ -243,7 +243,8 @@ class DynamicIPUpdater:
 @click.option('--max-retries', type=int, default=3, help='最大重试次数，默认3次')
 @click.option('--retry-delay', type=int, default=5, help='重试延迟，默认5秒')
 @click.option('--log-file', default=LOG_FILE, help='日志文件路径，默认 dynamic_ip_updater.log')
-def main(domain_name, rr, record_type, ttl, interval, max_retries, retry_delay, log_file):
+@click.option('-v', '--verbose', count=True, help='增加日志verbosity，可重复使用增加verbosity等级')
+def main(domain_name, rr, record_type, ttl, interval, max_retries, retry_delay, log_file, verbose):
     """动态IP监控和DNS自动更新工具
     
     监控本机公网IP地址变化，当检测到IP变化时自动更新阿里云DNS解析记录。
@@ -253,7 +254,11 @@ def main(domain_name, rr, record_type, ttl, interval, max_retries, retry_delay, 
     chattool.aliyun-dns-updater example.com home
     chattool.aliyun-dns-updater example.com www --ttl 600 --interval 60
     """
-    logger = setup_logger('dynamic_ip_updater', log_file)
+    if verbose:
+        log_level = "DEBUG"
+    else:
+        log_level = "INFO"
+    logger = setup_logger('dynamic_ip_updater', log_file, log_level)
     click.echo(f"启动动态IP更新器...")
     click.echo(f"域名: {domain_name}")
     click.echo(f"子域名: {rr}")

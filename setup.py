@@ -36,7 +36,8 @@ setup(
     entry_points={
         'console_scripts': [
             'chattool=chattool.cli:main',
-            'aliyun-dns-updater=chattool.tools.aliyun_dns.dynamic_ip_updater:main'
+            "chattool.ssl-cert-updater=chattool.tools.aliyun_dns.ssl_cert_updater:main",
+            'chattool.aliyun-dns-updater=chattool.tools.aliyun_dns.dynamic_ip_updater:main'
         ],
     },
     install_requires=requirements,
