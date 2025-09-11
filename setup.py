@@ -36,6 +36,7 @@ setup(
     entry_points={
         'console_scripts': [
             'chattool=chattool.cli:main',
+            'tencentcloud-sdk-python',
             "chattool.ssl-cert-updater=chattool.tools.aliyun_dns.ssl_cert_updater:main",
             'chattool.aliyun-dns-updater=chattool.tools.aliyun_dns.dynamic_ip_updater:main'
         ],
