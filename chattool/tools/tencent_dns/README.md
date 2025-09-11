@@ -2,24 +2,6 @@
 
 基于腾讯云官方 SDK 实现的 DNSPod 域名解析记录管理客户端，提供完整的 CRUD 操作功能，以及动态IP更新和SSL证书自动更新等高级功能。
 
-## 功能特性
-
-- ✅ **基础DNS管理**
-  - 域名列表查询
-  - 解析记录查询（支持多种过滤条件）
-  - 创建/修改/删除解析记录
-  - 设置记录状态（启用/禁用）
-
-- ✅ **高级功能**
-  - 智能记录管理（自动创建/更新）
-  - 动态IP监控和自动更新
-  - SSL证书自动申请和续期（Let's Encrypt）
-
-- ✅ **开发友好**
-  - 完整的错误处理和日志记录
-  - 命令行工具支持
-  - 批量操作支持
-
 ## 安装依赖
 
 ```bash
@@ -60,7 +42,7 @@ export TENCENT_SECRET_KEY="your_secret_key"
 ### 3. 基本使用
 
 ```python
-from chattool.tools.tencent_dns import TencentDNSClient
+from chattool.tools import TencentDNSClient
 
 # 初始化客户端
 client = TencentDNSClient()
@@ -275,113 +257,3 @@ RETRY_DELAY=5
 LOG_FILE=dynamic_ip_updater.log
 LOG_LEVEL=INFO
 ```
-
-## 自动化部署
-
-### Cron定时任务
-
-```bash
-# 每5分钟检查一次动态IP
-*/5 * * * * /usr/bin/python3 -m chattool.tools.tencent_dns.dynamic_ip_updater update --domain example.com --rr www
-
-# 每天检查一次SSL证书
-0 2 * * * /usr/bin/python3 -m chattool.tools.tencent_dns.ssl_cert_updater auto-update -d example.com -e your@email.com
-```
-
-### Systemd服务
-
-创建 `/etc/systemd/system/tencent-dns-monitor.service`:
-
-```ini
-[Unit]
-Description=Tencent DNS Dynamic IP Monitor
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/chattool
-ExecStart=/usr/bin/python3 -m chattool.tools.tencent_dns.dynamic_ip_updater monitor --domain example.com --rr www
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-启用服务：
-
-```bash
-sudo systemctl enable tencent-dns-monitor
-sudo systemctl start tencent-dns-monitor
-```
-
-## 与阿里云DNS的对比
-
-| 功能 | 阿里云DNS | 腾讯云DNSPod | 备注 |
-|------|-----------|--------------|------|
-| 认证方式 | AccessKeyId/AccessKeySecret | SecretId/SecretKey | 参数名不同 |
-| API端点 | alidns.cn-hangzhou.aliyuncs.com | dnspod.tencentcloudapi.com | 完全不同 |
-| SDK依赖 | alibabacloud-alidns20150109 | tencentcloud-sdk-python | 不同厂商SDK |
-| 记录类型 | 基本一致 | 基本一致 | 都支持主流记录类型 |
-| 线路类型 | 支持地域线路 | 支持运营商线路 | 各有特色 |
-| 批量操作 | 部分支持 | 部分支持 | 都提供批量接口 |
-| 接口风格 | 阿里云API 3.0 | 腾讯云API 3.0 | 接口设计类似 |
-
-## 故障排除
-
-### 常见问题
-
-1. **认证失败**
-   - 检查SecretId和SecretKey是否正确
-   - 确认账号已开通DNSPod服务
-
-2. **域名不存在**
-   - 确认域名已添加到DNSPod控制台
-   - 检查域名拼写是否正确
-
-3. **权限不足**
-   - 确认API密钥有DNS管理权限
-   - 检查CAM策略配置
-
-4. **网络连接问题**
-   - 检查网络连接
-   - 确认防火墙设置
-
-### 调试模式
-
-启用详细日志：
-
-```python
-import logging
-logging.getLogger('chattool.tools.tencent_dns').setLevel(logging.DEBUG)
-```
-
-或使用命令行参数：
-
-```bash
-python -m chattool.tools.tencent_dns.dynamic_ip_updater update \
-    --domain example.com \
-    --rr www \
-    --log-level DEBUG
-```
-
-## 许可证
-
-MIT License
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 作者
-
-MiniMax Agent
-
-## 更新日志
-
-### v1.0.0
-- 基础DNS记录管理功能
-- 动态IP监控和更新
-- SSL证书自动管理
-- 命令行工具支持

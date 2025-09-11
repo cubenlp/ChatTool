@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chattool"
+dynamic = ["version"]
+authors = [
+    {name = "Rex Wang", email = "1073853456@qq.com"}
+]
+description = "Toolkit for Chat API"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10"
+]
+keywords = ["chattool"]
+license = {text = "MIT license"}
+dependencies = [
+    "Click>=7.0",
+    "requests>=2.20",
+    "responses>=0.23",
+    "aiohttp>=3.8",
+    "tqdm>=4.60",
+    "docstring_parser>=0.10",
+    "python-dotenv>=0.17.0",
+    "loguru>=0.7",
+    "dnspython",
+    "fastmcp; python_version >= '3.10'",
+    "alibabacloud_alidns20150109==3.5.10",
+    "tencentcloud-sdk-python",
+    "batch_executor",
+    "colorama",
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "PyGithub"
+]
+
+[project.optional-dependencies]
+dev = [
+    "wheel",
+    "coverage",
+    "twine",
+    "pytest>=3",
+    "pytest-asyncio",
+    "unittest"
+]
+
+[project.urls]
+Homepage = "https://github.com/cubenlp/chattool"
+Repository = "https://github.com/cubenlp/chattool"
+
+[project.scripts]
+chattool = "chattool.cli:main"
+"chattool.ssl-cert-updater" = "chattool.tools.aliyun_dns.ssl_cert_updater:main"
+"chattool.aliyun-dns-updater" = "chattool.tools.aliyun_dns.dynamic_ip_updater:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "chattool.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["chattool*"]
+
+[tool.setuptools]
+include-package-data = true
