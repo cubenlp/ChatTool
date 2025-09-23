@@ -69,7 +69,7 @@ chattool = "chattool.cli:main"
 version = {attr = "chattool.__version__"}
 
 [tool.setuptools.packages.find]
-include = ["chattool*"]
+include = ["src"]
 
 [tool.setuptools]
 include-package-data = true
