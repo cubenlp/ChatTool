@@ -2,7 +2,6 @@ import httpx
 import asyncio
 import logging
 import time
-import json
 import hashlib
 from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
 from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
@@ -478,8 +477,8 @@ class AzureOpenAIClient(OpenAIClient):
         request_headers = self._prepare_headers(messages)
         request_params = self._prepare_params(params)
         
-        if data.get('stream'):
-            return self._async_stream_chat_completion(data, uri, request_headers, request_params)
+        # if data.get('stream'):
+        #     return self._async_stream_chat_completion(data, uri, request_headers, request_params)
         
         response = await self.async_post(uri, data=data, headers=request_headers, params=request_params)
         return response.json()

@@ -141,8 +141,3 @@ class AzureOpenAIConfig(Config):
         if self.api_key:
             params['ak'] = self.api_key
         return params
-
-# Anthropic 配置示例
-class AnthropicConfig(Config):
-    pass
-

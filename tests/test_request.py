@@ -1,10 +1,5 @@
 from chattool import debug_log, Resp
-from chattool.request import (
-    normalize_url, is_valid_url, valid_models,
-    loadfile, deletefile, filelist, filecontent,
-    create_finetune_job, list_finetune_job, retrievejob,
-    listevents, canceljob, deletemodel
-)
+from chattool.request import normalize_url, is_valid_url, valid_models
 import pytest, chattool, os
 api_key, base_url, api_base = chattool.api_key, chattool.base_url, chattool.api_base
 
@@ -38,25 +33,3 @@ def test_normalize_url():
     assert normalize_url("ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz") == "ftp://ftp.debian.org/debian/dists/stable/main/installer-amd64/current/images/cdrom/boot.img.gz"
     assert normalize_url("api.openai.com") == "https://api.openai.com"
     assert normalize_url("example.com/foo/bar") == "https://example.com/foo/bar"
-
-def test_broken_requests(testpath):
-    """Test the broken requests"""
-    with open(testpath + "test.txt", "w") as f:
-        f.write("hello world")
-    # invalid file uploading
-    with pytest.raises(Exception): # the file should be JSONL format
-        loadfile(api_key, base_url, "test.txt")
-    # invalid apikey
-    with pytest.raises(Exception):
-        filelist("sk-123", base_url)
-    with pytest.raises(Exception):
-        list_finetune_job("sk-123", base_url)
-    # no such file
-    with pytest.raises(Exception):
-        filecontent(api_key, base_url, "xxx")
-    # retrieve job
-    with pytest.raises(Exception):
-        retrievejob(api_key, base_url, "xxx")
-    # list events
-    with pytest.raises(Exception):
-        listevents(api_key, base_url, "xxx")

@@ -27,9 +27,8 @@ def findcost(model:str, prompt_tokens:int, completion_tokens:int=0):
         float: cost of the response
     """
     assert "gpt-" in model, "model name must contain 'gpt-'"
-    if 'ft' in model: # finetuned model
-        inprice, outprice = model_cost_perktoken['ft-gpt-3.5']
-    elif 'gpt-3.5-turbo' in model:
+
+    if 'gpt-3.5-turbo' in model:
         if '16k' in model:
             inprice, outprice = model_cost_perktoken['gpt-3.5-turbo-16k']
         else:

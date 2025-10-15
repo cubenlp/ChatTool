@@ -3,15 +3,16 @@ import json
 import os
 import time
 import asyncio
+import logging
 from chattool.custom_logger import setup_logger
-from chattool.core.config import OpenAIConfig, AzureOpenAIConfig
+from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
 from chattool.core.request import OpenAIClient, AzureOpenAIClient
 from chattool.core.response import ChatResponse
 
 
 def Chat(
     config: Optional[Union[OpenAIConfig, AzureOpenAIConfig]] = None,
-    logger: Optional[object] = None,
+    logger: Optional[logging.Logger] = None,
     **kwargs
 ) -> 'ChatBase':
     """
@@ -28,7 +29,7 @@ def Chat(
     if config is None:
         config = OpenAIConfig()
     
-    logger = logger or setup_logger('ChatBase')
+    logger = logger or setup_logger('Chat')
     
     if isinstance(config, AzureOpenAIConfig):
         return ChatAzure(config=config, logger=logger, **kwargs)
@@ -41,9 +42,9 @@ def Chat(
 class ChatBase:
     """Chat 基类 - 定义对话管理功能"""
     
-    def __init__(self, config, logger=None, **kwargs):
+    def __init__(self, config: Config, logger: Optional[logging.Logger] = None, **kwargs):
         self.config = config
-        self.logger = logger
+        self.logger = logger or setup_logger('ChatBase')
         
         # 初始化对话历史
         self._chat_log: List[Dict] = []
