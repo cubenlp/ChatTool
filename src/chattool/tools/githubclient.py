@@ -11,7 +11,7 @@ from github.Issue import Issue
 from github.Commit import Commit
 from batch_executor import setup_logger
 # 从chattool导入batch_executor相关功能
-from chattool import batch_executor, batch_thread_executor
+from batch_executor import batch_executor, batch_thread_executor
 
 
 class GitHubClient:

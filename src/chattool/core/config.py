@@ -1,5 +1,6 @@
 from typing import Dict, Optional
 from chattool.utils import get_secure_api_key
+from chattool.const import OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_API_BASE_URL, OPENAI_API_MODEL
 import os
 
 # 基础配置类 - 最通用的 HTTP 交互
@@ -77,11 +78,11 @@ class OpenAIConfig(Config):
         self.stop = stop
         
         if not self.api_key:
-            self.api_key = os.getenv("OPENAI_API_KEY", "")
+            self.api_key = OPENAI_API_KEY
         if not self.api_base:
-            self.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+            self.api_base = OPENAI_API_BASE_URL
         if not self.model:
-            self.model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo")
+            self.model = OPENAI_API_MODEL
         self._update_header()
     
     def _update_header(self):

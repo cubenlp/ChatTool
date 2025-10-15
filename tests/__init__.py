@@ -1,8 +1,8 @@
 """Unit test package for chattool."""
+from batch_executor import setup_logger
+from chattool.const import CHATTOOL_REPO_DIR
 
-import os
+test_dir = CHATTOOL_REPO_DIR / 'tests' / 'testfiles'
+test_dir.mkdir(parents=True, exist_ok=True)
 
-if not os.path.exists('tests'):
-    os.mkdir('tests')
-if not os.path.exists('tests/testfiles'):
-    os.mkdir('tests/testfiles')
+logger = setup_logger('test', log_level="DEBUG")
