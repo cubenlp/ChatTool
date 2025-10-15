@@ -1,3 +1,4 @@
+
 from typing import List, Dict, Union, Optional, Generator, AsyncGenerator, Any
 import json
 import os
@@ -8,6 +9,7 @@ from batch_executor import setup_logger
 from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
 from chattool.core.request import OpenAIClient, AzureOpenAIClient
 from chattool.core.response import ChatResponse
+from chattool.utils import valid_models
 
 
 def Chat(
@@ -111,9 +113,6 @@ class ChatBase:
     
     def get_valid_models(self, gpt_only: bool = True):
         """获取有效模型列表"""
-        from chattool.request import valid_models
-        import os
-        
         # 构建模型URL
         if hasattr(self.config, 'api_base') and self.config.api_base:
             model_url = os.path.join(self.config.api_base, 'models')
@@ -410,7 +409,6 @@ class ChatOpenAI(ChatBase, OpenAIClient):
         
         raise last_error
     
-
 
 class ChatAzure(ChatBase, AzureOpenAIClient):
     """Azure OpenAI Chat 实现 - 继承 ChatOpenAI 复用逻辑"""

@@ -6,8 +6,9 @@ import dotenv
 # dirs
 CHATTOOL_CACHE_DIR = Path(platformdirs.user_cache_dir('chattool'))
 CHATTOOL_CONFIG_DIR = Path(platformdirs.user_config_dir('chattool'))
+CHATTOOL_ENV_DIR = CHATTOOL_CONFIG_DIR / 'envs'
 CHATTOOL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-CHATTOOL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+CHATTOOL_ENV_DIR.mkdir(parents=True, exist_ok=True)
 
 CHATTOOL_ENV_FILE = CHATTOOL_CONFIG_DIR / '.env'
 CHATTOOL_REPO_DIR = Path(__file__).parent.parent.parent

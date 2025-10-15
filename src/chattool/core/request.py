@@ -358,9 +358,6 @@ class OpenAIClient(HTTPClient):
         **kwargs
     ):
         """OpenAI Chat Completion API 流式响应（异步版本）"""
-        
-        import json
-        
         # 合并参数
         all_kwargs = {
             'model': model,
@@ -370,7 +367,6 @@ class OpenAIClient(HTTPClient):
             'stream': True,
             **kwargs
         }
-        
         # 构建数据和请求头
         data = self._build_chat_data(messages, **all_kwargs)
         request_headers = self._prepare_headers(messages, headers)
@@ -394,7 +390,6 @@ class OpenAIClient(HTTPClient):
             async for line in stream.aiter_lines():
                 if not line:
                     continue
-                
                 # 去掉 "data: " 前缀
                 if line.startswith("data: "):
                     line = line[6:]
