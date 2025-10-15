@@ -4,7 +4,7 @@ import os
 import time
 import asyncio
 import logging
-from chattool.custom_logger import setup_logger
+from batch_executor import setup_logger
 from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
 from chattool.core.request import OpenAIClient, AzureOpenAIClient
 from chattool.core.response import ChatResponse
@@ -14,7 +14,7 @@ def Chat(
     config: Optional[Union[OpenAIConfig, AzureOpenAIConfig]] = None,
     logger: Optional[logging.Logger] = None,
     **kwargs
-) -> 'ChatBase':
+) -> Union['ChatOpenAI', 'ChatAzure']:
     """
     Chat 工厂函数 - 根据配置类型自动选择正确的客户端
     
@@ -86,8 +86,11 @@ class ChatBase:
     def get_response(self, **options) -> ChatResponse:
         raise NotImplementedError("子类必须实现 get_response 方法")
     
-    async def async_get_response(self, **options) -> ChatResponse:
-        raise NotImplementedError("子类必须实现 async_get_response 方法")
+    async def get_response_async(self, **options) -> ChatResponse:
+        raise NotImplementedError("子类必须实现 get_response_async 方法")
+
+    async def get_response_stream_async(self, **options) -> AsyncGenerator[ChatResponse, None]:
+        raise NotImplementedError("子类必须实现 get_response_stream 方法")
     
     # === 便捷方法 ===
     def ask(self, question: str, **options) -> str:
@@ -96,10 +99,10 @@ class ChatBase:
         response = self.get_response(**options)
         return response.content
     
-    async def async_ask(self, question: str, **options) -> str:
+    async def ask_async(self, question: str, **options) -> str:
         """异步问答便捷方法"""
         self.user(question)
-        response = await self.async_get_response(**options)
+        response = await self.get_response_async(**options)
         return response.content
     
     # === 对话历史管理 ===
@@ -261,7 +264,88 @@ class ChatOpenAI(ChatBase, OpenAIClient):
         
         raise last_error
     
-    async def async_get_response(
+    async def get_response_stream_async(
+        self,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        update_history: bool = True,
+        **options
+    ) -> AsyncGenerator[ChatResponse, None]:
+        """获取流式对话响应（异步）"""
+        chat_options = {
+            "model": self.config.model,
+            "temperature": getattr(self.config, 'temperature', None),
+            "stream": True,
+            **options
+        }
+        
+        last_error = None
+        for attempt in range(max_retries + 1):
+            try:
+                # 用于累积完整的响应内容
+                full_content = ""
+                last_response = None
+                
+                async for response in self.chat_completion_stream_async(
+                    messages=self._chat_log,
+                    **chat_options
+                ):
+                    # 保存最后一个响应对象
+                    last_response = response
+                    
+                    # 累积内容
+                    if response.delta_content:
+                        full_content += response.delta_content
+                    
+                    # 始终yield响应，让调用者决定如何处理
+                    yield response
+                    
+                    # 检查是否完成
+                    if response.finish_reason == 'stop':
+                        break
+                
+                # 流式响应结束后，更新历史记录和保存最后响应
+                if update_history and full_content:
+                    self._chat_log.append({
+                        "role": "assistant",
+                        "content": full_content
+                    })
+                
+                # 构建最终的完整响应对象
+                if last_response:
+                    final_response_data = {
+                        "id": last_response.id,
+                        "object": "chat.completion",
+                        "created": last_response.created,
+                        "model": last_response.model,
+                        "choices": [{
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": full_content
+                            },
+                            "finish_reason": "stop"
+                        }]
+                    }
+                    self._last_response = ChatResponse(final_response_data)
+                
+                # 成功完成，退出重试循环
+                return
+                
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries:
+                    self.logger.warning(f"流式请求失败 (尝试 {attempt + 1}/{max_retries + 1}): {e}")
+                    await asyncio.sleep(retry_delay * (2 ** attempt))
+                else:
+                    self.logger.error(f"流式请求在 {max_retries + 1} 次尝试后失败")
+        
+        # 如果所有重试都失败了，抛出最后一个错误
+        if last_error:
+            raise last_error
+        raise last_error
+    
+    async def get_response_async(
         self,
         max_retries: int = 3,
         retry_delay: float = 1.0,
@@ -278,7 +362,7 @@ class ChatOpenAI(ChatBase, OpenAIClient):
         last_error = None
         for attempt in range(max_retries + 1):
             try:
-                response_data = await self.async_chat_completion(
+                response_data = await self.chat_completion_async(
                     messages=self._chat_log,
                     **chat_options
                 )
@@ -303,6 +387,8 @@ class ChatOpenAI(ChatBase, OpenAIClient):
                     self.logger.error(f"请求在 {max_retries + 1} 次尝试后失败")
         
         raise last_error
+    
+
 
 class ChatAzure(ChatBase, AzureOpenAIClient):
     """Azure OpenAI Chat 实现 - 继承 ChatOpenAI 复用逻辑"""
@@ -355,7 +441,7 @@ class ChatAzure(ChatBase, AzureOpenAIClient):
         
         raise last_error
     
-    async def async_get_response(
+    async def get_response_async(
         self,
         max_retries: int = 3,
         retry_delay: float = 1.0,
@@ -372,7 +458,7 @@ class ChatAzure(ChatBase, AzureOpenAIClient):
         last_error = None
         for attempt in range(max_retries + 1):
             try:
-                response_data = await self.async_chat_completion(
+                response_data = await self.chat_completion_async(
                     messages=self._chat_log,
                     **chat_options
                 )

@@ -99,7 +99,7 @@ continue_chats = process_chats(msgs, msg2chat, checkpoint)
 Example 3, process data in batch (asynchronous), print hello using different languages, and use two coroutines:
 
 ```python
-from chattool import async_chat_completion, load_chats
+from chattool import chat_completion_async, load_chats
 
 langs = ["python", "java", "Julia", "C++"]
 def data2chat(msg):
@@ -108,14 +108,14 @@ def data2chat(msg):
     # Note that we don't need to call `getresponse` here, and leave it to the asynchronous processing
     return chat
 
-async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
+chat_completion_async(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
 ```
 
-when using `async_chat_completion` in Jupyter notebook, you should use the `await` keyword and the `wait=True` parameter:
+when using `chat_completion_async` in Jupyter notebook, you should use the `await` keyword and the `wait=True` parameter:
 
 ```python
-await async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
+await chat_completion_async(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
 ```
 
 

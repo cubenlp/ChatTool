@@ -1,7 +1,7 @@
 import asyncio, aiohttp
 import time, random, warnings, json, os
 from typing import List, Dict, Union, Callable
-from chattool import Chat, Resp, load_chats
+# from chattool import Chat, Resp, load_chats
 import chattool
 import tqdm.asyncio
 
@@ -123,7 +123,7 @@ async def async_process_msgs( chatlogs:List[List[Dict]]
             costs[ind] = cost
         return costs
 
-def async_chat_completion( msgs:Union[List[List[Dict]], str]
+def chat_completion_async( msgs:Union[List[List[Dict]], str]
                          , chkpoint:str
                          , api_key:Union[str, None]=None
                          , chat_url:Union[str, None]=None

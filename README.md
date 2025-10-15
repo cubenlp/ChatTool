@@ -94,7 +94,7 @@ continue_chats = process_chats(msgs, data2chat, checkpoint)
 示例3，批量处理数据（异步并行），用不同语言打印 hello，并使用两个协程：
 
 ```python
-from chattool import async_chat_completion, load_chats, Chat
+from chattool import chat_completion_async, load_chats, Chat
 
 langs = ["python", "java", "Julia", "C++"]
 def data2chat(msg):
@@ -103,14 +103,14 @@ def data2chat(msg):
     # 注意，这里不需要 getresponse 而交给异步处理
     return chat
 
-async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
+chat_completion_async(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat)
 chats = load_chats("async_chat.jsonl")
 ```
 
 在 Jupyter Notebook 中运行，因其[特殊机制](https://stackoverflow.com/questions/47518874/how-do-i-run-python-asyncio-code-in-a-jupyter-notebook)，需使用 `await` 关键字和 `wait=True` 参数：
 
 ```python
-await async_chat_completion(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
+await chat_completion_async(langs, chkpoint="async_chat.jsonl", nproc=2, data2chat=data2chat, wait=True)
 ```
 
 ### 工具调用

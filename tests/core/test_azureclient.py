@@ -173,13 +173,13 @@ class TestAzureOpenAIClient:
         mock_async_post.return_value = mock_response
         
         messages = [{"role": "user", "content": "Hello Azure Async"}]
-        result = await azure_client.async_chat_completion(messages)
+        result = await azure_client.chat_completion_async(messages)
         
         # 验证调用
         mock_async_post.assert_called_once()
         call_args = mock_async_post.call_args
         
-        # 验证使用空字符串作为 endpoint
+        # 验证使用空字符串作为 url
         assert call_args[0][0] == ""
         
         # 验证请求数据和头
@@ -295,7 +295,7 @@ class TestAzureIntegration:
         """测试 Azure 客户端与 OpenAI 客户端的 API 兼容性"""
         # Azure 客户端应该有与 OpenAI 客户端相同的主要方法
         assert hasattr(azure_client, 'chat_completion')
-        assert hasattr(azure_client, 'async_chat_completion')
+        assert hasattr(azure_client, 'chat_completion_async')
         assert hasattr(azure_client, '_build_chat_data')
         assert hasattr(azure_client, '_get_param_value')
         # 但有 Azure 特有的方法

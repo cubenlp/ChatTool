@@ -11,7 +11,7 @@ import click
 import asyncio
 import aiohttp
 from typing import Optional, Dict, Any, List
-from chattool.custom_logger import setup_logger
+from batch_executor import setup_logger
 from .client import TencentDNSClient
 
 # 域名配置

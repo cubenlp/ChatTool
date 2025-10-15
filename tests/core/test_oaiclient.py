@@ -150,7 +150,7 @@ class TestOpenAIClient:
         mock_async_post.return_value = mock_response
         
         messages = [{"role": "user", "content": "Hello"}]
-        result = await oai_client.async_chat_completion(messages)
+        result = await oai_client.chat_completion_async(messages)
         
         # 验证调用
         mock_async_post.assert_called_once()

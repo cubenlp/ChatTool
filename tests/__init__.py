@@ -1,6 +1,6 @@
 """Unit test package for chattool."""
 
-from chattool import Chat, debug_log
+from chattool import debug_log
 import os
 
 if not os.path.exists('tests'):

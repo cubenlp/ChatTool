@@ -226,22 +226,22 @@ class TestHTTPClient:
 class TestHTTPClientParametrized:
     """参数化测试"""
     
-    @pytest.mark.parametrize("method,endpoint", [
+    @pytest.mark.parametrize("method,url", [
         ("GET", "/param-test-get"),
         ("POST", "/param-test-post"),
         ("PUT", "/param-test-put"),
         ("DELETE", "/param-test-delete"),
     ])
-    def test_http_methods(self, http_client, method, endpoint):
+    def test_http_methods(self, http_client, method, url):
         """参数化测试不同的HTTP方法"""
         if method == "GET":
-            response = http_client.get(endpoint)
+            response = http_client.get(url)
         elif method == "POST":
-            response = http_client.post(endpoint, data={"test": "data"})
+            response = http_client.post(url, data={"test": "data"})
         elif method == "PUT":
-            response = http_client.put(endpoint, data={"test": "data"})
+            response = http_client.put(url, data={"test": "data"})
         elif method == "DELETE":
-            response = http_client.delete(endpoint)
+            response = http_client.delete(url)
         
         assert response.status_code == 200
         data = response.json()

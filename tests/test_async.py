@@ -1,6 +1,6 @@
 import chattool, time, os
 from chattool import Chat, process_chats, debug_log
-from chattool.asynctool import async_chat_completion
+from chattool.asynctool import chat_completion_async
 import asyncio, pytest
 
 # langs = ["Python", "Julia", "C++", "C", "Java", "JavaScript", "C#", "Go", "R", "Ruby"]
@@ -55,8 +55,8 @@ def test_async_typewriter2():
 def test_async_process(testpath):
     chkpoint = testpath + "test_async.jsonl"
     t = time.time()
-    async_chat_completion(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
-    async_chat_completion(chatlogs, chkpoint, nproc=3)
+    chat_completion_async(chatlogs[:1], chkpoint, clearfile=True, nproc=3)
+    chat_completion_async(chatlogs, chkpoint, nproc=3)
     print(f"Time elapsed: {time.time() - t:.2f}s")
 
 # broken test
@@ -65,7 +65,7 @@ def test_failed_async(testpath):
     chattool.api_key = "sk-invalid"
     chkpoint = testpath + "test_async_fail.jsonl"
     words = ["hello", "Can you help me?", "Do not translate this word", "I need help with my homework"]
-    resp = async_chat_completion(words, chkpoint, clearfile=True, nproc=3)
+    resp = chat_completion_async(words, chkpoint, clearfile=True, nproc=3)
     chattool.api_key = api_key
 
 def test_async_process_withfunc(testpath):
@@ -76,7 +76,7 @@ def test_async_process_withfunc(testpath):
         chat.system("translate the words from English to Chinese")
         chat.user(msg)
         return chat.chat_log
-    async_chat_completion(words, chkpoint, clearfile=True, nproc=3,  msg2log=msg2log)
+    chat_completion_async(words, chkpoint, clearfile=True, nproc=3,  msg2log=msg2log)
 
 def test_normal_process(testpath):
     chkpoint = testpath + "test_nomal.jsonl"

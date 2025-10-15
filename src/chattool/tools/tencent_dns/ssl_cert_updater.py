@@ -17,7 +17,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import shutil
-from ...custom_logger import setup_logger
+from batch_executor import setup_logger
 from .client import TencentDNSClient
 
 # 证书相关配置

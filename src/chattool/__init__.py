@@ -6,11 +6,10 @@ __version__ = '4.0.0'
 
 import os, sys, requests, json
 from pathlib import Path
-from .chattype import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from . import request
 from .tokencalc import model_cost_perktoken, findcost
-from .asynctool import async_chat_completion
+from .asynctool import chat_completion_async
 from .functioncall import generate_json_schema, exec_python_code
 from batch_executor import (
     Executor, batch_executor, batch_process_executor, batch_thread_executor, batch_hybrid_executor, batch_async_executor,

@@ -1,11 +1,13 @@
 import httpx
 import asyncio
 import logging
+import json
 import time
 import hashlib
 from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
 from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
-from chattool.custom_logger import setup_logger
+from chattool.core.response import ChatResponse
+from batch_executor import setup_logger
 
 # 基础HTTP客户端类
 class HTTPClient:
@@ -41,22 +43,22 @@ class HTTPClient:
             )
         return self._async_client
     
-    def _build_url(self, endpoint: str) -> str:
+    def _build_url(self, url: str) -> str:
         """构建完整的请求 URL"""
-        if not endpoint:
-            # 如果 endpoint 为空，直接使用 api_base
+        if not url:
+            # 如果 url 为空，直接使用 api_base
             return self.config.api_base
         
-        # 如果 endpoint 已经是完整 URL，直接返回
-        if endpoint.startswith(('http://', 'https://')):
-            return endpoint
+        # 如果 url 已经是完整 URL，直接返回
+        if url.startswith(('http://', 'https://')):
+            return url
             
         # 处理相对路径
         base = self.config.api_base.rstrip('/')
-        endpoint = endpoint.lstrip('/')
+        url = url.lstrip('/')
         
-        if endpoint:
-            return f"{base}/{endpoint}"
+        if url:
+            return f"{base}/{url}"
         else:
             return base
     
@@ -97,7 +99,7 @@ class HTTPClient:
     def request(
         self,
         method: str,
-        endpoint: str,
+        url: str,
         data: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
@@ -107,7 +109,7 @@ class HTTPClient:
         client = self._get_sync_client()
         
         # 构建完整 URL
-        url = self._build_url(endpoint)
+        url = self._build_url(url)
         
         # 合并headers
         merged_headers = self.config.headers.copy()
@@ -131,7 +133,7 @@ class HTTPClient:
     async def async_request(
         self,
         method: str,
-        endpoint: str,
+        url: str,
         data: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
@@ -141,7 +143,7 @@ class HTTPClient:
         client = self._get_async_client()
         
         # 构建完整 URL
-        url = self._build_url(endpoint)
+        url = self._build_url(url)
         
         # 合并headers
         merged_headers = self.config.headers.copy()
@@ -162,30 +164,30 @@ class HTTPClient:
         return response
     
     # 便捷方法
-    def get(self, endpoint: str, **kwargs) -> httpx.Response:
-        return self.request("GET", endpoint, **kwargs)
+    def get(self, url: str, **kwargs) -> httpx.Response:
+        return self.request("GET", url, **kwargs)
     
-    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
-        return self.request("POST", endpoint, data=data, **kwargs)
+    def post(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+        return self.request("POST", url, data=data, **kwargs)
     
-    def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
-        return self.request("PUT", endpoint, data=data, **kwargs)
+    def put(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+        return self.request("PUT", url, data=data, **kwargs)
     
-    def delete(self, endpoint: str, **kwargs) -> httpx.Response:
-        return self.request("DELETE", endpoint, **kwargs)
+    def delete(self, url: str, **kwargs) -> httpx.Response:
+        return self.request("DELETE", url, **kwargs)
     
     # 异步便捷方法
-    async def async_get(self, endpoint: str, **kwargs) -> httpx.Response:
-        return await self.async_request("GET", endpoint, **kwargs)
+    async def async_get(self, url: str, **kwargs) -> httpx.Response:
+        return await self.async_request("GET", url, **kwargs)
     
-    async def async_post(self, endpoint: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
-        return await self.async_request("POST", endpoint, data=data, **kwargs)
+    async def async_post(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+        return await self.async_request("POST", url, data=data, **kwargs)
     
-    async def async_put(self, endpoint: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
-        return await self.async_request("PUT", endpoint, data=data, **kwargs)
+    async def async_put(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+        return await self.async_request("PUT", url, data=data, **kwargs)
     
-    async def async_delete(self, endpoint: str, **kwargs) -> httpx.Response:
-        return await self.async_request("DELETE", endpoint, **kwargs)
+    async def async_delete(self, url: str, **kwargs) -> httpx.Response:
+        return await self.async_request("DELETE", url, **kwargs)
     
     def close(self):
         """关闭客户端连接"""
@@ -304,7 +306,7 @@ class OpenAIClient(HTTPClient):
         response = self.post(uri, data=data, headers=request_headers)
         return response.json()
     
-    async def async_chat_completion(
+    async def chat_completion_async(
         self,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
@@ -315,7 +317,7 @@ class OpenAIClient(HTTPClient):
         uri: str = '/chat/completions',
         headers: Optional[Dict[str, str]] = None,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], AsyncGenerator]:
         """OpenAI Chat Completion API (异步版本)"""
         all_kwargs = {
             'model': model,
@@ -330,10 +332,103 @@ class OpenAIClient(HTTPClient):
         request_headers = self._prepare_headers(messages, headers)
         
         if data.get('stream'):
-            data['stream'] = False #TODO: 流式响应不支持
+            return self.chat_completion_stream_async(
+                messages=messages,
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+                uri=uri,
+                headers=headers,
+                **kwargs
+            )
         
         response = await self.async_post(uri, data=data, headers=request_headers)
         return response.json()
+    
+    async def chat_completion_stream_async(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        uri: str = '/chat/completions',
+        headers: Optional[Dict[str, str]] = None,
+        **kwargs
+    ):
+        """OpenAI Chat Completion API 流式响应（异步版本）"""
+        
+        import json
+        
+        # 合并参数
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': True,
+            **kwargs
+        }
+        
+        # 构建数据和请求头
+        data = self._build_chat_data(messages, **all_kwargs)
+        request_headers = self._prepare_headers(messages, headers)
+        
+        # 构建完整 URL
+        url = self._build_url(uri)
+        
+        # 合并headers
+        merged_headers = self.config.headers.copy()
+        if request_headers:
+            merged_headers.update(request_headers)
+        
+        client = self._get_async_client()
+        
+        async with client.stream(
+            method="POST",
+            url=url,
+            json=data,
+            headers=merged_headers
+        ) as stream:
+            async for line in stream.aiter_lines():
+                if not line:
+                    continue
+                
+                # 去掉 "data: " 前缀
+                if line.startswith("data: "):
+                    line = line[6:]
+                
+                # 检查是否结束
+                if line.strip() == "[DONE]":
+                    break
+                
+                # 跳过空行
+                if not line.strip():
+                    continue
+                
+                try:
+                    # 解析 JSON
+                    chunk_data = json.loads(line)
+                    response = ChatResponse(chunk_data)
+                    
+                    # 跳过空的 choices 数组
+                    if not response.choices:
+                        continue
+                    
+                    # yield 所有有效的响应
+                    yield response
+                    
+                    # 检查是否完成
+                    if response.finish_reason == 'stop':
+                        break
+                        
+                except json.JSONDecodeError as e:
+                    # 跳过无法解析的行
+                    continue
+                except Exception as e:
+                    # 其他错误也跳过
+                    continue
 
     def embeddings(
         self, 
@@ -448,7 +543,7 @@ class AzureOpenAIClient(OpenAIClient):
         response = self.post(uri, data=data, headers=request_headers, params=request_params)
         return response.json()
     
-    async def async_chat_completion(
+    async def chat_completion_async(
         self,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
@@ -459,7 +554,7 @@ class AzureOpenAIClient(OpenAIClient):
         uri: str = '',
         params: Optional[Dict[str, str]] = None,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], AsyncGenerator]:
         """Azure OpenAI Chat Completion API (异步版本)"""
         
         # 合并参数
@@ -477,11 +572,100 @@ class AzureOpenAIClient(OpenAIClient):
         request_headers = self._prepare_headers(messages)
         request_params = self._prepare_params(params)
         
-        # if data.get('stream'):
-        #     return self._async_stream_chat_completion(data, uri, request_headers, request_params)
+        if data.get('stream'):
+            return self.chat_completion_stream_async(
+                messages=messages,
+                model=model,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+                uri=uri,
+                params=params,
+                **kwargs
+            )
         
         response = await self.async_post(uri, data=data, headers=request_headers, params=request_params)
         return response.json()
+    
+    async def chat_completion_stream_async(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        uri: str = '',
+        params: Optional[Dict[str, str]] = None,
+        **kwargs
+    ):
+        """Azure OpenAI Chat Completion API 流式响应（异步版本）"""
+        # 合并参数
+        all_kwargs = {
+            'model': model,
+            'temperature': temperature,
+            'top_p': top_p,
+            'max_tokens': max_tokens,
+            'stream': True,
+            **kwargs
+        }
+        
+        # 构建数据和请求头
+        data = self._build_chat_data(messages, **all_kwargs)
+        request_headers = self._prepare_headers(messages)
+        request_params = self._prepare_params(params)
+        
+        # 构建完整 URL
+        url = self._build_url(uri)
+        
+        # 合并headers
+        merged_headers = self.config.headers.copy()
+        if request_headers:
+            merged_headers.update(request_headers)
+        
+        client = self._get_async_client()
+        
+        async with client.stream(
+            method="POST",
+            url=url,
+            json=data,
+            headers=merged_headers,
+            params=request_params
+        ) as stream:
+            async for line in stream.aiter_lines():
+                if not line:
+                    continue
+                
+                # 去掉 "data: " 前缀
+                if line.startswith("data: "):
+                    line = line[6:]
+                
+                # 检查是否结束
+                if line.strip() == "[DONE]":
+                    break
+                
+                # 跳过空行
+                if not line.strip():
+                    continue
+                
+                try:
+                    # 解析 JSON
+                    chunk_data = json.loads(line)
+                    response = ChatResponse(chunk_data)
+                    
+                    # 检查是否有内容
+                    if response.delta and 'content' in response.delta:
+                        yield response
+                    
+                    # 检查是否完成
+                    if response.finish_reason == 'stop':
+                        break
+                        
+                except json.JSONDecodeError as e:
+                    # 跳过无法解析的行
+                    continue
+                except Exception as e:
+                    # 其他错误也跳过
+                    continue
     
     async def async_embeddings(
         self, 

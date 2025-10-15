@@ -1,6 +1,6 @@
 import json, os
 from typing import List, Dict, Union, Callable, Any
-from .chattype import Chat
+from chattool.core import Chat
 import tqdm
 from loguru import logger
 
