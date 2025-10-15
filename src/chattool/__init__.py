@@ -10,6 +10,7 @@ from chattool.core import (
      ChatResponse, Config, OpenAIConfig, AzureOpenAIConfig
 )
 from .const import OPENAI_API_BASE, OPENAI_API_BASE_URL, OPENAI_API_KEY, OPENAI_API_MODEL
+from .utils import debug_log, load_envs, create_env_file
 
 try:
     import nest_asyncio
@@ -25,4 +26,11 @@ __all__ = [
     "OPENAI_API_BASE_URL",
     "OPENAI_API_KEY",
     "OPENAI_API_MODEL",
+    "ChatResponse",
+    "Config",
+    "OpenAIConfig",
+    "AzureOpenAIConfig",
+    "debug_log",
+    "load_envs",
+    "create_env_file",
 ]
