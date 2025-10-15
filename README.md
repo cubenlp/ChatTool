@@ -19,7 +19,7 @@
 [English](README_en.md) | [简体中文](README.md)
 </div>
 
-基于 OpenAI API 的 `Chat` 对象，支持多轮对话，代理，以及异步处理数据等。
+基于 OpenAI API 的 `Chat` 对象，支持多轮对话以及异步处理数据等。
 
 ## 安装方法
 

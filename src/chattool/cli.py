@@ -11,6 +11,5 @@ def main(args=None):
     click.echo("See click documentation at https://click.palletsprojects.com/")
     return 0
 
-
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover

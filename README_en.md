@@ -24,7 +24,7 @@
 [![Updates](https://pyup.io/repos/github/cubenlp/chattool/shield.svg)](https://pyup.io/repos/github/cubenlp/chattool/) 
 -->
 
-Toolkit for Chat API, supporting multi-turn dialogue, proxy, and asynchronous data processing.
+Toolkit for Chat API, supporting multi-turn dialogue and asynchronous data processing.
 
 ## Installation
 

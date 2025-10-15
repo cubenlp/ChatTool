@@ -7,7 +7,6 @@ __version__ = '4.0.0'
 import os, sys, requests, json
 from .chattype import Chat, Resp
 from .checkpoint import load_chats, process_chats
-from .proxy import proxy_on, proxy_off, proxy_status
 from . import request
 from .tokencalc import model_cost_perktoken, findcost
 from .asynctool import async_chat_completion
@@ -164,11 +163,6 @@ def debug_log( net_url:str="https://www.baidu.com"
     except:
         print("Warning: Network is not available.")
         return False
-    
-    ## Check the proxy status
-    print("\nCheck your proxy: " +\
-          "This is not necessary if the base url is already a proxy link.")
-    proxy_status()
 
     ## Base url
     print("\nCheck the value OPENAI_API_BASE_URL:")

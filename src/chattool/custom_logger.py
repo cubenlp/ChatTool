@@ -5,7 +5,7 @@ import colorama
 from colorama import Fore, Style
 
 # Initialize colorama for Windows support
-colorama.init()
+colorama.init(wrap=False)
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter adding colors to log levels"""
