@@ -105,6 +105,28 @@ class ChatBase:
         response = await self.get_response_async(**options)
         return response.content
     
+    def getresponse(self, max_tries: int = 3, **options):
+        """获取响应（兼容旧版本API）"""
+        return self.get_response(max_retries=max_tries, **options)
+    
+    def get_valid_models(self, gpt_only: bool = True):
+        """获取有效模型列表"""
+        from chattool.request import valid_models
+        import os
+        
+        # 构建模型URL
+        if hasattr(self.config, 'api_base') and self.config.api_base:
+            model_url = os.path.join(self.config.api_base, 'models')
+        elif hasattr(self.config, 'api_base_url') and self.config.api_base_url:
+            model_url = os.path.join(self.config.api_base_url, 'v1/models')
+        else:
+            model_url = "https://api.openai.com/v1/models"
+        
+        # 获取API密钥
+        api_key = getattr(self.config, 'api_key', '') or ''
+        
+        return valid_models(api_key, model_url, gpt_only=gpt_only)
+    
     # === 对话历史管理 ===
     def save(self, path: str, mode: str = 'a', index: int = 0):
         """保存对话历史到文件"""

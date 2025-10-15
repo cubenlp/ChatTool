@@ -4,43 +4,61 @@ import chattool
 from chattool import Chat, save_envs, load_envs
 
 def test_model_api_key():
-    api_key, model = chattool.api_key, chattool.model
-    chattool.api_key, chattool.model = None, None
-    chat = Chat()
-    assert chat.api_key == ''
-    assert chat.model == ''
-    chattool.api_key, chattool.model = api_key, model
-    chat = Chat(api_key="sk-123", model="gpt-3.5-turbo")
-    assert chat.api_key == "sk-123"
-    assert chat.model == "gpt-3.5-turbo"
+    import os
+    # 保存原始环境变量
+    original_api_key = os.environ.get('OPENAI_API_KEY')
+    original_model = os.environ.get('OPENAI_API_MODEL')
+    
+    # 清除环境变量
+    if 'OPENAI_API_KEY' in os.environ:
+        del os.environ['OPENAI_API_KEY']
+    if 'OPENAI_API_MODEL' in os.environ:
+        del os.environ['OPENAI_API_MODEL']
+    
+    from chattool.core.config import OpenAIConfig
+    config = OpenAIConfig()
+    chat = Chat(config=config)
+    assert chat.config.api_key == ''
+    assert chat.config.model == 'gpt-3.5-turbo'  # 默认模型
+    
+    config = OpenAIConfig(api_key="sk-123", model="gpt-3.5-turbo")
+    chat = Chat(config=config)
+    assert chat.config.api_key == "sk-123"
+    assert chat.config.model == "gpt-3.5-turbo"
+    
+    # 恢复环境变量
+    if original_api_key:
+        os.environ['OPENAI_API_KEY'] = original_api_key
+    if original_model:
+        os.environ['OPENAI_API_MODEL'] = original_model
 
 def test_apibase():
-    api_base, base_url = chattool.api_base, chattool.base_url
-    chattool.api_base, chattool.base_url = None, None
-    # chat_url > api_base > base_url > chattool.api_base > chattool.base_url
-    # chat_url > api_base
-    chat = Chat(chat_url="https://api.pytest1.com/v1/chat/completions", api_base="https://api.pytest2.com/v1")
-    assert chat.chat_url == "https://api.pytest1.com/v1/chat/completions"
-
-    # api_base > base_url
-    chat = Chat(api_base="https://api.pytest2.com/v1", base_url="https://api.pytest3.com")
-    assert chat.chat_url == "https://api.pytest2.com/v1/chat/completions"
-
-    # base_url > chattool.api_base
-    chattool.api_base = "https://api.pytest2.com/v1"
-    chat = Chat(base_url="https://api.pytest3.com")
-    assert chat.chat_url == "https://api.pytest3.com/v1/chat/completions"
-
-    # chattool.api_base > chattool.base_url
-    chattool.base_url = "https://api.pytest4.com"
-    chat = Chat()
-    assert chat.chat_url == "https://api.pytest2.com/v1/chat/completions"
+    import os
+    from chattool.core.config import OpenAIConfig
     
-    # base_url > chattool.api_base, chattool.base_url
-    chat = Chat(base_url="https://api.pytest3.com")
-    assert chat.chat_url == "https://api.pytest3.com/v1/chat/completions"
+    # 保存原始环境变量
+    original_api_base = os.environ.get('OPENAI_API_BASE')
+    
+    # 测试 api_base 设置
+    config = OpenAIConfig(api_base="https://api.pytest1.com/v1")
+    chat = Chat(config=config)
+    assert chat.config.api_base == "https://api.pytest1.com/v1"
 
-    chattool.api_base, chattool.base_url = api_base, base_url
+    # 测试默认 api_base（清除环境变量）
+    if 'OPENAI_API_BASE' in os.environ:
+        del os.environ['OPENAI_API_BASE']
+    config = OpenAIConfig()
+    chat = Chat(config=config)
+    assert chat.config.api_base == "https://api.openai.com/v1"
+    
+    # 测试自定义 api_base
+    config = OpenAIConfig(api_base="https://api.pytest2.com/v1")
+    chat = Chat(config=config)
+    assert chat.config.api_base == "https://api.pytest2.com/v1"
+    
+    # 恢复环境变量
+    if original_api_base:
+        os.environ['OPENAI_API_BASE'] = original_api_base
 
 def test_env_file(testpath):
     save_envs(testpath + "chattool.env")
