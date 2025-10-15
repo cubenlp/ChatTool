@@ -5,6 +5,7 @@ __email__ = '1073853456@qq.com'
 __version__ = '4.0.0'
 
 import os, sys, requests, json
+from pathlib import Path
 from .chattype import Chat, Resp
 from .checkpoint import load_chats, process_chats
 from . import request
@@ -19,6 +20,12 @@ from batch_executor import (
 from typing import Union, List
 import dotenv
 import loguru
+
+try:
+    import nest_asyncio
+    nest_asyncio.apply()
+except Exception as e:
+    pass
 
 raw_env_text = f"""# Description: Env file for ChatTool.
 # Current version: {__version__}
@@ -60,9 +67,9 @@ def load_envs(env:Union[None, str, dict]=None):
         if not dotenv.load_dotenv(env, override=True):
             loguru.logger.warning(f"Failed to load the environment file: {env}")
             return False
-    elif env is not None:
-        loguru.logger.warning(f"Invalid environment variable: {env}")
-        return False
+    elif env is None:
+        env_file = Path('~/.askchat/.env').expanduser()
+        dotenv.load_dotenv(env_file, override=True)
     # else: load from environment variables
     api_key = os.getenv('OPENAI_API_KEY')
     base_url = os.getenv('OPENAI_API_BASE_URL') # or "https://api.openai.com"
@@ -94,13 +101,6 @@ elif platform.startswith("linux"):
     platform = "linux"
 elif platform.startswith("darwin"):
     platform = "macos"
-
-# is jupyter notebook
-try:
-    get_ipython
-    is_jupyter = True
-except:
-    is_jupyter = False
 
 def default_prompt(msg:str):
     """Default prompt message for the API call

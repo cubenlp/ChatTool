@@ -286,7 +286,6 @@ class Chat():
             >>> for resp in chat.stream_responses():
             >>>     print(resp)
         """
-        assert not chattool.is_jupyter, "use `await chat.async_stream_responses()` in Jupyter notebook"
         async_gen = self.async_stream_responses(timeout=timeout, textonly=textonly, **options)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)

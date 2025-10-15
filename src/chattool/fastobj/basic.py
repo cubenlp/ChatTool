@@ -2,7 +2,7 @@ import json
 import asyncio
 import threading
 import uvicorn
-from typing import Optional
+from typing import Optional, List
 
 def generate_curl_command(request_info: dict) -> str:
     """
