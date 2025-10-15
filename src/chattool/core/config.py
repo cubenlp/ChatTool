@@ -80,7 +80,7 @@ class OpenAIConfig(Config):
         if not self.api_key:
             self.api_key = OPENAI_API_KEY
         if not self.api_base:
-            self.api_base = OPENAI_API_BASE_URL
+            self.api_base = OPENAI_API_BASE
         if not self.model:
             self.model = OPENAI_API_MODEL
         self._update_header()

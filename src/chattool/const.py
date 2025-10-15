@@ -9,7 +9,7 @@ CHATTOOL_CONFIG_DIR = Path(platformdirs.user_config_dir('chattool'))
 CHATTOOL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 CHATTOOL_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
-CHATTOOL_ENV_FILE = CHATTOOL_CACHE_DIR / '.env'
+CHATTOOL_ENV_FILE = CHATTOOL_CONFIG_DIR / '.env'
 CHATTOOL_REPO_DIR = Path(__file__).parent.parent.parent
 
 # setup environment variables
