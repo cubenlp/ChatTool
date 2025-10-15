@@ -18,7 +18,9 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
 ]
 keywords = ["chattool"]
 license = {text = "MIT license"}
@@ -69,7 +71,7 @@ chattool = "chattool.cli:main"
 version = {attr = "chattool.__version__"}
 
 [tool.setuptools.packages.find]
-include = ["src"]
+where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
