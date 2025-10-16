@@ -74,7 +74,7 @@ class TestOpenAIClient:
         client = OpenAIClient()
         assert isinstance(client.config, OpenAIConfig)
     
-    def test_build_chat_data_basic(self, oai_client):
+    def test_build_chat_data_basic(self, oai_client : OpenAIClient):
         """测试基础聊天数据构建"""
         messages = [{"role": "user", "content": "Hello"}]
         data = oai_client._build_chat_data(messages)
@@ -82,7 +82,7 @@ class TestOpenAIClient:
         assert data["messages"] == messages
         assert "model" in data  # 应该从 config 中获取
     
-    def test_build_chat_data_with_kwargs(self, oai_client):
+    def test_build_chat_data_with_kwargs(self, oai_client : OpenAIClient):
         """测试带 kwargs 的聊天数据构建"""
         messages = [{"role": "user", "content": "Hello"}]
         data = oai_client._build_chat_data(
@@ -95,7 +95,7 @@ class TestOpenAIClient:
         assert data["temperature"] == 0.5
         assert data["max_tokens"] == 100
     
-    def test_build_chat_data_excludes_config_attrs(self, oai_client):
+    def test_build_chat_data_excludes_config_attrs(self, oai_client : OpenAIClient):
         """测试构建数据时排除配置专用属性"""
         messages = [{"role": "user", "content": "Hello"}]
         data = oai_client._build_chat_data(messages)
@@ -104,7 +104,7 @@ class TestOpenAIClient:
         for attr in oai_client._config_only_attrs:
             assert attr not in data
     
-    def test_get_param_value_priority(self, oai_client):
+    def test_get_param_value_priority(self, oai_client : OpenAIClient):
         """测试参数值优先级"""
         # kwargs 优先于 config
         kwargs = {"temperature": 0.8}
@@ -120,7 +120,7 @@ class TestOpenAIClient:
         assert value is None
     
     @patch('chattool.core.request.OpenAIClient.post')
-    def test_chat_completion_sync(self, mock_post, oai_client, mock_response_data):
+    def test_chat_completion_sync(self, mock_post, oai_client : OpenAIClient, mock_response_data):
         """测试同步聊天完成"""
         # 设置 mock
         mock_response = Mock()
@@ -142,7 +142,7 @@ class TestOpenAIClient:
     
     @patch('chattool.core.request.OpenAIClient.async_post')
     @pytest.mark.asyncio
-    async def test_chat_completion_async(self, mock_async_post, oai_client, mock_response_data):
+    async def test_chat_completion_async(self, mock_async_post, oai_client : OpenAIClient, mock_response_data):
         """测试异步聊天完成"""
         # 设置 mock
         mock_response = Mock()
@@ -162,7 +162,7 @@ class TestOpenAIClient:
         # 验证返回值
         assert result == mock_response_data
     
-    def test_chat_completion_parameter_override(self, oai_client):
+    def test_chat_completion_parameter_override(self, oai_client : OpenAIClient):
         """测试参数覆盖功能"""
         messages = [{"role": "user", "content": "Hello"}]
         
@@ -186,7 +186,7 @@ class TestOpenAIClient:
             assert call_data["custom_param"] == "test"
     
     @patch('chattool.core.request.OpenAIClient.post')
-    def test_embeddings(self, mock_post, oai_client):
+    def test_embeddings(self, mock_post, oai_client : OpenAIClient):
         """测试嵌入 API"""
         mock_response_data = {
             "object": "list",
@@ -218,7 +218,7 @@ class TestOpenAIClient:
     
     @patch('chattool.core.request.OpenAIClient.async_post')
     @pytest.mark.asyncio
-    async def test_embeddings_async(self, mock_async_post, oai_client):
+    async def test_embeddings_async(self, mock_async_post, oai_client : OpenAIClient):
         """测试异步嵌入 API"""
         mock_response_data = {
             "object": "list",
@@ -245,7 +245,7 @@ class TestOpenAIClient:
 class TestParameterHandling:
     """测试参数处理逻辑"""
     
-    def test_none_values_excluded(self, oai_client):
+    def test_none_values_excluded(self, oai_client : OpenAIClient):
         """测试 None 值被排除"""
         messages = [{"role": "user", "content": "Hello"}]
         data = oai_client._build_chat_data(
@@ -259,7 +259,7 @@ class TestParameterHandling:
         assert "top_p" not in data
         assert data["max_tokens"] == 100
     
-    def test_config_fallback(self, oai_client):
+    def test_config_fallback(self, oai_client : OpenAIClient):
         """测试配置回退机制"""
         # 设置一些配置值
         oai_client.config.temperature = 0.7
@@ -272,7 +272,7 @@ class TestParameterHandling:
         assert data["temperature"] == 0.7
         assert data["custom_param"] == "config_value"
     
-    def test_kwargs_override_config(self, oai_client):
+    def test_kwargs_override_config(self, oai_client : OpenAIClient):
         """测试 kwargs 覆盖配置"""
         # 设置配置值
         oai_client.config.temperature = 0.7
@@ -286,7 +286,7 @@ class TestParameterHandling:
         # 应该使用 kwargs 中的值
         assert data["temperature"] == 0.2
     
-    def test_unknown_parameters_included(self, oai_client):
+    def test_unknown_parameters_included(self, oai_client : OpenAIClient):
         """测试未知参数也会被包含"""
         messages = [{"role": "user", "content": "Hello"}]
         data = oai_client._build_chat_data(

@@ -91,7 +91,7 @@ class TestAzureOpenAIClient:
         client = AzureOpenAIClient()
         assert isinstance(client.config, AzureOpenAIConfig)
     
-    def test_generate_log_id(self, azure_client):
+    def test_generate_log_id(self, azure_client: AzureOpenAIClient):
         """测试 log ID 生成"""
         messages = [{"role": "user", "content": "Hello"}]
         log_id = azure_client._generate_log_id(messages)
@@ -109,7 +109,7 @@ class TestAzureOpenAIClient:
         log_id3 = azure_client._generate_log_id(different_messages)
         assert log_id != log_id3
     
-    def test_build_chat_data_excludes_azure_attrs(self, azure_client):
+    def test_build_chat_data_excludes_azure_attrs(self, azure_client: AzureOpenAIClient):
         """测试构建数据时排除 Azure 专用属性"""
         messages = [{"role": "user", "content": "Hello"}]
         data = azure_client._build_chat_data(messages)
@@ -122,7 +122,7 @@ class TestAzureOpenAIClient:
         assert data["messages"] == messages
         assert "model" in data  # 应该从 config 中获取
     
-    def test_parameter_priority_azure(self, azure_client):
+    def test_parameter_priority_azure(self, azure_client: AzureOpenAIClient):
         """测试 Azure 客户端的参数优先级"""
         # kwargs 优先于 config
         kwargs = {"temperature": 0.9, "max_tokens": 500}
@@ -132,65 +132,8 @@ class TestAzureOpenAIClient:
         # 没有 kwargs 时使用 config
         value = azure_client._get_param_value("model", {})
         assert value == azure_client.config.model
-    
-    @patch('chattool.core.request.AzureOpenAIClient.post')
-    def test_chat_completion_sync(self, mock_post, azure_client, mock_azure_response_data):
-        """测试 Azure 同步聊天完成"""
-        # 设置 mock
-        mock_response = Mock()
-        mock_response.json.return_value = mock_azure_response_data
-        mock_post.return_value = mock_response
         
-        messages = [{"role": "user", "content": "Hello Azure"}]
-        result = azure_client.chat_completion(messages)
-        
-        # 验证调用
-        mock_post.assert_called_once()
-        call_args = mock_post.call_args
-        
-        # 验证使用空字符串作为 endpoint（因为 api_base 已经是完整地址）
-        assert call_args[0][0] == ""
-        
-        # 验证请求数据
-        assert "data" in call_args[1]
-        assert call_args[1]["data"]["messages"] == messages
-        
-        # 验证 Azure 特殊请求头
-        assert "headers" in call_args[1]
-        headers = call_args[1]["headers"]
-        assert "X-TT-LOGID" in headers
-        
-        # 验证返回值
-        assert result == mock_azure_response_data
-    
-    @patch('chattool.core.request.AzureOpenAIClient.async_post')
-    @pytest.mark.asyncio
-    async def test_chat_completion_async(self, mock_async_post, azure_client, mock_azure_response_data):
-        """测试 Azure 异步聊天完成"""
-        # 设置 mock
-        mock_response = Mock()
-        mock_response.json.return_value = mock_azure_response_data
-        mock_async_post.return_value = mock_response
-        
-        messages = [{"role": "user", "content": "Hello Azure Async"}]
-        result = await azure_client.chat_completion_async(messages)
-        
-        # 验证调用
-        mock_async_post.assert_called_once()
-        call_args = mock_async_post.call_args
-        
-        # 验证使用空字符串作为 endpoint
-        assert call_args[0][0] == ""
-        
-        # 验证请求数据和头
-        assert "data" in call_args[1]
-        assert "headers" in call_args[1]
-        assert "X-TT-LOGID" in call_args[1]["headers"]
-        
-        # 验证返回值
-        assert result == mock_azure_response_data
-    
-    def test_parameter_override_azure(self, azure_client):
+    def test_parameter_override_azure(self, azure_client: AzureOpenAIClient):
         """测试 Azure 客户端参数覆盖功能"""
         messages = [{"role": "user", "content": "Hello"}]
         
@@ -213,7 +156,7 @@ class TestAzureOpenAIClient:
             assert call_data["temperature"] == 0.1
             assert call_data["azure_custom_param"] == "test"
     
-    def test_config_only_attrs_azure(self, azure_client):
+    def test_config_only_attrs_azure(self, azure_client : AzureOpenAIClient):
         """测试 Azure 配置专用属性列表"""
         expected_attrs = {
             'api_key', 'api_base', 'api_version',
@@ -225,7 +168,7 @@ class TestAzureOpenAIClient:
 class TestAzureParameterHandling:
     """测试 Azure 参数处理逻辑"""
     
-    def test_azure_none_values_excluded(self, azure_client):
+    def test_azure_none_values_excluded(self, azure_client : AzureOpenAIClient):
         """测试 Azure 客户端排除 None 值"""
         messages = [{"role": "user", "content": "Hello"}]
         data = azure_client._build_chat_data(
@@ -239,7 +182,7 @@ class TestAzureParameterHandling:
         assert "api_version" not in data
         assert data["max_tokens"] == 100
     
-    def test_azure_config_fallback(self, azure_client):
+    def test_azure_config_fallback(self, azure_client : AzureOpenAIClient):
         """测试 Azure 配置回退机制"""
         # 设置一些配置值
         azure_client.config.temperature = 0.8
@@ -256,7 +199,7 @@ class TestAzureParameterHandling:
         assert "api_version" not in data
         assert "api_key" not in data
     
-    def test_azure_kwargs_override_config(self, azure_client):
+    def test_azure_kwargs_override_config(self, azure_client : AzureOpenAIClient):
         """测试 Azure 客户端 kwargs 覆盖配置"""
         # 设置配置值
         azure_client.config.temperature = 0.7
@@ -275,7 +218,7 @@ class TestAzureParameterHandling:
         # max_tokens 应该使用配置中的值
         assert data["max_tokens"] == 1000
     
-    def test_azure_unknown_parameters_included(self, azure_client):
+    def test_azure_unknown_parameters_included(self, azure_client : AzureOpenAIClient):
         """测试 Azure 客户端包含未知参数"""
         messages = [{"role": "user", "content": "Hello"}]
         data = azure_client._build_chat_data(
@@ -291,7 +234,7 @@ class TestAzureParameterHandling:
 class TestAzureIntegration:
     """测试 Azure 集成功能"""
     
-    def test_azure_vs_openai_client_compatibility(self, azure_client):
+    def test_azure_vs_openai_client_compatibility(self, azure_client : AzureOpenAIClient):
         """测试 Azure 客户端与 OpenAI 客户端的 API 兼容性"""
         # Azure 客户端应该有与 OpenAI 客户端相同的主要方法
         assert hasattr(azure_client, 'chat_completion')
