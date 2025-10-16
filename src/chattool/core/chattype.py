@@ -10,6 +10,7 @@ from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
 from chattool.core.request import HTTPClient, OpenAIClient, AzureOpenAIClient
 from chattool.core.response import ChatResponse
 from chattool.utils import valid_models
+from chattool.utils.urltool import curl_cmd_of_chat_completion
 
 def Chat(
     config: Optional[Union[OpenAIConfig, AzureOpenAIConfig]] = None,
@@ -351,6 +352,26 @@ class ChatOpenAI(OpenAIClient):
             print(f"{key}: {value}")
         print("=" * 23)
     
+    def print_curl(self, **options):
+        """打印等效的 curl 命令"""
+        if not self._chat_log:
+            print("No messages in chat log to generate curl command.")
+            return
+        
+        # 构建 chat_url
+        chat_url = f"{self.config.api_base.rstrip('/')}/chat/completions"
+        
+        # 生成 curl 命令
+        curl_cmd = curl_cmd_of_chat_completion(
+            api_key=self.config.api_key,
+            chat_url=chat_url,
+            messages=self._chat_log,
+            model=self.config.model,
+            **options
+        )
+        
+        print(curl_cmd)
+    
     # === 属性访问 ===
     @property
     def chat_log(self) -> List[Dict]:
@@ -390,46 +411,3 @@ class ChatAzure(ChatOpenAI, AzureOpenAIClient):
         ChatOpenAI.__init__(self, config, logger, **kwargs)
         AzureOpenAIClient.__init__(self, config, logger, **kwargs)
         self.config: AzureOpenAIConfig
-    
-    async def get_response_async(
-        self,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-        update_history: bool = True,
-        **options
-    ) -> ChatResponse:
-        """获取对话响应（异步）"""
-        chat_options = {
-            "model": self.config.model,
-            "temperature": getattr(self.config, 'temperature', None),
-            **options
-        }
-        
-        last_error = None
-        for attempt in range(max_retries + 1):
-            try:
-                response_data = await self.chat_completion_async(
-                    messages=self._chat_log,
-                    **chat_options
-                )
-                
-                response = ChatResponse(response_data)
-                
-                if not response.is_valid():
-                    raise Exception(f"API 返回错误: {response.error_message}")
-                
-                if update_history and response.message:
-                    self._chat_log.append(response.message)
-                
-                self._last_response = response
-                return response
-                
-            except Exception as e:
-                last_error = e
-                if attempt < max_retries:
-                    self.logger.warning(f"请求失败 (尝试 {attempt + 1}/{max_retries + 1}): {e}")
-                    await asyncio.sleep(retry_delay * (2 ** attempt))
-                else:
-                    self.logger.error(f"请求在 {max_retries + 1} 次尝试后失败")
-        
-        raise last_error
