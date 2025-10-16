@@ -303,7 +303,6 @@ class OpenAIClient(HTTPClient):
         
         # 构建数据和请求头
         data = self._build_chat_data(messages, **all_kwargs)
-        # request_headers = self._prepare_headers(messages, headers)
         options = self._prepare_options(messages, headers, params, **kwargs)
         
         if data.get('stream'):
@@ -370,11 +369,6 @@ class OpenAIClient(HTTPClient):
         
         # 构建完整 URL
         url = self._build_url(uri)
-        
-        # 合并headers
-        merged_headers = self.config.headers.copy()
-        if request_headers:
-            merged_headers.update(request_headers)
         
         client = self._get_async_client()
         
