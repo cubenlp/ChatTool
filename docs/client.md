@@ -304,10 +304,10 @@ for i, item in enumerate(response["data"]):
 ```python
 import asyncio
 
-async def async_embeddings_example():
+async def embeddings_async_example():
     client = OpenAIClient()
     
-    response = await client.async_embeddings(
+    response = await client.embeddings_async(
         input_text="异步嵌入测试",
         model="text-embedding-ada-002"
     )
@@ -315,7 +315,7 @@ async def async_embeddings_example():
     embeddings = response["data"][0]["embedding"]
     print(f"异步嵌入维度: {len(embeddings)}")
 
-asyncio.run(async_embeddings_example())
+asyncio.run(embeddings_async_example())
 ```
 
 ### 参数优先级
@@ -443,7 +443,7 @@ response = client.embeddings(
 
 # 异步嵌入
 async def azure_embeddings():
-    response = await client.async_embeddings(
+    response = await client.embeddings_async(
         input_text="异步 Azure 嵌入",
         model="text-embedding-ada-002"
     )
@@ -679,7 +679,7 @@ async def complete_openai_example():
         
         # 5. 嵌入
         print("\n=== 文本嵌入 ===")
-        response = await client.async_embeddings(
+        response = await client.embeddings_async(
             input_text="这是一个测试文本",
             model="text-embedding-ada-002"
         )

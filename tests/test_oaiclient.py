@@ -230,7 +230,7 @@ class TestOpenAIClient:
         mock_response.json.return_value = mock_response_data
         mock_async_post.return_value = mock_response
         
-        result = await oai_client.async_embeddings(["text1", "text2"])
+        result = await oai_client.embeddings_async(["text1", "text2"])
         
         # 验证调用
         mock_async_post.assert_called_once()

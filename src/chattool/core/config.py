@@ -1,6 +1,9 @@
 from typing import Dict, Optional
 from chattool.utils import get_secure_api_key
-from chattool.const import OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_API_BASE_URL, OPENAI_API_MODEL
+from chattool.const import (
+    OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_API_BASE_URL, OPENAI_API_MODEL,
+    AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_MODEL, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_ENDPOINT
+)
 import os
 
 # 基础配置类 - 最通用的 HTTP 交互
@@ -121,13 +124,13 @@ class AzureOpenAIConfig(Config):
 
         # 从环境变量获取 Azure 配置
         if not self.api_key:
-            self.api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
+            self.api_key = AZURE_OPENAI_API_KEY
         if not self.api_base:
-            self.api_base = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+            self.api_base = AZURE_OPENAI_ENDPOINT
         if not self.api_version:
-            self.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+            self.api_version = AZURE_OPENAI_API_VERSION
         if not self.model:
-            self.model = os.getenv("AZURE_OPENAI_API_MODEL", "")
+            self.model = AZURE_OPENAI_API_MODEL
         # Azure 使用不同的请求头格式
         if not self.headers:
             self.headers = {
