@@ -54,8 +54,7 @@ dev = [
     "twine",
     "pytest>=3",
     "pytest-asyncio",
-    "pytest-mock",
-    "unittest"
+    "pytest-mock"
 ]
 
 [project.urls]
