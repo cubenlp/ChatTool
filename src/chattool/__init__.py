@@ -6,7 +6,7 @@ __version__ = '4.0.0'
 
 
 from chattool.core import (
-    Chat, ChatBase, ChatAzure, ChatOpenAI, OpenAIClient, AzureOpenAIClient,
+    Chat, ChatAzure, ChatOpenAI, OpenAIClient, AzureOpenAIClient,
     HTTPClient, ChatResponse, Config, OpenAIConfig, AzureOpenAIConfig
 )
 from .const import OPENAI_API_BASE, OPENAI_API_BASE_URL, OPENAI_API_KEY, OPENAI_API_MODEL
@@ -30,7 +30,6 @@ setup_jupyter_async()
 
 __all__ = [
     "Chat",
-    "ChatBase",
     "ChatAzure",
     "ChatOpenAI",
     "OpenAIClient",

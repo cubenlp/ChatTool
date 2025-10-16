@@ -11,7 +11,6 @@ from chattool.core.request import HTTPClient, OpenAIClient, AzureOpenAIClient
 from chattool.core.response import ChatResponse
 from chattool.utils import valid_models
 
-
 def Chat(
     config: Optional[Union[OpenAIConfig, AzureOpenAIConfig]] = None,
     logger: Optional[logging.Logger] = None,
@@ -40,19 +39,20 @@ def Chat(
     else:
         raise ValueError(f"不支持的配置类型: {type(config)}")
 
-class ChatBase():
+class ChatOpenAI(OpenAIClient):
     """Chat 基类 - 定义对话管理功能"""
     
     def __init__(self, config: Union[Config, OpenAIConfig, AzureOpenAIConfig], logger: Optional[logging.Logger] = None, **kwargs):
-        self.config = config
-        self.logger = logger or setup_logger('ChatBase')
+        # 先初始化 OpenAIClient（底层 HTTP 客户端）
+        OpenAIClient.__init__(self, config, logger, **kwargs)
+        self.logger = logger or setup_logger('ChatOpenAI')
         
         # 初始化对话历史
         self._chat_log: List[Dict] = []
         self._last_response: Optional[ChatResponse] = None
     
     # === 消息管理 ===
-    def add_message(self, role: str, content: str, **kwargs) -> 'ChatBase':
+    def add_message(self, role: str, content: str, **kwargs) -> 'ChatOpenAI':
         """添加消息到对话历史"""
         if role not in ['user', 'assistant', 'system']:
             raise ValueError(f"role 必须是 'user', 'assistant' 或 'system'，收到: {role}")
@@ -61,19 +61,19 @@ class ChatBase():
         self._chat_log.append(message)
         return self
     
-    def user(self, content: str) -> 'ChatBase':
+    def user(self, content: str) -> 'ChatOpenAI':
         """添加用户消息"""
         return self.add_message('user', content)
     
-    def assistant(self, content: str) -> 'ChatBase':
+    def assistant(self, content: str) -> 'ChatOpenAI':
         """添加助手消息"""
         return self.add_message('assistant', content)
     
-    def system(self, content: str) -> 'ChatBase':
+    def system(self, content: str) -> 'ChatOpenAI':
         """添加系统消息"""
         return self.add_message('system', content)
     
-    def clear(self) -> 'ChatBase':
+    def clear(self) -> 'ChatOpenAI':
         """清空对话历史"""
         self._chat_log = []
         self._last_response = None
@@ -84,9 +84,6 @@ class ChatBase():
         return self._chat_log.pop(index)
     
     # === 核心对话功能 - 子类实现 ===
-    async def chat_completion_async(self):
-        pass
-
     def get_response(
         self,
         max_retries: int = 3,
@@ -253,7 +250,20 @@ class ChatBase():
         if last_error:
             raise last_error
         raise last_error
-    
+
+    def get_valid_models(self, gpt_only: bool = True):
+        """获取有效模型列表"""
+        # 构建模型URL
+        if hasattr(self.config, 'api_base') and self.config.api_base:
+            model_url = os.path.join(self.config.api_base, 'models')
+        else:
+            model_url = "https://api.openai.com/v1/models"
+        
+        # 获取API密钥
+        api_key = getattr(self.config, 'api_key', '') or ''
+        
+        return valid_models(api_key, model_url, gpt_only=gpt_only)
+
     # === 便捷方法 ===
     def ask(self, question: str, **options) -> str:
         """问答便捷方法"""
@@ -290,7 +300,7 @@ class ChatBase():
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
     
     @classmethod
-    def load(cls, path: str) -> 'ChatBase':
+    def load(cls, path: str) -> 'ChatOpenAI':
         """从文件加载对话历史"""
         with open(path, 'r', encoding='utf-8') as f:
             data = json.loads(f.read())
@@ -313,7 +323,7 @@ class ChatBase():
         chat._chat_log = data['chat_log']
         return chat
     
-    def copy(self) -> 'ChatBase':
+    def copy(self) -> 'ChatOpenAI':
         """复制 Chat 对象"""
         new_chat = Chat(config=self.config)
         new_chat._chat_log = self._chat_log.copy()
@@ -377,36 +387,13 @@ class ChatBase():
     def __str__(self) -> str:
         return self.__repr__()
 
-
-class ChatOpenAI(ChatBase, OpenAIClient):
-    """OpenAI Chat 实现"""
-    
-    def __init__(self, config: OpenAIConfig = None, logger: logging.Logger = None, **kwargs):
-        # 先初始化 OpenAIClient（底层 HTTP 客户端）
-        OpenAIClient.__init__(self, config, logger, **kwargs)
-        # 再初始化 ChatBase（对话管理功能）
-        ChatBase.__init__(self, config, logger, **kwargs)
-    
-    def get_valid_models(self, gpt_only: bool = True):
-        """获取有效模型列表"""
-        # 构建模型URL
-        if hasattr(self.config, 'api_base') and self.config.api_base:
-            model_url = os.path.join(self.config.api_base, 'models')
-        else:
-            model_url = "https://api.openai.com/v1/models"
-        
-        # 获取API密钥
-        api_key = getattr(self.config, 'api_key', '') or ''
-        
-        return valid_models(api_key, model_url, gpt_only=gpt_only)
-
-class ChatAzure(ChatBase, AzureOpenAIClient):
+class ChatAzure(ChatOpenAI, AzureOpenAIClient):
     """Azure OpenAI Chat 实现 - 继承 ChatOpenAI 复用逻辑"""
     
-    def __init__(self, config=None, logger=None, **kwargs):
-        # 替换为 AzureOpenAIClient 初始化
+    def __init__(self, config: Optional[AzureOpenAIConfig] = None, logger: Optional[logging.Logger] = None, **kwargs):
+        ChatOpenAI.__init__(self, config, logger, **kwargs)
         AzureOpenAIClient.__init__(self, config, logger, **kwargs)
-        ChatBase.__init__(self, config, logger, **kwargs)
+        self.config: AzureOpenAIConfig
     
     async def get_response_async(
         self,

@@ -1,11 +1,10 @@
 from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
 from chattool.core.request import HTTPClient, OpenAIClient, AzureOpenAIClient
 from chattool.core.response import ChatResponse
-from chattool.core.chattype import Chat, ChatBase, ChatAzure, ChatOpenAI
+from chattool.core.chattype import Chat, ChatAzure, ChatOpenAI
 
 __all__ = [
     "Chat",
-    "ChatBase",
     "ChatAzure",
     "ChatOpenAI",
     "HTTPClient",
