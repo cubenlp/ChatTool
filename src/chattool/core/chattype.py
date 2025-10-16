@@ -205,10 +205,6 @@ class ChatOpenAI(OpenAIClient):
                     
                     # 始终yield响应，让调用者决定如何处理
                     yield response
-                    
-                    # 检查是否完成
-                    if response.finish_reason == 'stop':
-                        break
                 
                 # 流式响应结束后，更新历史记录和保存最后响应
                 if update_history and full_content:
