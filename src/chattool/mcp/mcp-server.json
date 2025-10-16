@@ -1,0 +1,39 @@
+{
+  "name": "agent_generated_aliyun_dns",
+  "exhibit_name": "阿里云DNS管理服务",
+  "type": 3,
+  "command": "sh {mcp_dir}/run.sh",
+  "args": [],
+  "env": {},
+  "description": "基于ChatTool项目的阿里云DNS综合管理服务，提供DNS记录CRUD操作、动态IP更新、SSL证书自动管理等功能。支持多语言指导和证书目录管理。",
+  "description_for_agent": "阿里云DNS管理MCP服务，提供8个核心工具：域名和解析记录查询、DNS记录增删改查、状态管理、动态IP更新、SSL证书管理。支持中英日三语言指导和证书目录资源管理。",
+  "user_params": {
+    "args": {},
+    "env": {
+      "ALIBABA_CLOUD_ACCESS_KEY_ID": {
+        "required": true,
+        "description": "阿里云Access Key ID，用于访问阿里云DNS API"
+      },
+      "ALIBABA_CLOUD_ACCESS_KEY_SECRET": {
+        "required": true,
+        "description": "阿里云Access Key Secret，用于访问阿里云DNS API"
+      },
+      "ALIBABA_CLOUD_ENDPOINT": {
+        "required": false,
+        "description": "阿里云DNS API端点，默认为 alidns.cn-hangzhou.aliyuncs.com"
+      },
+      "CERT_DIR": {
+        "required": false,
+        "description": "证书存储目录，默认为 /etc/ssl/certs"
+      },
+      "PRIVATE_KEY_DIR": {
+        "required": false,
+        "description": "私钥存储目录，默认为 /etc/ssl/private"
+      },
+      "LOG_LEVEL": {
+        "required": false,
+        "description": "日志级别，可选 DEBUG, INFO, WARNING, ERROR，默认为 INFO"
+      }
+    }
+  }
+}
