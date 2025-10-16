@@ -378,6 +378,20 @@ class OpenAIClient(HTTPClient):
             json=data,
             **options
         ) as stream:
+            # 检查响应状态码
+            if stream.status_code >= 400:
+                # 读取错误响应内容
+                error_content = await stream.aread()
+                try:
+                    error_data = json.loads(error_content.decode())
+                    error_msg = error_data.get('error', {}).get('message', f'HTTP {stream.status_code}')
+                except:
+                    error_msg = f'HTTP {stream.status_code}: {error_content.decode()}'
+                raise httpx.HTTPStatusError(
+                    message=f"API request failed: {error_msg}",
+                    request=stream.request,
+                    response=stream
+                )
             async for line in stream.aiter_lines():
                 if not line:
                     continue
@@ -392,7 +406,6 @@ class OpenAIClient(HTTPClient):
                 # 跳过空行
                 if not line.strip():
                     continue
-                
                 try:
                     # 解析 JSON
                     chunk_data = json.loads(line)
@@ -401,11 +414,7 @@ class OpenAIClient(HTTPClient):
                     # 跳过空的 choices 数组
                     if not response.choices:
                         continue
-                    
-                    # yield 所有有效的响应
                     yield response
-                    
-                    # 检查是否完成
                     if response.finish_reason == 'stop':
                         break
                 except Exception as e:
