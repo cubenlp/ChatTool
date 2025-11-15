@@ -118,7 +118,7 @@ class Chat(HTTPClient):
         response = self.post(uri, data=data, headers=headers)
         return response.json()
     
-    async def chat_completion_async(
+    async def async_chat_completion(
         self,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
@@ -274,10 +274,14 @@ class Chat(HTTPClient):
     # === 核心对话功能 - 子类实现 ===
     def get_response(
         self,
-        update_history: bool = True
+        update_history: bool = True,
+        **kwargs
     ) -> ChatResponse:
         """获取对话响应（同步）"""
-        response_data = self.chat_completion(messages=self._chat_log)
+        response_data = self.chat_completion(
+            messages=self._chat_log,
+            **kwargs
+        )
         response = ChatResponse(response_data)
         self._last_response = response
         if not response.is_valid():
@@ -288,11 +292,15 @@ class Chat(HTTPClient):
             self._chat_log.append(response.message)
         return response
     
-    async def get_response_async(
+    async def async_get_response(
         self,
         update_history: bool = True,
+        **kwargs
     ) -> ChatResponse:
-        response_data = await self.chat_completion_async(messages=self._chat_log)
+        response_data = await self.async_chat_completion(
+            messages=self._chat_log,
+            **kwargs
+        )
         response = ChatResponse(response_data)
         self._last_response = response
         if not response.is_valid():
@@ -303,7 +311,10 @@ class Chat(HTTPClient):
             self._chat_log.append(response.message)
         return response
     
-    async def async_get_response_stream(self, update_history: bool = True,
+    async def async_get_response_stream(self, 
+            update_history: bool = True,
+            stream: bool = True,
+            **kwargs
         ) -> AsyncGenerator[ChatResponse, None]:
         """获取流式对话响应（异步）"""
         
@@ -312,6 +323,7 @@ class Chat(HTTPClient):
         last_response = None
         async for response in self.chat_completion_stream_async(
             messages=self._chat_log,
+            **kwargs
         ):
             # 保存最后一个响应对象
             last_response = response
@@ -373,10 +385,10 @@ class Chat(HTTPClient):
             self.pop()
         return response.content
     
-    async def ask_async(self, question: str, update_history: bool = True) -> str:
+    async def async_ask(self, question: str, update_history: bool = True) -> str:
         """异步问答便捷方法"""
         self.user(question)
-        response = await self.get_response_async(update_history=update_history)
+        response = await self.async_get_response(update_history=update_history)
         if not update_history:
             self.pop()
         return response.content

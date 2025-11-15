@@ -2,8 +2,7 @@ import json
 import logging
 from typing import List, Dict, Optional, Any
 import os
-from chattool.core.request import HTTPClient
-from chattool.core.config import HTTPConfig
+from chattool.core import HTTPClient, HTTPConfig
 from batch_executor import setup_logger
 import asyncio
 
