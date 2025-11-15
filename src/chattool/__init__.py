@@ -30,7 +30,6 @@ setup_jupyter_async()
 __all__ = [
     "Chat",
     "AzureChat",
-    "ChatOpenAI",
     "HTTPClient",
     "OPENAI_API_BASE",
     "OPENAI_API_BASE_URL",

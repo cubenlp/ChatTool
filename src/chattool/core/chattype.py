@@ -38,7 +38,7 @@ class Chat(HTTPClient):
             headers: 自定义 HTTP 头
             **kwargs: 其他配置参数，传入给 data 部分
         """
-        logger = logger or setup_logger('ChatOpenAI')
+        logger = logger or setup_logger('Chat')
         if api_key is None:
             api_key = OPENAI_API_KEY
         if model is None:
@@ -240,7 +240,7 @@ class Chat(HTTPClient):
                     continue
     
     # === 消息管理 ===
-    def add_message(self, role: str, content: str, **kwargs) -> 'ChatOpenAI':
+    def add_message(self, role: str, content: str, **kwargs) -> 'Chat':
         """添加消息到对话历史"""
         if role not in ['user', 'assistant', 'system']:
             raise ValueError(f"role 必须是 'user', 'assistant' 或 'system'，收到: {role}")
@@ -249,19 +249,19 @@ class Chat(HTTPClient):
         self._chat_log.append(message)
         return self
     
-    def user(self, content: str) -> 'ChatOpenAI':
+    def user(self, content: str) -> 'Chat':
         """添加用户消息"""
         return self.add_message('user', content)
     
-    def assistant(self, content: str) -> 'ChatOpenAI':
+    def assistant(self, content: str) -> 'Chat':
         """添加助手消息"""
         return self.add_message('assistant', content)
     
-    def system(self, content: str) -> 'ChatOpenAI':
+    def system(self, content: str) -> 'Chat':
         """添加系统消息"""
         return self.add_message('system', content)
     
-    def clear(self) -> 'ChatOpenAI':
+    def clear(self) -> 'Chat':
         """清空对话历史"""
         self._chat_log = []
         self._last_response = None
@@ -407,7 +407,7 @@ class Chat(HTTPClient):
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
     
     @classmethod
-    def load(cls, path: str) -> 'ChatOpenAI':
+    def load(cls, path: str) -> 'Chat':
         """从文件加载对话历史"""
         with open(path, 'r', encoding='utf-8') as f:
             data = json.loads(f.read())
@@ -416,7 +416,7 @@ class Chat(HTTPClient):
         chat = Chat(messages=data['chat_log'])
         return chat
     
-    def copy(self) -> 'ChatOpenAI':
+    def copy(self) -> 'Chat':
         """复制 Chat 对象"""
         messages = [msg.copy() for msg in self._chat_log]
         return Chat(messages=messages)
@@ -497,5 +497,5 @@ class Chat(HTTPClient):
         return self.__repr__()
 
 class AzureChat(Chat):
-    """Azure OpenAI Chat 实现 - 继承 ChatOpenAI 复用逻辑"""
+    """Azure OpenAI Chat 实现 - 继承 Chat 复用逻辑"""
     pass
