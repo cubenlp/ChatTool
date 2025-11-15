@@ -1,0 +1,1552 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "73d14d48",
+   "metadata": {},
+   "source": [
+    "# DNS management"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "65866c25-bd10-47aa-895a-efbc1a7c9362",
+   "metadata": {},
+   "source": [
+    "## 初始化"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4107fe4d-dadc-4eeb-908f-371de0d90bfe",
+   "metadata": {},
+   "source": [
+    "### 阿里云\n",
+    "\n",
+    "```bash\n",
+    "# 请在阿里云控制台 > AccessKey 管理中获取 Access Key ID 和 Access Key Secret\n",
+    "# 官方文档：https://www.alibabacloud.com/help/zh/ram/user-guide/create-an-accesskey-pair\n",
+    "\n",
+    "# 阿里云 Access Key ID（必须）\n",
+    "export ALIBABA_CLOUD_ACCESS_KEY_ID=\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n",
+    "\n",
+    "# 阿里云 Access Key Secret（必须）\n",
+    "export ALIBABA_CLOUD_ACCESS_KEY_SECRET=\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n",
+    "\n",
+    "# 阿里云区域ID（可选，默认为cn-hangzhou）\n",
+    "export ALIBABA_CLOUD_REGION_ID=\"cn-hangzhou\"\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "24470054-35a5-44fb-beef-942238c7ae2a",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[32mINFO\u001b[0m: 阿里云DNS官方SDK客户端初始化成功\n"
+     ]
+    }
+   ],
+   "source": [
+    "from chattool.const import CHATTOOL_CONFIG_DIR\n",
+    "from chattool.tools import AliyunDNSClient\n",
+    "from dotenv import load_dotenv\n",
+    "load_dotenv(CHATTOOL_CONFIG_DIR / 'aliyun.env')\n",
+    "\n",
+    "cli = AliyunDNSClient()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "511b6284-25ce-46f0-9163-f4adaea92637",
+   "metadata": {},
+   "source": [
+    "### 腾讯云\n",
+    "\n",
+    "```bash\n",
+    "# 腾讯云动态DNS更新 - 环境变量配置示例\n",
+    "\n",
+    "TENCENT_SECRET_ID=*******************\n",
+    "TENCENT_SECRET_KEY=*******************\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "67c44c91-e0d0-4f80-8939-8b4ecef66cf6",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[32mINFO\u001b[0m: 腾讯云DNSPod官方SDK客户端初始化成功\n"
+     ]
+    }
+   ],
+   "source": [
+    "from chattool.const import CHATTOOL_CONFIG_DIR\n",
+    "from chattool.tools import TencentDNSClient\n",
+    "from dotenv import load_dotenv\n",
+    "load_dotenv(CHATTOOL_CONFIG_DIR / 'tencent.env')\n",
+    "\n",
+    "cli = TencentDNSClient()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3159c7a8-5f3a-4495-add0-2410cc3f8c66",
+   "metadata": {},
+   "source": [
+    "## 基本接口"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "c9ad2dff-f8a7-4383-a9cc-c0ece6f0ba2c",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[32mINFO\u001b[0m: 查询子域名 www.wzhecnu.cn 的解析记录\n",
+      "\u001b[32mINFO\u001b[0m: 成功获取 1 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842827241491456',\n",
+       "  'RR': 'www',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.describe_subdomain_records(sub_domain='www.wzhecnu.cn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "31666bd7-2393-4743-9f22-aabdb86fbace",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e5055ae9-48bf-4dcc-878f-e260ca23094d",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "0f21057a-66fd-4764-a294-8ca498b66432",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 阿里云DNS官方SDK客户端初始化成功\n",
+      "INFO: 动态IP更新器 -- 域名: wzhecnu.cn, 子域名: rexpc.oray, 记录类型: A\n"
+     ]
+    }
+   ],
+   "source": [
+    "dp = DynamicIPUpdater('wzhecnu.cn', 'rexpc.oray', dns_ttl=600)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "42e0b4da-1fd0-4888-ad3c-13dba87dc5e6",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'20.214.219.0'"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "asyncio.run(dp.get_current_ip())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "52d56ed8-222f-4a72-888a-a78218301014",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 rexpc.oray.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 1 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "{'DomainName': 'wzhecnu.cn',\n",
+       " 'RecordId': '1964658474186206208',\n",
+       " 'RR': 'rexpc.oray',\n",
+       " 'Type': 'CNAME',\n",
+       " 'Value': '81975xsdi046.vicp.fun',\n",
+       " 'TTL': 600,\n",
+       " 'Priority': None,\n",
+       " 'Line': 'default',\n",
+       " 'Status': 'ENABLE',\n",
+       " 'Weight': 1,\n",
+       " 'Locked': False}"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dp.get_current_dns_record()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "5fc1bfd9-8563-4f01-b7eb-125dfa666e7e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import letsencrypt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "c31aa83a-059c-4404-a030-61351b3db733",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 检测到IP地址变化: None -> 20.214.219.0\n",
+      "INFO: 查询子域名 rexpc.oray.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 1 条解析记录\n",
+      "INFO: 更新DNS记录ID 1964658474186206208: rexpc.oray A 20.214.219.0\n",
+      "INFO: DNS记录更新成功\n",
+      "INFO: 查询子域名 rexpc.oray.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 1 条解析记录\n",
+      "INFO: DNS记录验证成功，IP已更新为: 20.214.219.0\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "True"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "asyncio.run(dp.check_and_update_ip())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "5ea19e85-0c7a-49e5-8a4e-7695111bba1d",
+   "metadata": {
+    "collapsed": true,
+    "jupyter": {
+     "outputs_hidden": true
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "\u001b[0;31mSignature:\u001b[0m\n",
+       "\u001b[0mcli\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mset_record_value\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m\u001b[0m\n",
+       "\u001b[0;34m\u001b[0m    \u001b[0mdomain_name\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mstr\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\n",
+       "\u001b[0;34m\u001b[0m    \u001b[0mrr\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mstr\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\n",
+       "\u001b[0;34m\u001b[0m    \u001b[0mtype_\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mstr\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\n",
+       "\u001b[0;34m\u001b[0m    \u001b[0mvalue\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mstr\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\n",
+       "\u001b[0;34m\u001b[0m    \u001b[0mttl\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mint\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;36m600\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\n",
+       "\u001b[0;34m\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;34m->\u001b[0m \u001b[0mbool\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+       "\u001b[0;31mDocstring:\u001b[0m\n",
+       "设置DNS记录值（如果不存在则创建，存在则更新）\n",
+       "\n",
+       "Args:\n",
+       "    sub_domain: 子域名\n",
+       "    type_: 记录类型\n",
+       "    value: 记录值\n",
+       "    ttl: TTL值，默认600秒\n",
+       "    \n",
+       "Returns:\n",
+       "    是否操作成功\n",
+       "\u001b[0;31mFile:\u001b[0m      ~/workspace/python/chattool/chattool/tools/aliyun_dns/client.py\n",
+       "\u001b[0;31mType:\u001b[0m      method\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "?cli.set_record_value"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "05572420-5919-41bb-9229-81aae538c068",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 ww.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 0 条解析记录\n",
+      "INFO: 创建DNS记录: ww.wzhecnu.cn TXT kdafadfadsf\n",
+      "INFO: DNS记录创建成功，记录ID: 1965140726397541376\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "'1965140726397541376'"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.set_record_value('wzhecnu.cn', 'ww', 'TXT', 'kdafadfadsf')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3d0ab901-21ae-46c0-99d0-255adecf4300",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cli.del"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "9d9dff88-4498-4908-8fbb-d334a9033e49",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 ww.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 1 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '1965140726397541376',\n",
+       "  'RR': 'ww',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'kdafadfadsf',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "aa404e14-be40-45bb-a836-7e2917ebf86b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 ww.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 0 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "True"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.delete_record_value(domain_name='wzhecnu.cn', rr='ww')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "5c8ac1dd-f576-4854-be64-3bcc1605864a",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询域名列表\n",
+      "INFO: 成功获取 5 条域名列表\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'luogeng.cn',\n",
+       "  'DomainId': '15bc4780a0124c36b503799e369559bc',\n",
+       "  'CreateTime': '2025-02-13T05:21Z',\n",
+       "  'Remark': None,\n",
+       "  'Tags': []},\n",
+       " {'DomainName': 'qpetlover.cn',\n",
+       "  'DomainId': 'c2cc283f046e47b09ab5a15a0d2c6980',\n",
+       "  'CreateTime': '2024-07-13T16:28Z',\n",
+       "  'Remark': None,\n",
+       "  'Tags': []},\n",
+       " {'DomainName': 'luogeng.com',\n",
+       "  'DomainId': 'e7fb51ddbbee4983b0fb103f16b8cec6',\n",
+       "  'CreateTime': '2024-06-05T02:06Z',\n",
+       "  'Remark': None,\n",
+       "  'Tags': []},\n",
+       " {'DomainName': 'lookeng.cn',\n",
+       "  'DomainId': 'd53b770122da4dd6b71c522bd4541741',\n",
+       "  'CreateTime': '2023-08-28T14:06Z',\n",
+       "  'Remark': None,\n",
+       "  'Tags': []},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'DomainId': '1b00264b31d8454ba018d3bd02c8c51b',\n",
+       "  'CreateTime': '2021-11-10T06:37Z',\n",
+       "  'Remark': None,\n",
+       "  'Tags': []}]"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.describe_domains()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "71daff5d-7de7-4fc1-98d2-6d91e9050dd0",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询域名 wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 14 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '1965118272841189376',\n",
+       "  'RR': 'ww1',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '127.0.1.0',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '1964658474186206208',\n",
+       "  'RR': 'rexpc.oray',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': '81975xsdi046.vicp.fun',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '911882637050210304',\n",
+       "  'RR': '*.localhost',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '127.0.0.1',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '906091155781342208',\n",
+       "  'RR': 'qiniu-cdn',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'qiniu-cdn-wzhecnu-cn-idvofbz.qiniudns.com',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '906091087286273024',\n",
+       "  'RR': 'verification',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'verify_ac208ccac4cc5f08479e9fdad950a92e',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '892788499115488256',\n",
+       "  'RR': '_acme-challenge',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'Fbi4KGy1gHsmOxpyvWkpHExw4AKsCMym9PnwxTrFC6c',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '872726999110429696',\n",
+       "  'RR': 'qqpet',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'rexwzh.github.io',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '870110382652246016',\n",
+       "  'RR': '*',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '861757268437932032',\n",
+       "  'RR': 'qiniu',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '20.214.219.0',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'oversea',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '834448730061559808',\n",
+       "  'RR': 'vercel',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'cname.vercel-dns.com',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'DISABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '821573831575803904',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'MS=ms33300654',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '743618254460466176',\n",
+       "  'RR': 'qiniu',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'qiniu-wzhecnu-cn-idvibst.qiniudns.com',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842849695515648',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842827241491456',\n",
+       "  'RR': 'www',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.describe_domain_records('wzhecnu.cn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "841d2702-4eb5-439b-b0e4-800ee93f8d9e",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 2 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '821573831575803904',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'MS=ms33300654',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842849695515648',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.describe_subdomain_records('wzhecnu.cn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "25745035-993a-408f-8544-92628d2c5ad0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cli.delete_domain_record"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "ab72da1c-669b-4068-8815-113aa87586a2",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询域名 wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 14 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '1965118272841189376',\n",
+       "  'RR': 'ww1',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '127.0.1.0',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '1964658474186206208',\n",
+       "  'RR': 'rexpc.oray',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': '81975xsdi046.vicp.fun',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '911882637050210304',\n",
+       "  'RR': '*.localhost',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '127.0.0.1',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '906091155781342208',\n",
+       "  'RR': 'qiniu-cdn',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'qiniu-cdn-wzhecnu-cn-idvofbz.qiniudns.com',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '906091087286273024',\n",
+       "  'RR': 'verification',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'verify_ac208ccac4cc5f08479e9fdad950a92e',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '892788499115488256',\n",
+       "  'RR': '_acme-challenge',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'Fbi4KGy1gHsmOxpyvWkpHExw4AKsCMym9PnwxTrFC6c',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '872726999110429696',\n",
+       "  'RR': 'qqpet',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'rexwzh.github.io',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '870110382652246016',\n",
+       "  'RR': '*',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '861757268437932032',\n",
+       "  'RR': 'qiniu',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '20.214.219.0',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'oversea',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '834448730061559808',\n",
+       "  'RR': 'vercel',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'cname.vercel-dns.com',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'DISABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '821573831575803904',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'MS=ms33300654',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '743618254460466176',\n",
+       "  'RR': 'qiniu',\n",
+       "  'Type': 'CNAME',\n",
+       "  'Value': 'qiniu-wzhecnu-cn-idvibst.qiniudns.com',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842849695515648',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842827241491456',\n",
+       "  'RR': 'www',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.describe_domain_records('wzhecnu.cn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "bacbe4a9-bfd5-4ec3-867c-6be5e91d4fd8",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 ww1.wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 1 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '1965118272841189376',\n",
+       "  'RR': 'ww1',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '127.0.1.0',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.describe_subdomain_records('ww1.wzhecnu.cn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "e57e9cbf-9c35-47be-9927-5f97bd0e9797",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 创建DNS记录: ww.wzhecnu.cn A 127.0.0.1\n",
+      "INFO: DNS记录创建成功，记录ID: 1965118272841189376\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "'1965118272841189376'"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.add_domain_record('wzhecnu.cn', 'ww', 'A', '127.0.0.1')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "abbf8b74-5ade-4b94-a5c6-cdb925530240",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询域名 wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 13 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "{'DomainName': 'wzhecnu.cn',\n",
+       " 'RecordId': '1964658474186206208',\n",
+       " 'RR': 'rexpc.oray',\n",
+       " 'Type': 'CNAME',\n",
+       " 'Value': '81975xsdi046.vicp.fun',\n",
+       " 'TTL': 600,\n",
+       " 'Priority': None,\n",
+       " 'Line': 'default',\n",
+       " 'Status': 'ENABLE',\n",
+       " 'Weight': 1,\n",
+       " 'Locked': False}"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.get_record_by_subdomain('wzhecnu.cn', rr='qiniu-cdn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "aa990476-1d8d-4ec8-ab71-3d91e983aed5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import logging\n",
+    "from typing import List, Dict, Optional, Any\n",
+    "from alibabacloud_alidns20150109.client import Client as Alidns20150109Client\n",
+    "from alibabacloud_alidns20150109 import models as alidns_models\n",
+    "from alibabacloud_tea_openapi import models as open_api_models\n",
+    "from alibabacloud_credentials.client import Client as CredentialClient\n",
+    "from alibabacloud_tea_util import models as util_models\n",
+    "from alibabacloud_tea_util.client import Client as UtilClient\n",
+    "from batch_executor import setup_logger"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "657dd94c-e63b-4aee-8b78-90235d5e49c3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def describe_domains(self, page_number: int = 1, page_size: int = 20):\n",
+    "    try:\n",
+    "        self.logger.info(f\"查询域名列表\")\n",
+    "\n",
+    "        # 构造请求\n",
+    "        request = alidns_models.DescribeDomainsRequest(\n",
+    "            page_number=page_number,\n",
+    "            page_size=min(page_size, 500)  # 限制最大页面大小\n",
+    "        )\n",
+    "        \n",
+    "        # 发送请求\n",
+    "        response = self.client.describe_domains(request)\n",
+    "        \n",
+    "        # 提取记录列表\n",
+    "        records = []\n",
+    "        return list(response.body.domains.domain)\n",
+    "        if response.body.domains and response.body.domains.domain:\n",
+    "            for record in response.body.domains.domain:\n",
+    "                records.append({\n",
+    "                    'DomainName': record.domain_name,\n",
+    "                    'DomainId': record.domain_id,\n",
+    "                    'CreateTime': record.create_time,\n",
+    "                    'Remark': record.remark,\n",
+    "                    'Tags': record.tags.tag\n",
+    "                })\n",
+    "        \n",
+    "        self.logger.info(f\"成功获取 {len(records)} 条域名列表\")\n",
+    "        return records\n",
+    "        \n",
+    "    except Exception as e:\n",
+    "        self.logger.error(f\"查询域名解析记录失败: {e}\")\n",
+    "        return []\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "21e81a8a-2ed6-4553-906e-fd03633cbe13",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询域名列表\n"
+     ]
+    }
+   ],
+   "source": [
+    "recods = describe_domains(cli)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "73096968-2166-48a7-b225-5203ed9a1619",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "recods[0].group_id"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "3bd74591-06ea-402d-a7e3-fe84fcd82ff3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "    def describe_subdomain_record(self, subdomain: str) -> List[Dict[str, Any]]:\n",
+    "        \"\"\"\n",
+    "        查看子域名解析记录 (Read)\n",
+    "        \n",
+    "        Args:\n",
+    "            subdomain: 子域名 (如 www.example.com)\n",
+    "            \n",
+    "        Returns:\n",
+    "            解析记录列表\n",
+    "        \"\"\"\n",
+    "        try:\n",
+    "            self.logger.info(f\"查询子域名 {subdomain} 的解析记录\")\n",
+    "            # 发送请求\n",
+    "            request = alidns_models.DescribeSubDomainRecordsRequest(\n",
+    "                sub_domain=subdomain\n",
+    "            )\n",
+    "            response = self.client.describe_sub_domain_records(request)\n",
+    "            \n",
+    "            # 提取记录列表\n",
+    "            records = []\n",
+    "            if response.body.domain_records and response.body.domain_records.record:\n",
+    "                for record in response.body.domain_records.record:\n",
+    "                    records.append({\n",
+    "                        'DomainName': record.domain_name,\n",
+    "                        'RecordId': record.record_id,\n",
+    "                        'RR': record.rr,\n",
+    "                        'Type': record.type,\n",
+    "                        'Value': record.value,\n",
+    "                        'TTL': record.ttl,\n",
+    "                        'Priority': getattr(record, 'priority', None),\n",
+    "                        'Line': getattr(record, 'line', 'default'),\n",
+    "                        'Status': getattr(record, 'status', 'ENABLE'),\n",
+    "                        'Weight': getattr(record, 'weight', None),\n",
+    "                        'Locked': getattr(record, 'locked', False)\n",
+    "                    })\n",
+    "            \n",
+    "            self.logger.info(f\"成功获取 {len(records)} 条解析记录\")\n",
+    "            return records\n",
+    "            \n",
+    "        except Exception as e:\n",
+    "            self.logger.error(f\"查询子域名解析记录失败: {e}\")\n",
+    "            return []\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "id": "50cc3560-da9b-4639-9863-c2cd8db038aa",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 创建DNS记录: ww.wzhecnu.cn A 127.0.0.1\n",
+      "ERROR: 创建DNS记录失败: Error: DomainRecordDuplicate code: 400, The DNS record already exists. request id: 45DEB73F-FF37-59D0-95CA-35DD53B1D939 Response: {'RequestId': '45DEB73F-FF37-59D0-95CA-35DD53B1D939', 'HostId': 'alidns.cn-hangzhou.aliyuncs.com', 'Code': 'DomainRecordDuplicate', 'Message': 'The DNS record already exists.', 'Recommend': 'https://api.aliyun.com/troubleshoot?q=DomainRecordDuplicate&product=Alidns&requestId=45DEB73F-FF37-59D0-95CA-35DD53B1D939', 'statusCode': 400}\n"
+     ]
+    }
+   ],
+   "source": [
+    "cli.add_domain_record('wzhecnu.cn', 'ww', type_='A', value='127.0.0.1')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "id": "f928d9f6-4d9c-428a-8813-3717d08c67fa",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 查询子域名 wzhecnu.cn 的解析记录\n",
+      "INFO: 成功获取 2 条解析记录\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '821573831575803904',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'TXT',\n",
+       "  'Value': 'MS=ms33300654',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': None,\n",
+       "  'Locked': False},\n",
+       " {'DomainName': 'wzhecnu.cn',\n",
+       "  'RecordId': '730842849695515648',\n",
+       "  'RR': '@',\n",
+       "  'Type': 'A',\n",
+       "  'Value': '47.100.82.212',\n",
+       "  'TTL': 600,\n",
+       "  'Priority': None,\n",
+       "  'Line': 'default',\n",
+       "  'Status': 'ENABLE',\n",
+       "  'Weight': 1,\n",
+       "  'Locked': False}]"
+      ]
+     },
+     "execution_count": 48,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "describe_subdomain_record(cli, 'wzhecnu.cn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "id": "053bf3e4-4c89-415c-b296-1bbcbdd66655",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO: 删除DNS记录ID: 1965113145434580992\n",
+      "ERROR: 删除DNS记录失败: Error: DomainRecordNotBelongToUser code: 400, The DNS record does not exist in your account. request id: F2B89336-481D-563B-80D7-A0D8619529D7 Response: {'RequestId': 'F2B89336-481D-563B-80D7-A0D8619529D7', 'HostId': 'alidns.cn-hangzhou.aliyuncs.com', 'Code': 'DomainRecordNotBelongToUser', 'Message': 'The DNS record does not exist in your account.', 'Recommend': 'https://api.aliyun.com/troubleshoot?q=DomainRecordNotBelongToUser&product=Alidns&requestId=F2B89336-481D-563B-80D7-A0D8619529D7', 'statusCode': 400}\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "False"
+      ]
+     },
+     "execution_count": 49,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cli.delete_domain_record(1965113145434580992)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "8fb51d58",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# -*- coding: utf-8 -*-\n",
+    "# This file is auto-generated, don't edit it. Thanks.\n",
+    "import os\n",
+    "import sys\n",
+    "\n",
+    "from typing import List\n",
+    "\n",
+    "from alibabacloud_alidns20150109.client import Client as Alidns20150109Client\n",
+    "from alibabacloud_credentials.client import Client as CredentialClient\n",
+    "from alibabacloud_tea_openapi import models as open_api_models\n",
+    "from alibabacloud_alidns20150109 import models as alidns_20150109_models\n",
+    "from alibabacloud_tea_util import models as util_models\n",
+    "from alibabacloud_tea_util.client import Client as UtilClient\n",
+    "\n",
+    "config = open_api_models.HTTPConfig(\n",
+    "    # 您的AccessKey ID,\n",
+    "    access_key_id=os.environ['ALIBABA_CLOUD_ACCESS_KEY_ID'],\n",
+    "    # 您的AccessKey Secret,\n",
+    "    access_key_secret=os.environ['ALIBABA_CLOUD_ACCESS_KEY_SECRET']\n",
+    ")\n",
+    "\n",
+    "class Sample:\n",
+    "    def __init__(self):\n",
+    "        pass\n",
+    "\n",
+    "    @staticmethod\n",
+    "    def create_client() -> Alidns20150109Client:\n",
+    "        \"\"\"\n",
+    "        使用凭据初始化账号Client\n",
+    "        @return: Client\n",
+    "        @throws Exception\n",
+    "        \"\"\"\n",
+    "        # Endpoint 请参考 https://api.aliyun.com/product/Alidns\n",
+    "        config.endpoint = f'alidns.aliyuncs.com'\n",
+    "        return Alidns20150109Client(config)\n",
+    "\n",
+    "    @staticmethod\n",
+    "    def main(\n",
+    "        args: List[str],\n",
+    "    ) -> None:\n",
+    "        client = Sample.create_client()\n",
+    "        describe_domains_request = alidns_20150109_models.DescribeDomainsRequest()\n",
+    "        runtime = util_models.RuntimeOptions()\n",
+    "        try:\n",
+    "            # 复制代码运行请自行打印 API 的返回值\n",
+    "            client.describe_domains_with_options(describe_domains_request, runtime)\n",
+    "        except Exception as error:\n",
+    "            # 此处仅做打印展示，请谨慎对待异常处理，在工程项目中切勿直接忽略异常。\n",
+    "            # 错误 message\n",
+    "            print(error.message)\n",
+    "            # 诊断地址\n",
+    "            print(error.data.get(\"Recommend\"))\n",
+    "            UtilClient.assert_as_string(error.message)\n",
+    "\n",
+    "    @staticmethod\n",
+    "    async def main_async(\n",
+    "        args: List[str],\n",
+    "    ) -> None:\n",
+    "        client = Sample.create_client()\n",
+    "        describe_domains_request = alidns_20150109_models.DescribeDomainsRequest()\n",
+    "        runtime = util_models.RuntimeOptions()\n",
+    "        try:\n",
+    "            # 复制代码运行请自行打印 API 的返回值\n",
+    "            await client.describe_domains_with_options_async(describe_domains_request, runtime)\n",
+    "        except Exception as error:\n",
+    "            # 此处仅做打印展示，请谨慎对待异常处理，在工程项目中切勿直接忽略异常。\n",
+    "            # 错误 message\n",
+    "            print(error.message)\n",
+    "            # 诊断地址\n",
+    "            print(error.data.get(\"Recommend\"))\n",
+    "            UtilClient.assert_as_string(error.message)\n",
+    "\n",
+    "\n",
+    "if __name__ == '__main__':\n",
+    "    Sample.main(sys.argv[1:])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c1ed8aac",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# DNS 管理统一示例（腾讯云 / 阿里云）\n",
+        "本示例仅演示统一的公共 API，用于腾讯云和阿里云。\n",
+        "请在最上方填写你的测试变量，随后选择云厂商并初始化客户端。\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 预设变量（请替换为你的值）\n",
+        "- `YOUR_DOMAIN_NAME`: 你的主域名，例如 `example.com`\n",
+        "- `YOUR_RR`: 你的记录前缀（主机记录），例如 `www`\n",
+        "- `RECORD_TYPE`: 记录类型，例如 `A` 或 `TXT`\n",
+        "- `RECORD_VALUE`: 记录值，例如 `1.2.3.4` 或某个验证字符串\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "PROVIDER = \"aliyun\"  # 可选：\"aliyun\" 或 \"tencent\"\n",
+        "YOUR_DOMAIN_NAME = \"YOUR_DOMAIN_NAME\"\n",
+        "YOUR_RR = \"YOUR_RR\"\n",
+        "RECORD_TYPE = \"A\"  # 例如：\"A\"、\"CNAME\"、\"TXT\"、\"AAAA\"...\n",
+        "RECORD_VALUE = \"1.2.3.4\"  # 例如：IP 地址或 TXT 值\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 初始化客户端\n",
+        "优先从 `CHATTOOL_CONFIG_DIR` 下的 `aliyun.env` 或 `tencent.env` 加载密钥，也支持直接使用环境变量。\n",
+        "需要的环境变量示例：\n",
+        "- 阿里云：`ALIBABA_CLOUD_ACCESS_KEY_ID`、`ALIBABA_CLOUD_ACCESS_KEY_SECRET`、可选 `ALIBABA_CLOUD_REGION_ID`\n",
+        "- 腾讯云：`TENCENT_SECRET_ID`、`TENCENT_SECRET_KEY`\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "from dotenv import load_dotenv\n",
+        "from chattool.const import CHATTOOL_CONFIG_DIR\n",
+        "from chattool.tools import AliyunDNSClient, TencentDNSClient\n",
+        "\n",
+        "if PROVIDER == \"aliyun\":\n",
+        "    load_dotenv(CHATTOOL_CONFIG_DIR / \"aliyun.env\")\n",
+        "    client = AliyunDNSClient()\n",
+        "elif PROVIDER == \"tencent\":\n",
+        "    load_dotenv(CHATTOOL_CONFIG_DIR / \"tencent.env\")\n",
+        "    client = TencentDNSClient()\n",
+        "else:\n",
+        "    raise ValueError(\"PROVIDER 只能是 'aliyun' 或 'tencent'\")\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 公共 API 演示\n",
+        "以下方法在两家云上都统一支持，参数与返回结构尽量保持一致：\n",
+        "- `describe_domains()`：获取账户下域名列表\n",
+        "- `describe_domain_records(domain_name)`：获取某域名的解析记录列表\n",
+        "- `describe_subdomain_records(sub_domain)`：获取某子域名的解析记录列表（例如 `www.example.com`）\n",
+        "- `add_domain_record(domain_name, rr, type_, value, ttl=600)`：创建记录，返回记录 ID\n",
+        "- `set_record_value(domain_name, rr, type_, value, ttl=600)`：设置记录值（不存在则创建，存在则更新），返回是否成功\n",
+        "- `delete_record_value(domain_name, rr)`：删除指定子域名的记录，返回是否成功\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "# 1) 查询账户域名列表\n",
+        "domains = client.describe_domains()\n",
+        "len(domains), domains[:3]  # 预览前几个\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "# 2) 查询某域名的解析记录\n",
+        "records = client.describe_domain_records(YOUR_DOMAIN_NAME)\n",
+        "len(records), records[:5]\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "# 3) 查询某子域名的解析记录，例如 www.example.com\n",
+        "sub_domain = f\"{YOUR_RR}.{YOUR_DOMAIN_NAME}\"\n",
+        "sub_records = client.describe_subdomain_records(sub_domain)\n",
+        "len(sub_records), sub_records[:5]\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 写操作示例（谨慎执行）\n",
+        "以下操作会修改你域名下的解析记录，请确保使用测试域名或明确影响再执行。\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "# 4) 创建记录（返回记录ID）\n",
+        "record_id = client.add_domain_record(YOUR_DOMAIN_NAME, YOUR_RR, RECORD_TYPE, RECORD_VALUE, ttl=600)\n",
+        "record_id\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "# 5) 设置记录值（不存在则创建，存在则更新）\n",
+        "ok = client.set_record_value(YOUR_DOMAIN_NAME, YOUR_RR, RECORD_TYPE, RECORD_VALUE, ttl=600)\n",
+        "ok\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "execution_count": null,
+      "outputs": [],
+      "source": [
+        "# 6) 删除指定子域名的记录\n",
+        "ok = client.delete_record_value(YOUR_DOMAIN_NAME, rr=YOUR_RR)\n",
+        "ok\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 说明与提示\n",
+        "- 如果需要动态 IP 更新或证书自动化，请参考项目 `docs/dns.md` 的 CLI 章节。\n",
+        "- 返回的数据结构可能包含厂商特有字段，公共示例中只依赖通用键值。\n",
+        "- 若报权限或配额错误，请检查密钥是否具备对应的 API 权限。\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": { "name": "python3", "display_name": "Python 3" },
+    "language_info": { "name": "python", "version": "3.x" }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
