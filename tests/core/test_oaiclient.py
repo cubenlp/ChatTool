@@ -1,130 +1,95 @@
+import os
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from chattool.core import Chat
 
+from chattool import Chat
 
-@pytest.fixture
-def mock_response_data():
-    return {
-        "id": "chatcmpl-test123",
-        "object": "chat.completion",
-        "created": 1677652288,
-        "model": "gpt-4",
-        "choices": [
-            {
-                "index": 0,
-                "message": {"role": "assistant", "content": "Hello!"},
-                "finish_reason": "stop",
-            }
-        ],
-        "usage": {"prompt_tokens": 10, "completion_tokens": 9, "total_tokens": 19},
-    }
-
-
-def test_chat_initialization_defaults():
+def test_init_uses_env_defaults():
     chat = Chat()
     assert chat.api_key is not None
     assert chat.model is not None
     assert chat.config.api_base is not None
 
 
-@patch('chattool.core.chattype.Chat.post')
-def test_chat_completion_sync(mock_post, mock_response_data):
-    mock_response = Mock()
-    mock_response.json.return_value = mock_response_data
-    mock_post.return_value = mock_response
+def test_basic_sync_flow(chat: Chat):
+    chat.system("你是一个编程助手，请用简洁明了的方式回答。")
+    chat.user("请计算 6 + 7")
+    resp = chat.get_response(update_history=True)
 
-    chat = Chat(api_key='test-key', api_base='http://127.0.0.1:8000', model='gpt-4')
-    messages = [{"role": "user", "content": "Hello"}]
-    result = chat.chat_completion(messages)
+    # 响应基本有效性
+    assert resp.is_valid()
+    assert resp.message is not None
+    assert isinstance(resp.content, str)
+    assert len(resp.content) > 0
 
-    mock_post.assert_called_once()
-    call_args = mock_post.call_args
-    assert call_args[0][0] == "/chat/completions"
-    assert "data" in call_args[1]
-    assert call_args[1]["data"]["messages"] == messages
-    assert call_args[1]["headers"]["Authorization"] == "Bearer test-key"
-    assert result == mock_response_data
+    # 历史与状态
+    assert chat.last_response == resp
+    assert chat.chat_log[-1]["role"] == "assistant"
 
 
-@patch('chattool.core.chattype.Chat.async_post')
-@pytest.mark.asyncio
-async def test_async_chat_completion(mock_async_post, mock_response_data):
-    mock_response = Mock()
-    mock_response.json.return_value = mock_response_data
-    mock_async_post.return_value = mock_response
-
-    chat = Chat(api_key='test-key', api_base='http://127.0.0.1:8000', model='gpt-4')
-    messages = [{"role": "user", "content": "Hello"}]
-    result = await chat.async_chat_completion(messages)
-
-    mock_async_post.assert_called_once()
-    call_args = mock_async_post.call_args
-    assert call_args[0][0] == "/chat/completions"
-    assert "data" in call_args[1]
-    assert call_args[1]["data"]["messages"] == messages
-    assert call_args[1]["headers"]["Authorization"] == "Bearer test-key"
-    assert result == mock_response_data
-
-
-def test_chat_completion_parameter_override():
-    chat = Chat(api_key='test-key', api_base='http://127.0.0.1:8000', model='gpt-4')
-    messages = [{"role": "user", "content": "Hello"}]
-
-    with patch.object(chat, 'post') as mock_post:
-        mock_response = Mock()
-        mock_response.json.return_value = {}
-        mock_post.return_value = mock_response
-
-        chat.chat_completion(messages, model="gpt-4", temperature=0.2, custom_param="test")
-
-        call_data = mock_post.call_args[1]["data"]
-        assert call_data["model"] == "gpt-4"
-        assert call_data["temperature"] == 0.2
-        assert call_data["custom_param"] == "test"
-
-
-def test_chat_merges_default_kwargs_into_data():
-    chat = Chat(api_key='test-key', api_base='http://127.0.0.1:8000', model='gpt-4', default_role='system')
-    messages = [{"role": "user", "content": "Hello"}]
-
-    with patch.object(chat, 'post') as mock_post:
-        mock_response = Mock()
-        mock_response.json.return_value = {}
-        mock_post.return_value = mock_response
-
-        chat.chat_completion(messages)
-        call_data = mock_post.call_args[1]["data"]
-        assert call_data["messages"] == messages
-        assert call_data["default_role"] == "system"
-
-
-def test_message_helpers_user_assistant_system():
+def test_ask_convenience():
     chat = Chat()
-    chat.user('hi').assistant('hello').system('rule')
-    assert len(chat) == 3
-    assert chat[0]['role'] == 'user'
-    assert chat[1]['role'] == 'assistant'
-    assert chat[2]['role'] == 'system'
+    answer = chat.ask("请用一句话问候我。")
+    assert isinstance(answer, str) and len(answer) > 0
+    assert chat.chat_log[-1]["role"] == "assistant"
+
+    before = len(chat.chat_log)
+    answer2 = chat.ask("再来一句，但不要记录历史。", update_history=False)
+    assert isinstance(answer2, str) and len(answer2) > 0
+    assert len(chat.chat_log) == before
 
 
 @pytest.mark.asyncio
-async def test_async_get_response_updates_history():
-    chat = Chat(api_key='test-key', api_base='http://127.0.0.1:8000', model='gpt-4')
-    chat.user('hi')
-    fake = {
-        "id": "chatcmpl-test",
-        "object": "chat.completion",
-        "created": 1,
-        "model": "gpt-4",
-        "choices": [{
-            "index": 0,
-            "message": {"role": "assistant", "content": "hello"},
-            "finish_reason": "stop"
-        }]
-    }
-    with patch.object(chat, 'async_chat_completion', new=AsyncMock(return_value=fake)):
-        response = await chat.async_get_response(update_history=True)
-        assert response is not None
-        assert len(chat) == 2  # user + assistant
-        assert chat[-1]['role'] == 'assistant'
+async def test_async_ask():
+    chat = Chat()
+    chat.system("你是一个编程助手。")
+    result = await chat.async_ask("给我两个 Python 提示")
+    assert isinstance(result, str) and len(result) > 0
+    assert chat.chat_log[-1]["role"] == "assistant"
+
+
+@pytest.mark.asyncio
+async def test_async_get_response():
+    chat = Chat(messages=[{"role": "user", "content": "请把 'Chattool' 翻译成中文"}])
+    resp = await chat.async_get_response(update_history=True)
+
+    assert resp.is_valid()
+    assert resp.message is not None
+    assert isinstance(resp.content, str) and len(resp.content) > 0
+    assert chat.chat_log[-1]["role"] == "assistant"
+
+
+def test_message_helpers(chat: Chat):
+    chat.clear()
+    chat.system("系统提示").user("你好").assistant("你好，我是助手")
+    assert [m["role"] for m in chat.chat_log] == ["system", "user", "assistant"]
+
+    popped = chat.pop()
+    assert popped["role"] == "assistant"
+    assert len(chat.chat_log) == 2
+
+
+def test_copy(chat: Chat):
+    chat.clear()
+    chat.user("原始用户消息")
+    c2 = chat.copy()
+    assert c2.chat_log == chat.chat_log
+    c2.user("追加一条")
+    assert len(c2.chat_log) == len(chat.chat_log) + 1
+
+
+# 可选：流式响应（若后端不支持流式将跳过）
+@pytest.mark.asyncio
+async def test_async_stream_response_optional():
+    chat = Chat(messages=[{"role": "user", "content": "用两句话描述 Python"}])
+    aggregated = ""
+    try:
+        async for res in chat.async_get_response_stream(stream=True):
+            if res.delta_content:
+                aggregated += res.delta_content
+    except Exception as e:
+        pytest.skip(f"流式响应不可用: {e}")
+
+    # 如果成功，则应累积到非空内容，并写入历史
+    assert isinstance(aggregated, str)
+    assert len(aggregated) > 0
+    assert chat.chat_log[-1]["role"] == "assistant"

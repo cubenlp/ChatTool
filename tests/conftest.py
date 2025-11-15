@@ -1,8 +1,14 @@
 import pytest
-from chattool.core import HTTPClient, HTTPConfig
+from chattool.core import HTTPClient, HTTPConfig, Chat
 from chattool.tools import ZulipClient, GitHubClient
 
 TEST_PATH = 'tests/testfiles/'
+
+@pytest.fixture
+def chat():
+    c = Chat()
+    c.clear()
+    return c
 
 @pytest.fixture
 def testpath():
