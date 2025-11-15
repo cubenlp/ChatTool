@@ -53,7 +53,7 @@ class AliyunDNSClient:
         
         # 初始化官方SDK客户端
         try:
-            config = open_api_models.Config(
+            config = open_api_models.HTTPConfig(
                 access_key_id=self.access_key_id,
                 access_key_secret=self.access_key_secret
             )

@@ -119,7 +119,7 @@ def debug_log( net_url:str="https://www.baidu.com"
     Returns:
         bool: True if the debug is finished.
     """
-    print("Current version:", __version__)
+    print("Current version:", chattool.__version__)
     # Network test
     try:
         requests.get(net_url, timeout=timeout)

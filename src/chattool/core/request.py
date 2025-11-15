@@ -1,27 +1,74 @@
 import httpx
 import asyncio
 import logging
-import json
 import time
-import hashlib
-from typing import Dict, List, Optional, Union, Generator, AsyncGenerator, Any
-from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
-from chattool.core.response import ChatResponse
-from batch_executor import setup_logger
+from typing import Dict, Optional, Any
+from chattool.utils import setup_logger
+
+class HTTPConfig:
+    def __init__(
+        self,
+        api_base: str = "",
+        headers: Optional[Dict[str, str]] = None,
+        timeout: float = 0,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        **kwargs
+    ):
+        self.api_base = api_base
+        self.headers = headers or {}
+        self.timeout = timeout
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.kwargs = kwargs
+    
+    def get(self, key, default=None):
+        return getattr(self, key, self.kwargs.get(key, default))
+    
+    def copy(self):
+        return HTTPConfig(
+            api_base=self.api_base,
+            headers=self.headers.copy(),
+            timeout=self.timeout,
+            max_retries=self.max_retries,
+            retry_delay=self.retry_delay,
+            **self.kwargs
+        )
+    
+    def create(self, **kwargs):
+        config = self.copy()
+        config.kwargs.update(kwargs)
+        return config
+    
+    def __repr__(self):
+        text = f"{self.__class__.__name__}("
+        if self.api_base:
+            text += f"api_base={self.api_base}, "
+        text += f"timeout={self.timeout}, max_retries={self.max_retries}, retry_delay={self.retry_delay})"
+        return text
 
 # 基础HTTP客户端类
 class HTTPClient:
-    def __init__(self, config: Optional[Config]=None, logger: Optional[logging.Logger] = None, **kwargs):
-        if config is None:
-            config = Config()
-        config.update_kwargs(**kwargs)
-        self.config = config
+    def __init__(
+         self, 
+         logger: Optional[logging.Logger] = None, 
+         api_base: str = "",
+         headers: Optional[Dict[str, str]] = None,
+         timeout: float = 0,
+         max_retries: int = 3,
+         retry_delay: float = 1.0,
+         **kwargs):
+        self.config = HTTPConfig(
+            api_base=api_base,
+            headers=headers,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            **kwargs
+        )
         self._sync_client: Optional[httpx.Client] = None
         self._async_client: Optional[httpx.AsyncClient] = None
-        if logger is None:
-            self.logger = setup_logger(self.__class__.__name__)
-        else:
-            self.logger = logger
+        self.logger = logger or setup_logger(self.__class__.__name__)
     
     def _get_sync_client(self) -> httpx.Client:
         """获取同步客户端，懒加载"""
@@ -105,24 +152,29 @@ class HTTPClient:
         headers: Optional[Dict[str, str]] = None,
         **kwargs
     ) -> httpx.Response:
-        """同步请求"""
+        """同步请求
+
+        Args:
+            method: HTTP方法 (GET, POST, PUT, DELETE, etc.)
+            url: 请求URL，相对路径或完整URL
+            data: 请求体数据，JSON格式
+            params: 查询参数
+            headers: 自定义请求头
+        """
         client = self._get_sync_client()
         
         # 构建完整 URL
         url = self._build_url(url)
         
-        # 合并headers
-        merged_headers = self.config.headers.copy()
-        if headers:
-            merged_headers.update(headers)
-        
+        if headers is None:
+            headers = self.config.headers
         def _make_request():
             return client.request(
                 method=method,
                 url=url,
                 json=data,
                 params=params,
-                headers=merged_headers,
+                headers=headers,
                 **kwargs
             )
         
@@ -139,16 +191,21 @@ class HTTPClient:
         headers: Optional[Dict[str, str]] = None,
         **kwargs
     ) -> httpx.Response:
-        """异步请求"""
+        """异步请求
+
+        Args:
+            method: HTTP方法 (GET, POST, PUT, DELETE, etc.)
+            url: 请求URL，相对路径或完整URL
+            data: 请求体数据，JSON格式
+            params: 查询参数
+            headers: 自定义请求头
+        """
         client = self._get_async_client()
         
         # 构建完整 URL
         url = self._build_url(url)
-        
-        # 合并headers
-        merged_headers = self.config.headers.copy()
-        if headers:
-            merged_headers.update(headers)
+        if headers is None:
+            headers = self.config.headers
         
         async def _make_request():
             return await client.request(
@@ -156,10 +213,10 @@ class HTTPClient:
                 url=url,
                 json=data,
                 params=params,
-                headers=merged_headers,
+                headers=headers,
                 **kwargs
             )
-        response = await self._async_retry_request(_make_request)
+        response: httpx.Response = await self._async_retry_request(_make_request)
         response.raise_for_status()
         return response
     
@@ -214,286 +271,3 @@ class HTTPClient:
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.aclose()
-
-class OpenAIClient(HTTPClient):
-    _config_only_attrs = {
-        'api_key', 'api_base', 'headers', 'timeout', 
-        'max_retries', 'retry_delay'
-    }
-    
-    def __init__(self, config: Optional[OpenAIConfig] = None, logger = None, **kwargs):
-        if config is None:
-            config = OpenAIConfig()
-        super().__init__(config, logger, **kwargs)
-        self.config : OpenAIConfig
-    
-    def _build_chat_data(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
-        """构建聊天完成请求的数据"""
-        data = {"messages": messages}
-        
-        # 处理所有可能的参数
-        all_params = set(kwargs.keys()) | {
-            k for k in self.config.__dict__.keys() 
-            if not k.startswith('_')  # 排除私有属性
-        }
-        
-        for param_name in all_params:
-            # 跳过配置专用属性
-            if param_name in self._config_only_attrs:
-                continue
-                
-            value = self._get_param_value(param_name, kwargs)
-            if value is not None:
-                data[param_name] = value
-                
-        return data
-    
-    def _get_param_value(self, param_name: str, kwargs: Dict[str, Any]):
-        """按优先级获取参数值：kwargs > config > None"""
-        if kwargs.get(param_name) is not None:
-            return kwargs[param_name]
-        return self.config.get(param_name)
-    
-    def _prepare_options(self, messages: List[Dict[str, str]], custom_headers: Optional[Dict[str, str]] = None, custom_params: Optional[Dict[str, Any]] = None, **kwargs) -> Dict[str, Any]:
-        """准备请求选项 - 子类可以重写此方法"""
-        options = {}
-        headers = self.config.headers.copy()
-        if custom_headers:
-            headers.update(custom_headers)
-        options['headers'] = headers
-        return options
-    
-    def chat_completion(
-        self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        stream: bool = False,
-        uri: str = '/chat/completions',
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """
-        OpenAI Chat Completion API (同步版本)
-        
-        Args:
-            messages: 对话消息列表
-            model: 模型名称
-            temperature: 温度参数
-            top_p: top_p 参数
-            max_tokens: 最大token数
-            stream: 是否使用流式响应
-            uri: 请求 URI
-            headers: 自定义请求头(OpenAI 特有参数)
-            params: 自定义查询参数(Azure 特有参数)
-            **kwargs: 其他参数
-        """
-        # 合并参数
-        all_kwargs = {
-            'model': model,
-            'temperature': temperature,
-            'top_p': top_p,
-            'max_tokens': max_tokens,
-            'stream': stream,
-            **kwargs
-        }
-        
-        # 构建数据和请求头
-        data = self._build_chat_data(messages, **all_kwargs)
-        options = self._prepare_options(messages, headers, params, **kwargs)
-        
-        if data.get('stream'):
-            data['stream'] = False #TODO: 流式响应请使用 chat_completion_stream_async
-        
-        response = self.post(uri, data=data, **options)
-        return response.json()
-    
-    async def chat_completion_async(
-        self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        stream: bool = False,
-        uri: str = '/chat/completions',
-        headers: Optional[Dict[str, str]] = None,
-        **kwargs
-    ) -> Union[Dict[str, Any], AsyncGenerator]:
-        """OpenAI Chat Completion API (异步版本)"""
-        all_kwargs = {
-            'model': model,
-            'temperature': temperature,
-            'top_p': top_p,
-            'max_tokens': max_tokens,
-            'stream': stream,
-            **kwargs
-        }
-        
-        data = self._build_chat_data(messages, **all_kwargs)
-        options = self._prepare_options(messages, headers, **kwargs)
-        
-        if data.get('stream'):
-            data['stream'] = False #TODO: 流式响应请使用 chat_completion_stream_async
-        
-        response = await self.async_post(uri, data=data, **options)
-        return response.json()
-    
-    async def chat_completion_stream_async(
-        self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        uri: str = '/chat/completions',
-        headers: Optional[Dict[str, str]] = None,
-        **kwargs
-    ):
-        """OpenAI Chat Completion API 流式响应（异步版本）"""
-        # 合并参数
-        all_kwargs = {
-            'model': model,
-            'temperature': temperature,
-            'top_p': top_p,
-            'max_tokens': max_tokens,
-            'stream': True,
-            **kwargs
-        }
-        # 构建数据和请求头
-        data = self._build_chat_data(messages, **all_kwargs)
-        options = self._prepare_options(messages, headers, **kwargs)
-        
-        # 构建完整 URL
-        url = self._build_url(uri)
-        
-        client = self._get_async_client()
-        
-        async with client.stream(
-            method="POST",
-            url=url,
-            json=data,
-            **options
-        ) as stream:
-            # 检查响应状态码
-            if stream.status_code >= 400:
-                # 读取错误响应内容
-                error_content = await stream.aread()
-                try:
-                    error_data = json.loads(error_content.decode())
-                    error_msg = error_data.get('error', {}).get('message', f'HTTP {stream.status_code}')
-                except:
-                    error_msg = f'HTTP {stream.status_code}: {error_content.decode()}'
-                raise httpx.HTTPStatusError(
-                    message=f"API request failed: {error_msg}",
-                    request=stream.request,
-                    response=stream
-                )
-            async for line in stream.aiter_lines():
-                if not line:
-                    continue
-                # 去掉 "data: " 前缀
-                if line.startswith("data: "):
-                    line = line[6:]
-                
-                # 检查是否结束
-                if line.strip() == "[DONE]":
-                    break
-                
-                # 跳过空行
-                if not line.strip():
-                    continue
-                try:
-                    # 解析 JSON
-                    chunk_data = json.loads(line)
-                    response = ChatResponse(chunk_data)
-                    
-                    # 跳过空的 choices 数组
-                    if not response.choices:
-                        continue
-                    yield response
-                    if response.finish_reason == 'stop':
-                        break
-                except Exception as e:
-                    # 其他错误也跳过
-                    continue
-
-    def embeddings(
-        self, 
-        input_text: Union[str, List[str]], 
-        model: Optional[str] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """OpenAI Embeddings API"""
-        all_kwargs = {
-            'model': model or self.config.get('model', 'text-embedding-ada-002'),
-            'input': input_text,
-            **kwargs
-        }
-        
-        data = {}
-        for key, value in all_kwargs.items():
-            if value is not None:
-                data[key] = value
-        
-        response = self.post("/embeddings", data=data)
-        return response.json()
-    
-    async def embeddings_async(
-        self, 
-        input_text: Union[str, List[str]], 
-        model: Optional[str] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """异步 OpenAI Embeddings API"""
-        all_kwargs = {
-            'model': model or self.config.get('model', 'text-embedding-ada-002'),
-            'input': input_text,
-            **kwargs
-        }
-        
-        data = {}
-        for key, value in all_kwargs.items():
-            if value is not None:
-                data[key] = value
-        
-        response = await self.async_post("/embeddings", data=data)
-        return response.json()
-
-class AzureOpenAIClient(OpenAIClient):
-    """Azure OpenAI 客户端"""
-    
-    _config_only_attrs = {
-        'api_key', 'api_base', 'api_version',
-        'headers', 'timeout', 'max_retries', 'retry_delay'
-    }
-    
-    def __init__(self, config: Optional[AzureOpenAIConfig] = None, logger = None, **kwargs):
-        if config is None:
-            config = AzureOpenAIConfig()
-        super().__init__(config, logger, **kwargs)
-        self.config: AzureOpenAIConfig
-    
-    def _generate_log_id(self, messages: List[Dict[str, str]]) -> str:
-        """生成请求的 log ID"""
-        content = str(messages).encode()
-        return hashlib.sha256(content).hexdigest()
-    
-    def _prepare_options(self, messages: List[Dict[str, str]], custom_headers: Optional[Dict[str, str]] = None, custom_params: Optional[Dict[str, Any]] = None, **kwargs) -> Dict[str, Any]:
-        options = {}
-        headers = self.config.headers.copy()
-        headers['X-TT-LOGID'] = self._generate_log_id(messages)
-        
-        if custom_headers:
-            headers.update(custom_headers)
-        options['headers'] = headers
-
-        params = self.config.get_request_params()
-        if custom_params:
-            params.update(custom_params)
-        options['params'] = params
-        
-        return options
