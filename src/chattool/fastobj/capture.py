@@ -1,16 +1,22 @@
+import signal
+import sys
+import time
+import click
+import uvicorn
 from fastapi import FastAPI, Request
 from datetime import datetime
-from chattool.fastobj.basic import generate_curl_command, FastAPIManager
-import click
+from chattool.utils import setup_logger
+from .basic import generate_curl_command, FastAPIManager
 
 app = FastAPI(
     title="请求监控 API",
     description="捕获并展示所有 HTTP 请求的详细信息",
     version="1.0.0"
 )
+logger = setup_logger('capture')
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def capture_all_requests(request: Request, path: str = ""):
+async def capture_all_requests(request: Request, path: str = "", logger=logger):
     """
     捕获所有进入的 HTTP 请求并返回详细信息
     
@@ -43,22 +49,22 @@ async def capture_all_requests(request: Request, path: str = ""):
     curl_command = generate_curl_command(request_info)
     
     # 打印请求信息到控制台
-    print("\n" + "="*50)
-    print(f"📝 新请求 | {timestamp}")
-    print(f"📌 方法: {request.method}")
-    print(f"🔗 URL: {request.url}")
-    print(f"👤 客户端: {request.client.host}:{request.client.port}")
-    print(f"🔍 查询参数: {dict(request.query_params)}")
+    logger.info("\n" + "="*50)
+    logger.info(f"📝 新请求 | {timestamp}")
+    logger.info(f"📌 方法: {request.method}")
+    logger.info(f"🔗 URL: {request.url}")
+    logger.info(f"👤 客户端: {request.client.host}:{request.client.port}")
+    logger.info(f"🔍 查询参数: {dict(request.query_params)}")
     if body_str:
-        print(f"📦 请求体: {body_str}")
-    print(f"📋 请求头:")
+        logger.info(f"📦 请求体: {body_str}")
+    logger.info(f"📋 请求头:")
     for key, value in request.headers.items():
-        print(f"   {key}: {value}")
+        logger.info(f"   {key}: {value}")
     
     # 打印 curl 命令
-    print(f"\n🔧 等效 curl 命令:")
-    print(curl_command)
-    print("="*50)
+    logger.info(f"\n🔧 等效 curl 命令:")
+    logger.info(curl_command)
+    logger.info("="*50)
     
     return {
         "status": "success",
@@ -80,10 +86,6 @@ def main(host, port, daemon, reload):
     1. 直接运行模式（默认）：阻塞主线程，适合开发调试
     2. 后台运行模式（--daemon）：使用线程后台运行，适合集成到其他应用
     """
-    import signal
-    import sys
-    import time
-    
     click.echo("🚀 启动请求捕获服务器...")
     click.echo("📡 服务器将监听所有进入的 HTTP 请求")
     click.echo(f"🔗 访问 http://{host}:{port}/docs 查看 API 文档")
@@ -117,8 +119,6 @@ def main(host, port, daemon, reload):
     else:
         # 直接运行模式 - 使用 uvicorn.run
         click.echo("🔧 使用直接运行模式启动...")
-        
-        import uvicorn
         
         try:
             uvicorn.run(
