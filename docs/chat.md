@@ -2,18 +2,7 @@
 
 ## 概述
 
-`Chat` 是 Chattool 的核心对话管理接口，它是一个智能工厂函数，能够根据配置类型自动选择合适的客户端实现（OpenAI 或 Azure OpenAI），提供统一、简洁的对话管理功能。
-
-## 核心特性
-
-- **智能客户端选择**：根据配置类型自动选择 OpenAI 或 Azure OpenAI 客户端
-- **链式调用**：支持方法链式调用，代码更简洁易读
-- **对话历史管理**：自动维护完整的对话上下文
-- **同步/异步支持**：提供同步和异步两种调用方式
-- **流式响应**：支持实时流式响应
-- **错误处理与重试**：内置重试机制和错误处理
-- **持久化支持**：支持对话历史的保存和加载
-- **调试工具**：提供丰富的调试和监控功能
+`Chat` 是 Chattool 的核心对话管理类，提供统一、简洁的对话管理功能。它默认从环境变量读取 `OPENAI_API_KEY`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`，也支持在初始化时显式传入参数。
 
 ## 快速开始
 
@@ -26,7 +15,7 @@ from chattool import Chat
 chat = Chat()
 
 # 基本对话
-response = chat.user("你好，请介绍一下自己").get_response()
+response = chat.ask("你好，请介绍一下自己", update_history=False)
 print(response.content)
 
 # 链式调用
@@ -35,51 +24,42 @@ response = chat.get_response()
 print(response.content)
 ```
 
-### 使用自定义配置
+### 使用显式参数
 
 ```python
 from chattool import Chat
-from chattool.core.config import OpenAIConfig, AzureOpenAIConfig
 
-# OpenAI 配置
-openai_config = OpenAIConfig(
+# 显式传参（未传入则使用环境变量默认值）
+chat = Chat(
     api_key="your-openai-api-key",
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=1000
+    api_base="https://api.openai.com/v1",
+    model="gpt-4o-mini",
+    timeout=30,
+    max_retries=3,
+    retry_delay=1.0,
 )
-chat = Chat(config=openai_config)
-
-# Azure OpenAI 配置
-azure_config = AzureOpenAIConfig(
-    api_key="your-azure-api-key",
-    api_base="https://your-resource.openai.azure.com/",
-    api_version="2023-12-01-preview",
-    model="gpt-4",
-    temperature=0.7
-)
-chat = Chat(config=azure_config)
 ```
 
 ## API 参考
 
-### Chat 工厂函数
+### Chat 初始化参数
 
 ```python
-def Chat(
-    config: Optional[Union[OpenAIConfig, AzureOpenAIConfig]] = None,
+Chat(
+    messages: Optional[Union[str, List[Dict[str, str]]]] = None,
     logger: Optional[logging.Logger] = None,
-    **kwargs
-) -> Union[ChatOpenAI, ChatAzure]
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+    model: Optional[str] = None,
+    timeout: float = 0,
+    max_retries: int = 3,
+    retry_delay: float = 1.0,
+    headers: Optional[Dict[str, str]] = None,
+    **kwargs,
+)
 ```
 
-**参数：**
-- `config`: 配置对象（OpenAIConfig 或 AzureOpenAIConfig）
-- `logger`: 自定义日志实例
-- `**kwargs`: 其他配置参数
-
-**返回：**
-- 根据配置类型返回 ChatOpenAI 或 ChatAzure 实例
+未显式传入时将从环境变量读取默认值：`OPENAI_API_KEY`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`。
 
 ## 消息管理
 
@@ -132,15 +112,12 @@ last_message = chat[-1]
 
 ```python
 # 基本响应
-response = chat.user("什么是人工智能？").get_response()
-print(response.content)
-
-# 带参数的响应
-response = chat.get_response(
+response = chat.user("什么是人工智能？").get_response(
     temperature=0.8,
     max_tokens=500,
     top_p=0.9
 )
+print(response.content)
 
 # 快速问答
 answer = chat.ask("什么是深度学习？")
@@ -156,11 +133,11 @@ async def async_chat_example():
     chat = Chat()
     
     # 异步响应
-    response = await chat.user("解释一下区块链技术").get_response_async()
+    response = await chat.user("解释一下区块链技术").async_get_response()
     print(response.content)
     
     # 异步快速问答
-    answer = await chat.ask_async("什么是NFT？")
+    answer = await chat.async_ask("什么是NFT？")
     print(answer)
 
 # 运行异步示例
@@ -176,7 +153,7 @@ async def streaming_example():
     chat = Chat()
     
     # 异步流式响应
-    async for chunk in chat.user("写一首关于春天的诗").get_response_stream_async():
+    async for chunk in chat.user("写一首关于春天的诗").async_get_response_stream():
         print(chunk.content, end='', flush=True)
     print()  # 换行
 
@@ -292,190 +269,41 @@ os.environ["OPENAI_API_BASE"] = "https://api.openai.com/v1"
 chat = Chat()
 ```
 
-### Azure OpenAI 配置
-
-```python
-from chattool.core.config import AzureOpenAIConfig
-
-# Azure 配置
-azure_config = AzureOpenAIConfig(
-    api_key="your-azure-key",
-    api_base="https://your-resource.openai.azure.com/",
-    api_version="2023-12-01-preview",
-    model="gpt-4"
-)
-
-chat = Chat(config=azure_config)
-```
-
-## 高级用法
-
-### 批量处理
-
-```python
-import asyncio
-
-async def batch_questions():
-    chat = Chat()
-    
-    questions = [
-        "什么是机器学习？",
-        "什么是深度学习？", 
-        "什么是神经网络？"
-    ]
-    
-    tasks = []
-    for question in questions:
-        # 为每个问题创建独立的对话副本
-        chat_copy = chat.copy()
-        task = chat_copy.user(question).get_response_async()
-        tasks.append(task)
-    
-    # 并发执行
-    responses = await asyncio.gather(*tasks)
-    
-    for i, response in enumerate(responses):
-        print(f"问题 {i+1}: {questions[i]}")
-        print(f"回答: {response.content}\n")
-
-# 运行批量处理
-asyncio.run(batch_questions())
-```
-
-### 对话模板
-
-```python
-def create_translator_chat():
-    """创建翻译助手"""
-    chat = Chat()
-    chat.system("你是一个专业的翻译助手，能够准确翻译中英文。")
-    return chat
-
-def create_code_reviewer_chat():
-    """创建代码审查助手"""
-    chat = Chat()
-    chat.system("你是一个资深的代码审查专家，能够发现代码中的问题并提供改进建议。")
-    return chat
-
-# 使用模板
-translator = create_translator_chat()
-answer = translator.ask("请将'Hello World'翻译成中文")
-print(answer)
-```
-
-## 最佳实践
-
-### 1. 配置管理
-
-```python
-# 推荐：使用配置类
-config = OpenAIConfig(
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=1000
-)
-chat = Chat(config=config)
-
-# 避免：在每次调用时传递参数
-# chat.get_response(model="gpt-4", temperature=0.7)  # 不推荐
-```
-
-### 2. 错误处理
-
-```python
-def safe_chat(question: str, max_retries: int = 3) -> str:
-    """安全的对话函数"""
-    chat = Chat()
-    
-    for attempt in range(max_retries):
-        try:
-            return chat.user(question).ask()
-        except Exception as e:
-            if attempt == max_retries - 1:
-                raise e
-            print(f"尝试 {attempt + 1} 失败: {e}")
-    
-    return "无法获取响应"
-```
-
-### 3. 对话管理
-
-```python
-# 推荐：定期保存重要对话
-chat = Chat()
-# ... 进行对话 ...
-chat.save(f"important_conversation_{int(time.time())}.jsonl")
-
-# 推荐：使用副本进行实验
-original_chat = Chat()
-# ... 建立基础对话 ...
-
-# 创建副本进行不同的尝试
-experiment1 = original_chat.copy()
-experiment2 = original_chat.copy()
-```
-
-### 4. 性能优化
-
-```python
-# 异步处理多个请求
-async def efficient_batch_processing():
-    chat = Chat()
-    
-    # 使用异步方法
-    tasks = [
-        chat.copy().user(q).get_response_async() 
-        for q in questions
-    ]
-    
-    responses = await asyncio.gather(*tasks)
-    return responses
-```
-
 ## 完整示例
 
 ```python
 import asyncio
 from chattool import Chat
-from chattool.core.config import OpenAIConfig
-
 async def complete_example():
     """完整的使用示例"""
     
-    # 1. 创建配置
-    config = OpenAIConfig(
-        model="gpt-4",
-        temperature=0.7,
-        max_tokens=1000
-    )
+    # 1. 创建对话（从环境变量读取默认配置）
+    chat = Chat(model="gpt-4o-mini")
     
-    # 2. 创建对话
-    chat = Chat(config=config)
-    
-    # 3. 设置系统消息
+    # 2. 设置系统消息
     chat.system("你是一个有用的AI助手，能够回答各种问题。")
     
-    # 4. 进行对话
+    # 3. 进行对话
     print("=== 同步对话 ===")
     response = chat.user("什么是人工智能？").get_response()
     print(f"AI: {response.content}")
     
-    # 5. 异步对话
+    # 4. 异步对话
     print("\n=== 异步对话 ===")
-    response = await chat.user("AI的发展历史如何？").get_response_async()
+    response = await chat.user("AI的发展历史如何？").async_get_response()
     print(f"AI: {response.content}")
     
-    # 6. 流式响应
+    # 5. 流式响应
     print("\n=== 流式响应 ===")
     print("AI: ", end='')
-    async for chunk in chat.user("请写一首关于技术的诗").get_response_stream_async():
+    async for chunk in chat.user("请写一首关于技术的诗").async_get_response_stream():
         print(chunk.content, end='', flush=True)
     print()
     
-    # 7. 保存对话
+    # 6. 保存对话
     chat.save("example_conversation.jsonl")
     
-    # 8. 显示调试信息
+    # 7. 显示调试信息
     print("\n=== 调试信息 ===")
     chat.print_debug_info()
 
@@ -483,5 +311,3 @@ async def complete_example():
 if __name__ == "__main__":
     asyncio.run(complete_example())
 ```
-
-这个文档基于实际的示例代码，提供了 Chat 对象的全面使用指南，涵盖了从基础用法到高级特性的所有内容。
