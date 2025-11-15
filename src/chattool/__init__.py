@@ -2,12 +2,11 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '4.0.0'
+__version__ = '4.1.0'
 
 
 from chattool.core import (
-    Chat, ChatAzure, ChatOpenAI, OpenAIClient, AzureOpenAIClient,
-    HTTPClient, ChatResponse, Config, OpenAIConfig, AzureOpenAIConfig
+    Chat, AzureChat, HTTPClient, ChatResponse, HTTPConfig,
 )
 from .const import OPENAI_API_BASE, OPENAI_API_BASE_URL, OPENAI_API_KEY, OPENAI_API_MODEL
 from .utils import debug_log, load_envs, create_env_file
@@ -30,19 +29,14 @@ setup_jupyter_async()
 
 __all__ = [
     "Chat",
-    "ChatAzure",
-    "ChatOpenAI",
-    "OpenAIClient",
-    "AzureOpenAIClient",
+    "AzureChat",
     "HTTPClient",
     "OPENAI_API_BASE",
     "OPENAI_API_BASE_URL",
     "OPENAI_API_KEY",
     "OPENAI_API_MODEL",
     "ChatResponse",
-    "Config",
-    "OpenAIConfig",
-    "AzureOpenAIConfig",
+    "HTTPConfig",
     "debug_log",
     "load_envs",
     "create_env_file",

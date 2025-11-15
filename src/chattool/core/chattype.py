@@ -1,58 +1,246 @@
-
-from typing import List, Dict, Union, Optional, Generator, AsyncGenerator, Any
+import httpx
 import json
 import os
-import time
-import asyncio
 import logging
-from batch_executor import setup_logger
-from chattool.core.config import Config, OpenAIConfig, AzureOpenAIConfig
-from chattool.core.request import HTTPClient, OpenAIClient, AzureOpenAIClient
+from typing import List, Dict, Union, Optional, AsyncGenerator, Any
+from chattool.utils import setup_logger
+from .request import HTTPClient
 from chattool.core.response import ChatResponse
 from chattool.utils import valid_models
+from chattool.utils.urltool import curl_cmd_of_chat_completion
+from chattool.const import (
+    OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_API_MODEL,
+    AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_MODEL, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_ENDPOINT
+)
 
-def Chat(
-    config: Optional[Union[OpenAIConfig, AzureOpenAIConfig]] = None,
-    logger: Optional[logging.Logger] = None,
-    **kwargs
-) -> Union['ChatOpenAI', 'ChatAzure']:
-    """
-    Chat 工厂函数 - 根据配置类型自动选择正确的客户端
-    
-    Args:
-        config: 配置对象（OpenAIConfig 或 AzureOpenAIConfig）
-        logger: 日志实例
-        **kwargs: 其他配置参数
+class Chat(HTTPClient):
+    def __init__(self, 
+        messages: Optional[Union[str, List[Dict[str, str]]]]=None,
+        logger: logging.Logger=None,
+        api_key: str=None,
+        api_base: str=None,
+        model: str=None,
+        timeout: float = 0,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        headers: Optional[Dict[str, str]]=None,
+        **kwargs):
+        """初始化聊天模型
         
-    Returns:
-        ChatOpenAI 或 ChatAzure 实例
-    """
-    if config is None:
-        config = OpenAIConfig()
-    
-    logger = logger or setup_logger('Chat')
-    
-    if isinstance(config, AzureOpenAIConfig):
-        return ChatAzure(config=config, logger=logger, **kwargs)
-    elif isinstance(config, OpenAIConfig):
-        return ChatOpenAI(config=config, logger=logger, **kwargs)
-    else:
-        raise ValueError(f"不支持的配置类型: {type(config)}")
-
-class ChatOpenAI(OpenAIClient):
-    """Chat 基类 - 定义对话管理功能"""
-    
-    def __init__(self, config: Union[Config, OpenAIConfig, AzureOpenAIConfig], logger: Optional[logging.Logger] = None, **kwargs):
-        # 先初始化 OpenAIClient（底层 HTTP 客户端）
-        OpenAIClient.__init__(self, config, logger, **kwargs)
-        self.logger = logger or setup_logger('ChatOpenAI')
+        Args:
+            logger: 日志记录器
+            api_key: API 密钥
+            api_base: API 基础 URL
+            model: 模型名称
+            timeout: 请求超时时间（秒）
+            max_retries: 最大重试次数
+            retry_delay: 重试延迟时间（秒）
+            headers: 自定义 HTTP 头
+            **kwargs: 其他配置参数，传入给 data 部分
+        """
+        logger = logger or setup_logger('Chat')
+        if api_key is None:
+            api_key = OPENAI_API_KEY
+        if model is None:
+            model = OPENAI_API_MODEL
+        if api_base is None:
+            api_base = OPENAI_API_BASE
+        super().__init__(
+            logger=logger,
+            api_base=api_base,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            headers=headers,
+            **kwargs
+        )
+        
+        self.api_key = api_key
+        self.model = model
         
         # 初始化对话历史
-        self._chat_log: List[Dict] = []
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+        self._chat_log: List[Dict] = messages or []
         self._last_response: Optional[ChatResponse] = None
     
+    def chat_completion(
+        self,
+        # data 部分
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        # 默认请求地址
+        uri: str = '/chat/completions',
+        **kwargs # 其他参数，传入给 data 部分
+    ) -> Dict[str, Any]:
+        """
+        OpenAI Chat Completion API (同步版本)
+        
+        Args:
+            messages: 对话消息列表
+            model: 模型名称
+            temperature: 温度参数
+            top_p: top_p 参数
+            max_tokens: 最大token数
+            stream: 是否使用流式响应
+            uri: 请求 URI
+            headers: 自定义请求头(OpenAI 特有参数)
+            params: 自定义查询参数(Azure 特有参数)
+            **kwargs: 其他参数
+        """
+        # 合并参数
+        model = model if model is not None else self.model
+        data = {
+            'model': model, 
+            "messages": messages,
+            **kwargs
+        }
+        if temperature is not None:
+            data['temperature'] = temperature
+        if top_p is not None:
+            data['top_p'] = top_p
+        if max_tokens is not None:
+            data['max_tokens'] = max_tokens
+        if stream:
+            # NOTE: 流式响应请使用 chat_completion_stream_async
+            pass
+        for k in self.config.kwargs: # 默认的额外参数
+            if k not in data and self.config.get(k) is not None:
+                data[k] = self.config.get(k)
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json',
+        }
+        response = self.post(uri, data=data, headers=headers)
+        return response.json()
+    
+    async def async_chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = False,
+        uri: str = '/chat/completions',
+        **kwargs
+    ) -> Union[Dict[str, Any], AsyncGenerator]:
+        """OpenAI Chat Completion API (异步版本)"""
+        # 合并参数
+        model = model if model is not None else self.model
+        data = {
+            'model': model, 
+            "messages": messages,
+            **kwargs
+        }
+        if temperature is not None:
+            data['temperature'] = temperature
+        if top_p is not None:
+            data['top_p'] = top_p
+        if max_tokens is not None:
+            data['max_tokens'] = max_tokens
+        if stream:
+            # NOTE: 流式响应请使用 chat_completion_stream_async
+            pass
+        for k in self.config.kwargs: # 默认的额外参数
+            if k not in data and self.config.get(k) is not None:
+                data[k] = self.config.get(k)
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json',
+        }
+        response = await self.async_post(uri, data=data, headers=headers)
+        return response.json()
+    
+    async def chat_completion_stream_async(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        uri: str = '/chat/completions',
+        stream: bool = True,
+        **kwargs
+    ):
+        """OpenAI Chat Completion API 流式响应（异步版本）"""
+        data = {
+            'model': model if model is not None else self.model,
+            "messages": messages,
+            'stream': True,
+            **kwargs
+        }
+        if temperature is not None:
+            data['temperature'] = temperature
+        if top_p is not None:
+            data['top_p'] = top_p
+        if max_tokens is not None:
+            data['max_tokens'] = max_tokens
+        for k in self.config.kwargs: # 默认的额外参数
+            if k not in data and self.config.get(k) is not None:
+                data[k] = self.config.get(k)
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json',
+        }
+        # 构建完整 URL
+        url = self._build_url(uri)
+        client = self._get_async_client()
+        
+        async with client.stream(
+            method="POST",
+            url=url,
+            json=data,
+            headers=headers
+        ) as stream:
+            # 检查响应状态码
+            if stream.status_code >= 400:
+                # 读取错误响应内容
+                error_content = await stream.aread()
+                try:
+                    error_data = json.loads(error_content.decode())
+                    error_msg = error_data.get('error', {}).get('message', f'HTTP {stream.status_code}')
+                except:
+                    error_msg = f'HTTP {stream.status_code}: {error_content.decode()}'
+                raise httpx.HTTPStatusError(
+                    message=f"API request failed: {error_msg}",
+                    request=stream.request,
+                    response=stream
+                )
+            async for line in stream.aiter_lines():
+                if not line:
+                    continue
+                # 去掉 "data: " 前缀
+                if line.startswith("data: "):
+                    line = line[6:]
+                
+                # 检查是否结束
+                if line.strip() == "[DONE]":
+                    break
+                
+                # 跳过空行
+                if not line.strip():
+                    continue
+                try:
+                    # 解析 JSON
+                    chunk_data = json.loads(line)
+                    response = ChatResponse(chunk_data)
+                    # 跳过空的 choices 数组
+                    if not response.choices:
+                        continue
+                    yield response
+                    if response.finish_reason == 'stop':
+                        break
+                except Exception as e:
+                    # 其他错误也跳过
+                    continue
+    
     # === 消息管理 ===
-    def add_message(self, role: str, content: str, **kwargs) -> 'ChatOpenAI':
+    def add_message(self, role: str, content: str, **kwargs) -> 'Chat':
         """添加消息到对话历史"""
         if role not in ['user', 'assistant', 'system']:
             raise ValueError(f"role 必须是 'user', 'assistant' 或 'system'，收到: {role}")
@@ -61,19 +249,19 @@ class ChatOpenAI(OpenAIClient):
         self._chat_log.append(message)
         return self
     
-    def user(self, content: str) -> 'ChatOpenAI':
+    def user(self, content: str) -> 'Chat':
         """添加用户消息"""
         return self.add_message('user', content)
     
-    def assistant(self, content: str) -> 'ChatOpenAI':
+    def assistant(self, content: str) -> 'Chat':
         """添加助手消息"""
         return self.add_message('assistant', content)
     
-    def system(self, content: str) -> 'ChatOpenAI':
+    def system(self, content: str) -> 'Chat':
         """添加系统消息"""
         return self.add_message('system', content)
     
-    def clear(self) -> 'ChatOpenAI':
+    def clear(self) -> 'Chat':
         """清空对话历史"""
         self._chat_log = []
         self._last_response = None
@@ -86,166 +274,94 @@ class ChatOpenAI(OpenAIClient):
     # === 核心对话功能 - 子类实现 ===
     def get_response(
         self,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
         update_history: bool = True,
-        **options
+        **kwargs
     ) -> ChatResponse:
         """获取对话响应（同步）"""
-        chat_options = {
-            "model": self.config.model,
-            "temperature": getattr(self.config, 'temperature', None),
-            **options
-        }
-        
-        last_error = None
-        for attempt in range(max_retries + 1):
-            try:
-                response_data = self.chat_completion(
-                    messages=self._chat_log,
-                    **chat_options
-                )
-                
-                response = ChatResponse(response_data)
-                
-                if not response.is_valid():
-                    raise Exception(f"API 返回错误: {response.error_message}")
-                
-                if update_history and response.message:
-                    self._chat_log.append(response.message)
-                
-                self._last_response = response
-                return response
-                
-            except Exception as e:
-                last_error = e
-                if attempt < max_retries:
-                    self.logger.warning(f"请求失败 (尝试 {attempt + 1}/{max_retries + 1}): {e}")
-                    time.sleep(retry_delay * (2 ** attempt))
-                else:
-                    self.logger.error(f"请求在 {max_retries + 1} 次尝试后失败")
-        
-        raise last_error
+        response_data = self.chat_completion(
+            messages=self._chat_log,
+            **kwargs
+        )
+        response = ChatResponse(response_data)
+        self._last_response = response
+        if not response.is_valid():
+            raise Exception(f"API 返回错误: {response.error_message}")
+        if not response.message:
+            self.logger.warning("API 返回空消息")
+        elif update_history:
+            self._chat_log.append(response.message)
+        return response
     
-    async def get_response_async(
+    async def async_get_response(
         self,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
         update_history: bool = True,
-        **options
+        **kwargs
     ) -> ChatResponse:
-        """获取对话响应（异步）"""
-        chat_options = {
-            "model": self.config.model,
-            "temperature": getattr(self.config, 'temperature', None),
-            **options
-        }
-        
-        last_error = None
-        for attempt in range(max_retries + 1):
-            try:
-                response_data = await self.chat_completion_async(
-                    messages=self._chat_log,
-                    **chat_options
-                )
-                
-                response = ChatResponse(response_data)
-                
-                if not response.is_valid():
-                    raise Exception(f"API 返回错误: {response.error_message}")
-                
-                if update_history and response.message:
-                    self._chat_log.append(response.message)
-                
-                self._last_response = response
-                return response
-                
-            except Exception as e:
-                last_error = e
-                if attempt < max_retries:
-                    self.logger.warning(f"请求失败 (尝试 {attempt + 1}/{max_retries + 1}): {e}")
-                    await asyncio.sleep(retry_delay * (2 ** attempt))
-                else:
-                    self.logger.error(f"请求在 {max_retries + 1} 次尝试后失败")
-        
-        raise last_error
+        response_data = await self.async_chat_completion(
+            messages=self._chat_log,
+            **kwargs
+        )
+        response = ChatResponse(response_data)
+        self._last_response = response
+        if not response.is_valid():
+            raise Exception(f"API 返回错误: {response.error_message}")
+        if not response.message:
+            self.logger.warning("API 返回空消息")
+        elif update_history:
+            self._chat_log.append(response.message)
+        return response
     
-    async def get_response_stream_async(
-        self,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-        update_history: bool = True,
-        **options
-    ) -> AsyncGenerator[ChatResponse, None]:
+    async def async_get_response_stream(self, 
+            update_history: bool = True,
+            stream: bool = True,
+            **kwargs
+        ) -> AsyncGenerator[ChatResponse, None]:
         """获取流式对话响应（异步）"""
-        chat_options = {
-            "model": self.config.model,
-            "temperature": getattr(self.config, 'temperature', None),
-            "stream": True,
-            **options
-        }
         
-        last_error = None
-        for attempt in range(max_retries + 1):
-            try:
-                # 用于累积完整的响应内容
-                full_content = ""
-                last_response = None
-                
-                async for response in self.chat_completion_stream_async(
-                    messages=self._chat_log,
-                    **chat_options
-                ):
-                    # 保存最后一个响应对象
-                    last_response = response
-                    
-                    # 累积内容
-                    if response.delta_content:
-                        full_content += response.delta_content
-                    
-                    # 始终yield响应，让调用者决定如何处理
-                    yield response
-                
-                # 流式响应结束后，更新历史记录和保存最后响应
-                if update_history and full_content:
-                    self._chat_log.append({
+        # 用于累积完整的响应内容
+        full_content = ""
+        last_response = None
+        async for response in self.chat_completion_stream_async(
+            messages=self._chat_log,
+            **kwargs
+        ):
+            # 保存最后一个响应对象
+            last_response = response
+            
+            # 累积内容
+            if response.delta_content:
+                full_content += response.delta_content
+            
+            # 始终yield响应，让调用者决定如何处理
+            yield response
+        
+        # 流式响应结束后，更新历史记录和保存最后响应
+        if update_history and full_content:
+            self._chat_log.append({
+                "role": "assistant",
+                "content": full_content
+            })
+        
+        # 构建最终的完整响应对象
+        if last_response:
+            final_response_data = {
+                "id": last_response.id,
+                "object": "chat.completion",
+                "created": last_response.created,
+                "model": last_response.model,
+                "choices": [{
+                    "index": 0,
+                    "message": {
                         "role": "assistant",
                         "content": full_content
-                    })
-                
-                # 构建最终的完整响应对象
-                if last_response:
-                    final_response_data = {
-                        "id": last_response.id,
-                        "object": "chat.completion",
-                        "created": last_response.created,
-                        "model": last_response.model,
-                        "choices": [{
-                            "index": 0,
-                            "message": {
-                                "role": "assistant",
-                                "content": full_content
-                            },
-                            "finish_reason": "stop"
-                        }]
-                    }
-                    self._last_response = ChatResponse(final_response_data)
-                
-                # 成功完成，退出重试循环
-                return
-                
-            except Exception as e:
-                last_error = e
-                if attempt < max_retries:
-                    self.logger.warning(f"流式请求失败 (尝试 {attempt + 1}/{max_retries + 1}): {e}")
-                    await asyncio.sleep(retry_delay * (2 ** attempt))
-                else:
-                    self.logger.error(f"流式请求在 {max_retries + 1} 次尝试后失败")
+                    },
+                    "finish_reason": "stop"
+                }]
+            }
+            self._last_response = ChatResponse(final_response_data)
         
-        # 如果所有重试都失败了，抛出最后一个错误
-        if last_error:
-            raise last_error
-        raise last_error
+        # 成功完成，退出重试循环
+        return
 
     def get_valid_models(self, gpt_only: bool = True):
         """获取有效模型列表"""
@@ -261,21 +377,21 @@ class ChatOpenAI(OpenAIClient):
         return valid_models(api_key, model_url, gpt_only=gpt_only)
 
     # === 便捷方法 ===
-    def ask(self, question: str, **options) -> str:
+    def ask(self, question: str, update_history: bool = True) -> str:
         """问答便捷方法"""
         self.user(question)
-        response = self.get_response(**options)
+        response = self.get_response(update_history=update_history)
+        if not update_history:
+            self.pop()
         return response.content
     
-    async def ask_async(self, question: str, **options) -> str:
+    async def async_ask(self, question: str, update_history: bool = True) -> str:
         """异步问答便捷方法"""
         self.user(question)
-        response = await self.get_response_async(**options)
+        response = await self.async_get_response(update_history=update_history)
+        if not update_history:
+            self.pop()
         return response.content
-    
-    def getresponse(self, max_tries: int = 3, **options):
-        """获取响应（兼容旧版本API）"""
-        return self.get_response(max_retries=max_tries, **options)
     
     # === 对话历史管理 ===
     def save(self, path: str, mode: str = 'a', index: int = 0):
@@ -285,45 +401,25 @@ class ChatOpenAI(OpenAIClient):
         data = {
             "index": index,
             "chat_log": self._chat_log,
-            "config_type": type(self.config).__name__,
-            "config": {
-                "model": self.config.model,
-                "api_base": self.config.api_base
-            }
         }
         
         with open(path, mode, encoding='utf-8') as f:
             f.write(json.dumps(data, ensure_ascii=False) + '\n')
     
     @classmethod
-    def load(cls, path: str) -> 'ChatOpenAI':
+    def load(cls, path: str) -> 'Chat':
         """从文件加载对话历史"""
         with open(path, 'r', encoding='utf-8') as f:
             data = json.loads(f.read())
         
-        # 根据保存的配置类型创建相应的配置对象
-        config_type = data.get('config_type', 'OpenAIConfig')
-        if config_type == 'AzureOpenAIConfig':
-            config = AzureOpenAIConfig()
-        else:
-            config = OpenAIConfig()
-        
-        # 应用保存的配置
-        if 'config' in data:
-            for key, value in data['config'].items():
-                if hasattr(config, key):
-                    setattr(config, key, value)
-        
         # 使用工厂函数创建正确的实例
-        chat = Chat(config=config)
-        chat._chat_log = data['chat_log']
+        chat = Chat(messages=data['chat_log'])
         return chat
     
-    def copy(self) -> 'ChatOpenAI':
+    def copy(self) -> 'Chat':
         """复制 Chat 对象"""
-        new_chat = Chat(config=self.config)
-        new_chat._chat_log = self._chat_log.copy()
-        return new_chat
+        messages = [msg.copy() for msg in self._chat_log]
+        return Chat(messages=messages)
     
     # === 显示和调试 ===
     def print_log(self, sep: str = "\n" + "-" * 50 + "\n"):
@@ -337,8 +433,7 @@ class ChatOpenAI(OpenAIClient):
         """获取调试信息"""
         return {
             "message_count": len(self._chat_log),
-            "config_type": type(self.config).__name__,
-            "model": self.config.model,
+            "model": self.model,
             "api_base": self.config.api_base,
             "last_response": self._last_response.get_debug_info() if self._last_response else None
         }
@@ -350,6 +445,25 @@ class ChatOpenAI(OpenAIClient):
         for key, value in info.items():
             print(f"{key}: {value}")
         print("=" * 23)
+    
+    def print_curl(self, **options):
+        """打印等效的 curl 命令"""
+        if not self._chat_log:
+            print("No messages in chat log to generate curl command.")
+            return
+        
+        # 构建 chat_url
+        chat_url = f"{self.config.api_base.rstrip('/')}/chat/completions"
+        
+        # 生成 curl 命令
+        curl_cmd = curl_cmd_of_chat_completion(
+            api_key=self.config.api_key,
+            chat_url=chat_url,
+            messages=self._chat_log,
+            model=self.model,
+            **options
+        )
+        print(curl_cmd)
     
     # === 属性访问 ===
     @property
@@ -377,59 +491,11 @@ class ChatOpenAI(OpenAIClient):
         return self._chat_log[index]
     
     def __repr__(self) -> str:
-        config_type = type(self.config).__name__
-        return f"<Chat({config_type}) with {len(self._chat_log)} messages, model: {self.config.model}>"
+        return f"<Chat with {len(self._chat_log)} messages, model: {self.model}>"
     
     def __str__(self) -> str:
         return self.__repr__()
 
-class ChatAzure(ChatOpenAI, AzureOpenAIClient):
-    """Azure OpenAI Chat 实现 - 继承 ChatOpenAI 复用逻辑"""
-    
-    def __init__(self, config: Optional[AzureOpenAIConfig] = None, logger: Optional[logging.Logger] = None, **kwargs):
-        ChatOpenAI.__init__(self, config, logger, **kwargs)
-        AzureOpenAIClient.__init__(self, config, logger, **kwargs)
-        self.config: AzureOpenAIConfig
-    
-    async def get_response_async(
-        self,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-        update_history: bool = True,
-        **options
-    ) -> ChatResponse:
-        """获取对话响应（异步）"""
-        chat_options = {
-            "model": self.config.model,
-            "temperature": getattr(self.config, 'temperature', None),
-            **options
-        }
-        
-        last_error = None
-        for attempt in range(max_retries + 1):
-            try:
-                response_data = await self.chat_completion_async(
-                    messages=self._chat_log,
-                    **chat_options
-                )
-                
-                response = ChatResponse(response_data)
-                
-                if not response.is_valid():
-                    raise Exception(f"API 返回错误: {response.error_message}")
-                
-                if update_history and response.message:
-                    self._chat_log.append(response.message)
-                
-                self._last_response = response
-                return response
-                
-            except Exception as e:
-                last_error = e
-                if attempt < max_retries:
-                    self.logger.warning(f"请求失败 (尝试 {attempt + 1}/{max_retries + 1}): {e}")
-                    await asyncio.sleep(retry_delay * (2 ** attempt))
-                else:
-                    self.logger.error(f"请求在 {max_retries + 1} 次尝试后失败")
-        
-        raise last_error
+class AzureChat(Chat):
+    """Azure OpenAI Chat 实现 - 继承 Chat 复用逻辑"""
+    pass

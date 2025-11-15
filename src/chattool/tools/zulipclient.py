@@ -2,8 +2,7 @@ import json
 import logging
 from typing import List, Dict, Optional, Any
 import os
-from chattool.core.request import HTTPClient
-from chattool.core.config import Config
+from chattool.core import HTTPClient, HTTPConfig
 from batch_executor import setup_logger
 import asyncio
 
@@ -11,7 +10,7 @@ ZULIP_BOT_EMAIL = os.getenv('ZULIP_BOT_EMAIL')
 ZULIP_BOT_API_KEY = os.getenv('ZULIP_BOT_API_KEY')
 ZULIP_SITE = os.getenv('ZULIP_SITE')
 
-class ZulipConfig(Config):
+class ZulipConfig(HTTPConfig):
     """Zulip 专用配置类"""
     def __init__(self, site_url: str, bot_email: str, bot_api_key: str):
         # 设置基础 URL 和认证

@@ -10,9 +10,9 @@
 import click
 import asyncio
 import aiohttp
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from batch_executor import setup_logger
-from .client import TencentDNSClient
+from .utils import create_dns_client, DNSClientType
 
 # 域名配置
 LOG_FILE = "dynamic_ip_updater.log"           # 日志文件路径
@@ -31,7 +31,9 @@ class DynamicIPUpdater:
                 dns_ttl: int = 600,
                 max_retries: int = 3,
                 retry_delay: int = 5,
-                logger=None
+                logger=None,
+                dns_type: Union[DNSClientType, str]='aliyun',
+                **dns_client_kwargs
         ):
         """初始化更新器
         
@@ -43,6 +45,8 @@ class DynamicIPUpdater:
             max_retries: 最大重试次数
             retry_delay: 重试延迟时间（秒）
             logger: 日志记录器
+            dns_type: DNS客户端类型
+            dns_client_kwargs: DNS客户端初始化参数
         """
         self.domain_name = domain_name
         self.rr = rr
@@ -54,10 +58,10 @@ class DynamicIPUpdater:
         
         # 初始化DNS客户端
         try:
-            self.dns_client = TencentDNSClient(logger=self.logger)
-            self.logger.info("腾讯云DNS客户端初始化成功")
+            self.dns_client = create_dns_client(dns_type, logger=self.logger, **dns_client_kwargs)
+            self.logger.info(f"{dns_type.value} DNS客户端初始化成功")
         except Exception as e:
-            self.logger.error(f"腾讯云DNS客户端初始化失败: {e}")
+            self.logger.error(f"{dns_type.value} DNS客户端初始化失败: {e}")
             raise
         
         # IP检查服务列表
@@ -223,7 +227,7 @@ class DynamicIPUpdater:
 # CLI 接口
 @click.group()
 def cli():
-    """腾讯云DNSPod动态IP更新工具"""
+    """DNSPod动态IP更新工具"""
     pass
 
 @cli.command()

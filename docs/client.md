@@ -2,11 +2,10 @@
 
 ## 概述
 
-Chattool 提供了三个核心的 HTTP 客户端类，用于与不同的 API 服务进行交互：
+Chattool 提供了两个核心客户端用于与 API 服务交互：
 
 - **HTTPClient**: 通用 HTTP 客户端，提供基础的 HTTP 请求功能
-- **OpenAIClient**: OpenAI API 专用客户端，继承自 HTTPClient
-- **AzureOpenAIClient**: Azure OpenAI API 专用客户端，继承自 OpenAIClient
+- **Chat**: 基于 OpenAI Chat Completion 的对话客户端，支持同步/异步及流式响应
 
 这些客户端都支持同步和异步操作，具有重试机制、错误处理和连接管理功能。
 
@@ -45,13 +44,13 @@ print(f"响应内容: {response.json()}")
 ### 初始化配置
 
 ```python
-from chattool.core import HTTPClient, Config
+from chattool.core import HTTPClient, HTTPConfig
 
 # 使用默认配置
 client = HTTPClient()
 
 # 使用自定义配置
-config = Config(
+config = HTTPConfig(
     api_base="https://api.example.com",
     timeout=30,
     max_retries=3,
@@ -178,288 +177,54 @@ def error_handling_example():
         print(f"超时错误: {type(e).__name__}: {e}")
 ```
 
-## OpenAIClient
+## Chat（对话客户端）
 
 ### 概述
 
-OpenAIClient 是专门用于与 OpenAI API 交互的客户端，继承自 HTTPClient，提供了聊天完成和嵌入等专用功能。
+`Chat` 基于 OpenAI Chat Completion，提供同步/异步响应与流式输出，并内置对话历史管理与调试工具。
 
-### 初始化
-
-```python
-from chattool.core.request import OpenAIClient
-from chattool.core.config import OpenAIConfig
-
-# 使用默认配置
-client = OpenAIClient()
-
-# 使用自定义配置
-config = OpenAIConfig(
-    api_key="your-openai-api-key",
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=1000
-)
-client = OpenAIClient(config)
-
-# 使用 kwargs 直接设置
-client = OpenAIClient(
-    api_key="your-api-key",
-    model="gpt-4",
-    temperature=0.8
-)
-```
-
-### 聊天完成 API
-
-#### 同步聊天完成
+### 基本使用
 
 ```python
-# 基本聊天完成
-messages = [
-    {"role": "system", "content": "你是一个有用的助手"},
-    {"role": "user", "content": "什么是人工智能？"}
-]
+from chattool import Chat
 
-response = client.chat_completion(
-    messages=messages,
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=500
-)
-
-print(response["choices"][0]["message"]["content"])
+chat = Chat()
+chat.system("你是一个有用的助手")
+resp = chat.user("什么是人工智能？").get_response()
+print(resp.content)
 ```
 
-#### 异步聊天完成
+### 异步与流式
 
 ```python
 import asyncio
+from chattool import Chat
 
-async def async_chat_example():
-    client = OpenAIClient()
-    
-    messages = [
-        {"role": "user", "content": "解释一下量子计算"}
-    ]
-    
-    response = await client.chat_completion_async(
-        messages=messages,
-        temperature=0.7
-    )
-    
-    print(response["choices"][0]["message"]["content"])
+async def async_examples():
+    chat = Chat()
 
-asyncio.run(async_chat_example())
-```
+    # 异步响应
+    resp = await chat.user("解释一下量子计算").async_get_response()
+    print(resp.content)
 
-#### 流式聊天完成
+    # 流式响应（异步）
+    print("流式: ", end='')
+    async for chunk in chat.user("写一首关于春天的诗").async_get_response_stream():
+        if chunk.delta_content:
+            print(chunk.delta_content, end='', flush=True)
+    print()
 
-```python
-import asyncio
-
-async def streaming_chat_example():
-    client = OpenAIClient()
-    
-    messages = [
-        {"role": "user", "content": "写一首关于春天的诗"}
-    ]
-    
-    async for chunk in client.chat_completion_stream_async(messages=messages):
-        if chunk.get("choices") and chunk["choices"][0].get("delta", {}).get("content"):
-            content = chunk["choices"][0]["delta"]["content"]
-            print(content, end='', flush=True)
-    print()  # 换行
-
-asyncio.run(streaming_chat_example())
-```
-
-### 嵌入 API
-
-#### 同步嵌入
-
-```python
-# 单个文本嵌入
-response = client.embeddings(
-    input_text="这是一个测试文本",
-    model="text-embedding-ada-002"
-)
-
-embeddings = response["data"][0]["embedding"]
-print(f"嵌入维度: {len(embeddings)}")
-
-# 批量文本嵌入
-texts = ["文本1", "文本2", "文本3"]
-response = client.embeddings(
-    input_text=texts,
-    model="text-embedding-ada-002"
-)
-
-for i, item in enumerate(response["data"]):
-    print(f"文本 {i+1} 嵌入维度: {len(item['embedding'])}")
-```
-
-#### 异步嵌入
-
-```python
-import asyncio
-
-async def embeddings_async_example():
-    client = OpenAIClient()
-    
-    response = await client.embeddings_async(
-        input_text="异步嵌入测试",
-        model="text-embedding-ada-002"
-    )
-    
-    embeddings = response["data"][0]["embedding"]
-    print(f"异步嵌入维度: {len(embeddings)}")
-
-asyncio.run(embeddings_async_example())
-```
-
-### 参数优先级
-
-OpenAIClient 的参数优先级（从高到低）：
-1. 方法调用时传入的参数
-2. 配置对象中的参数
-3. 默认值
-
-```python
-# 配置中设置 temperature=0.5
-config = OpenAIConfig(temperature=0.5)
-client = OpenAIClient(config)
-
-# 方法调用时的 temperature=0.8 会覆盖配置中的值
-response = client.chat_completion(
-    messages=messages,
-    temperature=0.8  # 这个值会被使用
-)
-```
-
-## AzureOpenAIClient
-
-### 概述
-
-AzureOpenAIClient 是专门用于与 Azure OpenAI 服务交互的客户端，继承自 OpenAIClient，提供了 Azure 特有的功能。
-
-### 初始化
-
-```python
-from chattool.core.request import AzureOpenAIClient
-from chattool.core.config import AzureOpenAIConfig
-
-# 使用配置对象
-config = AzureOpenAIConfig(
-    api_key="your-azure-api-key",
-    api_base="https://your-resource.openai.azure.com/",
-    api_version="2023-12-01-preview",
-    model="gpt-4"
-)
-client = AzureOpenAIClient(config)
-
-# 使用 kwargs 直接设置
-client = AzureOpenAIClient(
-    api_key="your-azure-key",
-    api_base="https://your-resource.openai.azure.com/",
-    api_version="2023-12-01-preview"
-)
-```
-
-### 自动日志 ID 生成
-
-AzureOpenAIClient 会自动为每个请求生成唯一的日志 ID：
-
-```python
-messages = [{"role": "user", "content": "Hello"}]
-
-# 客户端会自动生成日志 ID 并添加到请求头中
-response = client.chat_completion(messages=messages)
-
-# 日志 ID 基于消息内容的 MD5 哈希生成
-```
-
-### API 版本管理
-
-```python
-# 在配置中指定 API 版本
-config = AzureOpenAIConfig(
-    api_version="2023-12-01-preview"  # 指定版本
-)
-
-# 或在初始化时指定
-client = AzureOpenAIClient(api_version="2023-12-01-preview")
-```
-
-### 聊天完成 API
-
-#### 同步聊天完成
-
-```python
-messages = [
-    {"role": "system", "content": "你是一个有用的助手"},
-    {"role": "user", "content": "什么是 Azure OpenAI？"}
-]
-
-response = client.chat_completion(
-    messages=messages,
-    temperature=0.7,
-    max_tokens=500
-)
-
-print(response["choices"][0]["message"]["content"])
-```
-
-#### 异步聊天完成
-
-```python
-import asyncio
-
-async def azure_async_chat():
-    client = AzureOpenAIClient()
-    
-    messages = [
-        {"role": "user", "content": "解释一下 Azure 云服务"}
-    ]
-    
-    response = await client.chat_completion_async(
-        messages=messages,
-        temperature=0.7
-    )
-    
-    print(response["choices"][0]["message"]["content"])
-
-asyncio.run(azure_async_chat())
-```
-
-### 嵌入 API
-
-```python
-# 同步嵌入
-response = client.embeddings(
-    input_text="Azure OpenAI 嵌入测试",
-    model="text-embedding-ada-002"
-)
-
-# 异步嵌入
-async def azure_embeddings():
-    response = await client.embeddings_async(
-        input_text="异步 Azure 嵌入",
-        model="text-embedding-ada-002"
-    )
-    return response
-
-asyncio.run(azure_embeddings())
+asyncio.run(async_examples())
 ```
 
 ## 配置类
 
-### Config（基础配置）
+### HTTPConfig（基础配置）
 
 ```python
-from chattool.core.config import Config
+from chattool.core.config import HTTPConfig
 
-config = Config(
+config = HTTPConfig(
     api_key="your-api-key",
     api_base="https://api.example.com",
     model="gpt-4",
@@ -470,37 +235,7 @@ config = Config(
 )
 ```
 
-### OpenAIConfig
-
-```python
-from chattool.core.config import OpenAIConfig
-
-config = OpenAIConfig(
-    api_key="your-openai-key",
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=1000,
-    top_p=0.9,
-    frequency_penalty=0.0,
-    presence_penalty=0.0,
-    stop=["END"]
-)
-```
-
-### AzureOpenAIConfig
-
-```python
-from chattool.core.config import AzureOpenAIConfig
-
-config = AzureOpenAIConfig(
-    api_key="your-azure-key",
-    api_base="https://your-resource.openai.azure.com/",
-    api_version="2023-12-01-preview",
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=1000
-)
-```
+（目前推荐直接通过 `Chat(api_key, api_base, model, ...)` 显式传参或使用环境变量，详见 `docs/chat.md`）
 
 ## 错误处理
 
@@ -510,7 +245,7 @@ config = AzureOpenAIConfig(
 
 ```python
 # 配置重试参数
-config = Config(
+config = HTTPConfig(
     max_retries=5,      # 最大重试次数
     retry_delay=2.0     # 重试延迟（指数退避）
 )
@@ -551,30 +286,25 @@ async with HTTPClient() as client:
 ### 2. 配置复用
 
 ```python
-# 推荐：创建配置对象并复用
-config = OpenAIConfig(
-    model="gpt-4",
-    temperature=0.7
-)
-
-client1 = OpenAIClient(config)
-client2 = OpenAIClient(config)  # 复用配置
+# 推荐：通过环境变量定义基础参数，代码中按需覆盖
+# export OPENAI_API_KEY=...
+# export OPENAI_API_BASE=...
+chat1 = Chat(model="gpt-4o-mini")
+chat2 = Chat(model="gpt-4o-mini", timeout=60)
 ```
 
 ### 3. 异步并发
 
 ```python
 import asyncio
+from chattool import Chat
 
 async def concurrent_requests():
-    client = OpenAIClient()
-    
-    # 并发执行多个请求
+    base = Chat()
     tasks = [
-        client.chat_completion_async(messages=[{"role": "user", "content": f"问题 {i}"}])
+        base.copy().user(f"问题 {i}").async_get_response()
         for i in range(5)
     ]
-    
     responses = await asyncio.gather(*tasks)
     return responses
 ```
@@ -637,85 +367,42 @@ async def complete_http_example():
 asyncio.run(complete_http_example())
 ```
 
-### OpenAI 客户端完整示例
+### Chat 客户端完整示例
 
 ```python
 import asyncio
-from chattool.core.request import OpenAIClient
-from chattool.core.config import OpenAIConfig
+from chattool import Chat
 
-async def complete_openai_example():
-    """OpenAI 客户端完整使用示例"""
-    
-    # 1. 创建配置和客户端
-    config = OpenAIConfig(
-        model="gpt-4",
-        temperature=0.7,
-        max_tokens=500
-    )
-    client = OpenAIClient(config)
-    
+async def complete_chat_example():
+    """Chat 客户端完整使用示例"""
+    chat = Chat()
+
     try:
-        # 2. 同步聊天
+        # 同步聊天
         print("=== 同步聊天 ===")
-        messages = [{"role": "user", "content": "什么是人工智能？"}]
-        response = client.chat_completion(messages=messages)
-        print(f"AI: {response['choices'][0]['message']['content']}")
-        
-        # 3. 异步聊天
+        response = chat.user("什么是人工智能？").get_response()
+        print(f"AI: {response.content}")
+
+        # 异步聊天
         print("\n=== 异步聊天 ===")
-        messages = [{"role": "user", "content": "什么是机器学习？"}]
-        response = await client.chat_completion_async(messages=messages)
-        print(f"AI: {response['choices'][0]['message']['content']}")
-        
-        # 4. 流式响应
+        response = await chat.user("什么是机器学习？").async_get_response()
+        print(f"AI: {response.content}")
+
+        # 流式响应
         print("\n=== 流式响应 ===")
-        messages = [{"role": "user", "content": "写一首短诗"}]
         print("AI: ", end='')
-        async for chunk in client.chat_completion_stream_async(messages=messages):
-            if chunk.get("choices") and chunk["choices"][0].get("delta", {}).get("content"):
-                print(chunk["choices"][0]["delta"]["content"], end='', flush=True)
+        async for resp in chat.user("写一首短诗").async_get_response_stream():
+            if resp.delta_content:
+                print(resp.delta_content, end='', flush=True)
         print()
-        
-        # 5. 嵌入
-        print("\n=== 文本嵌入 ===")
-        response = await client.embeddings_async(
-            input_text="这是一个测试文本",
-            model="text-embedding-ada-002"
-        )
-        print(f"嵌入维度: {len(response['data'][0]['embedding'])}")
-        
     except Exception as e:
-        print(f"OpenAI 请求失败: {e}")
-    finally:
-        await client.aclose()
+        print(f"请求失败: {e}")
 
-# 运行示例
-asyncio.run(complete_openai_example())
-```
-
-## 测试
-
-项目包含完整的测试套件，位于 `tests/core/` 目录：
-
-```bash
-# 运行所有核心测试
-pytest tests/core/
-
-# 运行特定测试文件
-pytest tests/core/test_httpclient.py
-pytest tests/core/test_oaiclient.py
-pytest tests/core/test_azureclient.py
-
-# 运行异步测试
-pytest tests/core/ -k "async"
+asyncio.run(complete_chat_example())
 ```
 
 ## 更多示例
 
 查看 `examples/` 目录获取更多使用示例：
 
-- `httpclient_example.ipynb`: HTTPClient 详细使用示例
-- `chat_example.ipynb`: Chat 对象使用示例（包含客户端使用）
-
-这个文档基于实际的示例代码，提供了 Chattool 客户端的全面使用指南，涵盖了从基础 HTTP 请求到高级 AI 功能的所有内容。
+- `chat_example.ipynb`: Chat 对象使用示例

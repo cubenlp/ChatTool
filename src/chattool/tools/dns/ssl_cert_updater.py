@@ -12,13 +12,13 @@ import time
 import click
 import asyncio
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Union
 from pathlib import Path
 import subprocess
 import tempfile
 import shutil
 from batch_executor import setup_logger
-from .client import AliyunDNSClient
+from .utils import create_dns_client, DNSClientType
 
 # 证书相关配置
 CERT_DIR = "/etc/ssl/certs"              # 证书存储目录
@@ -37,7 +37,10 @@ class SSLCertUpdater:
                  cert_dir: str = CERT_DIR,
                  private_key_dir: str = PRIVATE_KEY_DIR,
                  staging: bool = False,
-                 logger=None):
+                 logger=None,
+                 dns_type: Union[DNSClientType, str]='aliyun',
+                 **dns_client_kwargs
+        ):
         """
         初始化SSL证书更新器
         
@@ -48,6 +51,8 @@ class SSLCertUpdater:
             private_key_dir: 私钥存储目录
             staging: 是否使用Let's Encrypt测试环境
             logger: 日志记录器
+            dns_type: DNS客户端类型
+            dns_client_kwargs: DNS客户端初始化参数
         """
         self.domains = domains
         self.email = email
@@ -57,7 +62,7 @@ class SSLCertUpdater:
         self.logger = logger or setup_logger(__name__, log_file=LOG_FILE)
         
         # 初始化DNS客户端
-        self.dns_client = AliyunDNSClient(logger=self.logger)
+        self.dns_client = create_dns_client(dns_type, logger=self.logger, **dns_client_kwargs)
         
         # 创建目录
         self.cert_dir.mkdir(parents=True, exist_ok=True)
