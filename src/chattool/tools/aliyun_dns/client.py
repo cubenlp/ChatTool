@@ -13,10 +13,16 @@
 import os
 import logging
 from typing import List, Dict, Optional, Any
+from dotenv import dotenv_values
+
 from alibabacloud_alidns20150109.client import Client as Alidns20150109Client
 from alibabacloud_alidns20150109 import models as alidns_models
 from alibabacloud_tea_openapi import models as open_api_models
-from batch_executor import setup_logger
+
+from chattool.utils import setup_logger
+from chattool.const import CHATTOOL_CONFIG_DIR
+
+ALIYUN_ENV_FILE = os.path.join(CHATTOOL_CONFIG_DIR, 'aliyun.env')
 
 class AliyunDNSClient:
     """
@@ -25,16 +31,19 @@ class AliyunDNSClient:
     提供域名解析记录的完整 CRUD 操作功能。
     """
     
-    def __init__(self, access_key_id: Optional[str] = None, 
+    def __init__(self, 
+                 access_key_id: Optional[str] = None, 
                  access_key_secret: Optional[str] = None,
+                 region:str='cn-hangzhou',
                  endpoint: Optional[str] = None,
                  logger: Optional[logging.Logger] = None):
         """
         初始化阿里云 DNS 客户端
         
         Args:
-            access_key_id: 阿里云 Access Key ID，如果为空则从环境变量获取
-            access_key_secret: 阿里云 Access Key Secret，如果为空则从环境变量获取
+            access_key_id: 阿里云 Access Key ID，如果为空，则从 aliyun.env 文件或环境变量获取
+            access_key_secret: 阿里云 Access Key Secret，如果为空，则从 aliyun.env 文件或环境变量获取
+            region: API 区域，默认为 cn-hangzhou
             endpoint: API 端点，默认为 alidns.cn-hangzhou.aliyuncs.com
             logger: 日志记录器，如果为空则创建默认记录器
         
@@ -42,8 +51,11 @@ class AliyunDNSClient:
             ValueError: 当认证信息不完整时抛出异常
         """
         # 参数验证和环境变量回退
-        self.access_key_id = access_key_id or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_ID')
-        self.access_key_secret = access_key_secret or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_SECRET')
+        
+        _env_values = dotenv_values(ALIYUN_ENV_FILE)        
+        self.region = region or _env_values.get('ALIBABA_CLOUD_REGION_ID', os.getenv('ALIBABA_CLOUD_REGION_ID', 'cn-hangzhou'))
+        self.access_key_id = access_key_id or _env_values.get('ALIBABA_CLOUD_ACCESS_KEY_ID') or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_ID')
+        self.access_key_secret = access_key_secret or _env_values.get('ALIBABA_CLOUD_ACCESS_KEY_SECRET') or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_SECRET')
         
         if not all([self.access_key_id, self.access_key_secret]):
             raise ValueError("access_key_id 和 access_key_secret 不能为空，请通过参数传入或设置环境变量")
@@ -53,12 +65,12 @@ class AliyunDNSClient:
         
         # 初始化官方SDK客户端
         try:
-            config = open_api_models.HTTPConfig(
+            config = open_api_models.Config(
                 access_key_id=self.access_key_id,
                 access_key_secret=self.access_key_secret
             )
             # 设置端点
-            config.endpoint = endpoint or 'alidns.cn-hangzhou.aliyuncs.com'
+            config.endpoint = endpoint or f'alidns.{self.region}.aliyuncs.com'
             
             self.client = Alidns20150109Client(config)
             self.logger.info("阿里云DNS官方SDK客户端初始化成功")

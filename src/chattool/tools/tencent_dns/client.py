@@ -19,8 +19,10 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.dnspod.v20210323 import dnspod_client, models
-from batch_executor import setup_logger
+from chattool.utils import setup_logger
+from chattool.const import CHATTOOL_CONFIG_DIR
 
+TENCENT_ENV_FILE = os.path.join(CHATTOOL_CONFIG_DIR, 'tencent.env')
 
 class TencentDNSClient:
     """
@@ -48,8 +50,10 @@ class TencentDNSClient:
             ValueError: 当认证信息不完整时抛出异常
         """
         # 参数验证和环境变量回退
-        self.secret_id = secret_id or os.getenv('TENCENT_SECRET_ID')
-        self.secret_key = secret_key or os.getenv('TENCENT_SECRET_KEY')
+        _env_values = dotenv_values(TENCENT_ENV_FILE)
+        self.region = region or _env_values.get('TENCENT_REGION_ID', os.getenv('TENCENT_REGION_ID', 'ap-guangzhou'))
+        self.secret_id = secret_id or _env_values.get('TENCENT_SECRET_ID', os.getenv('TENCENT_SECRET_ID'))
+        self.secret_key = secret_key or _env_values.get('TENCENT_SECRET_KEY', os.getenv('TENCENT_SECRET_KEY'))
         
         if not all([self.secret_id, self.secret_key]):
             raise ValueError("secret_id 和 secret_key 不能为空，请通过参数传入或设置环境变量")
