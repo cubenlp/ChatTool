@@ -27,18 +27,13 @@ license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
     "requests>=2.20",
-    "responses>=0.23",
     "aiohttp>=3.8",
     "tqdm>=4.60",
-    "docstring_parser>=0.10",
+    # "docstring_parser>=0.10",
     "python-dotenv>=0.17.0",
     "loguru>=0.7",
-    "dnspython",
     "fastmcp; python_version >= '3.10'",
-    "alibabacloud_alidns20150109==3.5.10",
-    "alibabacloud_tea_openapi>=0.3.0",
-    "tencentcloud-sdk-python",
-    "batch_executor",
+    "batch_executor>=0.3.0",
     "colorama",
     "fastapi",
     "uvicorn",
@@ -55,7 +50,11 @@ dev = [
     "twine",
     "pytest>=3",
     "pytest-asyncio",
-    "pytest-mock"
+    "pytest-mock",
+    "alibabacloud_alidns20150109==3.5.10",
+    "alibabacloud_tea_openapi>=0.3.0",
+    "tencentcloud-sdk-python",
+    "dnspython",
 ]
 
 [project.urls]
