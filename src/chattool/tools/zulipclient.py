@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Optional, Any
 import os
 from chattool.core import HTTPClient, HTTPConfig
-from batch_executor import setup_logger
+from chattool.utils import setup_logger
 import asyncio
 
 ZULIP_BOT_EMAIL = os.getenv('ZULIP_BOT_EMAIL')

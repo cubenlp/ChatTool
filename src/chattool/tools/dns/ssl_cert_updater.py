@@ -17,7 +17,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import shutil
-from batch_executor import setup_logger
+from chattool.utils import setup_logger
 from .utils import create_dns_client, DNSClientType
 
 # 证书相关配置
