@@ -276,11 +276,7 @@ class Chat(HTTPClient):
         return self._chat_log.pop(index)
     
     # === 核心对话功能 - 子类实现 ===
-    def get_response(
-        self,
-        update_history: bool = True,
-        **kwargs
-    ) -> ChatResponse:
+    def get_response(self, update_history: bool = True, **kwargs) -> ChatResponse:
         """获取对话响应（同步）"""
         response_data = self.chat_completion(
             messages=self._chat_log,
@@ -295,6 +291,9 @@ class Chat(HTTPClient):
         elif update_history:
             self._chat_log.append(response.message)
         return response
+    
+    def getresponse(self, update_history: bool = True, **kwargs):
+        return self.get_response(update_history, **kwargs)
     
     async def async_get_response(
         self,
