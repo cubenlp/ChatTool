@@ -39,7 +39,8 @@ dependencies = [
     "platformdirs>=3.0",
     "pydantic>=2.0.0",
     "httpx",
-    "PyGithub"
+    "PyGithub",
+    "filelock"
 ]
 
 [project.optional-dependencies]
