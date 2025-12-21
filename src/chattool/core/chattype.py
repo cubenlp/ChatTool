@@ -437,7 +437,7 @@ class Chat(HTTPClient):
         datas = [json.loads(i) for i in data.splitlines()]
         if not datas:
             return []
-        chats = [None] * max([i['index'] for i in datas])
+        chats = [None] * (max([i['index'] for i in datas]) + 1)
         for data in datas:
             chats[data['index']] = cls(messages=data['chat_log'])
         return chats
@@ -506,7 +506,7 @@ class Chat(HTTPClient):
             处理后的 Chat 对象列表
         """
         chats = [] # 最终结果
-        msgs = enumerate(messages) # 处理数据
+        msgs = list(enumerate(messages)) # 处理数据
 
         # 处理已缓存数据
         if checkpoint is not None: # 缓存存在
@@ -519,7 +519,7 @@ class Chat(HTTPClient):
                 else:
                     chats = cls.load_chats(checkpoint)
                     # 跳过已处理数据
-                    msgs = [(msg, idt) for idt, msg in enumerate(messages) if idt >= len(chats) or chats[idt] is None]
+                    msgs = [(idt, msg) for idt, msg in enumerate(messages) if idt >= len(chats) or chats[idt] is None]
                     if not msgs:
                         return chats
         # 开始处理数据
@@ -529,8 +529,8 @@ class Chat(HTTPClient):
                 #     lock = f'{temp_dir}/{checkpoint.stem}_{pool_id}.lock'
                 #     dest_file = f'{checkpoint.parent}/{checkpoint.stem}_{pool_id}.{checkpoint.suffix}'
                 lock = f'{temp_dir}/{checkpoint}.lock'
-            async def process_message(msg_idt:tuple[str, int]) -> Chat:
-                msg, idt = msg_idt
+            async def process_message(idt_msg:tuple[int, str]) -> Chat:
+                idt, msg = idt_msg
                 chat = await async_func(msg)
                 if checkpoint:
                     with FileLock(lock):
@@ -544,10 +544,10 @@ class Chat(HTTPClient):
             return newchats
         idt = 0
         for i, chat in enumerate(chats):
-            if chat[i] is None:
-                chat[i] = newchats[idt]
+            if chat is None:
+                chats[i] = newchats[idt]
                 idt += 1
-        return chats
+        return chats + newchats[idt:]
     
     # === 属性访问 ===
     @property
