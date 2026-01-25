@@ -63,8 +63,8 @@ Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
 chattool = "chattool.cli:main"
-"chattool.ssl-cert-updater" = "chattool.tools.aliyun_dns.ssl_cert_updater:main"
-"chattool.aliyun-dns-updater" = "chattool.tools.aliyun_dns.dynamic_ip_updater:main"
+"chattool.ssl-cert-updater" = "chattool.client.ssl_updater:main"
+"chattool.aliyun-dns-updater" = "chattool.client.dns_updater:cli"
 "chattool.capture-server" = "chattool.fastobj.capture:main"
 
 [tool.setuptools.dynamic]
