@@ -29,18 +29,42 @@ pip install chattool --upgrade
 
 ## 使用方法
 
-### 设置密钥和代理链接
+### 环境变量配置
 
-通过环境变量设置密钥和代理，比如在 `~/.bashrc` 或者 `~/.zshrc` 中追加
+ChatTool 使用 `.env` 文件进行集中式配置管理。
 
-```bash
-export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export OPENAI_API_BASE="https://api.example.com/v1"
-export OPENAI_API_BASE_URL="https://api.example.com" # 可选
-```
-注：环境变量 `OPENAI_API_BASE` 优先于 `OPENAI_API_BASE_URL`，二者选其一即可。
+1. **生成配置文件模板**：
+   ```python
+   from chattool import create_env_file
+   create_env_file(".env")
+   ```
+   这将在当前目录下生成一个包含所有可用配置项的 `.env` 模板文件。
 
-### 示例
+2. **手动配置**：
+   你也可以手动创建 `.env` 文件或设置环境变量。
+
+   **OpenAI 配置**
+   ```bash
+   export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   export OPENAI_API_BASE="https://api.example.com/v1"
+   export OPENAI_API_MODEL="gpt-3.5-turbo"
+   ```
+
+   **阿里云 DNS 配置**
+   ```bash
+   export ALIBABA_CLOUD_ACCESS_KEY_ID="your-access-key-id"
+   export ALIBABA_CLOUD_ACCESS_KEY_SECRET="your-access-key-secret"
+   export ALIBABA_CLOUD_REGION_ID="cn-hangzhou"
+   ```
+
+   **腾讯云 DNS 配置**
+   ```bash
+   export TENCENT_SECRET_ID="your-secret-id"
+   export TENCENT_SECRET_KEY="your-secret-key"
+   export TENCENT_REGION_ID="ap-guangzhou"
+   ```
+
+### Chat 对象使用
 
 示例1，多轮对话：
 
@@ -100,6 +124,31 @@ async def run():
     print()
 
 asyncio.run(run())
+```
+
+### DNS 工具箱
+
+ChatTool 提供了统一的 DNS 管理接口，支持阿里云和腾讯云。
+
+```python
+from chattool.tools.dns import create_dns_client
+
+# 创建阿里云客户端
+aliyun = create_dns_client("aliyun")
+aliyun.add_domain_record("example.com", "www", "A", "1.1.1.1")
+
+# 创建腾讯云客户端
+tencent = create_dns_client("tencent")
+tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
+```
+
+**命令行工具 (CLI)**
+
+提供了便捷的 DDNS（动态域名解析）更新工具：
+
+```bash
+# 阿里云 DDNS 更新
+chattool.aliyun-dns-updater --domain example.com --rr www --type A
 ```
 
 ## 开源协议

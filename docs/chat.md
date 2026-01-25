@@ -257,6 +257,8 @@ except Exception as e:
 
 ## 配置管理
 
+ChatTool 使用统一的配置管理系统。详细指南请参考 [配置管理指南](configuration.md)。
+
 ### 环境变量配置
 
 ```python
@@ -264,6 +266,10 @@ except Exception as e:
 import os
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 os.environ["OPENAI_API_BASE"] = "https://api.openai.com/v1"
+
+# 或者使用 BaseEnvConfig 动态设置（推荐）
+from chattool.utils.config import BaseEnvConfig
+BaseEnvConfig.set("OPENAI_API_KEY", "your-api-key")
 
 # 使用环境变量（自动读取）
 chat = Chat()

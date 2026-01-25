@@ -34,18 +34,42 @@ pip install chattool --upgrade
 
 ## Usage
 
-### Set API Key and Base URL
+### Configuration
 
-Set environment variables in `~/.bashrc` or `~/.zshrc`:
+ChatTool uses `.env` files for centralized configuration management.
 
-```bash
-export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export OPENAI_API_BASE="https://api.example.com/v1" 
-export OPENAI_API_BASE_URL="https://api.example.com" # optional
-```
-Note: `OPENAI_API_BASE` takes precedence over `OPENAI_API_BASE_URL`. Set one.
+1. **Generate Configuration Template**:
+   ```python
+   from chattool import create_env_file
+   create_env_file(".env")
+   ```
+   This generates a `.env` template file in the current directory containing all available configuration options.
 
-## Examples
+2. **Manual Configuration**:
+   You can also manually create a `.env` file or set environment variables.
+
+   **OpenAI Configuration**
+   ```bash
+   export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   export OPENAI_API_BASE="https://api.example.com/v1" 
+   export OPENAI_API_MODEL="gpt-3.5-turbo"
+   ```
+
+   **Aliyun DNS Configuration**
+   ```bash
+   export ALIBABA_CLOUD_ACCESS_KEY_ID="your-access-key-id"
+   export ALIBABA_CLOUD_ACCESS_KEY_SECRET="your-access-key-secret"
+   export ALIBABA_CLOUD_REGION_ID="cn-hangzhou"
+   ```
+
+   **Tencent DNS Configuration**
+   ```bash
+   export TENCENT_SECRET_ID="your-secret-id"
+   export TENCENT_SECRET_KEY="your-secret-key"
+   export TENCENT_REGION_ID="ap-guangzhou"
+   ```
+
+### Chat Examples
 
 Example 1, simulate multi-turn dialogue:
 
@@ -104,6 +128,31 @@ async def run():
     print()
 
 asyncio.run(run())
+```
+
+### DNS Toolkit
+
+ChatTool provides a unified DNS management interface supporting Alibaba Cloud and Tencent Cloud.
+
+```python
+from chattool.tools.dns import create_dns_client
+
+# Create Aliyun client
+aliyun = create_dns_client("aliyun")
+aliyun.add_domain_record("example.com", "www", "A", "1.1.1.1")
+
+# Create Tencent Cloud client
+tencent = create_dns_client("tencent")
+tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
+```
+
+**Command Line Interface (CLI)**
+
+A convenient DDNS (Dynamic DNS) updater tool is provided:
+
+```bash
+# Aliyun DDNS updater
+chattool.aliyun-dns-updater --domain example.com --rr www --type A
 ```
 
 ## License
