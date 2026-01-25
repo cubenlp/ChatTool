@@ -4,7 +4,6 @@
 import os
 import logging
 from typing import List, Dict, Optional, Any
-from dotenv import dotenv_values
 
 from tencentcloud.common import credential
 from tencentcloud.common.profile.client_profile import ClientProfile
@@ -12,11 +11,8 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.dnspod.v20210323 import dnspod_client, models
 
-from chattool.const import CHATTOOL_CONFIG_DIR, CHATTOOL_REPO_DIR
+from chattool.utils.config import TencentConfig
 from .base import DNSClient
-
-TENCENT_ENV_FILE = os.path.join(CHATTOOL_CONFIG_DIR, 'tencent.env')
-REPO_TENCENT_ENV_FILE = os.path.join(CHATTOOL_REPO_DIR, 'tencent.env')
 
 class TencentDNSClient(DNSClient):
     """
@@ -26,21 +22,16 @@ class TencentDNSClient(DNSClient):
     def __init__(self, 
                  secret_id: Optional[str] = None,
                  secret_key: Optional[str] = None,
-                 region: str = "ap-guangzhou",
+                 region: str = None,
                  endpoint: Optional[str] = None,
                  logger: Optional[logging.Logger] = None):
         
         super().__init__(logger=logger)
         
         # 参数验证和环境变量回退
-        # 优先读取 CHATTOOL_CONFIG_DIR，其次读取项目根目录
-        _env_values = dotenv_values(TENCENT_ENV_FILE)
-        if not _env_values and os.path.exists(REPO_TENCENT_ENV_FILE):
-             _env_values = dotenv_values(REPO_TENCENT_ENV_FILE)
-             
-        self.region = region or _env_values.get('TENCENT_REGION_ID', os.getenv('TENCENT_REGION_ID', 'ap-guangzhou'))
-        self.secret_id = secret_id or _env_values.get('TENCENT_SECRET_ID', os.getenv('TENCENT_SECRET_ID'))
-        self.secret_key = secret_key or _env_values.get('TENCENT_SECRET_KEY', os.getenv('TENCENT_SECRET_KEY'))
+        self.region = region or TencentConfig.TENCENT_REGION_ID.value or "ap-guangzhou"
+        self.secret_id = secret_id or TencentConfig.TENCENT_SECRET_ID.value
+        self.secret_key = secret_key or TencentConfig.TENCENT_SECRET_KEY.value
         
         if not all([self.secret_id, self.secret_key]):
             raise ValueError("secret_id 和 secret_key 不能为空，请通过参数传入或设置环境变量")

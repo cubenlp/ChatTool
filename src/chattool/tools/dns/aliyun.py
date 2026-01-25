@@ -4,17 +4,13 @@
 import os
 import logging
 from typing import List, Dict, Optional, Any
-from dotenv import dotenv_values
 
 from alibabacloud_alidns20150109.client import Client as Alidns20150109Client
 from alibabacloud_alidns20150109 import models as alidns_models
 from alibabacloud_tea_openapi import models as open_api_models
 
-from chattool.const import CHATTOOL_CONFIG_DIR, CHATTOOL_REPO_DIR
+from chattool.utils.config import AliyunConfig
 from .base import DNSClient
-
-ALIYUN_ENV_FILE = os.path.join(CHATTOOL_CONFIG_DIR, 'aliyun.env')
-REPO_ALIYUN_ENV_FILE = os.path.join(CHATTOOL_REPO_DIR, 'aliyun.env')
 
 class AliyunDNSClient(DNSClient):
     """
@@ -24,21 +20,16 @@ class AliyunDNSClient(DNSClient):
     def __init__(self, 
                  access_key_id: Optional[str] = None, 
                  access_key_secret: Optional[str] = None,
-                 region: str = 'cn-hangzhou',
+                 region: str = None,
                  endpoint: Optional[str] = None,
                  logger: Optional[logging.Logger] = None):
         
         super().__init__(logger=logger)
         
         # 参数验证和环境变量回退
-        # 优先读取 CHATTOOL_CONFIG_DIR，其次读取项目根目录
-        _env_values = dotenv_values(ALIYUN_ENV_FILE)
-        if not _env_values and os.path.exists(REPO_ALIYUN_ENV_FILE):
-             _env_values = dotenv_values(REPO_ALIYUN_ENV_FILE)
-             
-        self.region = region or _env_values.get('ALIBABA_CLOUD_REGION_ID', os.getenv('ALIBABA_CLOUD_REGION_ID', 'cn-hangzhou'))
-        self.access_key_id = access_key_id or _env_values.get('ALIBABA_CLOUD_ACCESS_KEY_ID') or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_ID')
-        self.access_key_secret = access_key_secret or _env_values.get('ALIBABA_CLOUD_ACCESS_KEY_SECRET') or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_SECRET')
+        self.region = region or AliyunConfig.ALIBABA_CLOUD_REGION_ID.value or 'cn-hangzhou'
+        self.access_key_id = access_key_id or AliyunConfig.ALIBABA_CLOUD_ACCESS_KEY_ID.value
+        self.access_key_secret = access_key_secret or AliyunConfig.ALIBABA_CLOUD_ACCESS_KEY_SECRET.value
         
         if not all([self.access_key_id, self.access_key_secret]):
             raise ValueError("access_key_id 和 access_key_secret 不能为空，请通过参数传入或设置环境变量")

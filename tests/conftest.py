@@ -7,6 +7,7 @@ from chattool.core import HTTPClient, HTTPConfig, Chat
 from chattool.tools import ZulipClient, GitHubClient
 from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
+from chattool.utils.config import BaseEnvConfig
 
 # 在收集阶段（collection phase）之前加载环境变量
 def _load_envs():
@@ -14,6 +15,13 @@ def _load_envs():
     # 尝试加载项目根目录下的 .env 文件
     env_file = CHATTOOL_REPO_DIR / '.env'
     load_dotenv(env_file)
+    
+    # Reload config to pick up env vars loaded into os.environ
+    load_dotenv(env_file)
+    
+    # Reload all registered configs using empty dict (forcing os.getenv fallback)
+    for config_cls in BaseEnvConfig._registry:
+        config_cls.load_from_dict({})
 
 _load_envs()
 
