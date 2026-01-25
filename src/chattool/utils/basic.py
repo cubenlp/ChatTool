@@ -24,6 +24,7 @@ def get_secure_api_key(api_key):
 raw_env_text = """# Description: Env file for ChatTool.
 # Current version: {version}
 
+# ==================== OpenAI Configuration ====================
 # The base url of the API (with suffix /v1)
 # This will override OPENAI_API_BASE_URL if both are set.
 OPENAI_API_BASE='{OPENAI_API_BASE}'
@@ -36,6 +37,49 @@ OPENAI_API_KEY='{OPENAI_API_KEY}'
 
 # The default model name
 OPENAI_API_MODEL='{OPENAI_API_MODEL}'
+
+# ==================== Azure OpenAI Configuration ====================
+# Azure OpenAI API Key
+AZURE_OPENAI_API_KEY='{AZURE_OPENAI_API_KEY}'
+
+# Azure OpenAI Endpoint
+AZURE_OPENAI_ENDPOINT='{AZURE_OPENAI_ENDPOINT}'
+
+# Azure OpenAI API Version
+AZURE_OPENAI_API_VERSION='{AZURE_OPENAI_API_VERSION}'
+
+# Azure OpenAI Deployment Name (Model)
+AZURE_OPENAI_API_MODEL='{AZURE_OPENAI_API_MODEL}'
+
+# ==================== Alibaba Cloud (Aliyun) Configuration ====================
+# Access Key ID
+ALIBABA_CLOUD_ACCESS_KEY_ID='{ALIBABA_CLOUD_ACCESS_KEY_ID}'
+
+# Access Key Secret
+ALIBABA_CLOUD_ACCESS_KEY_SECRET='{ALIBABA_CLOUD_ACCESS_KEY_SECRET}'
+
+# Region ID (default: cn-hangzhou)
+ALIBABA_CLOUD_REGION_ID='{ALIBABA_CLOUD_REGION_ID}'
+
+# ==================== Tencent Cloud Configuration ====================
+# Secret ID
+TENCENT_SECRET_ID='{TENCENT_SECRET_ID}'
+
+# Secret Key
+TENCENT_SECRET_KEY='{TENCENT_SECRET_KEY}'
+
+# Region ID (default: ap-guangzhou)
+TENCENT_REGION_ID='{TENCENT_REGION_ID}'
+
+# ==================== Zulip Configuration ====================
+# Zulip Bot Email
+ZULIP_BOT_EMAIL='{ZULIP_BOT_EMAIL}'
+
+# Zulip Bot API Key
+ZULIP_BOT_API_KEY='{ZULIP_BOT_API_KEY}'
+
+# Zulip Site URL
+ZULIP_SITE='{ZULIP_SITE}'
 """
 
 def load_envs(path:Union[str, Path]):
@@ -51,6 +95,8 @@ def load_envs(path:Union[str, Path]):
         load_envs("envfile.env")
     """
     vals = dotenv.dotenv_values(path)
+    
+    # OpenAI
     if 'OPENAI_API_KEY' in vals:
         chattool.const.OPENAI_API_KEY = vals['OPENAI_API_KEY']
     if 'OPENAI_API_BASE_URL' in vals:
@@ -59,6 +105,40 @@ def load_envs(path:Union[str, Path]):
         chattool.const.OPENAI_API_BASE = vals['OPENAI_API_BASE']
     if 'OPENAI_API_MODEL' in vals:
         chattool.const.OPENAI_API_MODEL = vals['OPENAI_API_MODEL']
+        
+    # Azure
+    if 'AZURE_OPENAI_API_KEY' in vals:
+        chattool.const.AZURE_OPENAI_API_KEY = vals['AZURE_OPENAI_API_KEY']
+    if 'AZURE_OPENAI_ENDPOINT' in vals:
+        chattool.const.AZURE_OPENAI_ENDPOINT = vals['AZURE_OPENAI_ENDPOINT']
+    if 'AZURE_OPENAI_API_VERSION' in vals:
+        chattool.const.AZURE_OPENAI_API_VERSION = vals['AZURE_OPENAI_API_VERSION']
+    if 'AZURE_OPENAI_API_MODEL' in vals:
+        chattool.const.AZURE_OPENAI_API_MODEL = vals['AZURE_OPENAI_API_MODEL']
+        
+    # Aliyun
+    if 'ALIBABA_CLOUD_ACCESS_KEY_ID' in vals:
+        chattool.const.ALIBABA_CLOUD_ACCESS_KEY_ID = vals['ALIBABA_CLOUD_ACCESS_KEY_ID']
+    if 'ALIBABA_CLOUD_ACCESS_KEY_SECRET' in vals:
+        chattool.const.ALIBABA_CLOUD_ACCESS_KEY_SECRET = vals['ALIBABA_CLOUD_ACCESS_KEY_SECRET']
+    if 'ALIBABA_CLOUD_REGION_ID' in vals:
+        chattool.const.ALIBABA_CLOUD_REGION_ID = vals['ALIBABA_CLOUD_REGION_ID']
+        
+    # Tencent
+    if 'TENCENT_SECRET_ID' in vals:
+        chattool.const.TENCENT_SECRET_ID = vals['TENCENT_SECRET_ID']
+    if 'TENCENT_SECRET_KEY' in vals:
+        chattool.const.TENCENT_SECRET_KEY = vals['TENCENT_SECRET_KEY']
+    if 'TENCENT_REGION_ID' in vals:
+        chattool.const.TENCENT_REGION_ID = vals['TENCENT_REGION_ID']
+        
+    # Zulip
+    if 'ZULIP_BOT_EMAIL' in vals:
+        chattool.const.ZULIP_BOT_EMAIL = vals['ZULIP_BOT_EMAIL']
+    if 'ZULIP_BOT_API_KEY' in vals:
+        chattool.const.ZULIP_BOT_API_KEY = vals['ZULIP_BOT_API_KEY']
+    if 'ZULIP_SITE' in vals:
+        chattool.const.ZULIP_SITE = vals['ZULIP_SITE']
 
 def create_env_file(env_file:Union[str, Path], env_vals:Optional[dict] = None):
     """Create the environment file for the API call
@@ -72,10 +152,27 @@ def create_env_file(env_file:Union[str, Path], env_vals:Optional[dict] = None):
     """
     if env_vals is None:
         env_vals = {
-            'OPENAI_API_KEY': chattool.const.OPENAI_API_KEY,
-            'OPENAI_API_BASE_URL': chattool.const.OPENAI_API_BASE_URL,
-            'OPENAI_API_BASE': chattool.const.OPENAI_API_BASE,
-            'OPENAI_API_MODEL': chattool.const.OPENAI_API_MODEL,
+            'OPENAI_API_KEY': chattool.const.OPENAI_API_KEY or '',
+            'OPENAI_API_BASE_URL': chattool.const.OPENAI_API_BASE_URL or '',
+            'OPENAI_API_BASE': chattool.const.OPENAI_API_BASE or '',
+            'OPENAI_API_MODEL': chattool.const.OPENAI_API_MODEL or '',
+            
+            'AZURE_OPENAI_API_KEY': chattool.const.AZURE_OPENAI_API_KEY or '',
+            'AZURE_OPENAI_ENDPOINT': chattool.const.AZURE_OPENAI_ENDPOINT or '',
+            'AZURE_OPENAI_API_VERSION': chattool.const.AZURE_OPENAI_API_VERSION or '',
+            'AZURE_OPENAI_API_MODEL': chattool.const.AZURE_OPENAI_API_MODEL or '',
+            
+            'ALIBABA_CLOUD_ACCESS_KEY_ID': chattool.const.ALIBABA_CLOUD_ACCESS_KEY_ID or '',
+            'ALIBABA_CLOUD_ACCESS_KEY_SECRET': chattool.const.ALIBABA_CLOUD_ACCESS_KEY_SECRET or '',
+            'ALIBABA_CLOUD_REGION_ID': chattool.const.ALIBABA_CLOUD_REGION_ID or '',
+            
+            'TENCENT_SECRET_ID': chattool.const.TENCENT_SECRET_ID or '',
+            'TENCENT_SECRET_KEY': chattool.const.TENCENT_SECRET_KEY or '',
+            'TENCENT_REGION_ID': chattool.const.TENCENT_REGION_ID or '',
+            
+            'ZULIP_BOT_EMAIL': chattool.const.ZULIP_BOT_EMAIL or '',
+            'ZULIP_BOT_API_KEY': chattool.const.ZULIP_BOT_API_KEY or '',
+            'ZULIP_SITE': chattool.const.ZULIP_SITE or '',
         }
     env_file = Path(env_file)
     env_file.parent.mkdir(parents=True, exist_ok=True)
