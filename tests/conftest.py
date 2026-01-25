@@ -1,6 +1,28 @@
 import pytest
+import os
+from dotenv import load_dotenv
+from chattool.const import CHATTOOL_REPO_DIR
 from chattool.core import HTTPClient, HTTPConfig, Chat
 from chattool.tools import ZulipClient, GitHubClient
+
+# 在收集阶段（collection phase）之前加载环境变量
+def _load_envs():
+    """自动加载项目根目录下的环境变量文件"""
+    # 尝试加载项目根目录下的 .env 文件
+    env_file = CHATTOOL_REPO_DIR / '.env'
+    if env_file.exists():
+        load_dotenv(env_file)
+    
+    # 也尝试加载具体的环境文件（为了兼容旧的测试习惯）
+    aliyun_env = CHATTOOL_REPO_DIR / 'aliyun.env'
+    if aliyun_env.exists():
+        load_dotenv(aliyun_env)
+        
+    tencent_env = CHATTOOL_REPO_DIR / 'tencent.env'
+    if tencent_env.exists():
+        load_dotenv(tencent_env)
+
+_load_envs()
 
 TEST_PATH = 'tests/testfiles/'
 

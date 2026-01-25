@@ -75,3 +75,10 @@ where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",
+    "ignore::DeprecationWarning:tencentcloud.*",
+    "ignore::UserWarning:tencentcloud.*"
+]

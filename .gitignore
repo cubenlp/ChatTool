@@ -114,3 +114,7 @@ ENV/
 requests
 responses
 .DS_Store
+
+/*.env
+
+.trae/
