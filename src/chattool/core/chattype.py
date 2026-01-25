@@ -11,10 +11,7 @@ from pathlib import Path
 
 from chattool.core.response import ChatResponse
 from chattool.utils import valid_models, setup_logger, curl_cmd_of_chat_completion
-from chattool.const import (
-    OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_API_MODEL,
-    AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_MODEL, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_ENDPOINT
-)
+from chattool.utils.config import OpenAIConfig, AzureConfig
 from .request import HTTPClient
 
 class Chat(HTTPClient):
@@ -44,11 +41,11 @@ class Chat(HTTPClient):
         """
         logger = logger or setup_logger('Chat')
         if api_key is None:
-            api_key = OPENAI_API_KEY
+            api_key = OpenAIConfig.OPENAI_API_KEY.value
         if model is None:
-            model = OPENAI_API_MODEL
+            model = OpenAIConfig.OPENAI_API_MODEL.value
         if api_base is None:
-            api_base = OPENAI_API_BASE
+            api_base = OpenAIConfig.OPENAI_API_BASE.value
         if headers is None:
             headers = {
                 'Content-Type': 'application/json'
@@ -609,13 +606,13 @@ class AzureChat(Chat):
         """
         logger = logger or setup_logger('Chat')
         if api_key is None:
-            api_key = AZURE_OPENAI_API_KEY
+            api_key = AzureConfig.AZURE_OPENAI_API_KEY.value
         if model is None:
-            model = AZURE_OPENAI_API_MODEL
+            model = AzureConfig.AZURE_OPENAI_API_MODEL.value
         if api_base is None:
-            api_base = AZURE_OPENAI_ENDPOINT
+            api_base = AzureConfig.AZURE_OPENAI_ENDPOINT.value
         if api_version is None:
-            api_version = AZURE_OPENAI_API_VERSION
+            api_version = AzureConfig.AZURE_OPENAI_API_VERSION.value
         if headers is None:
             headers = {
                 'Content-Type': 'application/json'

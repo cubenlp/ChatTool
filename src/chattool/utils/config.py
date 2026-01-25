@@ -84,6 +84,17 @@ class BaseEnvConfig:
             for name, field in config_cls.get_fields().items():
                 values[name] = field.value
         return values
+
+    @classmethod
+    def set(cls, key: str, value: Any):
+        """设置配置值"""
+        for config_cls in cls._registry:
+            fields = config_cls.get_fields()
+            if key in fields:
+                fields[key].value = value
+                return
+        # Optional: raise error or warn if key not found
+        # print(f"Warning: Configuration key '{key}' not found.")
     
     @classmethod
     def generate_env_template(cls, current_version: str) -> str:

@@ -1,26 +1,19 @@
 import pytest
 import os
+import time
 from dotenv import load_dotenv
 from chattool.const import CHATTOOL_REPO_DIR
 from chattool.core import HTTPClient, HTTPConfig, Chat
 from chattool.tools import ZulipClient, GitHubClient
+from chattool.fastobj.basic import FastAPIManager
+from chattool.fastobj.capture import app
 
 # 在收集阶段（collection phase）之前加载环境变量
 def _load_envs():
     """自动加载项目根目录下的环境变量文件"""
     # 尝试加载项目根目录下的 .env 文件
     env_file = CHATTOOL_REPO_DIR / '.env'
-    if env_file.exists():
-        load_dotenv(env_file)
-    
-    # 也尝试加载具体的环境文件（为了兼容旧的测试习惯）
-    aliyun_env = CHATTOOL_REPO_DIR / 'aliyun.env'
-    if aliyun_env.exists():
-        load_dotenv(aliyun_env)
-        
-    tencent_env = CHATTOOL_REPO_DIR / 'tencent.env'
-    if tencent_env.exists():
-        load_dotenv(tencent_env)
+    load_dotenv(env_file)
 
 _load_envs()
 
@@ -35,6 +28,16 @@ def chat():
 @pytest.fixture
 def testpath():
     return TEST_PATH
+
+@pytest.fixture(scope="session", autouse=True)
+def capture_server():
+    """Start the capture server for tests"""
+    # Start server on 127.0.0.1:8000
+    manager = FastAPIManager(app, host="127.0.0.1", port=8000)
+    manager.start()
+    time.sleep(1) # Wait for server to start
+    yield
+    manager.stop()
 
 @pytest.fixture(scope="session")
 def server_url():
