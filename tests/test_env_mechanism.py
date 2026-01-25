@@ -1,8 +1,4 @@
-from pathlib import Path
 import pytest
-from dotenv import load_dotenv
-import os
-import platformdirs
 from chattool.utils import load_envs
 import chattool.const
 from chattool.utils import create_env_file
@@ -34,10 +30,12 @@ def test_env_mechanism(tmp_path):
     # 验证 create_env_file 能否生成包含所有字段的文件
     output_env = tmp_path / "output.env"
     
-    # 设置一些默认值
-    chattool.const.TENCENT_SECRET_ID = "test-tencent-id"
-    
-    create_env_file(output_env)
+    # 设置一些默认值，使用新机制推荐的方式：传入 env_vals 字典
+    create_env_file(output_env, env_vals={
+        "TENCENT_SECRET_ID": "test-tencent-id",
+        "OPENAI_API_KEY": "test-openai-key",
+        "ZULIP_BOT_EMAIL": "test-bot@example.com"
+    })
     
     assert output_env.exists()
     content = output_env.read_text()
@@ -46,7 +44,7 @@ def test_env_mechanism(tmp_path):
     assert "OPENAI_API_KEY='test-openai-key'" in content
     assert "ZULIP_BOT_EMAIL='test-bot@example.com'" in content
     assert "TENCENT_SECRET_ID='test-tencent-id'" in content
-    assert "# Zulip Configuration" in content
+    assert "Zulip Configuration" in content
 
 if __name__ == "__main__":
     pytest.main([__file__])

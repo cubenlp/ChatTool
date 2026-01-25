@@ -1,7 +1,6 @@
-import os
 import platformdirs
 from pathlib import Path
-import dotenv
+from chattool.utils.config import BaseEnvConfig, OpenAIConfig
 
 # dirs
 CHATTOOL_CACHE_DIR = Path(platformdirs.user_cache_dir('chattool'))
@@ -15,34 +14,26 @@ CHATTOOL_REPO_DIR = Path(__file__).parent.parent.parent
 
 # setup environment variables
 # CONFIG_DIR/.env file > environment > default values
-_env_values = dotenv.dotenv_values(CHATTOOL_ENV_FILE)
+BaseEnvConfig.load_all(CHATTOOL_ENV_FILE)
 
-# OpenAI
-OPENAI_API_KEY = _env_values.get('OPENAI_API_KEY') or os.getenv('OPENAI_API_KEY')
-OPENAI_API_MODEL = _env_values.get('OPENAI_API_MODEL') or os.getenv('OPENAI_API_MODEL')  or 'gpt-3.5-turbo'
-OPENAI_API_BASE_URL = _env_values.get('OPENAI_API_BASE_URL') or os.getenv('OPENAI_API_BASE_URL')
-_api_base = _env_values.get('OPENAI_API_BASE') or os.getenv('OPENAI_API_BASE')
-if _api_base is None and OPENAI_API_BASE_URL:
-    _api_base = OPENAI_API_BASE_URL.rstrip('/') + '/v1'
-OPENAI_API_BASE = _api_base or 'https://api.openai.com/v1'
+# Inject loaded values into current namespace
+# This ensures backward compatibility (e.g., chattool.const.OPENAI_API_KEY)
+globals().update(BaseEnvConfig.get_all_values())
 
-# Azure OpenAI
-AZURE_OPENAI_API_KEY = _env_values.get('AZURE_OPENAI_API_KEY') or os.getenv('AZURE_OPENAI_API_KEY')
-AZURE_OPENAI_ENDPOINT = _env_values.get('AZURE_OPENAI_ENDPOINT') or os.getenv('AZURE_OPENAI_ENDPOINT')
-AZURE_OPENAI_API_VERSION = _env_values.get('AZURE_OPENAI_API_VERSION') or os.getenv('AZURE_OPENAI_API_VERSION')
-AZURE_OPENAI_API_MODEL = _env_values.get('AZURE_OPENAI_API_MODEL') or os.getenv('AZURE_OPENAI_API_MODEL')
+# Special logic for OPENAI_API_BASE
+# If OPENAI_API_BASE is not set, but OPENAI_API_BASE_URL is set, derive it.
+# This logic is specific to OpenAI and hard to generalize in the declarative config,
+# so we keep it here as a post-processing step.
+_api_base = globals().get('OPENAI_API_BASE')
+_api_base_url = globals().get('OPENAI_API_BASE_URL')
 
-# Alibaba Cloud (Aliyun)
-ALIBABA_CLOUD_ACCESS_KEY_ID = _env_values.get('ALIBABA_CLOUD_ACCESS_KEY_ID') or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_ID')
-ALIBABA_CLOUD_ACCESS_KEY_SECRET = _env_values.get('ALIBABA_CLOUD_ACCESS_KEY_SECRET') or os.getenv('ALIBABA_CLOUD_ACCESS_KEY_SECRET')
-ALIBABA_CLOUD_REGION_ID = _env_values.get('ALIBABA_CLOUD_REGION_ID') or os.getenv('ALIBABA_CLOUD_REGION_ID') or 'cn-hangzhou'
+if not _api_base and _api_base_url:
+    _api_base = _api_base_url.rstrip('/') + '/v1'
 
-# Tencent Cloud
-TENCENT_SECRET_ID = _env_values.get('TENCENT_SECRET_ID') or os.getenv('TENCENT_SECRET_ID')
-TENCENT_SECRET_KEY = _env_values.get('TENCENT_SECRET_KEY') or os.getenv('TENCENT_SECRET_KEY')
-TENCENT_REGION_ID = _env_values.get('TENCENT_REGION_ID') or os.getenv('TENCENT_REGION_ID') or 'ap-guangzhou'
+# Final fallback
+if not _api_base:
+    _api_base = 'https://api.openai.com/v1'
 
-# Zulip
-ZULIP_BOT_EMAIL = _env_values.get('ZULIP_BOT_EMAIL') or os.getenv('ZULIP_BOT_EMAIL')
-ZULIP_BOT_API_KEY = _env_values.get('ZULIP_BOT_API_KEY') or os.getenv('ZULIP_BOT_API_KEY')
-ZULIP_SITE = _env_values.get('ZULIP_SITE') or os.getenv('ZULIP_SITE')
+OPENAI_API_BASE = _api_base
+# Update the config object as well, just in case
+OpenAIConfig.OPENAI_API_BASE.value = _api_base
