@@ -11,7 +11,7 @@ import click
 import asyncio
 import aiohttp
 from typing import Optional, Dict, Any, List, Union
-from batch_executor import setup_logger
+from chattool.utils import setup_logger
 from .utils import create_dns_client, DNSClientType
 
 # 域名配置

@@ -9,7 +9,7 @@ from chattool.core import (
     Chat, AzureChat, HTTPClient, ChatResponse, HTTPConfig,
 )
 from .const import OPENAI_API_BASE, OPENAI_API_BASE_URL, OPENAI_API_KEY, OPENAI_API_MODEL
-from .utils import debug_log, load_envs, create_env_file
+from .utils import debug_log, load_envs, create_env_file, setup_logger
 import asyncio
 
 def setup_jupyter_async():
@@ -40,4 +40,5 @@ __all__ = [
     "debug_log",
     "load_envs",
     "create_env_file",
+    "setup_logger",
 ]
