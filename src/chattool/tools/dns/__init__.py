@@ -3,6 +3,8 @@ from typing import Union
 from .base import DNSClient
 from .aliyun import AliyunDNSClient
 from .tencent import TencentDNSClient
+from .dynamic_ip_updater import DynamicIPUpdater
+from .cert_updater import SSLCertUpdater
 
 class DNSClientType(Enum):
     ALIYUN = 'aliyun'
@@ -31,5 +33,7 @@ __all__ = [
     'AliyunDNSClient',
     'TencentDNSClient',
     'DNSClientType',
-    'create_dns_client'
+    'create_dns_client',
+    'DynamicIPUpdater',
+    'SSLCertUpdater',
 ]

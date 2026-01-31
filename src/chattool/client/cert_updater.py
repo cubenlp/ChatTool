@@ -7,7 +7,7 @@ SSL证书自动更新 CLI
 import click
 import asyncio
 from chattool.utils import setup_logger
-from chattool.tools.dns.ssl_cert_updater import SSLCertUpdater, CERT_DIR, PRIVATE_KEY_DIR, LOG_FILE
+from chattool.tools.dns.cert_updater import SSLCertUpdater, CERT_DIR, PRIVATE_KEY_DIR, LOG_FILE
 
 # 命令行入口
 @click.command()
