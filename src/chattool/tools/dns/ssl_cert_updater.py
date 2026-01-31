@@ -7,7 +7,6 @@ SSL证书自动更新工具 - 基于Let's Encrypt和阿里云DNS
 支持多域名，自动管理DNS TXT记录，生成nginx可用的证书文件。
 """
 
-import os
 import asyncio
 from datetime import datetime
 from typing import List, Dict, Optional, Union

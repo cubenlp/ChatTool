@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Union
-from ..aliyun_dns.client import AliyunDNSClient
-from ..tencent_dns import TencentDNSClient
+from .aliyun import AliyunDNSClient
+from .tencent import TencentDNSClient
 
 class DNSClientType(Enum):
     ALIYUN = 'aliyun'

@@ -62,10 +62,7 @@ Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
-chattool = "chattool.cli:main"
-"chattool.ssl-cert-updater" = "chattool.client.ssl_updater:main"
-"chattool.aliyun-dns-updater" = "chattool.client.dns_updater:cli"
-"chattool.capture-server" = "chattool.fastobj.capture:main"
+chattool = "chattool.client.main:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "chattool.__version__"}

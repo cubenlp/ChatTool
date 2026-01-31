@@ -24,8 +24,8 @@ def main(domains, email, cert_dir, private_key_dir, staging, log_file):
     
     示例:
     
-    chattool.ssl-cert-updater -d example.com -d www.example.com -e admin@example.com
-    chattool.ssl-cert-updater -d example.com -d api.example.com -d www.example.com -e admin@example.com --staging
+    chattool script cert-updater -d example.com -d www.example.com -e admin@example.com
+    chattool script cert-updater -d example.com -d api.example.com -d www.example.com -e admin@example.com --staging
     """
     logger = setup_logger('ssl_cert_updater', log_file)
     
