@@ -120,6 +120,13 @@ class BaseEnvConfig:
         return "\n".join(lines)
 
     @classmethod
+    def save_env_file(cls, env_path: str, version: str = "0.0.0"):
+        """保存当前配置到 .env 文件"""
+        content = cls.generate_env_template(version)
+        with open(env_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+    @classmethod
     def print_config(cls):
         """打印配置信息（敏感信息自动打码）"""
         for config_cls in cls._registry:
@@ -156,14 +163,14 @@ class AzureConfig(BaseEnvConfig):
 class AliyunConfig(BaseEnvConfig):
     _title = "Alibaba Cloud (Aliyun) Configuration"
     
-    ALIBABA_CLOUD_ACCESS_KEY_ID = EnvField("ALIBABA_CLOUD_ACCESS_KEY_ID", desc="Access Key ID", is_sensitive=True)
+    ALIBABA_CLOUD_ACCESS_KEY_ID = EnvField("ALIBABA_CLOUD_ACCESS_KEY_ID", desc="Access Key ID. See https://www.alibabacloud.com/help/zh/ram/user-guide/create-an-accesskey-pair", is_sensitive=True)
     ALIBABA_CLOUD_ACCESS_KEY_SECRET = EnvField("ALIBABA_CLOUD_ACCESS_KEY_SECRET", desc="Access Key Secret", is_sensitive=True)
     ALIBABA_CLOUD_REGION_ID = EnvField("ALIBABA_CLOUD_REGION_ID", default="cn-hangzhou", desc="Region ID (default: cn-hangzhou)")
 
 class TencentConfig(BaseEnvConfig):
     _title = "Tencent Cloud Configuration"
     
-    TENCENT_SECRET_ID = EnvField("TENCENT_SECRET_ID", desc="Secret ID", is_sensitive=True)
+    TENCENT_SECRET_ID = EnvField("TENCENT_SECRET_ID", desc="Secret ID. See https://console.cloud.tencent.com.cn/cam/capi", is_sensitive=True)
     TENCENT_SECRET_KEY = EnvField("TENCENT_SECRET_KEY", desc="Secret Key", is_sensitive=True)
     TENCENT_REGION_ID = EnvField("TENCENT_REGION_ID", default="ap-guangzhou", desc="Region ID (default: ap-guangzhou)")
 

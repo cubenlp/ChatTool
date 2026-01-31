@@ -13,9 +13,20 @@ ChatTool 使用 `dotenv` 加载环境变量，配置加载顺序如下（优先�
 
 ## 快速开始
 
-### 1. 生成配置模板
+### 1. 使用 CLI 初始化配置 (推荐)
 
-在项目根目录下运行以下 Python 代码，生成包含所有可用配置项的 `.env` 模板文件：
+ChatTool 提供了便捷的命令行工具来管理配置。
+
+```bash
+# 交互式初始化（引导设置各项配置）
+chattool env init -i
+```
+
+该命令会引导你逐步设置所需的 API Key 和其他参数，并自动保存到 `.env` 文件中。
+
+### 2. 手动生成配置模板 (可选)
+
+如果你偏好手动编辑，也可以生成模板：
 
 ```python
 from chattool import create_env_file
@@ -24,21 +35,20 @@ from chattool import create_env_file
 create_env_file(".env")
 ```
 
-### 2. 编辑配置文件
+### 3. CLI 管理配置
 
-打开生成的 `.env` 文件，填入你的密钥和配置：
+你也可以使用 `chattool env` 命令来管理配置：
 
 ```bash
-# ==================== OpenAI Configuration ====================
-OPENAI_API_KEY='sk-xxxxxxxxxxxx'
-OPENAI_API_BASE='https://api.openai.com/v1'
+# 设置配置
+chattool env set OPENAI_API_KEY=sk-new-key
 
-# ==================== Alibaba Cloud (Aliyun) Configuration ====================
-ALIBABA_CLOUD_ACCESS_KEY_ID='LTAIxxxxxxxx'
-ALIBABA_CLOUD_ACCESS_KEY_SECRET='xxxxxxxxxxxx'
+# 查看配置
+chattool env list
+
+# 获取单个配置
+chattool env get OPENAI_API_KEY
 ```
-
-### 3. 代码中使用
 
 在代码中，你不再需要手动读取 `os.getenv`，ChatTool 的各个组件会自动读取配置。
 

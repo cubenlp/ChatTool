@@ -74,8 +74,14 @@ where = ["src"]
 include-package-data = true
 
 [tool.pytest.ini_options]
+markers = [
+    "integration: mark test as integration test"
+]
 filterwarnings = [
     "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",
     "ignore::DeprecationWarning:tencentcloud.*",
-    "ignore::UserWarning:tencentcloud.*"
+    "ignore::UserWarning:tencentcloud.*",
+    "ignore:websockets.legacy is deprecated:DeprecationWarning",
+    "ignore:websockets.server.WebSocketServerProtocol is deprecated:DeprecationWarning"
 ]
+

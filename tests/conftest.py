@@ -9,22 +9,6 @@ from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
 from chattool.utils import BaseEnvConfig, HTTPClient, HTTPConfig
 
-# 在收集阶段（collection phase）之前加载环境变量
-def _load_envs():
-    """自动加载项目根目录下的环境变量文件"""
-    # 尝试加载项目根目录下的 .env 文件
-    env_file = CHATTOOL_REPO_DIR / '.env'
-    load_dotenv(env_file)
-    
-    # Reload config to pick up env vars loaded into os.environ
-    load_dotenv(env_file)
-    
-    # Reload all registered configs using empty dict (forcing os.getenv fallback)
-    for config_cls in BaseEnvConfig._registry:
-        config_cls.load_from_dict({})
-
-_load_envs()
-
 TEST_PATH = 'tests/testfiles/'
 
 @pytest.fixture

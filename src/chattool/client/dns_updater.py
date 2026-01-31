@@ -8,7 +8,7 @@ import click
 import asyncio
 from chattool.utils import setup_logger
 from chattool.tools.dns.dynamic_ip_updater import DynamicIPUpdater, LOG_FILE
-from chattool.tools.dns.tencent import TencentDNSClient
+from chattool.tools.dns.utils import create_dns_client
 
 # CLI 接口
 @click.group()
@@ -24,17 +24,18 @@ def cli():
 @click.option('--interval', '-i', default=120, help='检查间隔秒数 (默认: 120)')
 @click.option('--max-retries', default=3, help='最大重试次数 (默认: 3)')
 @click.option('--retry-delay', default=5, help='重试延迟秒数 (默认: 5)')
+@click.option('--monitor', is_flag=True, help='持续监控IP变化')
 @click.option('--log-file', help='日志文件路径')
 @click.option('--log-level', default='INFO', help='日志级别 (默认: INFO)')
-def monitor(domain, rr, record_type, ttl, interval, max_retries, retry_delay, log_file, log_level):
-    """持续监控IP变化并自动更新DNS记录"""
+def ddns(domain, rr, record_type, ttl, interval, max_retries, retry_delay, monitor, log_file, log_level):
+    """执行动态DNS更新（支持一次性或持续监控）"""
     
     # 设置日志
     logger = setup_logger(
-        name="tencent_dns_monitor",
-        log_file=log_file or LOG_FILE,
+        name="dns_updater",
+        log_file=log_file or LOG_FILE if monitor else None,
         log_level=log_level,
-        format_type="detailed"
+        format_type="detailed" if monitor else "simple"
     )
     
     # 创建更新器
@@ -48,66 +49,39 @@ def monitor(domain, rr, record_type, ttl, interval, max_retries, retry_delay, lo
         logger=logger
     )
     
-    # 运行持续监控
     try:
-        asyncio.run(updater.run_continuous(interval))
-    except KeyboardInterrupt:
-        logger.info("监控已停止")
-    except Exception as e:
-        logger.error(f"监控运行失败: {e}")
-
-@cli.command()
-@click.option('--domain', '-d', required=True, help='域名')
-@click.option('--rr', '-r', required=True, help='主机记录 (如 www, @, *)')
-@click.option('--type', '-t', 'record_type', default='A', help='记录类型 (默认: A)')
-@click.option('--ttl', default=600, help='TTL值 (默认: 600)')
-@click.option('--max-retries', default=3, help='最大重试次数 (默认: 3)')
-@click.option('--retry-delay', default=5, help='重试延迟秒数 (默认: 5)')
-@click.option('--log-level', default='INFO', help='日志级别 (默认: INFO)')
-def update(domain, rr, record_type, ttl, max_retries, retry_delay, log_level):
-    """执行一次IP检查和DNS更新"""
-    
-    # 设置日志
-    logger = setup_logger(
-        name="tencent_dns_update",
-        log_level=log_level,
-        format_type="simple"
-    )
-    
-    # 创建更新器
-    updater = DynamicIPUpdater(
-        domain_name=domain,
-        rr=rr,
-        record_type=record_type,
-        dns_ttl=ttl,
-        max_retries=max_retries,
-        retry_delay=retry_delay,
-        logger=logger
-    )
-    
-    # 执行一次更新
-    try:
-        success = asyncio.run(updater.run_once())
-        if success:
-            logger.info("DNS更新完成")
+        if monitor:
+            # 运行持续监控
+            asyncio.run(updater.run_continuous(interval))
         else:
-            logger.error("DNS更新失败")
-            exit(1)
+            # 执行一次更新
+            success = asyncio.run(updater.run_once())
+            if success:
+                logger.info("DNS更新完成")
+            else:
+                logger.error("DNS更新失败")
+                exit(1)
+    except KeyboardInterrupt:
+        if monitor:
+            logger.info("监控已停止")
+        else:
+            logger.info("程序被用户中断")
     except Exception as e:
-        logger.error(f"DNS更新失败: {e}")
+        logger.error(f"运行失败: {e}")
         exit(1)
 
-@cli.command()
+@cli.command(name='list')
 @click.option('--domain', '-d', required=True, help='域名')
 @click.option('--rr', '-r', help='主机记录过滤')
 @click.option('--type', '-t', 'record_type', help='记录类型过滤')
-def list_records(domain, rr, record_type):
+@click.option('--provider', '-p', default='tencent', type=click.Choice(['aliyun', 'tencent']), help='DNS提供商 (默认: tencent)')
+def list_records(domain, rr, record_type, provider):
     """列出DNS记录"""
     
-    logger = setup_logger("tencent_dns_list", log_level="INFO", format_type="simple")
+    logger = setup_logger("dns_list", log_level="INFO", format_type="simple")
     
     try:
-        client = TencentDNSClient(logger=logger)
+        client = create_dns_client(provider, logger=logger)
         records = client.describe_domain_records(
             domain_name=domain,
             subdomain=rr,

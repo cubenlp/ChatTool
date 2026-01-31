@@ -69,34 +69,46 @@ client.delete_subdomain_records("example.com", "temp")
 
 ## 命令行工具 (CLI)
 
-ChatTool 提供了 `aliyun-dns-updater` 命令，用于快速更新 DNS 记录（常用于 DDNS 场景）。
+ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 DNS 记录（常用于 DDNS 场景）以及管理 SSL 证书。
 
 ### 基本用法
 
+#### 1. 列出 DNS 记录
+
 ```bash
-chattool.aliyun-dns-updater --domain example.com --rr home --type A
+# 列出指定域名的所有记录 (默认使用腾讯云)
+chattool dns list -d example.com
+
+# 指定阿里云
+chattool dns list -d example.com -p aliyun
 ```
 
-该命令会自动获取当前机器的公网 IP，并更新到 `home.example.com` 的 A 记录中。
+#### 2. 动态域名更新 (DDNS)
 
-### 参数说明
-
-- `--domain`: (必填) 域名名称，如 `example.com`
-- `--rr`: (必填) 主机记录，如 `www`, `@`, `home`
-- `--type`: (必填) 记录类型，支持 `A` (IPv4) 或 `AAAA` (IPv6)
-- `--value`: (可选) 显式指定 IP 地址。如果不填，则自动获取当前公网 IP。
-
-### 示例
-
-**使用当前公网 IP 更新**
 ```bash
-chattool.aliyun-dns-updater --domain mysite.com --rr vpn --type A
+# 单次更新（自动获取当前公网 IP 并更新到 'home.example.com'）
+chattool dns ddns -d example.com -r home
+
+# 持续监控模式 (后台运行，IP 变动时自动更新)
+chattool dns ddns -d example.com -r home --monitor
 ```
 
-**指定 IP 更新**
+**参数说明**：
+- `--domain, -d`: (必填) 域名名称，如 `example.com`
+- `--rr, -r`: (必填) 主机记录，如 `www`, `@`, `home`
+- `--type, -t`: (可选) 记录类型，默认 `A` (IPv4)
+- `--interval, -i`: (可选) 监控间隔秒数 (默认 120s)
+
+#### 3. SSL 证书自动更新
+
 ```bash
-chattool.aliyun-dns-updater --domain mysite.com --rr static --type A --value 192.168.1.100
+chattool dns cert-update -d example.com -e admin@example.com
 ```
+
+**参数说明**：
+- `--domains, -d`: (必填) 域名列表，支持多次指定 `-d example.com -d www.example.com`
+- `--email, -e`: (必填) Let's Encrypt 账户邮箱
+- `--staging`: (可选) 使用测试环境 (不消耗正式额度)
 
 ## 扩展指南
 

@@ -31,17 +31,24 @@ pip install chattool --upgrade
 
 ### 环境变量配置
 
-ChatTool 使用 `.env` 文件进行集中式配置管理。
+ChatTool 使用集中式配置管理，支持`.env`文件、环境变量和默认值。
 
-1. **生成配置文件模板**：
-   ```python
-   from chattool import create_env_file
-   create_env_file(".env")
+**优先级**：手动传入 > 环境变量 > `.env` 文件 > 默认值
+
+1. **CLI 管理配置**（推荐）：
+   ```bash
+   # 交互式初始化（引导设置各项配置）
+   chattool env init -i
+   
+   # 设置配置项
+   chattool env set OPENAI_API_KEY=sk-xxx
+   
+   # 查看配置
+   chattool env list
    ```
-   这将在当前目录下生成一个包含所有可用配置项的 `.env` 模板文件。
 
 2. **手动配置**：
-   你也可以手动创建 `.env` 文件或设置环境变量。
+   你可以手动创建 `.env` 文件或设置环境变量。
 
    **OpenAI 配置**
    ```bash
@@ -144,11 +151,17 @@ tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
 
 **命令行工具 (CLI)**
 
-提供了便捷的 DDNS（动态域名解析）更新工具：
+提供了便捷的 DDNS（动态域名解析）更新工具和 SSL 证书管理：
 
 ```bash
-# 阿里云 DDNS 更新
-chattool.aliyun-dns-updater --domain example.com --rr www --type A
+# 列出 DNS 记录
+chattool dns list -d example.com
+
+# DDNS 动态域名更新
+chattool dns ddns -d example.com -r www --monitor
+
+# SSL 证书自动更新
+chattool dns cert-update -d example.com -e admin@example.com
 ```
 
 ## 开源协议
