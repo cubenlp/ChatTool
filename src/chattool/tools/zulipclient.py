@@ -2,8 +2,7 @@ import json
 import logging
 from typing import List, Dict, Optional, Any
 import os
-from chattool.core import HTTPClient, HTTPConfig
-from chattool.utils import setup_logger
+from chattool.utils import setup_logger, HTTPClient, HTTPConfig
 import asyncio
 
 ZULIP_BOT_EMAIL = os.getenv('ZULIP_BOT_EMAIL')

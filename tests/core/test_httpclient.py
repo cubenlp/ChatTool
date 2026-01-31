@@ -1,8 +1,7 @@
 import json
 import asyncio
 import pytest
-from chattool.core import HTTPClient, HTTPConfig
-
+from chattool.utils import HTTPClient
 
 # 初始化与配置相关测试
 def test_client_initialization(config):

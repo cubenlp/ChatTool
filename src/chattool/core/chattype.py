@@ -6,13 +6,14 @@ import hashlib
 from filelock import FileLock
 import tempfile
 from typing import Awaitable, Callable, List, Dict, Union, Optional, AsyncGenerator, Any
-from batch_executor import batch_executor, batch_async_executor, batch_hybrid_executor
+from batch_executor import batch_async_executor, batch_hybrid_executor
 from pathlib import Path
 
 from chattool.core.response import ChatResponse
-from chattool.utils import valid_models, setup_logger, curl_cmd_of_chat_completion
-from chattool.utils.config import OpenAIConfig, AzureConfig
-from .request import HTTPClient
+from chattool.utils import (
+    valid_models, setup_logger, curl_cmd_of_chat_completion, 
+    HTTPClient, OpenAIConfig, AzureConfig
+)
 
 class Chat(HTTPClient):
     def __init__(self, 

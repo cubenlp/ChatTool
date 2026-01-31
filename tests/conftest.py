@@ -3,11 +3,11 @@ import os
 import time
 from dotenv import load_dotenv
 from chattool.const import CHATTOOL_REPO_DIR
-from chattool.core import HTTPClient, HTTPConfig, Chat
+from chattool.core import Chat
 from chattool.tools import ZulipClient, GitHubClient
 from chattool.fastobj.basic import FastAPIManager
 from chattool.fastobj.capture import app
-from chattool.utils.config import BaseEnvConfig
+from chattool.utils import BaseEnvConfig, HTTPClient, HTTPConfig
 
 # 在收集阶段（collection phase）之前加载环境变量
 def _load_envs():
