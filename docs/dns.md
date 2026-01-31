@@ -86,18 +86,27 @@ chattool dns list -d example.com -p aliyun
 #### 2. 动态域名更新 (DDNS)
 
 ```bash
-# 单次更新（自动获取当前公网 IP 并更新到 'home.example.com'）
-chattool dns ddns -d example.com -r home
+# 1. 公网 IP 更新 (默认)
+# 自动获取当前公网 IP 并更新到 'home.example.com'
+chattool dns ddns home.example.com
 
-# 持续监控模式 (后台运行，IP 变动时自动更新)
-chattool dns ddns -d example.com -r home --monitor
+# 2. 局域网 IP 更新 (自动探测)
+# 自动探测局域网 IP (192.168.x.x, 10.x.x.x 等) 并更新
+chattool dns ddns nas.example.com --ip-type local
+
+# 3. 局域网 IP 更新 (指定网段过滤)
+# 当存在多个局域网 IP 时，可指定网段进行筛选 (如仅匹配 192.168.1.x)
+chattool dns ddns nas.example.com --ip-type local --local-ip-cidr 192.168.1.0/24
+
+# 4. 持续监控模式 (后台运行，IP 变动时自动更新)
+chattool dns ddns home.example.com --monitor
 ```
 
 **参数说明**：
-- `--domain, -d`: (必填) 域名名称，如 `example.com`
-- `--rr, -r`: (必填) 主机记录，如 `www`, `@`, `home`
-- `--type, -t`: (可选) 记录类型，默认 `A` (IPv4)
+- `[DOMAIN]`: (必填位置参数) 完整域名，如 `home.example.com`
 - `--interval, -i`: (可选) 监控间隔秒数 (默认 120s)
+- `--ip-type`: (可选) IP 类型，`public` (默认) 或 `local`
+- `--local-ip-cidr`: (可选) 局域网 IP 过滤网段，仅当 `ip-type=local` 时有效 (如 `192.168.1.0/24`)
 
 #### 3. SSL 证书自动更新
 

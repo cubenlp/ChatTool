@@ -17,9 +17,7 @@ def cli():
     pass
 
 @cli.command()
-@click.option('--domain', '-d', required=True, help='域名')
-@click.option('--rr', '-r', required=True, help='主机记录 (如 www, @, *)')
-@click.option('--type', '-t', 'record_type', default='A', help='记录类型 (默认: A)')
+@click.argument('full_domain', required=True)
 @click.option('--ttl', default=600, help='TTL值 (默认: 600)')
 @click.option('--interval', '-i', default=120, help='检查间隔秒数 (默认: 120)')
 @click.option('--max-retries', default=3, help='最大重试次数 (默认: 3)')
@@ -27,9 +25,29 @@ def cli():
 @click.option('--monitor', is_flag=True, help='持续监控IP变化')
 @click.option('--log-file', help='日志文件路径')
 @click.option('--log-level', default='INFO', help='日志级别 (默认: INFO)')
-def ddns(domain, rr, record_type, ttl, interval, max_retries, retry_delay, monitor, log_file, log_level):
-    """执行动态DNS更新（支持一次性或持续监控）"""
+@click.option('--ip-type', default='public', type=click.Choice(['public', 'local']), help='IP类型 (默认: public)')
+@click.option('--local-ip-cidr', help='局域网IP过滤网段 (例如: 192.168.0.0/16)，仅当 ip-type=local 时有效')
+def ddns(full_domain, ttl, interval, max_retries, retry_delay, monitor, log_file, log_level, ip_type, local_ip_cidr):
+    """执行动态DNS更新（支持一次性或持续监控）
     
+    使用完整的域名作为参数:
+        chattool dns ddns public.rexwang.site
+    """
+    record_type = 'A'
+    
+    # 解析 full_domain
+    parts = full_domain.split('.')
+    if len(parts) < 2:
+        click.echo("错误: 无效的完整域名格式。应如 'sub.example.com'", err=True)
+        exit(1)
+    
+    domain = ".".join(parts[-2:])
+    rr_parts = parts[:-2]
+    if not rr_parts:
+        rr = "@"
+    else:
+        rr = ".".join(rr_parts)
+            
     # 设置日志
     logger = setup_logger(
         name="dns_updater",
@@ -46,7 +64,9 @@ def ddns(domain, rr, record_type, ttl, interval, max_retries, retry_delay, monit
         dns_ttl=ttl,
         max_retries=max_retries,
         retry_delay=retry_delay,
-        logger=logger
+        logger=logger,
+        ip_type=ip_type,
+        local_ip_cidr=local_ip_cidr
     )
     
     try:

@@ -157,8 +157,11 @@ tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
 # 列出 DNS 记录
 chattool dns list -d example.com
 
-# DDNS 动态域名更新
-chattool dns ddns -d example.com -r www --monitor
+# DDNS 动态域名更新 (公网 IP)
+chattool dns ddns -d example.com -r home --monitor
+
+# DDNS 动态域名更新 (局域网 IP)
+chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
 
 # SSL 证书自动更新
 chattool dns cert-update -d example.com -e admin@example.com

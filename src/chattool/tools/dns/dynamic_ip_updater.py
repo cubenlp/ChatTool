@@ -20,6 +20,10 @@ LOG_FILE = "dynamic_ip_updater.log"           # 日志文件路径
 IP_CHECK_TIMEOUT = 10                    # IP检查超时时间（秒）
 IP_CHECK_INTERVAL = 120                   # IP检查间隔（秒）
 
+import socket
+import netifaces
+import ipaddress
+
 class DynamicIPUpdater:
     """动态IP监控和DNS更新器"""
     
@@ -32,6 +36,8 @@ class DynamicIPUpdater:
                 retry_delay: int = 5,
                 logger=None,
                 dns_type: Union[DNSClientType, str]='aliyun',
+                ip_type: str = 'public',  # 'public' or 'local'
+                local_ip_cidr: Optional[str] = None, # e.g. '192.168.0.0/16'
                 **dns_client_kwargs
         ):
         """初始化更新器
@@ -45,6 +51,8 @@ class DynamicIPUpdater:
             retry_delay: 重试延迟时间（秒）
             logger: 日志记录器
             dns_type: DNS客户端类型
+            ip_type: IP类型，'public' 或 'local'
+            local_ip_cidr: 局域网IP过滤网段，仅当 ip_type='local' 时有效
             dns_client_kwargs: DNS客户端初始化参数
         """
         self.domain_name = domain_name
@@ -54,13 +62,17 @@ class DynamicIPUpdater:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.logger = logger or setup_logger(__name__)
+        self.ip_type = ip_type
+        self.local_ip_cidr = local_ip_cidr
         
         # 初始化DNS客户端
         try:
             self.dns_client = create_dns_client(dns_type, logger=self.logger, **dns_client_kwargs)
-            self.logger.info(f"{dns_type.value} DNS客户端初始化成功")
+            client_type_name = dns_type.value if hasattr(dns_type, 'value') else str(dns_type)
+            self.logger.info(f"{client_type_name} DNS客户端初始化成功")
         except Exception as e:
-            self.logger.error(f"{dns_type.value} DNS客户端初始化失败: {e}")
+            client_type_name = dns_type.value if hasattr(dns_type, 'value') else str(dns_type)
+            self.logger.error(f"{client_type_name} DNS客户端初始化失败: {e}")
             raise
         
         # IP检查服务列表
@@ -75,6 +87,65 @@ class DynamicIPUpdater:
         
         self.current_ip = None
     
+    async def get_ip(self) -> Optional[str]:
+        """获取IP地址（根据配置选择公网或局域网IP）"""
+        if self.ip_type == 'public':
+            return await self.get_public_ip()
+        elif self.ip_type == 'local':
+            return self.get_local_ip()
+        else:
+            self.logger.error(f"不支持的IP类型: {self.ip_type}")
+            return None
+
+    def get_local_ip(self) -> Optional[str]:
+        """获取局域网IP地址"""
+        try:
+            # 获取所有网络接口
+            interfaces = netifaces.interfaces()
+            candidates = []
+
+            for iface in interfaces:
+                # 排除 lo 接口
+                if iface == 'lo':
+                    continue
+                    
+                addrs = netifaces.ifaddresses(iface)
+                if netifaces.AF_INET in addrs:
+                    for addr_info in addrs[netifaces.AF_INET]:
+                        ip = addr_info['addr']
+                        # 排除回环地址
+                        if ip.startswith('127.'):
+                            continue
+                        
+                        # 如果指定了网段，进行过滤
+                        if self.local_ip_cidr:
+                            try:
+                                network = ipaddress.ip_network(self.local_ip_cidr, strict=False)
+                                if ipaddress.ip_address(ip) in network:
+                                    candidates.append(ip)
+                            except ValueError:
+                                self.logger.warning(f"无效的网段格式: {self.local_ip_cidr}")
+                                continue
+                        else:
+                            # 如果没有指定网段，优先选择常见的局域网网段
+                            # 192.168.x.x, 10.x.x.x, 172.16.x.x - 172.31.x.x
+                            # 以及常见的 VPN/Tailscale 网段如 100.x.x.x
+                            if ip.startswith(('192.168.', '10.', '172.', '100.')):
+                                candidates.append(ip)
+            
+            if not candidates:
+                self.logger.warning("未找到合适的局域网IP")
+                return None
+            
+            if len(candidates) > 1:
+                self.logger.info(f"找到多个局域网IP: {candidates}，将使用第一个")
+            
+            return candidates[0]
+            
+        except Exception as e:
+            self.logger.error(f"获取局域网IP失败: {e}")
+            return None
+
     async def get_public_ip(self) -> Optional[str]:
         """获取当前公网IP地址"""
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=IP_CHECK_TIMEOUT)) as session:
@@ -155,10 +226,10 @@ class DynamicIPUpdater:
     
     async def check_and_update(self) -> bool:
         """检查IP并更新DNS记录"""
-        # 获取当前公网IP
-        current_ip = await self.get_public_ip()
+        # 获取当前IP
+        current_ip = await self.get_ip()
         if not current_ip:
-            self.logger.error("无法获取当前公网IP")
+            self.logger.error("无法获取当前IP")
             return False
         
         # 检查IP是否有变化
