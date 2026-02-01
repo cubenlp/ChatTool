@@ -2,7 +2,7 @@ name: preview
 on:
   pull_request:
     branches:
-      - main
+      - master
 permissions:
   contents: write
   pull-requests: write
@@ -27,11 +27,11 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install -r requirements.txt
+      - run: pip install .[docs]
       - run: |
           git fetch origin
           mike deploy dev -p --allow-empty
-          echo "Preview URL: https://leanprover.cn/dev/" >> $GITHUB_STEP_SUMMARY
+          echo "Preview URL: https://chattool.wzhecnu.cn/dev/" >> $GITHUB_STEP_SUMMARY
 
       - name: Comment PR with Preview Link
         uses: actions/github-script@v6
@@ -39,7 +39,7 @@ jobs:
           script: |
             const { payload } = context;
             const prNumber = payload.number;
-            const baseUrl = 'https://leanprover.cn';
+            const baseUrl = 'https://chattool.wzhecnu.cn';
             const previewLink = `${baseUrl}/dev/`;
             const comments = await github.rest.issues.listComments({
               issue_number: prNumber,
