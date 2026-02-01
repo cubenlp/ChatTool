@@ -31,10 +31,18 @@ plugins:
       redirect_maps:
         # Example: 'old.md': 'new.md'
   - i18n:
-      default_language: zh
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
       languages:
-        zh: 简体中文
-        en: English
+        - locale: zh
+          default: true
+          name: 简体中文
+          build: true
+        - locale: en
+          name: English
+          build: true
 
 markdown_extensions:
   - admonition
