@@ -118,3 +118,4 @@ responses
 /*.env
 
 .trae/
+*.lock

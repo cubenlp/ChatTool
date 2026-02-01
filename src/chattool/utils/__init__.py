@@ -1,4 +1,4 @@
-from .basic import load_envs, debug_log, create_env_file
+from .basic import load_envs, debug_log, create_env_file, setup_jupyter_async
 from .urltool import resp2curl, valid_models, curl_cmd_of_chat_completion
 from .custom_logger import setup_logger
 from .httpclient import HTTPClient, HTTPConfig
@@ -23,4 +23,5 @@ __all__ = [
     "TencentConfig",
     "AliyunConfig",
     "EnvField",
+    "setup_jupyter_async",
 ]

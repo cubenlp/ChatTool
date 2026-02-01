@@ -1,9 +1,10 @@
+import requests
+from pathlib import Path
+from typing import Union, Optional
+
 import chattool
 import chattool.const
-from typing import Union, Optional
-from pathlib import Path
-import requests
-from chattool.utils.config import BaseEnvConfig
+from .config import BaseEnvConfig
 
 def load_envs(path:Union[str, Path]):
     """Load the environment variables for the API call
@@ -106,3 +107,16 @@ def debug_log( net_url:str="https://www.baidu.com"
 
     print("\nDebug is finished.")
     return True
+
+def setup_jupyter_async():
+    try:
+        from IPython import get_ipython
+        if get_ipython() is not None:
+            import nest_asyncio
+            loop = asyncio.get_running_loop()
+            if not hasattr(loop, '_nest_asyncio_patched'):
+                nest_asyncio.apply()
+                # 标记已经应用过
+                loop._nest_asyncio_patched = True
+    except Exception:
+        pass

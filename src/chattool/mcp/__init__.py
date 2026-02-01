@@ -1,4 +1,7 @@
-#TODO: 实现 aliyun MCP 服务器
+from .server import mcp
 
-from chattool.tools.aliyun_dns import AliyunDNSClient
+def main():
+    """Entry point for the MCP server."""
+    mcp.run()
 
+__all__ = ["mcp", "main"]
