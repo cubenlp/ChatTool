@@ -3,6 +3,7 @@ from chattool.client.cert_updater import main as ssl_updater_main
 from chattool.client.dns_updater import cli as dns_updater_cli
 from chattool.fastobj.capture import main as capture_main
 from chattool.client.env_manager import cli as env_cli
+from chattool.client.mcp import cli as mcp_cli
 
 @click.group()
 def cli():
@@ -26,6 +27,9 @@ serve.add_command(capture_main, name='capture')
 
 # Env Group
 cli.add_command(env_cli, name='env')
+
+# MCP Group
+cli.add_command(mcp_cli, name='mcp')
 
 def main():
     cli()
