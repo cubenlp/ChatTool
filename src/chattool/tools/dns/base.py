@@ -1,8 +1,7 @@
-from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Any, Union
 import logging
-import asyncio
 import aiohttp
+from abc import ABC, abstractmethod
+from typing import List, Dict, Optional, Any
 
 class DNSClient(ABC):
     """DNS 客户端抽象基类"""
@@ -131,6 +130,36 @@ class DNSClient(ABC):
             return success
         except Exception as e:
             self.logger.error(f"删除子域名记录失败: {e}")
+            return False
+
+    def delete_record_value(self, domain_name: str, rr: str, type_: str, value: Optional[str] = None) -> bool:
+        """
+        删除指定值的记录
+        
+        Args:
+            domain_name: 域名
+            rr: 主机记录
+            type_: 记录类型
+            value: 记录值 (可选，如果未提供则删除所有匹配 rr 和 type 的记录)
+            
+        Returns:
+            是否成功
+        """
+        try:
+            records = self.describe_subdomain_records(domain_name, rr)
+            
+            deleted_count = 0
+            for record in records:
+                if record['Type'] != type_:
+                    continue
+                    
+                if value is None or record['Value'] == value:
+                    if self.delete_domain_record(record['RecordId'], domain_name=domain_name):
+                        deleted_count += 1
+            
+            return deleted_count > 0
+        except Exception as e:
+            self.logger.error(f"批量删除DNS记录失败: {e}")
             return False
 
     async def get_public_ip(self, timeout: int = 10) -> Optional[str]:

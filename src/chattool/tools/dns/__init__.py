@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Union
+
 from .base import DNSClient
 from .aliyun import AliyunDNSClient
 from .tencent import TencentDNSClient
-from .dynamic_ip_updater import DynamicIPUpdater
+from .ip_updater import DynamicIPUpdater
 from .cert_updater import SSLCertUpdater
 
 class DNSClientType(Enum):

@@ -1,7 +1,7 @@
 import pytest
 import os
 import asyncio
-from chattool.tools.dns.dynamic_ip_updater import DynamicIPUpdater
+from chattool.tools.dns import DynamicIPUpdater
 from chattool.utils import setup_logger
 
 @pytest.mark.integration

@@ -154,8 +154,11 @@ tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
 提供了便捷的 DDNS（动态域名解析）更新工具和 SSL 证书管理：
 
 ```bash
-# 列出 DNS 记录
-chattool dns list -d example.com
+# 获取 DNS 记录
+chattool dns get test.example.com
+
+# 设置 DNS 记录
+chattool dns set test.example.com -v 1.2.3.4
 
 # DDNS 动态域名更新 (公网 IP)
 chattool dns ddns -d example.com -r home --monitor
@@ -164,7 +167,7 @@ chattool dns ddns -d example.com -r home --monitor
 chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
 
 # SSL 证书自动更新
-chattool dns cert-update -d example.com -e admin@example.com
+chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
 ```
 
 ## 开源协议

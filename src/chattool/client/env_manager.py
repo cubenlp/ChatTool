@@ -1,5 +1,5 @@
 import click
-from chattool.utils.config import BaseEnvConfig, EnvField
+from chattool.utils import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE
 from chattool import __version__
 

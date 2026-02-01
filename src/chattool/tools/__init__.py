@@ -1,7 +1,9 @@
 from .zulipclient import ZulipClient
 from .githubclient import GitHubClient
 from .interact import InteractiveShell, SimpleAsyncShell
-from .dns import create_dns_client, AliyunDNSClient, TencentDNSClient
+from .dns import (
+    create_dns_client, AliyunDNSClient, TencentDNSClient, DynamicIPUpdater, SSLCertUpdater
+)
 
 __all__ = [
     "ZulipClient", 
@@ -10,4 +12,6 @@ __all__ = [
     "create_dns_client",
     "AliyunDNSClient",
     "TencentDNSClient",
+    "DynamicIPUpdater",
+    "SSLCertUpdater",
 ]

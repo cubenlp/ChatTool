@@ -1,8 +1,8 @@
 import pytest
 import socket
 import netifaces
-from unittest.mock import patch, MagicMock
-from chattool.tools.dns.dynamic_ip_updater import DynamicIPUpdater
+from unittest.mock import patch
+from chattool.tools.dns.ip_updater import DynamicIPUpdater
 
 class TestDynamicIPUpdater:
     

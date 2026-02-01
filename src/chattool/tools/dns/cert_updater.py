@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SSL证书自动更新工具 - 基于Let's Encrypt和阿里云DNS
+SSL 证书自动更新工具 - 基于 Let's Encrypt 和阿里云 DNS
 
-使用Let's Encrypt的DNS-01挑战验证方式自动申请和更新SSL证书。
-支持多域名，自动管理DNS TXT记录，生成nginx可用的证书文件。
+使用 Let's Encrypt 的 DNS-01 挑战验证方式自动申请和更新 SSL 证书。
+支持多域名，自动管理 DNS TXT 记录，生成 nginx 可用的证书文件。
 """
-
 import asyncio
+import subprocess
 from datetime import datetime
 from typing import List, Dict, Optional, Union
 from pathlib import Path
-import subprocess
-import shutil
+
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, ec
+from cryptography.x509.oid import NameOID
+
 from chattool.utils import setup_logger
+
 from .utils import create_dns_client, DNSClientType
+from .acme_dns_tiny import get_crt
 
 # 证书相关配置
-CERT_DIR = "/etc/ssl/certs"              # 证书存储目录
-PRIVATE_KEY_DIR = "/etc/ssl/private"     # 私钥存储目录
-LOG_FILE = "ssl_cert_updater.log"       # 日志文件
 ACME_CHALLENGE_TTL = 120                 # DNS挑战记录TTL
 CHALLENGE_WAIT_TIME = 60                 # 等待DNS传播时间
 CERT_RENEWAL_DAYS = 30                   # 证书续期提前天数
@@ -30,10 +33,10 @@ class SSLCertUpdater:
     def __init__(self, 
                  domains: List[str],
                  email: str,
-                 cert_dir: str = CERT_DIR,
-                 private_key_dir: str = PRIVATE_KEY_DIR,
+                 cert_dir: str = "certs",
                  staging: bool = False,
                  logger=None,
+                 log_file: Optional[str] = None,
                  dns_type: Union[DNSClientType, str]='aliyun',
                  **dns_client_kwargs
         ):
@@ -44,25 +47,23 @@ class SSLCertUpdater:
             domains: 域名列表
             email: Let's Encrypt账户邮箱
             cert_dir: 证书存储目录
-            private_key_dir: 私钥存储目录
             staging: 是否使用Let's Encrypt测试环境
             logger: 日志记录器
+            log_file: 日志文件路径 (如果未提供 logger 且需要文件日志)
             dns_type: DNS客户端类型
             dns_client_kwargs: DNS客户端初始化参数
         """
         self.domains = domains
         self.email = email
         self.cert_dir = Path(cert_dir)
-        self.private_key_dir = Path(private_key_dir)
         self.staging = staging
-        self.logger = logger or setup_logger(__name__, log_file=LOG_FILE)
+        self.logger = logger or setup_logger(__name__, log_file=log_file)
         
         # 初始化DNS客户端
         self.dns_client = create_dns_client(dns_type, logger=self.logger, **dns_client_kwargs)
         
         # 创建目录
         self.cert_dir.mkdir(parents=True, exist_ok=True)
-        self.private_key_dir.mkdir(parents=True, exist_ok=True)
         
         # Let's Encrypt服务器URL
         self.acme_server = (
@@ -74,7 +75,6 @@ class SSLCertUpdater:
         self.logger.info(f"域名: {', '.join(self.domains)}")
         self.logger.info(f"邮箱: {self.email}")
         self.logger.info(f"证书目录: {self.cert_dir}")
-        self.logger.info(f"私钥目录: {self.private_key_dir}")
         self.logger.info(f"环境: {'测试' if staging else '生产'}")
     
     def check_cert_expiry(self, domain: str) -> Optional[datetime]:
@@ -87,7 +87,10 @@ class SSLCertUpdater:
         Returns:
             证书过期时间，如果证书不存在返回None
         """
-        cert_file = self.cert_dir / f"{domain}.crt"
+        # Handle wildcard replacement in path
+        file_domain_name = domain.replace("*", "_")
+        cert_file = self.cert_dir / file_domain_name / "fullchain.pem"
+        
         if not cert_file.exists():
             return None
             
@@ -142,6 +145,9 @@ class SSLCertUpdater:
             主域名
         """
         parts = fqdn.split('.')
+        # 简单处理：取最后两段作为主域名
+        # 对于复杂域名（如 .com.cn），可能需要更复杂的逻辑
+        # 这里暂时假设是最后两段
         if len(parts) >= 2:
             return '.'.join(parts[-2:])
         return fqdn
@@ -160,20 +166,24 @@ class SSLCertUpdater:
         try:
             # 提取主域名
             main_domain = self.extract_domain_from_fqdn(domain)
-            challenge_name = f"_acme-challenge.{domain}"
             
-            # 如果是子域名，需要调整记录名
-            if domain != main_domain:
-                subdomain_part = domain.replace(f".{main_domain}", "")
-                rr = f"_acme-challenge.{subdomain_part}"
-            else:
+            # 如果是子域名，例如 test.example.com，记录名为 _acme-challenge.test
+            # 如果是泛域名，例如 *.example.com，ACME 传递的 domain 也是 example.com (去掉了*.)? 
+            # 泛域名验证时，LE会要求验证 _acme-challenge.example.com
+            # 对于子域名 sub.example.com，LE要求验证 _acme-challenge.sub.example.com
+            if domain == main_domain:
                 rr = "_acme-challenge"
+            else:
+                # 移除主域名后缀
+                sub_part = domain[:-len(main_domain)-1]
+                rr = f"_acme-challenge.{sub_part}"
             
             self.logger.info(f"创建DNS挑战记录: {rr}.{main_domain} TXT {challenge_token}")
             
             # 删除可能存在的旧记录
             self.dns_client.delete_record_value(main_domain, rr, "TXT")
-            await asyncio.sleep(2)
+            # Wait longer for deletion propagation before adding new one
+            await asyncio.sleep(10)
             
             # 创建新的TXT记录
             record_id = self.dns_client.add_domain_record(
@@ -210,11 +220,12 @@ class SSLCertUpdater:
             main_domain = self.extract_domain_from_fqdn(domain)
             
             # 如果是子域名，需要调整记录名
-            if domain != main_domain:
-                subdomain_part = domain.replace(f".{main_domain}", "")
-                rr = f"_acme-challenge.{subdomain_part}"
-            else:
+            if domain == main_domain:
                 rr = "_acme-challenge"
+            else:
+                # 移除主域名后缀
+                sub_part = domain[:-len(main_domain)-1]
+                rr = f"_acme-challenge.{sub_part}"
             
             self.logger.info(f"清理DNS挑战记录: {rr}.{main_domain}")
             
@@ -230,137 +241,6 @@ class SSLCertUpdater:
             
         except Exception as e:
             self.logger.error(f"清理DNS挑战记录时发生异常: {e}")
-            return False
-    
-    def run_certbot(self, domains: List[str]) -> bool:
-        """
-        运行certbot申请证书
-        
-        Args:
-            domains: 域名列表
-            
-        Returns:
-            是否申请成功
-        """
-        try:
-            # 构建certbot命令
-            cmd = [
-                "certbot", "certonly",
-                "--manual",
-                "--preferred-challenges", "dns",
-                "--manual-auth-hook", self._get_auth_hook_script(),
-                "--manual-cleanup-hook", self._get_cleanup_hook_script(),
-                "--server", self.acme_server,
-                "--email", self.email,
-                "--agree-tos",
-                "--non-interactive",
-                "--cert-path", str(self.cert_dir),
-                "--key-path", str(self.private_key_dir)
-            ]
-            
-            # 添加域名
-            for domain in domains:
-                cmd.extend(["-d", domain])
-            
-            self.logger.info(f"运行certbot命令: {' '.join(cmd)}")
-            
-            # 执行命令
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                self.logger.info("证书申请成功")
-                return True
-            else:
-                self.logger.error(f"证书申请失败: {result.stderr}")
-                return False
-                
-        except Exception as e:
-            self.logger.error(f"运行certbot时发生异常: {e}")
-            return False
-    
-    def _get_auth_hook_script(self) -> str:
-        """
-        获取认证钩子脚本路径
-        """
-        # 这里应该创建一个临时脚本来处理DNS挑战
-        # 为简化，我们使用内置的DNS挑战处理
-        return "/tmp/certbot_auth_hook.sh"
-    
-    def _get_cleanup_hook_script(self) -> str:
-        """
-        获取清理钩子脚本路径
-        """
-        return "/tmp/certbot_cleanup_hook.sh"
-    
-    def copy_certs_for_nginx(self, domain: str) -> bool:
-        """
-        复制证书文件到nginx可用的位置
-        
-        Args:
-            domain: 主域名
-            
-        Returns:
-            是否复制成功
-        """
-        try:
-            # Let's Encrypt证书路径
-            le_cert_dir = Path(f"/etc/letsencrypt/live/{domain}")
-            
-            if not le_cert_dir.exists():
-                self.logger.error(f"Let's Encrypt证书目录不存在: {le_cert_dir}")
-                return False
-            
-            # 复制证书文件
-            cert_files = {
-                "fullchain.pem": self.cert_dir / f"{domain}.crt",
-                "privkey.pem": self.private_key_dir / f"{domain}.key",
-                "chain.pem": self.cert_dir / f"{domain}-chain.crt"
-            }
-            
-            for src_name, dst_path in cert_files.items():
-                src_path = le_cert_dir / src_name
-                if src_path.exists():
-                    shutil.copy2(src_path, dst_path)
-                    # 设置适当的权限
-                    if "key" in str(dst_path):
-                        dst_path.chmod(0o600)
-                    else:
-                        dst_path.chmod(0o644)
-                    self.logger.info(f"复制证书文件: {src_path} -> {dst_path}")
-                else:
-                    self.logger.warning(f"源证书文件不存在: {src_path}")
-            
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"复制证书文件时发生异常: {e}")
-            return False
-    
-    def reload_nginx(self) -> bool:
-        """
-        重新加载nginx配置
-        
-        Returns:
-            是否重新加载成功
-        """
-        try:
-            # 测试nginx配置
-            result = subprocess.run(["nginx", "-t"], capture_output=True, text=True)
-            if result.returncode != 0:
-                self.logger.error(f"nginx配置测试失败: {result.stderr}")
-                return False
-            
-            # 重新加载nginx
-            result = subprocess.run(["nginx", "-s", "reload"], capture_output=True, text=True)
-            if result.returncode == 0:
-                self.logger.info("nginx重新加载成功")
-                return True
-            else:
-                self.logger.error(f"nginx重新加载失败: {result.stderr}")
-                return False
-                
-        except Exception as e:
-            self.logger.error(f"重新加载nginx时发生异常: {e}")
             return False
     
     async def update_certificates(self) -> bool:
@@ -388,18 +268,11 @@ class SSLCertUpdater:
             
             # 申请证书（使用简化的方式，实际应该集成完整的ACME客户端）
             if await self._request_certificate_for_domains(domain_list):
-                # 复制证书文件
-                if self.copy_certs_for_nginx(main_domain):
-                    success_count += 1
-                    self.logger.info(f"域名组 {main_domain} 证书更新成功")
-                else:
-                    self.logger.error(f"域名组 {main_domain} 证书文件复制失败")
+                success_count += 1
+                self.logger.info(f"域名组 {main_domain} 证书更新成功")
             else:
                 self.logger.error(f"域名组 {main_domain} 证书申请失败")
         
-        # 如果有证书更新成功，重新加载nginx
-        if success_count > 0:
-            self.reload_nginx()
         
         total_groups = len(domain_groups)
         self.logger.info(f"证书更新完成: {success_count}/{total_groups} 个域名组成功")
@@ -421,48 +294,238 @@ class SSLCertUpdater:
             groups[main_domain].append(domain)
         return groups
     
+    def _ensure_account_key(self) -> str:
+        """Ensure account key exists and return it. Uses RSA 2048 for account key (ACME requirement/standard)."""
+        key_path = self.cert_dir / "account.key"
+        if not key_path.exists():
+            self.logger.info("Generating new account key (RSA 2048)...")
+            private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048,
+            )
+            pem = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            )
+            key_path.write_bytes(pem)
+            # Secure permissions
+            key_path.chmod(0o600)
+            
+        return key_path.read_text()
+
+    def _ensure_domain_key(self, domain: str) -> str:
+        """Ensure domain key exists and return it. Uses ECDSA secp384r1 for domain key (Modern, shorter)."""
+        key_path = self.cert_dir / f"{domain}.key"
+        if not key_path.exists():
+            self.logger.info(f"Generating new private key for {domain} (ECDSA secp384r1)...")
+            # Use ECDSA secp384r1 (P-384)
+            private_key = ec.generate_private_key(ec.SECP384R1())
+            
+            pem = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            )
+            key_path.write_bytes(pem)
+            key_path.chmod(0o600)
+            
+        return key_path.read_text()
+
+    def verify_certificate_key_match(self, cert_path: Path, key_path: Path) -> bool:
+        """
+        Verify that the certificate matches the private key.
+        
+        Args:
+            cert_path: Path to the certificate file (PEM format)
+            key_path: Path to the private key file (PEM format)
+            
+        Returns:
+            True if they match, False otherwise
+        """
+        try:
+            cert_pem = cert_path.read_bytes()
+            key_pem = key_path.read_bytes()
+            
+            cert = x509.load_pem_x509_certificate(cert_pem)
+            private_key = serialization.load_pem_private_key(key_pem, password=None)
+            
+            cert_public_key = cert.public_key()
+            private_key_public_key = private_key.public_key()
+            
+            # For Elliptic Curve keys
+            if isinstance(cert_public_key, ec.EllipticCurvePublicKey) and \
+               isinstance(private_key_public_key, ec.EllipticCurvePublicKey):
+                # Compare curve name and public numbers
+                if cert_public_key.curve.name != private_key_public_key.curve.name:
+                    return False
+                return cert_public_key.public_numbers() == private_key_public_key.public_numbers()
+            
+            # For RSA keys (legacy)
+            if isinstance(cert_public_key, rsa.RSAPublicKey) and \
+               isinstance(private_key_public_key, rsa.RSAPublicKey):
+                return cert_public_key.public_numbers() == private_key_public_key.public_numbers()
+                
+            # Mismatched key types
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Certificate/Key verification failed: {e}")
+            return False
+    
+    def _generate_csr(self, main_domain: str, domains: List[str], domain_key_pem: str) -> str:
+        """Generate CSR for the domain list"""
+        
+        private_key = serialization.load_pem_private_key(domain_key_pem.encode('utf8'), password=None)
+        
+        builder = x509.CertificateSigningRequestBuilder()
+        builder = builder.subject_name(x509.Name([
+            x509.NameAttribute(NameOID.COMMON_NAME, main_domain),
+        ]))
+        
+        builder = builder.add_extension(
+            x509.SubjectAlternativeName([x509.DNSName(d) for d in domains]),
+            critical=False,
+        )
+        
+        csr = builder.sign(private_key, hashes.SHA256())
+        return csr.public_bytes(serialization.Encoding.PEM).decode('utf8')
+
     async def _request_certificate_for_domains(self, domains: List[str]) -> bool:
         """
-        为域名列表申请证书（简化版本）
+        使用 ACME 协议申请证书
         
         Args:
             domains: 域名列表
             
         Returns:
             是否申请成功
+            
+        Logic:
+        1. 确定主域名 (用于文件名和 CN): 取列表第一个域名。
+        2. 生成 Account Key (如果不存在): 使用 RSA 2048。
+        3. 生成 Domain Private Key (如果不存在): 使用 ECDSA secp384r1 (更安全且短)。
+        4. 生成 CSR (Certificate Signing Request)。
+        5. 调用 `acme_dns_tiny.get_crt` 获取证书:
+            - 该函数是同步阻塞的，因此在 `run_in_executor` 中运行以避免阻塞 asyncio 循环。
+            - 传递两个回调函数 `dns_update` 和 `dns_cleanup` 用于处理 DNS-01 挑战。
+            - 回调函数内部调用 `self.dns_client` (同步方法) 添加/删除 TXT 记录。
+        6. 保存证书文件:
+            - `privkey.pem`: 私钥
+            - `fullchain.pem`: 完整证书链 (从 ACME 获取)
+            - `cert.pem`: 叶子证书 (从 fullchain 分离)
+            - `chain.pem`: 中间证书 (从 fullchain 分离)
+        7. 验证证书与私钥是否匹配 (`verify_certificate_key_match`)。
         """
-        # 这里应该实现完整的ACME协议
-        # 为了简化，我们假设使用certbot的DNS插件
-        self.logger.info(f"开始为域名申请证书: {domains}")
+        self.logger.info(f"Starting ACME process for: {domains}")
+        
+        main_domain = domains[0]
+        # Filename logic: replace wildcard "*" with "_"
+        file_domain_name = main_domain.replace("*", "_")
         
         try:
-            # 使用certbot DNS插件（需要预先配置）
-            cmd = [
-                "certbot", "certonly",
-                "--dns-aliyun",
-                "--dns-aliyun-credentials", "/etc/letsencrypt/aliyun.ini",
-                "--server", self.acme_server,
-                "--email", self.email,
-                "--agree-tos",
-                "--non-interactive"
-            ]
+            account_key = self._ensure_account_key()
+            domain_key = self._ensure_domain_key(file_domain_name)
+            csr = self._generate_csr(main_domain, domains, domain_key)
             
-            for domain in domains:
-                cmd.extend(["-d", domain])
-            
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                self.logger.info(f"证书申请成功: {domains}")
-                return True
-            else:
-                self.logger.error(f"证书申请失败: {result.stderr}")
-                return False
+            # Callbacks for DNS challenge (executed in thread executor context)
+            def dns_update(domain, token):
+                self.logger.info(f"Callback: Updating DNS for {domain}")
                 
+                main_d = self.extract_domain_from_fqdn(domain)
+                if domain == main_d:
+                    rr = "_acme-challenge"
+                else:
+                    sub = domain[:-len(main_d)-1]
+                    rr = f"_acme-challenge.{sub}"
+                
+                # Sync call to DNS client
+                self.dns_client.add_domain_record(
+                    domain_name=main_d, rr=rr, type_="TXT", value=token, ttl=600
+                )
+            
+            def dns_cleanup(domain):
+                self.logger.info(f"Callback: Cleaning DNS for {domain}")
+                main_d = self.extract_domain_from_fqdn(domain)
+                
+                if domain == main_d:
+                    rr = "_acme-challenge"
+                else:
+                    sub = domain[:-len(main_d)-1]
+                    rr = f"_acme-challenge.{sub}"
+                    
+                self.dns_client.delete_record_value(main_d, rr, "TXT")
+
+            # Run get_crt in executor to avoid blocking async loop
+            loop = asyncio.get_running_loop()
+            crt_pem = await loop.run_in_executor(
+                None, 
+                lambda: get_crt(
+                    account_key, 
+                    csr, 
+                    dns_update, 
+                    dns_cleanup,
+                    directory_url=self.acme_server,
+                    contact=[f"mailto:{self.email}"]
+                )
+            )
+            
+            # Save certificate and key in domain directory
+            domain_dir = self.cert_dir / file_domain_name
+            domain_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save Private Key
+            key_path = domain_dir / "privkey.pem"
+            key_path.write_text(domain_key)
+            key_path.chmod(0o600)
+            self.logger.info(f"Private Key saved to {key_path}")
+
+            # Save Full Chain
+            fullchain_path = domain_dir / "fullchain.pem"
+            fullchain_path.write_text(crt_pem)
+            self.logger.info(f"Full Chain saved to {fullchain_path}")
+            
+            # Split into cert and chain
+            try:
+                parts = crt_pem.strip().split("-----END CERTIFICATE-----")
+                if len(parts) > 1:
+                    leaf_cert = parts[0] + "-----END CERTIFICATE-----\n"
+                    chain_cert = "-----END CERTIFICATE-----".join(parts[1:]).strip()
+                    if chain_cert:
+                            chain_cert += "-----END CERTIFICATE-----\n"
+                    
+                    # Save leaf cert
+                    cert_path = domain_dir / "cert.pem"
+                    cert_path.write_text(leaf_cert)
+                    self.logger.info(f"Cert saved to {cert_path}")
+                    
+                    # Save chain
+                    if chain_cert:
+                        chain_path = domain_dir / "chain.pem"
+                        chain_path.write_text(chain_cert)
+                        self.logger.info(f"Chain saved to {chain_path}")
+            except Exception as e:
+                self.logger.warning(f"Failed to split certificate chain: {e}")
+
+            # Verify Certificate Match
+            if self.verify_certificate_key_match(domain_dir / "cert.pem", key_path):
+                self.logger.info("Certificate verification successful: Matches private key")
+            else:
+                self.logger.error("Certificate verification FAILED: Does not match private key!")
+                return False
+
+            return True
+
         except Exception as e:
-            self.logger.error(f"申请证书时发生异常: {e}")
+            self.logger.error(f"ACME Tiny process failed: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
             return False
-    
+
+    async def run_certbot(self, domains: List[str]) -> bool:
+        """Deprecated: Use _request_certificate_for_domains"""
+        return await self._request_certificate_for_domains(domains)
+
     async def run_once(self) -> bool:
         """
         执行一次证书更新检查和更新

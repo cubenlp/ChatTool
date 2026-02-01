@@ -11,7 +11,7 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.dnspod.v20210323 import dnspod_client, models
 
-from chattool.utils.config import TencentConfig
+from chattool.utils import TencentConfig
 from .base import DNSClient
 
 class TencentDNSClient(DNSClient):
@@ -52,6 +52,16 @@ class TencentDNSClient(DNSClient):
             raise
 
     def describe_domains(self, page_number: int = 1, page_size: int = 20) -> List[Dict[str, Any]]:
+        """
+        获取域名列表
+        
+        Args:
+            page_number: 页码，默认1
+            page_size: 每页数量，默认20
+            
+        Returns:
+            域名列表
+        """
         try:
             req = models.DescribeDomainListRequest()
             req.Offset = (page_number - 1) * page_size
@@ -76,6 +86,20 @@ class TencentDNSClient(DNSClient):
             return []
 
     def describe_domain_records(self, domain_name: str, page_number: int = 1, page_size: int = 20, **kwargs) -> List[Dict[str, Any]]:
+        """
+        获取域名解析记录列表
+        
+        Args:
+            domain_name: 域名名称
+            page_number: 页码，默认1
+            page_size: 每页数量，默认20
+            **kwargs: 可选参数
+                subdomain: 主机记录关键字
+                record_type: 记录类型关键字
+            
+        Returns:
+            解析记录列表
+        """
         try:
             req = models.DescribeRecordListRequest()
             req.Domain = domain_name
@@ -122,6 +146,20 @@ class TencentDNSClient(DNSClient):
         return self.describe_domain_records(domain_name, subdomain=rr)
 
     def add_domain_record(self, domain_name: str, rr: str, type_: str, value: str, ttl: int = 600, **kwargs) -> Optional[str]:
+        """
+        添加域名解析记录
+        
+        Args:
+            domain_name: 域名名称
+            rr: 主机记录
+            type_: 记录类型
+            value: 记录值
+            ttl: TTL值
+            **kwargs: 可选参数
+            
+        Returns:
+            记录ID，失败返回None
+        """
         try:
             req = models.CreateRecordRequest()
             req.Domain = domain_name
@@ -143,6 +181,21 @@ class TencentDNSClient(DNSClient):
             return None
 
     def update_domain_record(self, record_id: str, rr: str, type_: str, value: str, domain_name: str = None, ttl: int = 600, **kwargs) -> bool:
+        """
+        更新域名解析记录
+        
+        Args:
+            record_id: 记录ID
+            rr: 主机记录
+            type_: 记录类型
+            value: 记录值
+            domain_name: 域名名称 (腾讯云API必须)
+            ttl: TTL值
+            **kwargs: 可选参数
+            
+        Returns:
+            是否成功
+        """
         if not domain_name:
             self.logger.error("腾讯云更新记录需要提供 domain_name")
             return False
@@ -169,6 +222,16 @@ class TencentDNSClient(DNSClient):
             return False
 
     def delete_domain_record(self, record_id: str, domain_name: str = None) -> bool:
+        """
+        删除域名解析记录
+        
+        Args:
+            record_id: 记录ID
+            domain_name: 域名名称 (腾讯云API必须)
+            
+        Returns:
+            是否成功
+        """
         if not domain_name:
             self.logger.error("腾讯云删除记录需要提供 domain_name")
             return False
@@ -182,4 +245,31 @@ class TencentDNSClient(DNSClient):
             return True
         except Exception as e:
             self.logger.error(f"删除DNS记录失败: {e}")
+            return False
+
+    def delete_record_value(self, domain_name: str, rr: str, type_: str, value: Optional[str] = None) -> bool:
+        """
+        删除指定值的记录
+        
+        Args:
+            domain_name: 域名
+            rr: 主机记录
+            type_: 记录类型
+            value: 记录值 (可选，如果未提供则删除所有匹配 rr 和 type 的记录)
+            
+        Returns:
+            是否成功
+        """
+        try:
+            records = self.describe_domain_records(domain_name, subdomain=rr, record_type=type_)
+            
+            deleted_count = 0
+            for record in records:
+                if value is None or record['Value'] == value:
+                    if self.delete_domain_record(record['RecordId'], domain_name=domain_name):
+                        deleted_count += 1
+            
+            return deleted_count > 0
+        except Exception as e:
+            self.logger.error(f"批量删除DNS记录失败: {e}")
             return False

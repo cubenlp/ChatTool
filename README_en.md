@@ -148,11 +148,20 @@ tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
 
 **Command Line Interface (CLI)**
 
-A convenient DDNS (Dynamic DNS) updater tool is provided:
+A convenient DDNS (Dynamic DNS) updater tool and SSL certificate manager are provided:
 
 ```bash
+# Get DNS record
+chattool dns get test.example.com
+
+# Set DNS record
+chattool dns set test.example.com -v 1.2.3.4
+
 # Aliyun DDNS updater
-chattool.aliyun-dns-updater --domain example.com --rr www --type A
+chattool dns ddns -d example.com -r home --monitor
+
+# SSL Certificate Auto-Update
+chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
 ```
 
 ## License

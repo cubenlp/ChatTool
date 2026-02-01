@@ -58,7 +58,21 @@ class TestDNSCLIUsage:
             assert call_args['domain_name'] == 'rexwang.site'
             assert call_args['rr'] == 'a.b'
 
-            # Case 5: Missing args (no positional)
+            # Case 4: Mix (warning should appear)
+            result = runner.invoke(cli, ['dns', 'ddns', 'test.rexwang.site', '-d', 'other.com'])
+            assert result.exit_code == 0
+            assert "警告" in result.output
+            call_args = MockUpdater.call_args[1]
+            assert call_args['domain_name'] == 'rexwang.site' # Positional wins
+
+            # Case 5: Use Options (no positional)
+            result = runner.invoke(cli, ['dns', 'ddns', '-d', 'example.com', '-r', 'www'])
+            assert result.exit_code == 0
+            call_args = MockUpdater.call_args[1]
+            assert call_args['domain_name'] == 'example.com'
+            assert call_args['rr'] == 'www'
+
+            # Case 6: Missing all args
             result = runner.invoke(cli, ['dns', 'ddns'])
             assert result.exit_code != 0
-            assert "Missing argument 'FULL_DOMAIN'" in result.output
+            assert "必须提供 full_domain 位置参数，或者同时提供 --domain 和 --rr 选项" in result.output

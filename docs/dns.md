@@ -73,14 +73,20 @@ ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 
 
 ### 基本用法
 
-#### 1. 列出 DNS 记录
+#### 1. 查看/管理 DNS 记录
 
 ```bash
-# 列出指定域名的所有记录 (默认使用腾讯云)
-chattool dns list -d example.com
+# 获取 DNS 记录 (get)
+# 完整域名方式:
+chattool dns get test.example.com
+# 分开指定方式:
+chattool dns get -d example.com -r test
 
-# 指定阿里云
-chattool dns list -d example.com -p aliyun
+# 设置 DNS 记录 (set) - 自动处理新增或更新
+# 将 test.example.com 解析到 1.2.3.4
+chattool dns set test.example.com -v 1.2.3.4
+# 指定类型和 TTL
+chattool dns set test.example.com -v "some-text-value" -t TXT --ttl 300
 ```
 
 #### 2. 动态域名更新 (DDNS)
@@ -88,7 +94,10 @@ chattool dns list -d example.com -p aliyun
 ```bash
 # 1. 公网 IP 更新 (默认)
 # 自动获取当前公网 IP 并更新到 'home.example.com'
+# 简化写法：
 chattool dns ddns home.example.com
+# 或传统写法：
+chattool dns ddns -d example.com -r home
 
 # 2. 局域网 IP 更新 (自动探测)
 # 自动探测局域网 IP (192.168.x.x, 10.x.x.x 等) 并更新
@@ -103,21 +112,35 @@ chattool dns ddns home.example.com --monitor
 ```
 
 **参数说明**：
-- `[DOMAIN]`: (必填位置参数) 完整域名，如 `home.example.com`
+- `[DOMAIN]`: (可选位置参数) 完整域名，如 `home.example.com`。如果提供此参数，则忽略 `-d` 和 `-r`。
+- `--domain, -d`: (可选) 域名名称，如 `example.com`
+- `--rr, -r`: (可选) 主机记录，如 `www`, `@`, `home`
 - `--interval, -i`: (可选) 监控间隔秒数 (默认 120s)
 - `--ip-type`: (可选) IP 类型，`public` (默认) 或 `local`
 - `--local-ip-cidr`: (可选) 局域网 IP 过滤网段，仅当 `ip-type=local` 时有效 (如 `192.168.1.0/24`)
 
 #### 3. SSL 证书自动更新
 
+ChatTool 内置了轻量级 ACME v2 客户端，支持通过 DNS-01 挑战自动申请和更新 Let's Encrypt 证书。
+
+> **注意**：
+> 1. 无需安装 `certbot` 或 `acme.sh`。
+> 2. 不需要 root 权限 (证书默认保存在用户目录或指定位置)。
+> 3. 必须配置 DNS 凭证 (因为需要添加 TXT 记录进行验证)。
+
 ```bash
-chattool dns cert-update -d example.com -e admin@example.com
+# 申请证书 (自动处理 DNS 验证)
+chattool dns cert-update -d *.example.com -d example.com -e admin@example.com
+
+# 指定证书保存目录
+chattool dns cert-update -d *.example.com -e admin@example.com --cert-dir ./certs
 ```
 
 **参数说明**：
-- `--domains, -d`: (必填) 域名列表，支持多次指定 `-d example.com -d www.example.com`
-- `--email, -e`: (必填) Let's Encrypt 账户邮箱
-- `--staging`: (可选) 使用测试环境 (不消耗正式额度)
+- `--domains, -d`: (必填) 域名列表，支持多次指定。支持泛域名 (如 `*.example.com`)。
+- `--email, -e`: (必填) Let's Encrypt 账户邮箱 (用于接收通知)。
+- `--cert-dir`: (可选) 证书存储根目录 (默认: `certs`)。证书将保存在 `<cert-dir>/<domain>/` 下。
+- `--staging`: (可选) 使用 Let's Encrypt 测试环境 (建议首次测试时使用)。
 
 ## 扩展指南
 

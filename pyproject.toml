@@ -62,7 +62,7 @@ Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
-chattool = "chattool.client.main:main"
+chattool = "chattool.client:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "chattool.__version__"}

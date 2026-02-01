@@ -9,20 +9,15 @@
 
 import asyncio
 import aiohttp
-from typing import Optional, Dict, Any, List, Union
+import netifaces
+import ipaddress
+from typing import Optional, Dict, Any, Union
+
 from chattool.utils import setup_logger
 from .utils import create_dns_client, DNSClientType
 
-# 域名配置
-LOG_FILE = "dynamic_ip_updater.log"           # 日志文件路径
-
-# IP检查服务列表（故障切换用）
 IP_CHECK_TIMEOUT = 10                    # IP检查超时时间（秒）
 IP_CHECK_INTERVAL = 120                   # IP检查间隔（秒）
-
-import socket
-import netifaces
-import ipaddress
 
 class DynamicIPUpdater:
     """动态IP监控和DNS更新器"""
@@ -35,6 +30,7 @@ class DynamicIPUpdater:
                 max_retries: int = 3,
                 retry_delay: int = 5,
                 logger=None,
+                log_file: Optional[str] = None,
                 dns_type: Union[DNSClientType, str]='aliyun',
                 ip_type: str = 'public',  # 'public' or 'local'
                 local_ip_cidr: Optional[str] = None, # e.g. '192.168.0.0/16'
@@ -50,6 +46,7 @@ class DynamicIPUpdater:
             max_retries: 最大重试次数
             retry_delay: 重试延迟时间（秒）
             logger: 日志记录器
+            log_file: 日志文件路径 (如果未提供 logger 且需要文件日志)
             dns_type: DNS客户端类型
             ip_type: IP类型，'public' 或 'local'
             local_ip_cidr: 局域网IP过滤网段，仅当 ip_type='local' 时有效
@@ -61,7 +58,7 @@ class DynamicIPUpdater:
         self.dns_ttl = dns_ttl
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self.logger = logger or setup_logger(__name__)
+        self.logger = logger or setup_logger(__name__, log_file=log_file)
         self.ip_type = ip_type
         self.local_ip_cidr = local_ip_cidr
         
@@ -88,7 +85,12 @@ class DynamicIPUpdater:
         self.current_ip = None
     
     async def get_ip(self) -> Optional[str]:
-        """获取IP地址（根据配置选择公网或局域网IP）"""
+        """
+        获取当前设备的公网或局域网IP
+        
+        Returns:
+            IP地址字符串，获取失败返回None
+        """
         if self.ip_type == 'public':
             return await self.get_public_ip()
         elif self.ip_type == 'local':
@@ -202,7 +204,15 @@ class DynamicIPUpdater:
             return None
     
     def update_dns_record(self, new_ip: str) -> bool:
-        """更新DNS记录"""
+        """
+        更新DNS记录为新的IP
+        
+        Args:
+            new_ip: 新的IP地址
+            
+        Returns:
+            是否更新成功
+        """
         try:
             # 使用set_record_value方法，自动处理创建或更新
             success = self.dns_client.set_record_value(
@@ -225,7 +235,12 @@ class DynamicIPUpdater:
             return False
     
     async def check_and_update(self) -> bool:
-        """检查IP并更新DNS记录"""
+        """
+        检查当前IP与DNS记录是否一致，不一致则更新
+        
+        Returns:
+            操作是否成功（IP无变化也视为成功）
+        """
         # 获取当前IP
         current_ip = await self.get_ip()
         if not current_ip:
@@ -267,7 +282,12 @@ class DynamicIPUpdater:
         return False
     
     async def run_continuous(self, interval: int = IP_CHECK_INTERVAL):
-        """持续运行监控"""
+        """
+        持续运行监控循环
+        
+        Args:
+            interval: 检查间隔（秒）
+        """
         self.logger.info(f"开始持续监控 {self.rr}.{self.domain_name} 的IP变化...")
         self.logger.info(f"检查间隔: {interval} 秒")
         
@@ -289,6 +309,11 @@ class DynamicIPUpdater:
                 continue
     
     async def run_once(self) -> bool:
-        """运行一次检查和更新"""
+        """
+        运行一次检查和更新
+        
+        Returns:
+            操作是否成功
+        """
         self.logger.info(f"执行一次IP检查和DNS更新: {self.rr}.{self.domain_name}")
         return await self.check_and_update()
