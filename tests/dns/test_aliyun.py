@@ -5,6 +5,7 @@ from chattool.tools.dns import create_dns_client
 from chattool.utils import setup_logger
 
 # 只有当 ALIBABA_CLOUD_ACCESS_KEY_ID 环境变量存在时才运行测试
+@pytest.mark.dns
 @pytest.mark.skipif(not os.getenv('ALIBABA_CLOUD_ACCESS_KEY_ID'), reason="Missing Aliyun credentials")
 def test_aliyun_dns():
     logger = setup_logger('test_aliyun', log_level='INFO')

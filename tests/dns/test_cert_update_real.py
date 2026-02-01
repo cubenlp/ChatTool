@@ -7,6 +7,7 @@ from pathlib import Path
 from chattool.tools.dns.cert_updater import SSLCertUpdater
 from chattool.utils import setup_logger
 
+@pytest.mark.dns
 @pytest.mark.asyncio
 async def test_cert_update():
     # Setup paths

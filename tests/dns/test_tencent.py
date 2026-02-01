@@ -5,6 +5,7 @@ from chattool.tools.dns import create_dns_client
 from chattool.utils import setup_logger
 
 # 只有当 TENCENT_SECRET_ID 环境变量存在时才运行测试
+@pytest.mark.dns
 @pytest.mark.skipif(not os.getenv('TENCENT_SECRET_ID'), reason="Missing Tencent credentials")
 def test_tencent_dns():
     logger = setup_logger('test_tencent', log_level='INFO')

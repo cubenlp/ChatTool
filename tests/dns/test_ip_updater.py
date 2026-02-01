@@ -4,6 +4,7 @@ import netifaces
 from unittest.mock import patch
 from chattool.tools.dns.ip_updater import DynamicIPUpdater
 
+@pytest.mark.dns
 class TestDynamicIPUpdater:
     
     @pytest.mark.asyncio

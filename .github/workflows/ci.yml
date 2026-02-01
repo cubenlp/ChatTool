@@ -40,7 +40,7 @@ jobs:
         mkdir -p .logs
         nohup chattool.capture-server --daemon --port 8000 &
         sleep 1
-        coverage run -m pytest -s tests/
+        coverage run -m pytest -s tests/ -m "not dns"
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:

@@ -4,6 +4,7 @@ import asyncio
 from chattool.tools.dns import DynamicIPUpdater
 from chattool.utils import setup_logger
 
+@pytest.mark.dns
 @pytest.mark.integration
 class TestDynamicIPUpdaterIntegration:
     """Real integration tests for DynamicIPUpdater using Tencent DNS"""

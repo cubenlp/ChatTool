@@ -7,6 +7,7 @@ from chattool.client.main import cli
 def runner():
     return CliRunner()
 
+@pytest.mark.dns
 @pytest.mark.integration
 class TestDNSCLIUsage:
     """Tests for new CLI usage patterns (positional arguments)"""

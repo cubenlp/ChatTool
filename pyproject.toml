@@ -85,7 +85,8 @@ include-package-data = true
 
 [tool.pytest.ini_options]
 markers = [
-    "integration: mark test as integration test"
+    "integration: mark test as integration test",
+    "dns: mark test as dns test"
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",

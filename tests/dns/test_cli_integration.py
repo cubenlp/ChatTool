@@ -7,6 +7,7 @@ from chattool.client.main import cli
 def runner():
     return CliRunner()
 
+@pytest.mark.dns
 @pytest.mark.integration
 class TestDNSIntegration:
     """DNS CLI Integration Tests - Real Production Tests"""
