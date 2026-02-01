@@ -219,6 +219,8 @@ asyncio.run(async_examples())
 
 ## 配置类
 
+详细配置说明请参考 [配置管理指南](configuration.md)。
+
 ### HTTPConfig（基础配置）
 
 ```python

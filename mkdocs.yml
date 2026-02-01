@@ -1,0 +1,98 @@
+site_name: ChatTool 文档
+site_url: https://chattool.wzhecnu.cn
+repo_url: https://github.com/CubeNLP/ChatTool
+repo_name: ChatTool
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    primary: teal
+    accent: purple
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.instant
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      lang: zh
+  - minify:
+      minify_html: true
+  - awesome-pages
+  - redirects:
+      redirect_maps:
+        # Example: 'old.md': 'new.md'
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          default: true
+          name: 简体中文
+          build: true
+        - locale: en
+          name: English
+          build: true
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.highlight:
+      use_pygments: true
+      pygments_style: friendly
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - def_list
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+extra_css:
+  - assets/css/admonition-custom.css
+  - assets/css/custom.css
+  - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css
+
+extra:
+  version:
+    provider: mike
+    default: latest
+    alias: true
+
+nav:
+  - 主页: 
+    - 快速开始: index.md
+  - 核心组件:
+    - 客户端指南: client.md
+    - Chat对象: chat.md
+    - 配置管理: configuration.md
+  - 工具箱:
+    - DNS工具: dns.md

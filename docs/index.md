@@ -5,7 +5,7 @@
     <a href="https://github.com/cubenlp/chattool/actions/workflows/test.yml">
         <img src="https://github.com/cubenlp/chattool/actions/workflows/test.yml/badge.svg" alt="Tests" />
     </a>
-    <a href="https://chattool.cubenlp.com">
+    <a href="https://chattool.wzhecnu.cn">
         <img src="https://img.shields.io/badge/docs-github_pages-blue.svg" alt="Documentation Status" />
     </a>
     <a href="https://codecov.io/gh/cubenlp/chattool">
@@ -14,9 +14,7 @@
 </div>
 
 <div align="center">
-    <img src="https://qiniu.wzhecnu.cn/PicBed6/picgo/chattool.jpeg" alt="ChatAPI Toolkit" width="360", style="border-radius: 20px;">
-
-[English](README_en.md) | [简体中文](README.md)
+    <img src="https://qiniu.wzhecnu.cn/PicBed6/picgo/chattool.jpeg" alt="ChatAPI Toolkit" width="360" style="border-radius: 20px;">
 </div>
 
 基于 OpenAI API 的 `Chat` 对象，支持多轮对话以及异步处理数据等。

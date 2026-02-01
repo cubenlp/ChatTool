@@ -1,6 +1,13 @@
 import pytest
-from chattool.core import HTTPClient, HTTPConfig, Chat
+import os
+import time
+from dotenv import load_dotenv
+from chattool.const import CHATTOOL_REPO_DIR
+from chattool.core import Chat
 from chattool.tools import ZulipClient, GitHubClient
+from chattool.fastobj.basic import FastAPIManager
+from chattool.fastobj.capture import app
+from chattool.utils import BaseEnvConfig, HTTPClient, HTTPConfig
 
 TEST_PATH = 'tests/testfiles/'
 
@@ -13,6 +20,16 @@ def chat():
 @pytest.fixture
 def testpath():
     return TEST_PATH
+
+@pytest.fixture(scope="session", autouse=True)
+def capture_server():
+    """Start the capture server for tests"""
+    # Start server on 127.0.0.1:8000
+    manager = FastAPIManager(app, host="127.0.0.1", port=8000)
+    manager.start()
+    time.sleep(1) # Wait for server to start
+    yield
+    manager.stop()
 
 @pytest.fixture(scope="session")
 def server_url():

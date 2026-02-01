@@ -47,6 +47,7 @@ dependencies = [
 dev = [
     "wheel",
     "coverage",
+    "netifaces",
     "twine",
     "pytest>=3",
     "pytest-asyncio",
@@ -56,16 +57,22 @@ dev = [
     "tencentcloud-sdk-python",
     "dnspython",
 ]
+docs = [
+    "mkdocs>=1.4.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocs-minify-plugin>=0.6.0",
+    "mkdocs-static-i18n>=0.53",
+    "mkdocs-awesome-pages-plugin>=2.8.0",
+    "mkdocs-redirects>=1.2.0",
+    "mike>=1.1.2",
+]
 
 [project.urls]
 Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
-chattool = "chattool.cli:main"
-"chattool.ssl-cert-updater" = "chattool.tools.aliyun_dns.ssl_cert_updater:main"
-"chattool.aliyun-dns-updater" = "chattool.tools.aliyun_dns.dynamic_ip_updater:main"
-"chattool.capture-server" = "chattool.fastobj.capture:main"
+chattool = "chattool.client:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "chattool.__version__"}
@@ -75,3 +82,17 @@ where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: mark test as integration test",
+    "dns: mark test as dns test"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",
+    "ignore::DeprecationWarning:tencentcloud.*",
+    "ignore::UserWarning:tencentcloud.*",
+    "ignore:websockets.legacy is deprecated:DeprecationWarning",
+    "ignore:websockets.server.WebSocketServerProtocol is deprecated:DeprecationWarning"
+]
+
