@@ -2,10 +2,10 @@
     <a href="https://pypi.python.org/pypi/chattool">
         <img src="https://img.shields.io/pypi/v/chattool.svg" alt="PyPI version" />
     </a>
-    <a href="https://github.com/cubenlp/chattool/actions/workflows/test.yml">
-        <img src="https://github.com/cubenlp/chattool/actions/workflows/test.yml/badge.svg" alt="Tests" />
+    <a href="https://github.com/cubenlp/chattool/actions/workflows/ci.yml">
+        <img src="https://github.com/cubenlp/chattool/actions/workflows/ci.yml/badge.svg" alt="Tests" />
     </a>
-    <a href="https://chattool.cubenlp.com">
+    <a href="https://chattool.wzhecnu.cn">
         <img src="https://img.shields.io/badge/docs-github_pages-blue.svg" alt="Documentation Status" />
     </a>
     <a href="https://codecov.io/gh/cubenlp/chattool">

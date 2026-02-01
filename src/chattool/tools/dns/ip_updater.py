@@ -41,7 +41,7 @@ class DynamicIPUpdater:
         Args:
             domain_name: 域名
             rr: 子域名记录
-            record_type: DNS记录类型，默认为A记录
+            record_type: DNS记录类型，默认为A记录，支持A、CNAME、MX等
             dns_ttl: TTL值
             max_retries: 最大重试次数
             retry_delay: 重试延迟时间（秒）
