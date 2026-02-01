@@ -56,6 +56,15 @@ dev = [
     "tencentcloud-sdk-python",
     "dnspython",
 ]
+docs = [
+    "mkdocs>=1.4.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocs-minify-plugin>=0.6.0",
+    "mkdocs-static-i18n>=0.53",
+    "mkdocs-awesome-pages-plugin>=2.8.0",
+    "mkdocs-redirects>=1.2.0",
+    "mike>=1.1.2",
+]
 
 [project.urls]
 Homepage = "https://github.com/cubenlp/chattool"
