@@ -47,6 +47,7 @@ dependencies = [
 dev = [
     "wheel",
     "coverage",
+    "netifaces",
     "twine",
     "pytest>=3",
     "pytest-asyncio",
