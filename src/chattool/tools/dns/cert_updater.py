@@ -152,97 +152,6 @@ class SSLCertUpdater:
             return '.'.join(parts[-2:])
         return fqdn
     
-    async def create_dns_challenge(self, domain: str, challenge_token: str) -> bool:
-        """
-        创建DNS挑战记录
-        
-        Args:
-            domain: 域名
-            challenge_token: 挑战令牌
-            
-        Returns:
-            是否创建成功
-        """
-        try:
-            # 提取主域名
-            main_domain = self.extract_domain_from_fqdn(domain)
-            
-            # 如果是子域名，例如 test.example.com，记录名为 _acme-challenge.test
-            # 如果是泛域名，例如 *.example.com，ACME 传递的 domain 也是 example.com (去掉了*.)? 
-            # 泛域名验证时，LE会要求验证 _acme-challenge.example.com
-            # 对于子域名 sub.example.com，LE要求验证 _acme-challenge.sub.example.com
-            if domain == main_domain:
-                rr = "_acme-challenge"
-            else:
-                # 移除主域名后缀
-                sub_part = domain[:-len(main_domain)-1]
-                rr = f"_acme-challenge.{sub_part}"
-            
-            self.logger.info(f"创建DNS挑战记录: {rr}.{main_domain} TXT {challenge_token}")
-            
-            # 删除可能存在的旧记录
-            self.dns_client.delete_record_value(main_domain, rr, "TXT")
-            # Wait longer for deletion propagation before adding new one
-            await asyncio.sleep(10)
-            
-            # 创建新的TXT记录
-            record_id = self.dns_client.add_domain_record(
-                domain_name=main_domain,
-                rr=rr,
-                type_="TXT",
-                value=challenge_token,
-                ttl=ACME_CHALLENGE_TTL
-            )
-            
-            if record_id:
-                self.logger.info(f"DNS挑战记录创建成功: {record_id}")
-                return True
-            else:
-                self.logger.error(f"DNS挑战记录创建失败")
-                return False
-                
-        except Exception as e:
-            self.logger.error(f"创建DNS挑战记录时发生异常: {e}")
-            return False
-    
-    async def cleanup_dns_challenge(self, domain: str) -> bool:
-        """
-        清理DNS挑战记录
-        
-        Args:
-            domain: 域名
-            
-        Returns:
-            是否清理成功
-        """
-        try:
-            # 提取主域名
-            main_domain = self.extract_domain_from_fqdn(domain)
-            
-            # 如果是子域名，需要调整记录名
-            if domain == main_domain:
-                rr = "_acme-challenge"
-            else:
-                # 移除主域名后缀
-                sub_part = domain[:-len(main_domain)-1]
-                rr = f"_acme-challenge.{sub_part}"
-            
-            self.logger.info(f"清理DNS挑战记录: {rr}.{main_domain}")
-            
-            # 删除TXT记录
-            success = self.dns_client.delete_record_value(main_domain, rr, "TXT")
-            
-            if success:
-                self.logger.info(f"DNS挑战记录清理成功")
-            else:
-                self.logger.warning(f"DNS挑战记录清理失败")
-                
-            return success
-            
-        except Exception as e:
-            self.logger.error(f"清理DNS挑战记录时发生异常: {e}")
-            return False
-    
     async def update_certificates(self) -> bool:
         """
         更新所有域名的证书
@@ -521,10 +430,6 @@ class SSLCertUpdater:
             import traceback
             self.logger.error(traceback.format_exc())
             return False
-
-    async def run_certbot(self, domains: List[str]) -> bool:
-        """Deprecated: Use _request_certificate_for_domains"""
-        return await self._request_certificate_for_domains(domains)
 
     async def run_once(self) -> bool:
         """

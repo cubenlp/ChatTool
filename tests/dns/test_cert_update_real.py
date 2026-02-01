@@ -14,7 +14,6 @@ async def test_cert_update():
     test_dir.mkdir(parents=True, exist_ok=True)
     
     cert_dir = test_dir / "certs"
-    key_dir = test_dir / "private"
     
     logger = setup_logger("test_cert_updater", log_level="INFO")
     
