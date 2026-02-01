@@ -96,3 +96,4 @@ nav:
     - 配置管理: configuration.md
   - 工具箱:
     - DNS工具: dns.md
+    - MCP服务: mcp.md
