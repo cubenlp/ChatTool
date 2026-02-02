@@ -73,6 +73,19 @@ sudo bash skills/frp-configurator/scripts/setup_client.sh
     sudo ./install.sh
     ```
 
+## 卸载
+
+如果需要移除 FRP 服务和配置：
+
+```bash
+sudo bash skills/frp-configurator/scripts/uninstall.sh
+```
+
+脚本会：
+1. 停止并禁用 `frpc` 和 `frps` 服务。
+2. 删除 Systemd 服务文件。
+3. 询问是否删除安装目录（默认 `/srv/frp`）。
+
 ## 配置说明
 
 ### 目录结构

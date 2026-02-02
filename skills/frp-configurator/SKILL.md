@@ -14,6 +14,7 @@ This skill helps you set up and manage FRP (Fast Reverse Proxy) for secure intra
 3.  **Pairing / Export**:
     *   **Export to Remote**: If you have a Client config, generate a Server installer package that matches your keys.
     *   **Export to Local**: If you have a Server config, generate a Client installer package that matches your keys.
+4.  **Uninstall**: Remove FRP services and configuration.
 
 ## Tools & Scripts
 
@@ -23,6 +24,7 @@ Located in `scripts/`:
 *   `setup_server.sh`: Installs `frps`, sets up systemd service, configures Dashboard.
 *   `pack_for_server.sh`: Reads local `frpc.toml` $\rightarrow$ Generates `frps_bundle.tar.gz`.
 *   `pack_for_client.sh`: Reads local `frps.toml` $\rightarrow$ Generates `frpc_bundle.tar.gz`.
+*   `uninstall.sh`: Stops services and removes FRP installation.
 
 ## Usage Examples
 
@@ -50,6 +52,11 @@ bash scripts/pack_for_server.sh
 # Generate client installer based on my server config
 bash scripts/pack_for_client.sh
 # Then download 'frpc_bundle.tar.gz' to your client machine and run the install script inside.
+```
+
+### 5. Uninstall
+```bash
+bash scripts/uninstall.sh
 ```
 
 ## Configuration Details
