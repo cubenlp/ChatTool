@@ -1,7 +1,6 @@
 import pytest
 import os
 from unittest.mock import MagicMock, patch, AsyncMock, ANY
-from chattool.mcp.server import mcp
 
 @pytest.mark.dns
 @pytest.mark.asyncio
@@ -9,33 +8,28 @@ class TestMCPServer:
     
     async def test_dns_list_domains(self):
         """Test dns_list_domains tool"""
-        with patch('chattool.mcp.server.create_dns_client') as mock_create:
+        with patch('chattool.mcp.dns.create_dns_client') as mock_create:
             mock_client = MagicMock()
             mock_client.describe_domains.return_value = [{'DomainName': 'example.com'}]
             mock_create.return_value = mock_client
             
-            # Call the tool function directly (FastMCP wraps it, but underlying function is accessible via mcp._tool_functions usually, 
-            # or we can import the function if we refactored. 
-            # But FastMCP decorates the function. Let's try calling the decorated function directly if possible, 
-            # or use mcp.call_tool if FastMCP supports testing easily.
-            # FastMCP tools are just decorated functions, they should be callable.
-            from chattool.mcp.server import dns_list_domains
+            from chattool.mcp.dns import list_domains
             
-            result = dns_list_domains.fn(provider='aliyun')
+            result = list_domains(provider='aliyun')
             assert len(result) == 1
             assert result[0]['DomainName'] == 'example.com'
             mock_create.assert_called_with('aliyun', logger=ANY)
 
     async def test_dns_add_record(self):
         """Test dns_add_record tool"""
-        with patch('chattool.mcp.server.create_dns_client') as mock_create:
+        with patch('chattool.mcp.dns.create_dns_client') as mock_create:
             mock_client = MagicMock()
             mock_client.add_domain_record.return_value = '12345'
             mock_create.return_value = mock_client
             
-            from chattool.mcp.server import dns_add_record
+            from chattool.mcp.dns import add_record
             
-            result = dns_add_record.fn(
+            result = add_record(
                 domain='example.com', 
                 rr='www', 
                 type='A', 
@@ -51,13 +45,13 @@ class TestMCPServer:
 
     async def test_dns_ddns_update(self):
         """Test dns_ddns_update tool"""
-        with patch('chattool.mcp.server.DynamicIPUpdater') as MockUpdater:
+        with patch('chattool.mcp.dns.DynamicIPUpdater') as MockUpdater:
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
             
-            from chattool.mcp.server import dns_ddns_update
+            from chattool.mcp.dns import ddns_update
             
-            result = await dns_ddns_update.fn(
+            result = await ddns_update(
                 domain='example.com', 
                 rr='home',
                 provider='aliyun'
@@ -74,16 +68,16 @@ class TestMCPServer:
 
     async def test_dns_cert_update(self):
         """Test dns_cert_update tool"""
-        with patch('chattool.mcp.server.SSLCertUpdater') as MockUpdater:
+        with patch('chattool.mcp.dns.SSLCertUpdater') as MockUpdater:
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
             
-            from chattool.mcp.server import dns_cert_update
+            from chattool.mcp.dns import cert_update
             
             domains = ['example.com', '*.example.com']
             email = 'admin@example.com'
             
-            result = await dns_cert_update.fn(
+            result = await cert_update(
                 domains=domains,
                 email=email,
                 provider='aliyun',

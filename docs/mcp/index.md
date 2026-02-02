@@ -2,21 +2,12 @@
 
 ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 标准的服务端，允许 LLM 客户端（如 Claude Desktop, Cursor 等）直接调用 ChatTool 的功能。
 
-## 核心功能
+## 功能模块
 
-ChatTool MCP Server (`ChatTool DNS Manager`) 暴露了以下工具：
+ChatTool MCP Server 包含以下核心模块：
 
-### 1. DNS 管理
-- `dns_list_domains`: 列出账号下的所有域名
-- `dns_get_records`: 获取域名的解析记录
-- `dns_add_record`: 添加 DNS 解析记录
-- `dns_delete_record`: 删除 DNS 解析记录
-
-### 2. 动态域名 (DDNS)
-- `dns_ddns_update`: 执行一次 DDNS 更新（支持公网 IP 和内网 IP）
-
-### 3. SSL 证书管理
-- `dns_cert_update`: 自动申请或更新 Let's Encrypt 证书（通过 DNS-01 验证）
+- [DNS 管理](./dns.md): 域名解析、DDNS 和 SSL 证书管理
+- [Zulip 集成](./zulip.md): 消息收发、频道管理
 
 ## 安装与使用
 
@@ -127,8 +118,9 @@ ChatTool MCP 服务支持对工具进行分组和权限控制，你可以通过�
 
 - `dns`: 所有 DNS 相关工具
 - `cert`: 所有证书相关工具
-- `read`: 只读工具（如查询域名、记录）
-- `write`: 写入工具（如添加/删除记录、申请证书）
+- `zulip`: 所有 Zulip 聊天工具
+- `read`: 只读工具（如查询域名、记录、消息）
+- `write`: 写入工具（如添加/删除记录、申请证书、发送消息）
 
 ## 在 Claude Desktop 中使用
 

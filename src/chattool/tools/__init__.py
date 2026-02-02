@@ -1,4 +1,4 @@
-from .zulipclient import ZulipClient
+from .zulip import ZulipClient
 from .githubclient import GitHubClient
 from .interact import InteractiveShell, SimpleAsyncShell
 from .dns import (
