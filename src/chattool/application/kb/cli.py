@@ -2,6 +2,7 @@ import click
 from typing import Optional
 from chattool.application.kb.manager import KBManager
 import datetime
+import os
 
 @click.group()
 def cli():
@@ -33,19 +34,29 @@ def untrack(name: str, stream: str):
 
 @cli.command()
 @click.argument('name')
-def sync(name: str):
+@click.option('--latest', is_flag=True, help="Fetch latest messages only (snapshot mode)")
+@click.option('--limit', default=1000, help="Max messages to fetch (default 1000)")
+def sync(name: str, latest: bool, limit: int):
     """Sync tracked streams from Zulip."""
     manager = KBManager(name)
-    click.echo(f"Syncing workspace '{name}'...")
-    manager.sync()
+    mode = "snapshot (latest)" if latest else "incremental"
+    click.echo(f"Syncing workspace '{name}' in {mode} mode...")
+    manager.sync(fetch_newest=latest, limit=limit)
     click.echo("Sync completed.")
 
 @cli.command()
 @click.argument('name')
 @click.option('--stream', help="Filter by stream")
-def list(name: str, stream: Optional[str]):
+@click.option('--export', help="Export to file (CSV)")
+def list(name: str, stream: Optional[str], export: Optional[str]):
     """List topics in the workspace."""
     manager = KBManager(name)
+    
+    if export:
+        manager.export_topics(export)
+        click.echo(f"Topics exported to {export}")
+        return
+
     topics = manager.list_topics(stream)
     
     if not topics:
@@ -67,9 +78,16 @@ def list(name: str, stream: Optional[str]):
 @click.argument('stream')
 @click.argument('topic')
 @click.option('--limit', default=50, help="Number of messages to show")
-def show(name: str, stream: str, topic: str, limit: int):
+@click.option('--export', help="Export to file (TXT)")
+def show(name: str, stream: str, topic: str, limit: int, export: Optional[str]):
     """Show messages in a topic."""
     manager = KBManager(name)
+    
+    if export:
+        manager.export_messages(stream, topic, export)
+        click.echo(f"Messages exported to {export}")
+        return
+
     messages = manager.get_messages(stream, topic, limit)
     
     if not messages:
@@ -99,3 +117,23 @@ def search(name: str, query: str):
         click.echo(f"[{dt}] {msg.stream} > {msg.topic}")
         click.echo(f"{msg.sender}: {msg.content[:100]}...")
         click.echo("-" * 40)
+
+@cli.command()
+@click.argument('name')
+@click.argument('stream')
+@click.argument('topic')
+@click.option('--to-stream', required=True, help="Target stream to post result")
+@click.option('--to-topic', required=True, help="Target topic to post result")
+def process(name: str, stream: str, topic: str, to_stream: str, to_topic: str):
+    """Process a topic and repost summary (Demo: Uppercase)."""
+    manager = KBManager(name)
+    
+    def simple_processor(text):
+        return f"**Knowledge Summary for {topic}**\n\n{text[:500]}...\n\n(Processed at {datetime.datetime.now()})"
+
+    click.echo(f"Processing topic '{topic}' in stream '{stream}'...")
+    result = manager.process_topic(stream, topic, simple_processor)
+    
+    click.echo(f"Reposting to '{to_stream}' > '{to_topic}'...")
+    manager.repost_knowledge(to_stream, to_topic, result)
+    click.echo("Done.")

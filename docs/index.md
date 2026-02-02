@@ -129,6 +129,21 @@ async def run():
 asyncio.run(run())
 ```
 
+### MCP 服务
+
+ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 标准的服务端，允许 LLM 客户端（如 Claude Desktop, Cursor）直接调用 ChatTool 的功能。
+
+- [MCP 服务指南](mcp/index.md)
+- [DNS 管理服务](mcp/dns.md)
+- [Zulip 集成服务](mcp/zulip.md)
+
+### Zulip 知识库
+
+ZulipKB 是 ChatTool 内置的一个知识库管理应用，旨在将 Zulip 中的聊天记录转化为本地可检索、可管理的知识资产。
+
+- [Zulip 知识库指南](application/zulip_kb.md)
+- [Zulip 知识结构](application/zulip_structure.md)
+
 ### DNS 工具箱
 
 ChatTool 提供了统一的 DNS 管理接口，支持阿里云和腾讯云。

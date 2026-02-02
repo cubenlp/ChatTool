@@ -94,7 +94,13 @@ nav:
     - 客户端指南: client.md
     - Chat对象: chat.md
     - 配置管理: configuration.md
+  - 应用层:
+    - Zulip知识库: application/zulip_kb.md
+    - Zulip知识结构: application/zulip_structure.md
+  - MCP服务:
+    - 服务指南: mcp/index.md
+    - DNS服务: mcp/dns.md
+    - Zulip集成: mcp/zulip.md
   - 工具箱:
     - DNS工具: tools/dns.md
     - FRP内网穿透: tools/frp.md
-    - MCP服务: mcp.md

@@ -1,9 +1,10 @@
 import os
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 from chattool.application.kb.storage import KBStorage, KBMessage
 from chattool.application.kb.ingest import ZulipIngester
+from chattool.tools.zulip.client import ZulipClient
 
 DEFAULT_KB_DIR = Path.home() / ".chattool" / "kb"
 
@@ -15,6 +16,7 @@ class KBManager:
         self.db_path = self.kb_dir / f"{name}.db"
         self.storage = KBStorage(str(self.db_path))
         self.ingester = ZulipIngester(self.storage)
+        self.client = ZulipClient() # For reposting
 
     def track_stream(self, stream_name: str):
         """Add a stream to the tracking list."""
@@ -58,9 +60,9 @@ class KBManager:
         except:
             return [s.strip() for s in current.split(',') if s.strip()]
 
-    def sync(self):
+    def sync(self, fetch_newest: bool = False, limit: int = 1000):
         """Sync all tracked streams."""
-        self.ingester.sync_all_tracked_streams()
+        self.ingester.sync_all_tracked_streams(fetch_newest=fetch_newest, limit=limit)
 
     def list_topics(self, stream: Optional[str] = None):
         """List topics with message counts."""
@@ -71,3 +73,40 @@ class KBManager:
 
     def search(self, query: str) -> List[KBMessage]:
         return self.storage.search_messages(query)
+
+    def process_topic(self, stream: str, topic: str, processor_func) -> str:
+        """
+        Process messages in a topic and return a result.
+        """
+        messages = self.get_messages(stream, topic, limit=1000)
+        if not messages:
+            return "No content found."
+        
+        # Simple concatenation for now, can be replaced by LLM summary
+        content = "\n".join([f"{m.sender}: {m.content}" for m in messages])
+        return processor_func(content)
+
+    def repost_knowledge(self, to_stream: str, to_topic: str, content: str):
+        """Post processed knowledge back to Zulip."""
+        self.client.send_message(
+            type="stream",
+            to=to_stream,
+            topic=to_topic,
+            content=content
+        )
+
+    def export_topics(self, output_file: str):
+        """Export topic list to a file."""
+        topics = self.list_topics()
+        with open(output_file, 'w') as f:
+            f.write("Stream,Topic,Count\n")
+            for s, t, c in topics:
+                f.write(f"{s},{t},{c}\n")
+    
+    def export_messages(self, stream: str, topic: str, output_file: str):
+        """Export messages of a topic to a file."""
+        messages = self.get_messages(stream, topic, limit=1000)
+        with open(output_file, 'w') as f:
+            for msg in messages:
+                f.write(f"--- {msg.sender} at {msg.timestamp} ---\n")
+                f.write(f"{msg.content}\n\n")
