@@ -95,5 +95,6 @@ nav:
     - Chat对象: chat.md
     - 配置管理: configuration.md
   - 工具箱:
-    - DNS工具: dns.md
+    - DNS工具: tools/dns.md
+    - FRP内网穿透: tools/frp.md
     - MCP服务: mcp.md
