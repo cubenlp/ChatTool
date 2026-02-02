@@ -9,16 +9,37 @@ DEFAULT_SERVER_IP="127.0.0.1"
 DEFAULT_SERVER_PORT="7000"
 DEFAULT_WEB_PORT="7555"
 
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Helper for colored output
+info() { echo -e "${GREEN}>>> $1${NC}"; }
+warn() { echo -e "${YELLOW}>>> $1${NC}"; }
+error() { echo -e "${RED}>>> $1${NC}"; }
+
+# Check for -y flag
+SKIP_PROMPT=false
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -y|--yes) SKIP_PROMPT=true ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 # Check root
 if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root or sudo"
+  error "Please run as root or sudo"
   exit 1
 fi
 
-echo ">>> Starting FRP Client Setup..."
+info "Starting FRP Client Setup..."
 
 # 1. Dependencies
-echo ">>> Installing dependencies..."
+info "Installing dependencies..."
 if command -v apt-get &> /dev/null; then
     apt-get update && apt-get install -y wget tar pwgen
 elif command -v yum &> /dev/null; then
@@ -26,21 +47,47 @@ elif command -v yum &> /dev/null; then
 fi
 
 # 2. Gather Info
-read -p "Enter Server IP [${DEFAULT_SERVER_IP}]: " SERVER_IP
-SERVER_IP=${SERVER_IP:-$DEFAULT_SERVER_IP}
 
-read -p "Enter Server Port [${DEFAULT_SERVER_PORT}]: " SERVER_PORT
-SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
+# Determine Defaults (Env > Hardcoded)
+DEFAULT_IP=${FRP_SERVER_IP:-$DEFAULT_SERVER_IP}
+DEFAULT_PORT=${FRP_SERVER_PORT:-$DEFAULT_SERVER_PORT}
+DEFAULT_TOKEN=${FRP_AUTH_TOKEN:-}
 
-# Generate or Ask for Token
-if command -v pwgen &> /dev/null; then
-    GEN_TOKEN=$(pwgen -s 32 1)
+# Server IP
+if [ "$SKIP_PROMPT" = true ]; then
+    SERVER_IP=$DEFAULT_IP
+    info "Using Server IP: $SERVER_IP (Non-interactive)"
 else
-    GEN_TOKEN=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+    read -p "Enter Server IP [${DEFAULT_IP}]: " SERVER_IP
+    SERVER_IP=${SERVER_IP:-$DEFAULT_IP}
 fi
 
-read -p "Enter Auth Token (Press Enter to generate new): " AUTH_TOKEN
-AUTH_TOKEN=${AUTH_TOKEN:-$GEN_TOKEN}
+# Server Port
+if [ "$SKIP_PROMPT" = true ]; then
+    SERVER_PORT=$DEFAULT_PORT
+    info "Using Server Port: $SERVER_PORT (Non-interactive)"
+else
+    read -p "Enter Server Port [${DEFAULT_PORT}]: " SERVER_PORT
+    SERVER_PORT=${SERVER_PORT:-$DEFAULT_PORT}
+fi
+
+# Token
+if [ -z "$DEFAULT_TOKEN" ]; then
+    if command -v pwgen &> /dev/null; then
+        GEN_TOKEN=$(pwgen -s 32 1)
+    else
+        GEN_TOKEN=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+    fi
+    DEFAULT_TOKEN=$GEN_TOKEN
+fi
+
+if [ "$SKIP_PROMPT" = true ]; then
+    AUTH_TOKEN=$DEFAULT_TOKEN
+    info "Using Auth Token: $AUTH_TOKEN (Non-interactive)"
+else
+    read -p "Enter Auth Token [${DEFAULT_TOKEN}]: " AUTH_TOKEN
+    AUTH_TOKEN=${AUTH_TOKEN:-$DEFAULT_TOKEN}
+fi
 
 # Web UI Credentials
 if command -v pwgen &> /dev/null; then
@@ -115,13 +162,13 @@ WantedBy=multi-user.target
 EOF
 
 # 7. Start
-echo ">>> Starting Service..."
+info "Starting Service..."
 systemctl daemon-reload
 systemctl enable frpc
 systemctl restart frpc
 
 echo "---------------------------------------------"
-echo "✅ FRPC Setup Complete!"
+info "FRPC Setup Complete!"
 echo "   Server: ${SERVER_IP}:${SERVER_PORT}"
 echo "   Token:  ${AUTH_TOKEN}"
 echo "   Web UI: http://localhost:${DEFAULT_WEB_PORT} (User: ${WEB_USER}, Pass: ${WEB_PASS})"
