@@ -19,7 +19,7 @@ class ChatResponse:
     
     def is_stream(self) -> bool:
         """检查是否为流式响应"""
-        return self.response.get('object') == 'chat.completion.chunk'
+        return self.response.get('object') == 'chat.completion.chunk' or self.response.get('type') == 'message_delta' or self.response.get('type') == 'content_block_delta'
     
     # === 基础属性 ===
     @property
@@ -36,7 +36,7 @@ class ChatResponse:
     
     @property
     def object(self) -> Optional[str]:
-        return self.response.get('object')
+        return self.response.get('object') or self.response.get('type')
     
     # === 使用统计 ===
     @property
@@ -47,17 +47,27 @@ class ChatResponse:
     @property
     def total_tokens(self) -> int:
         """总 token 数"""
-        return self.usage.get('total_tokens', 0) if self.usage else 0
+        if self.usage:
+            # OpenAI
+            if 'total_tokens' in self.usage:
+                return self.usage['total_tokens']
+            # Anthropic
+            return self.usage.get('input_tokens', 0) + self.usage.get('output_tokens', 0)
+        return 0
     
     @property
     def prompt_tokens(self) -> int:
         """提示 token 数"""
-        return self.usage.get('prompt_tokens', 0) if self.usage else 0
+        if self.usage:
+            return self.usage.get('prompt_tokens') or self.usage.get('input_tokens', 0)
+        return 0
     
     @property
     def completion_tokens(self) -> int:
         """完成 token 数"""
-        return self.usage.get('completion_tokens', 0) if self.usage else 0
+        if self.usage:
+            return self.usage.get('completion_tokens') or self.usage.get('output_tokens', 0)
+        return 0
     
     # === 消息内容 ===
     @property
@@ -70,6 +80,16 @@ class ChatResponse:
         """消息内容"""
         if self.choices:
             return self.choices[0].get('message')
+        # Anthropic format
+        if self.response.get('content'):
+            content = self.response['content']
+            if isinstance(content, list):
+                # Extract text from content list
+                text_content = "".join([item.get('text', '') for item in content if item.get('type') == 'text'])
+                return {
+                    "role": self.response.get('role', 'assistant'),
+                    "content": text_content
+                }
         return None
     
     @property
@@ -91,7 +111,8 @@ class ChatResponse:
         """完成原因"""
         if self.choices:
             return self.choices[0].get('finish_reason')
-        return None
+        # Anthropic
+        return self.response.get('stop_reason')
     
     # === 流式响应专用 ===
     @property

@@ -12,7 +12,7 @@ from pathlib import Path
 from chattool.core.response import ChatResponse
 from chattool.utils import (
     valid_models, setup_logger, curl_cmd_of_chat_completion, 
-    HTTPClient, OpenAIConfig, AzureConfig
+    HTTPClient, OpenAIConfig, AzureConfig, ClaudeConfig
 )
 
 class Chat(HTTPClient):
@@ -656,3 +656,149 @@ class AzureChat(Chat):
         """生成请求的 log ID"""
         content = str(messages).encode()
         return hashlib.sha256(content).hexdigest()
+
+class ClaudeChat(Chat):
+    """Claude Chat Implementation"""
+    def __init__(self,
+        messages: Optional[Union[str, List[Dict[str, str]]]]=None,
+        logger: logging.Logger=None,
+        api_key: str=None,
+        api_base: str=None,
+        model: str=None,
+        timeout: float = 0,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        headers: Optional[Dict[str, str]]=None,
+        **kwargs):
+        
+        logger = logger or setup_logger('ClaudeChat')
+        if api_key is None:
+            api_key = ClaudeConfig.CLAUDE_API_KEY.value
+        if model is None:
+            model = ClaudeConfig.CLAUDE_API_MODEL.value
+        if api_base is None:
+            api_base = ClaudeConfig.CLAUDE_API_BASE.value
+            
+        if headers is None:
+            headers = {
+                'Content-Type': 'application/json',
+                'anthropic-version': ClaudeConfig.CLAUDE_API_VERSION.value,
+                'x-api-key': api_key
+            }
+            
+        HTTPClient.__init__(
+            self,
+            logger=logger,
+            api_base=api_base,
+            timeout=timeout,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            headers=headers,
+            **kwargs
+        )
+        
+        self.api_key = api_key
+        self.model = model
+        
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+        self._chat_log: List[Dict] = messages or []
+        self._last_response: Optional[ChatResponse] = None
+
+    def _get_uri(self) -> str:
+        return '/v1/messages'
+
+    def _prepare_data(self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        **kwargs) -> Dict[str, Any]:
+        
+        model = model if model is not None else self.model
+        
+        # Extract system message
+        system_msg = ""
+        chat_messages = []
+        for msg in messages:
+            if msg['role'] == 'system':
+                system_msg += msg['content'] + "\n"
+            else:
+                chat_messages.append(msg)
+        
+        if system_msg:
+            system_msg = system_msg.strip()
+            
+        data = {
+            'model': model,
+            'messages': chat_messages,
+            'max_tokens': max_tokens if max_tokens is not None else 4096,
+            **kwargs
+        }
+        
+        if system_msg:
+            data['system'] = system_msg
+            
+        if temperature is not None:
+            data['temperature'] = temperature
+        if top_p is not None:
+            data['top_p'] = top_p
+            
+        return data
+
+    def _convert_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert Anthropic response to OpenAI format"""
+        # If response is already OpenAI format (e.g. from proxy), return it
+        if 'choices' in response:
+            return response
+            
+        # Convert Anthropic to OpenAI
+        if response.get('type') == 'message':
+            content = response.get('content', [])
+            text_content = ""
+            if isinstance(content, list):
+                text_content = "".join([item.get('text', '') for item in content if item.get('type') == 'text'])
+            
+            return {
+                "id": response.get('id'),
+                "object": "chat.completion",
+                "created": 0,
+                "model": response.get('model'),
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": response.get('role'),
+                        "content": text_content
+                    },
+                    "finish_reason": response.get('stop_reason')
+                }],
+                "usage": {
+                    "prompt_tokens": response.get('usage', {}).get('input_tokens', 0),
+                    "completion_tokens": response.get('usage', {}).get('output_tokens', 0),
+                    "total_tokens": response.get('usage', {}).get('input_tokens', 0) + response.get('usage', {}).get('output_tokens', 0)
+                }
+            }
+        return response
+
+    def chat_completion(self, **kwargs) -> Dict[str, Any]:
+        resp = super().chat_completion(**kwargs)
+        return self._convert_response(resp)
+
+    async def async_chat_completion(self, **kwargs) -> Dict[str, Any]:
+        resp = await super().async_chat_completion(**kwargs)
+        return self._convert_response(resp)
+
+    def copy(self) -> 'ClaudeChat':
+        """复制 ClaudeChat 对象"""
+        messages = [msg.copy() for msg in self._chat_log]
+        return ClaudeChat(
+            messages=messages,
+            api_key=self.api_key,
+            api_base=self.config.api_base,
+            model=self.model,
+            timeout=self.config.timeout,
+            max_retries=self.config.max_retries,
+            retry_delay=self.config.retry_delay,
+            headers=self.config.headers
+        )

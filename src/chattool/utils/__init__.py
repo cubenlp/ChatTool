@@ -4,7 +4,7 @@ from .custom_logger import setup_logger
 from .httpclient import HTTPClient, HTTPConfig
 from .config import (
     BaseEnvConfig, OpenAIConfig, AzureConfig, EnvField,
-    TencentConfig, AliyunConfig
+    TencentConfig, AliyunConfig, ClaudeConfig
 )
 
 __all__ = [
@@ -22,6 +22,7 @@ __all__ = [
     "AzureConfig",
     "TencentConfig",
     "AliyunConfig",
+    "ClaudeConfig",
     "EnvField",
     "setup_jupyter_async",
 ]

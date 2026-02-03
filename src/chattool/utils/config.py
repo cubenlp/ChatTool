@@ -174,6 +174,14 @@ class TencentConfig(BaseEnvConfig):
     TENCENT_SECRET_KEY = EnvField("TENCENT_SECRET_KEY", desc="Secret Key", is_sensitive=True)
     TENCENT_REGION_ID = EnvField("TENCENT_REGION_ID", default="ap-guangzhou", desc="Region ID (default: ap-guangzhou)")
 
+class ClaudeConfig(BaseEnvConfig):
+    _title = "Claude Configuration (OpenAI Compatible)"
+    
+    CLAUDE_API_KEY = EnvField("CLAUDE_API_KEY", desc="Claude API Key", is_sensitive=True)
+    CLAUDE_API_BASE = EnvField("CLAUDE_API_BASE", default="https://api.anthropic.com", desc="Claude API Base URL")
+    CLAUDE_API_VERSION = EnvField("CLAUDE_API_VERSION", default="2023-06-01", desc="Claude API Version")
+    CLAUDE_API_MODEL = EnvField("CLAUDE_API_MODEL", default="gpt-3.5-turbo", desc="Claude Model Name")
+
 class ZulipConfig(BaseEnvConfig):
     _title = "Zulip Configuration"
     

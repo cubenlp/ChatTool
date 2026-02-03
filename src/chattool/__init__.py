@@ -6,7 +6,7 @@ __version__ = '4.4.0'
 
 
 from chattool.core import (
-    Chat, AzureChat, ChatResponse
+    Chat, AzureChat, ClaudeChat, ChatResponse
 )
 from .utils import (
     debug_log, load_envs, create_env_file, setup_logger, setup_jupyter_async,
@@ -18,6 +18,7 @@ setup_jupyter_async()
 __all__ = [
     "Chat",
     "AzureChat",
+    "ClaudeChat",
     "HTTPClient",
     "ChatResponse",
     "HTTPConfig",
