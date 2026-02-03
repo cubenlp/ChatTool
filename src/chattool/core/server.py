@@ -3,8 +3,6 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Union
 import json
-import logging
-import os
 from chattool.core.chattype import AzureChat
 from chattool.utils import setup_logger
 
@@ -59,12 +57,6 @@ async def chat_completions(request: ChatCompletionRequest, raw_request: Request)
         
         # Get API Key from request header (Authorization: Bearer <key>)
         api_key = get_bearer_token(raw_request)
-        
-        # Initialize AzureChat
-        # We pass model directly as requested
-        # api_base and api_version will be picked up from env vars if not passed explicitly,
-        # but here we rely on env vars or defaults in AzureChat logic since user didn't request dynamic base per request.
-        # However, AzureChat constructor allows overrides if needed.
         
         chat = AzureChat(
             messages=messages_dict,

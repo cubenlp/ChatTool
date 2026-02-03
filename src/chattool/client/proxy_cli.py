@@ -18,19 +18,9 @@ def main(host, port, reload, api_base, api_version):
     
     # Set environment variables for the server process if provided
     if api_base:
-        # Use config system to set environment variable implicitly via os.environ update if needed,
-        # but here we update os.environ directly as AzureChat reads from env/config.
-        # However, updating the config class memory doesn't affect os.environ for child processes unless we explicitly set it.
-        # Since uvicorn runs in the same process (unless workers>1), setting os.environ is fine.
-        # But to be consistent with config mechanism:
         AzureConfig.set(AzureConfig.AZURE_OPENAI_ENDPOINT.env_key, api_base)
-        os.environ[AzureConfig.AZURE_OPENAI_ENDPOINT.env_key] = api_base
-        logger.info(f"Overriding {AzureConfig.AZURE_OPENAI_ENDPOINT.env_key} with: {api_base}")
-    
     if api_version:
         AzureConfig.set(AzureConfig.AZURE_OPENAI_API_VERSION.env_key, api_version)
-        os.environ[AzureConfig.AZURE_OPENAI_API_VERSION.env_key] = api_version
-        logger.info(f"Overriding {AzureConfig.AZURE_OPENAI_API_VERSION.env_key} with: {api_version}")
 
     uvicorn.run(
         "chattool.core.server:app",
