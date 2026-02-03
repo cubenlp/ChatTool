@@ -181,6 +181,17 @@ chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.
 chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
 ```
 
+### Azure 代理服务
+
+ChatTool 提供了一个 OpenAI 兼容的代理服务器，用于将 Azure OpenAI API 转换为标准 OpenAI 格式。
+
+- [Azure 代理服务指南](tools/proxy.md)
+
+```bash
+# 启动代理服务
+chattool serve proxy
+```
+
 ## 开源协议
 
 使用 MIT 协议开源。

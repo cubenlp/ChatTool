@@ -5,6 +5,7 @@ from chattool.fastobj.capture import main as capture_main
 from chattool.client.env_manager import cli as env_cli
 from chattool.client.mcp import cli as mcp_cli
 from chattool.application.kb.cli import cli as kb_cli
+from chattool.client.proxy_cli import main as proxy_main
 
 @click.group()
 def cli():
@@ -25,6 +26,7 @@ def serve():
     pass
 
 serve.add_command(capture_main, name='capture')
+serve.add_command(proxy_main, name='proxy')
 
 # Env Group
 cli.add_command(env_cli, name='env')
