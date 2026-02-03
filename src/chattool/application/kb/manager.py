@@ -2,21 +2,49 @@ import os
 import json
 from pathlib import Path
 from typing import List, Optional, Dict
+from urllib.parse import urlparse
+
+from chattool.const import CHATTOOL_CACHE_DIR
 from chattool.application.kb.storage import KBStorage, KBMessage
 from chattool.application.kb.ingest import ZulipIngester
 from chattool.tools.zulip.client import ZulipClient
+from chattool.utils.config import ZulipConfig as EnvZulipConfig
 
-DEFAULT_KB_DIR = Path.home() / ".chattool" / "kb"
+# Default KB directory inside the cache, organized by site
+DEFAULT_KB_CACHE_DIR = CHATTOOL_CACHE_DIR / "kb"
 
 class KBManager:
-    def __init__(self, name: str):
-        self.name = name
-        self.kb_dir = DEFAULT_KB_DIR
+    def __init__(self, name: Optional[str] = None):
+        """
+        Initialize the Knowledge Base Manager.
+        
+        Args:
+            name: Workspace name. If None, defaults to the Zulip site hostname.
+                  The database will be stored in CHATTOOL_CACHE_DIR/kb/<site>/<name>.db
+        """
+        self.client = ZulipClient() # For reposting and config access
+        
+        # Determine site hostname for folder organization
+        site_url = EnvZulipConfig.ZULIP_SITE.value
+        if site_url:
+            try:
+                self.site_host = urlparse(site_url).hostname or "unknown_site"
+            except:
+                self.site_host = "unknown_site"
+        else:
+            self.site_host = "default_site"
+            
+        # Determine workspace name
+        self.name = name or self.site_host
+        
+        # Construct path: ~/.cache/chattool/kb/<site_host>/<name>.db
+        self.kb_dir = DEFAULT_KB_CACHE_DIR / self.site_host
         self.kb_dir.mkdir(parents=True, exist_ok=True)
-        self.db_path = self.kb_dir / f"{name}.db"
+        self.db_path = self.kb_dir / f"{self.name}.db"
+        
+        # Initialize storage
         self.storage = KBStorage(str(self.db_path))
         self.ingester = ZulipIngester(self.storage)
-        self.client = ZulipClient() # For reposting
 
     def track_stream(self, stream_name: str):
         """Add a stream to the tracking list."""

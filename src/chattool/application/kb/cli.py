@@ -10,45 +10,45 @@ def cli():
     pass
 
 @cli.command()
-@click.argument('name')
-def init(name: str):
+@click.argument('name', required=False)
+def init(name: Optional[str]):
     """Initialize a new knowledge base workspace."""
     manager = KBManager(name)
-    click.echo(f"Initialized workspace '{name}' at {manager.db_path}")
+    click.echo(f"Initialized workspace '{manager.name}' at {manager.db_path}")
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.argument('stream')
-def track(name: str, stream: str):
+def track(name: Optional[str], stream: str):
     """Track a Zulip stream in the workspace."""
     manager = KBManager(name)
     manager.track_stream(stream)
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.argument('stream')
-def untrack(name: str, stream: str):
+def untrack(name: Optional[str], stream: str):
     """Stop tracking a Zulip stream."""
     manager = KBManager(name)
     manager.untrack_stream(stream)
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.option('--latest', is_flag=True, help="Fetch latest messages only (snapshot mode)")
 @click.option('--limit', default=1000, help="Max messages to fetch (default 1000)")
-def sync(name: str, latest: bool, limit: int):
+def sync(name: Optional[str], latest: bool, limit: int):
     """Sync tracked streams from Zulip."""
     manager = KBManager(name)
     mode = "snapshot (latest)" if latest else "incremental"
-    click.echo(f"Syncing workspace '{name}' in {mode} mode...")
+    click.echo(f"Syncing workspace '{manager.name}' in {mode} mode...")
     manager.sync(fetch_newest=latest, limit=limit)
     click.echo("Sync completed.")
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.option('--stream', help="Filter by stream")
 @click.option('--export', help="Export to file (CSV)")
-def list(name: str, stream: Optional[str], export: Optional[str]):
+def list(name: Optional[str], stream: Optional[str], export: Optional[str]):
     """List topics in the workspace."""
     manager = KBManager(name)
     
@@ -74,12 +74,12 @@ def list(name: str, stream: Optional[str], export: Optional[str]):
         click.echo(f"{s_disp:<20} | {t_disp:<40} | {c:<5}")
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.argument('stream')
 @click.argument('topic')
 @click.option('--limit', default=50, help="Number of messages to show")
 @click.option('--export', help="Export to file (TXT)")
-def show(name: str, stream: str, topic: str, limit: int, export: Optional[str]):
+def show(name: Optional[str], stream: str, topic: str, limit: int, export: Optional[str]):
     """Show messages in a topic."""
     manager = KBManager(name)
     
@@ -101,9 +101,9 @@ def show(name: str, stream: str, topic: str, limit: int, export: Optional[str]):
         click.echo("-" * 40)
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.argument('query')
-def search(name: str, query: str):
+def search(name: Optional[str], query: str):
     """Search messages in the workspace."""
     manager = KBManager(name)
     results = manager.search(query)
@@ -119,12 +119,12 @@ def search(name: str, query: str):
         click.echo("-" * 40)
 
 @cli.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @click.argument('stream')
 @click.argument('topic')
 @click.option('--to-stream', required=True, help="Target stream to post result")
 @click.option('--to-topic', required=True, help="Target topic to post result")
-def process(name: str, stream: str, topic: str, to_stream: str, to_topic: str):
+def process(name: Optional[str], stream: str, topic: str, to_stream: str, to_topic: str):
     """Process a topic and repost summary (Demo: Uppercase)."""
     manager = KBManager(name)
     
