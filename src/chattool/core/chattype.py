@@ -789,6 +789,98 @@ class ClaudeChat(Chat):
         resp = await super().async_chat_completion(**kwargs)
         return self._convert_response(resp)
 
+    async def chat_completion_stream_async(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        stream: bool = True,
+        **kwargs
+    ):
+        """Claude API 流式响应（异步版本）"""
+        data = self._prepare_data(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            stream=True,
+            **kwargs
+        )
+        url = self._build_url(self._get_uri())
+        client = self._get_async_client()
+        
+        async with client.stream(
+            method="POST",
+            url=url,
+            json=data,
+            headers=self.config.headers,
+            params=self._get_params()
+        ) as stream:
+            if stream.status_code >= 400:
+                error_content = await stream.aread()
+                try:
+                    error_data = json.loads(error_content.decode())
+                    error_msg = error_data.get('error', {}).get('message', f'HTTP {stream.status_code}')
+                except:
+                    error_msg = f'HTTP {stream.status_code}: {error_content.decode()}'
+                raise httpx.HTTPStatusError(
+                    message=f"API request failed: {error_msg}",
+                    request=stream.request,
+                    response=stream
+                )
+            
+            # Anthropic stream events
+            # data: {"type": "message_start", "message": {...}}
+            # data: {"type": "content_block_start", ...}
+            # data: {"type": "content_block_delta", "delta": {"type": "text_delta", "text": "..."}}
+            # data: {"type": "message_stop"}
+            
+            msg_id = "msg_claude"
+            model_name = model or self.model
+            
+            async for line in stream.aiter_lines():
+                if not line or not line.startswith("data: "):
+                    continue
+                
+                event_data = json.loads(line[6:])
+                event_type = event_data.get("type")
+                
+                if event_type == "message_start":
+                    msg_id = event_data.get("message", {}).get("id", msg_id)
+                elif event_type == "content_block_delta":
+                    text = event_data.get("delta", {}).get("text", "")
+                    if text:
+                        # Convert to OpenAI format
+                        openai_chunk = {
+                            "id": msg_id,
+                            "object": "chat.completion.chunk",
+                            "created": 0,
+                            "model": model_name,
+                            "choices": [{
+                                "index": 0,
+                                "delta": {"content": text},
+                                "finish_reason": None
+                            }]
+                        }
+                        yield ChatResponse(openai_chunk)
+                elif event_type == "message_stop":
+                    openai_chunk = {
+                        "id": msg_id,
+                        "object": "chat.completion.chunk",
+                        "created": 0,
+                        "model": model_name,
+                        "choices": [{
+                            "index": 0,
+                            "delta": {},
+                            "finish_reason": "stop"
+                        }]
+                    }
+                    yield ChatResponse(openai_chunk)
+                    break
+
     def copy(self) -> 'ClaudeChat':
         """复制 ClaudeChat 对象"""
         messages = [msg.copy() for msg in self._chat_log]
