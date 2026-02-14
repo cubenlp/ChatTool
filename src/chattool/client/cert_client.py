@@ -7,19 +7,23 @@ from typing import Optional
 
 console = Console()
 
-@click.group(name="cert")
-@click.option('--server', default='http://127.0.0.1:8000', help='SSL 证书服务地址')
-@click.option('-t', '--token', help='鉴权 Token (也可通过 CHATTOOL_CERT_TOKEN 环境变量设置)')
-@click.pass_context
-def cert_client(ctx, server, token):
-    """SSL 证书客户端工具 (连接到 chattool serve cert)"""
-    ctx.ensure_object(dict)
-    ctx.obj['SERVER'] = server
-    # 优先使用命令行参数，其次环境变量
-    ctx.obj['TOKEN'] = token or os.environ.get('CHATTOOL_CERT_TOKEN')
-    
-    if not ctx.obj['TOKEN']:
+def common_options(func):
+    """Common options for all cert client commands"""
+    func = click.option('-s', '--server', default='http://127.0.0.1:8000', help='SSL 证书服务地址')(func)
+    func = click.option('-t', '--token', help='鉴权 Token (也可通过 CHATTOOL_CERT_TOKEN 环境变量设置)')(func)
+    return func
+
+def get_config(server, token):
+    """Helper to resolve config"""
+    final_token = token or os.environ.get('CHATTOOL_CERT_TOKEN')
+    if not final_token:
         console.print("[yellow]警告: 未提供 Token，某些操作可能会失败。请使用 --token 或设置 CHATTOOL_CERT_TOKEN[/yellow]")
+    return server, final_token
+
+@click.group(name="cert")
+def cert_client():
+    """SSL 证书客户端工具 (连接到 chattool serve cert)"""
+    pass
 
 @cert_client.command()
 @click.option('-d', '--domain', 'domains', multiple=True, required=True, help='域名 (可多次使用，例如 -d example.com -d *.example.com)')
@@ -27,11 +31,10 @@ def cert_client(ctx, server, token):
 @click.option('-p', '--provider', type=click.Choice(['aliyun', 'tencent']), help='DNS 提供商 (可选，覆盖服务端默认)')
 @click.option('--secret-id', help='云厂商 Secret ID (可选)')
 @click.option('--secret-key', help='云厂商 Secret Key (可选)')
-@click.pass_context
-def apply(ctx, domains, email, provider, secret_id, secret_key):
+@common_options
+def apply(server, token, domains, email, provider, secret_id, secret_key):
     """申请 SSL 证书"""
-    server = ctx.obj['SERVER']
-    token = ctx.obj['TOKEN']
+    server, token = get_config(server, token)
     headers = {"X-ChatTool-Token": token} if token else {}
     
     payload = {
@@ -61,11 +64,10 @@ def apply(ctx, domains, email, provider, secret_id, secret_key):
              console.print(f"服务端响应: {e.response.text}")
 
 @cert_client.command(name="list")
-@click.pass_context
-def list_certs(ctx):
+@common_options
+def list_certs(server, token):
     """列出已申请的证书"""
-    server = ctx.obj['SERVER']
-    token = ctx.obj['TOKEN']
+    server, token = get_config(server, token)
     headers = {"X-ChatTool-Token": token} if token else {}
     
     try:
@@ -102,11 +104,10 @@ def list_certs(ctx):
 @cert_client.command()
 @click.argument('domain')
 @click.option('-o', '--output-dir', default='.', help='下载保存目录')
-@click.pass_context
-def download(ctx, domain, output_dir):
+@common_options
+def download(server, token, domain, output_dir):
     """下载证书文件 (cert.pem, privkey.pem)"""
-    server = ctx.obj['SERVER']
-    token = ctx.obj['TOKEN']
+    server, token = get_config(server, token)
     headers = {"X-ChatTool-Token": token} if token else {}
     
     target_dir = os.path.join(output_dir, domain)
