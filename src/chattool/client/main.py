@@ -5,6 +5,7 @@ from chattool.client.service import capture_app, cert_app
 from chattool.client.env_manager import cli as env_cli
 from chattool.client.mcp import cli as mcp_cli
 from chattool.application.kb.cli import cli as kb_cli
+from chattool.client.cert_client import cert_client
 
 @click.group()
 def cli():
@@ -26,6 +27,14 @@ def serve():
 
 serve.add_command(capture_app, name='capture')
 serve.add_command(cert_app, name='cert')
+
+# Client Group
+@cli.group()
+def client():
+    """Remote client tools."""
+    pass
+
+client.add_command(cert_client, name='cert')
 
 # Env Group
 cli.add_command(env_cli, name='env')

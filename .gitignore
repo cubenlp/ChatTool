@@ -119,3 +119,4 @@ responses
 
 .trae/
 *.lock
+test_certs/

@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from pathlib import Path
-from chattool.tools.dns.cert_updater import SSLCertUpdater
+from chattool.tools import SSLCertUpdater
 from chattool.utils import setup_logger
 
 # 全局配置
