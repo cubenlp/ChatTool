@@ -4,7 +4,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from chattool.tools.dns.cert_updater import SSLCertUpdater
+from chattool.tools import SSLCertUpdater
 from chattool.utils import setup_logger
 
 @pytest.mark.dns

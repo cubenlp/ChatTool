@@ -1,7 +1,7 @@
 import click
 from chattool.client.cert_updater import main as ssl_updater_main
 from chattool.client.dns_updater import cli as dns_updater_cli
-from chattool.client import capture_app
+from chattool.client.service import capture_app, cert_app
 from chattool.client.env_manager import cli as env_cli
 from chattool.client.mcp import cli as mcp_cli
 from chattool.application.kb.cli import cli as kb_cli
@@ -25,6 +25,7 @@ def serve():
     pass
 
 serve.add_command(capture_app, name='capture')
+serve.add_command(cert_app, name='cert')
 
 # Env Group
 cli.add_command(env_cli, name='env')
