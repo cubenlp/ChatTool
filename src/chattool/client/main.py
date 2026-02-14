@@ -4,6 +4,7 @@ from chattool.client.dns_updater import cli as dns_updater_cli
 from chattool.fastobj.capture import main as capture_main
 from chattool.client.env_manager import cli as env_cli
 from chattool.client.mcp import cli as mcp_cli
+from chattool.application.kb.cli import cli as kb_cli
 
 @click.group()
 def cli():
@@ -30,6 +31,9 @@ cli.add_command(env_cli, name='env')
 
 # MCP Group
 cli.add_command(mcp_cli, name='mcp')
+
+# KB Group
+cli.add_command(kb_cli, name='kb')
 
 def main():
     cli()

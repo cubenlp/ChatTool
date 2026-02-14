@@ -6,20 +6,49 @@ import chattool
 import chattool.const
 from .config import BaseEnvConfig
 
-def load_envs(path:Union[str, Path]):
+def load_envs(path:Union[str, Path, None] = None):
     """Load the environment variables for the API call
     
     Args:
-        path (Union[str, Path]): The path to the environment file.
+        path (Union[str, Path], optional): The path to the environment file. 
+        If None, attempts to find .env in default locations.
         
     Returns:
         bool: True if the environment variables are loaded successfully.
         
     Examples:
         load_envs("envfile.env")
+        load_envs() # tries to find .env automatically
     """
-    # Load all configs from the specified path
-    BaseEnvConfig.load_all(path)
+    if path is None:
+        # Try to find .env in current or parent directories
+        # Simple strategy: look in current dir
+        import os
+        if os.path.exists(".env"):
+            path = ".env"
+        # If still None, we might just rely on OS envs, but BaseEnvConfig.load_all expects a path
+        # Actually BaseEnvConfig.load_all uses dotenv_values(env_path), if env_path is None dotenv might not like it
+        # or might load nothing.
+        
+        # Let's check dotenv behavior. dotenv_values(None) -> {}
+        # But we want to support default behavior.
+        # If path is None, let's assume we want to load from .env if it exists
+        if path is None:
+             # Fallback to empty load if no file found, but still trigger refresh from os.environ
+             # Wait, BaseEnvConfig.load_from_dict merges dict > os.getenv > default.
+             # So even with empty dict, it will refresh from os.getenv.
+             # We can pass an empty path or handle it.
+             # But dotenv_values requires a path-like or stream.
+             
+             # Let's try to locate it relative to project root if possible, or just skip file loading
+             # and only refresh from os.environ
+             pass
+
+    if path:
+        BaseEnvConfig.load_all(path)
+    else:
+        # Just refresh from OS envs
+        BaseEnvConfig.load_from_dict({})
     
     # Inject loaded values into const module
     # This keeps chattool.const.SOME_KEY up-to-date
