@@ -1,11 +1,21 @@
 import click
 import requests
 import os
+import git
 from rich.console import Console
 from rich.table import Table
-from typing import Optional
 
 console = Console()
+
+def get_git_email():
+    """Get email from git config"""
+    try:
+        email = git.Git().config("--get", "user.email")
+        if email:
+            return email.strip()
+    except Exception:
+        pass
+    return None
 
 def common_options(func):
     """Common options for all cert client commands"""
@@ -27,7 +37,7 @@ def cert_client():
 
 @cert_client.command()
 @click.option('-d', '--domain', 'domains', multiple=True, required=True, help='域名 (可多次使用，例如 -d example.com -d *.example.com)')
-@click.option('-e', '--email', required=True, help='Let\'s Encrypt 邮箱')
+@click.option('-e', '--email', default=get_git_email, show_default="git config user.email", required=True, help='Let\'s Encrypt 邮箱')
 @click.option('-p', '--provider', type=click.Choice(['aliyun', 'tencent']), help='DNS 提供商 (可选，覆盖服务端默认)')
 @click.option('--secret-id', help='云厂商 Secret ID (可选)')
 @click.option('--secret-key', help='云厂商 Secret Key (可选)')
