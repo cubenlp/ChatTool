@@ -3,6 +3,11 @@ import time
 from chattool.tools.zulip.client import ZulipClient
 from chattool.utils.config import ZulipConfig
 
+def test_zulip_setup():
+    print('API Key:', ZulipConfig.ZULIP_BOT_API_KEY.value[:5])
+    print('Bot Email:', ZulipConfig.ZULIP_BOT_EMAIL.value[-7:])
+    print('Zulip Site:', ZulipConfig.ZULIP_SITE.value)
+
 class TestZulipIntegration:
     
     def setup_method(self):
