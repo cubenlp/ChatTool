@@ -33,7 +33,7 @@ class TestDNSCLIUsage:
         
         from unittest.mock import patch, AsyncMock
         
-        with patch('chattool.cli.dns_updater.DynamicIPUpdater') as MockUpdater:
+        with patch('chattool.cli.client.dns_updater.DynamicIPUpdater') as MockUpdater:
             # Mock run_once as an async method returning True
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
