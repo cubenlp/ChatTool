@@ -1,11 +1,7 @@
 import click
-from chattool.client.cert_updater import main as ssl_updater_main
-from chattool.client.dns_updater import cli as dns_updater_cli
-from chattool.client.service import capture_app, cert_app
-from chattool.client.env_manager import cli as env_cli
-from chattool.client.mcp import cli as mcp_cli
+from .client import ssl_updater_main, dns_updater_cli, env_cli, mcp_cli, cert_client
+from .service import capture_app, cert_app
 from chattool.application.kb.cli import cli as kb_cli
-from chattool.client.cert_client import cert_client
 
 @click.group()
 def cli():
