@@ -117,11 +117,11 @@ chattool dns cert-update -d example.com -d *.example.com -e admin@example.com
 
 #### 申请证书 (`apply`)
 ```bash
-chattool client cert apply -d example.com -d *.example.com -e admin@example.com --token my-secret-token
+chattool client cert apply -d example.com -d *.example.com --token my-secret-token
 ```
 **选项:**
 - `-d, --domain`: 域名列表 (必填)。
-- `-e, --email`: 邮箱 (必填)。
+- `-e, --email`: 邮箱 (如果配置了 `git config user.email` 则可选，否则必填)。
 - `-p, --provider`: DNS 提供商 (可选)。
 - `--secret-id/--secret-key`: 云厂商凭证 (可选)。
 
