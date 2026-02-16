@@ -1,16 +1,16 @@
-import asyncio
 import uuid
 import hashlib
 import json
-import shutil
 from datetime import datetime
 from fastapi import FastAPI, Header, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
+
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from pathlib import Path
-from chattool.tools.dns.cert_updater import SSLCertUpdater
+
 from chattool.utils import setup_logger
+from .cert_updater import SSLCertUpdater
 
 # 全局配置
 config = {
