@@ -1,7 +1,7 @@
 import pytest
 import os
 from click.testing import CliRunner
-from chattool.client.main import cli
+from chattool.cli.main import cli
 
 @pytest.fixture
 def runner():

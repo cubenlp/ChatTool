@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Dict
 import os
 from fastmcp import FastMCP
-from chattool.tools.dns import create_dns_client, DynamicIPUpdater, SSLCertUpdater
+from chattool.tools import create_dns_client, DynamicIPUpdater, SSLCertUpdater
 from chattool.utils import setup_logger
 
 logger = setup_logger("mcp_dns", log_level="INFO")

@@ -18,8 +18,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa, ec
 from cryptography.x509.oid import NameOID
 
 from chattool.utils import setup_logger
+from chattool.tools.dns.utils import create_dns_client, DNSClientType
 
-from .utils import create_dns_client, DNSClientType
 from .acme_dns_tiny import get_crt
 
 # 证书相关配置

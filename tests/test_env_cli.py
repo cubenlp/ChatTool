@@ -1,7 +1,7 @@
 import pytest
 import os
 from click.testing import CliRunner
-from chattool.client.main import cli
+from chattool.cli.main import cli
 from chattool.utils.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE
 from unittest.mock import patch, MagicMock
@@ -14,7 +14,7 @@ def runner():
 def mock_env_file(tmp_path):
     """Mock the env file location"""
     env_file = tmp_path / ".env"
-    with patch("chattool.client.env_manager.CHATTOOL_ENV_FILE", env_file), \
+    with patch("chattool.cli.client.env_manager.CHATTOOL_ENV_FILE", env_file), \
          patch("chattool.utils.config.dotenv.dotenv_values") as mock_dotenv_values:
         # Mock initial loading to return empty or specific values
         mock_dotenv_values.return_value = {}

@@ -1,9 +1,6 @@
 import click
-from chattool.client.cert_updater import main as ssl_updater_main
-from chattool.client.dns_updater import cli as dns_updater_cli
-from chattool.fastobj.capture import main as capture_main
-from chattool.client.env_manager import cli as env_cli
-from chattool.client.mcp import cli as mcp_cli
+from .client import ssl_updater_main, dns_updater_cli, env_cli, mcp_cli, cert_client
+from .service import capture_app, cert_app
 from chattool.application.kb.cli import cli as kb_cli
 
 @click.group()
@@ -24,7 +21,16 @@ def serve():
     """Local server tools."""
     pass
 
-serve.add_command(capture_main, name='capture')
+serve.add_command(capture_app, name='capture')
+serve.add_command(cert_app, name='cert')
+
+# Client Group
+@cli.group()
+def client():
+    """Remote client tools."""
+    pass
+
+client.add_command(cert_client, name='cert')
 
 # Env Group
 cli.add_command(env_cli, name='env')

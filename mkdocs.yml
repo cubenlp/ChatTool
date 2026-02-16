@@ -104,3 +104,5 @@ nav:
   - 工具箱:
     - DNS工具: tools/dns.md
     - FRP内网穿透: tools/frp.md
+  - 博客:
+    - 从代码到 Agent 技能: blog/code_tool_skill.md

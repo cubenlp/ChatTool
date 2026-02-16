@@ -1,7 +1,8 @@
 import pytest
-import os
+from unittest.mock import patch, AsyncMock
+from chattool.cli.client.dns_updater import ddns
 from click.testing import CliRunner
-from chattool.client.main import cli
+from chattool.cli.main import cli
 
 @pytest.fixture
 def runner():
@@ -25,15 +26,12 @@ class TestDNSCLIUsage:
 
     def test_ddns_argument_parsing(self, runner):
         """Verify that full_domain is correctly split into domain and rr"""
-        from chattool.client.dns_updater import ddns
         
         # We can use invoke and check for error if domain is invalid, or success if valid
         # But we don't want to actually update DNS in this test.
         # So we'll mock DynamicIPUpdater
         
-        from unittest.mock import patch, AsyncMock
-        
-        with patch('chattool.client.dns_updater.DynamicIPUpdater') as MockUpdater:
+        with patch('chattool.cli.client.dns_updater.DynamicIPUpdater') as MockUpdater:
             # Mock run_once as an async method returning True
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)

@@ -39,6 +39,7 @@ dependencies = [
     "platformdirs>=3.0",
     "pydantic>=2.0.0",
     "httpx",
+    "gitpython",
     "PyGithub",
     "filelock"
 ]
@@ -72,7 +73,7 @@ Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
-chattool = "chattool.client:main"
+chattool = "chattool.cli:main_cli"
 mcp-server-chattool = "chattool.mcp:main"
 
 [tool.setuptools.dynamic]

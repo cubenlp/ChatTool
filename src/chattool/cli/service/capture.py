@@ -1,7 +1,8 @@
+import click
 from fastapi import FastAPI, Request
 from datetime import datetime
-from chattool.fastobj.basic import generate_curl_command, FastAPIManager
-import click
+
+from chattool.utils import generate_curl_command, FastAPIManager
 
 app = FastAPI(
     title="请求监控 API",
