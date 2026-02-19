@@ -88,11 +88,11 @@ chattool mcp info
 
 ## 配置说明
 
-MCP 服务会自动读取 ChatTool 的全局配置。请确保你已经通过 `chattool env init` 或 `.env` 文件配置了相应的云厂商凭证（阿里云或腾讯云）。
+MCP 服务会自动读取 ChatTool 的全局配置。请确保你已经通过 `chatenv init` 或 `.env` 文件配置了相应的云厂商凭证（阿里云或腾讯云）。
 
 ```bash
 # 检查当前配置
-chattool env list
+chatenv cat
 ```
 
 

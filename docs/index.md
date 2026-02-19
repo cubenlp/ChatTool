@@ -3,7 +3,7 @@
         <img src="https://img.shields.io/pypi/v/chattool.svg" alt="PyPI version" />
     </a>
     <a href="https://github.com/cubenlp/chattool/actions/workflows/test.yml">
-        <img src="https://github.com/cubenlp/chattool/actions/workflows/test.yml/badge.svg" alt="Tests" />
+        <img src="https://github.com/cubenlp/chattool/actions/workflows/ci.yml/badge.svg" alt="Tests" />
     </a>
     <a href="https://chattool.wzhecnu.cn">
         <img src="https://img.shields.io/badge/docs-github_pages-blue.svg" alt="Documentation Status" />
@@ -34,13 +34,13 @@ ChatTool 使用集中式配置管理，支持`.env`文件、环境变量和默�
 1. **CLI 管理配置**（推荐）：
    ```bash
    # 交互式初始化（引导设置各项配置）
-   chattool env init -i
+   chatenv init -i
    
    # 设置配置项
-   chattool env set OPENAI_API_KEY=sk-xxx
+   chatenv set OPENAI_API_KEY=sk-xxx
    
    # 查看配置
-   chattool env list
+   chatenv cat
    ```
 
 2. **手动配置**：
