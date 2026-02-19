@@ -3,10 +3,6 @@ from .urltool import resp2curl, valid_models, curl_cmd_of_chat_completion
 from .custom_logger import setup_logger
 from .fastobj import generate_curl_command, FastAPIManager
 from .httpclient import HTTPClient, HTTPConfig
-from .config import (
-    BaseEnvConfig, OpenAIConfig, AzureConfig, EnvField,
-    TencentConfig, AliyunConfig
-)
 
 __all__ = [
     "HTTPClient",
@@ -18,12 +14,6 @@ __all__ = [
     "valid_models",
     "curl_cmd_of_chat_completion",
     "setup_logger",
-    "BaseEnvConfig",
-    "OpenAIConfig",
-    "AzureConfig",
-    "TencentConfig",
-    "AliyunConfig",
-    "EnvField",
     "setup_jupyter_async",
     "generate_curl_command",
     "FastAPIManager",

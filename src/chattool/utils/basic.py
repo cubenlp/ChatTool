@@ -4,7 +4,7 @@ from typing import Union, Optional
 
 import chattool
 import chattool.const
-from .config import BaseEnvConfig
+from chattool.config import BaseEnvConfig
 
 def load_envs(path:Union[str, Path, None] = None):
     """Load the environment variables for the API call

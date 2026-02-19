@@ -66,7 +66,7 @@ chat = Chat()
 你可以在运行时动态修改配置，这对多账号切换或测试场景非常有用。修改后，**新创建**的客户端实例将使用新配置。
 
 ```python
-from chattool.utils.config import BaseEnvConfig, OpenAIConfig
+from chattool.config import BaseEnvConfig, OpenAIConfig
 from chattool import Chat
 
 # 查看当前配置
@@ -85,7 +85,7 @@ print(chat.api_key) # 输出: new-secret-key
 你可以直接从配置类中访问当前生效的配置值：
 
 ```python
-from chattool.utils.config import OpenAIConfig, AliyunConfig
+from chattool.config import OpenAIConfig, AliyunConfig
 
 key = OpenAIConfig.OPENAI_API_KEY.value
 region = AliyunConfig.ALIBABA_CLOUD_REGION_ID.value
@@ -96,7 +96,7 @@ region = AliyunConfig.ALIBABA_CLOUD_REGION_ID.value
 配置系统会自动识别敏感字段（如 API Key、Secret），在打印配置或生成日志时自动进行脱敏处理（用 `*` 代替）。
 
 ```python
-from chattool.utils.config import BaseEnvConfig
+from chattool.config import BaseEnvConfig
 
 # 打印当前所有配置（敏感信息已脱敏）
 BaseEnvConfig.print_config()

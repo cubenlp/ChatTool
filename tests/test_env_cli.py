@@ -2,7 +2,7 @@ import pytest
 import os
 from click.testing import CliRunner
 from chattool.cli.main import cli
-from chattool.utils.config import BaseEnvConfig
+from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE
 from unittest.mock import patch, MagicMock
 

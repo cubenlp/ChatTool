@@ -8,7 +8,7 @@ from chattool.const import CHATTOOL_CACHE_DIR
 from chattool.application.kb.storage import KBStorage, KBMessage
 from chattool.application.kb.ingest import ZulipIngester
 from chattool.tools.zulip.client import ZulipClient
-from chattool.utils.config import ZulipConfig as EnvZulipConfig
+from chattool.config import ZulipConfig as EnvZulipConfig
 
 # Default KB directory inside the cache, organized by site
 DEFAULT_KB_CACHE_DIR = CHATTOOL_CACHE_DIR / "kb"

@@ -12,8 +12,9 @@ from pathlib import Path
 from chattool.core.response import ChatResponse
 from chattool.utils import (
     valid_models, setup_logger, curl_cmd_of_chat_completion, 
-    HTTPClient, OpenAIConfig, AzureConfig
+    HTTPClient
 )
+from chattool.config import OpenAIConfig, AzureConfig
 
 class Chat(HTTPClient):
     def __init__(self, 
