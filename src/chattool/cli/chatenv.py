@@ -1,0 +1,222 @@
+import click
+import shutil
+import os
+from pathlib import Path
+from typing import List, Optional
+from chattool.config import BaseEnvConfig
+from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
+from chattool import __version__
+
+@click.group(name='chatenv')
+def cli():
+    """Manage configuration environment variables and profiles."""
+    if not CHATTOOL_ENV_DIR.exists():
+        CHATTOOL_ENV_DIR.mkdir(parents=True)
+
+@cli.command(name='list')
+def profiles():
+    """List all available environment profiles."""
+    configs = list(CHATTOOL_ENV_DIR.glob('*.env'))
+    if configs:
+        click.echo("Available profiles:")
+        for config in configs:
+            click.echo(f"- {config.stem}")
+    else:
+        click.echo(f"No profiles found in {CHATTOOL_ENV_DIR}")
+
+@cli.command(name='cat')
+@click.argument('name', required=False)
+@click.option('--no-mask', is_flag=True, help='Show values in plain text without masking.')
+def cat_env(name, no_mask):
+    """Print the content of an environment profile or current .env."""
+    if name:
+        config_path = CHATTOOL_ENV_DIR / f'{name}.env'
+    else:
+        config_path = CHATTOOL_ENV_FILE
+
+    if not config_path.exists():
+        click.echo(f"Error: Environment file '{config_path}' not found.", err=True)
+        return
+
+    content = config_path.read_text()
+    if no_mask:
+        click.echo(content)
+        return
+
+    # Identify sensitive keys
+    sensitive_keys = set()
+    for config_cls in BaseEnvConfig._registry:
+        for _, field in config_cls.get_fields().items():
+            if field.is_sensitive:
+                sensitive_keys.add(field.env_key)
+
+    # Line-by-line processing for masking
+    for line in content.splitlines():
+        line_strip = line.strip()
+        if not line_strip or line_strip.startswith('#'):
+            click.echo(line)
+            continue
+        
+        if '=' in line:
+            key, value = line.split('=', 1)
+            key = key.strip()
+            
+            if key in sensitive_keys:
+                val_part = value.strip()
+                quote = ''
+                raw_val = val_part
+                
+                # Handle quotes
+                if len(val_part) >= 2:
+                    if (val_part.startswith("'") and val_part.endswith("'")) or \
+                       (val_part.startswith('"') and val_part.endswith('"')):
+                        quote = val_part[0]
+                        raw_val = val_part[1:-1]
+                
+                # Masking logic
+                length = len(raw_val)
+                if length <= 2:
+                    masked = '*' * length
+                elif length <= 6:
+                    masked = raw_val[0] + '*' * (length - 2) + raw_val[-1]
+                else:
+                    masked = raw_val[:2] + '*' * (length - 4) + raw_val[-2:]
+                
+                # Reconstruct line with masked value
+                # We try to preserve the key part as is (from split), but we lost the whitespace around =
+                # Since we don't know the exact whitespace, we just output KEY=VALUE
+                click.echo(f"{key}={quote}{masked}{quote}")
+            else:
+                click.echo(line)
+        else:
+            click.echo(line)
+
+@cli.command(name='save')
+@click.argument('name')
+def save_env(name):
+    """Save the current .env configuration as a profile."""
+    if not CHATTOOL_ENV_FILE.exists():
+        click.echo("Error: No active .env file to save.", err=True)
+        return
+
+    target_path = CHATTOOL_ENV_DIR / f'{name}.env'
+    if target_path.exists():
+        click.confirm(f"Profile '{name}' already exists. Overwrite?", abort=True)
+    
+    shutil.copy(CHATTOOL_ENV_FILE, target_path)
+    click.echo(f"Saved current configuration to profile '{name}'")
+
+@cli.command(name='use')
+@click.argument('name')
+def use_env(name):
+    """Activate an environment profile."""
+    source_path = CHATTOOL_ENV_DIR / f'{name}.env'
+    if not source_path.exists():
+        click.echo(f"Error: Profile '{name}' not found.", err=True)
+        return
+    
+    shutil.copy(source_path, CHATTOOL_ENV_FILE)
+    click.echo(f"Activated profile '{name}'")
+
+@cli.command(name='delete')
+@click.argument('name')
+def delete_env(name):
+    """Delete an environment profile."""
+    target_path = CHATTOOL_ENV_DIR / f'{name}.env'
+    if not target_path.exists():
+        click.echo(f"Error: Profile '{name}' not found.", err=True)
+        return
+    
+    os.remove(target_path)
+    click.echo(f"Deleted profile '{name}'")
+
+@cli.command(name='init')
+@click.option('--interactive', '-i', is_flag=True, help='Interactive mode to set values.')
+@click.option('--type', '-t', 'config_types', multiple=True, help='Filter configuration types (case-insensitive title match).')
+def init(interactive, config_types):
+    """Initialize or update the .env configuration file."""
+    
+    # Filter config classes if types are specified
+    target_configs = BaseEnvConfig._registry
+    if config_types:
+        normalized_types = [t.lower() for t in config_types]
+        target_configs = [
+            cls for cls in BaseEnvConfig._registry 
+            if cls._title.lower() in normalized_types or 
+               any(alias.lower() in normalized_types for alias in getattr(cls, '_aliases', []))
+        ]
+        
+        if not target_configs:
+            click.echo(f"No configuration types matched: {', '.join(config_types)}")
+            titles = [cls._title for cls in BaseEnvConfig._registry]
+            click.echo("Available types: " + ", ".join(titles))
+            return
+
+    # Load existing values from file to serve as defaults
+    if CHATTOOL_ENV_FILE.exists():
+        BaseEnvConfig.load_all(CHATTOOL_ENV_FILE)
+
+    if interactive:
+        click.echo("Starting interactive configuration...")
+        
+        for config_cls in target_configs:
+            click.echo(f"\n[{config_cls._title}]")
+            
+            for name, field in config_cls.get_fields().items():
+                prompt_text = f"{name}"
+                if field.desc:
+                    prompt_text += f" ({field.desc})"
+                
+                default_val = field.value if field.value is not None else field.default
+                
+                new_val = click.prompt(
+                    prompt_text,
+                    default=default_val if default_val is not None else "",
+                    show_default=True,
+                    type=str
+                )
+                
+                if new_val:
+                     field.value = new_val
+    
+    BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
+    click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
+
+@cli.command(name='set')
+@click.argument('key_value')
+def set_env(key_value):
+    """Set a configuration value (KEY=VALUE)."""
+    if '=' not in key_value:
+        click.echo("Error: Invalid format. Use KEY=VALUE", err=True)
+        return
+
+    key, value = key_value.split('=', 1)
+    key = key.strip()
+    value = value.strip()
+    
+    BaseEnvConfig.set(key, value)
+    
+    BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
+    click.echo(f"Set {key}={value}")
+
+@cli.command(name='get')
+@click.argument('key')
+def get_env(key):
+    """Get a configuration value."""
+    values = BaseEnvConfig.get_all_values()
+    if key in values:
+        val = values[key]
+        click.echo(val if val is not None else "")
+    else:
+        click.echo(f"Error: Key '{key}' not found", err=True)
+
+@cli.command(name='unset')
+@click.argument('key')
+def unset_env(key):
+    """Unset a configuration value."""
+    BaseEnvConfig.set(key, "")
+    BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
+    click.echo(f"Unset {key}")
+
+if __name__ == '__main__':
+    cli()

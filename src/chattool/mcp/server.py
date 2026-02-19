@@ -1,4 +1,3 @@
-from pathlib import Path
 import os
 from fastmcp import FastMCP
 from chattool.utils import setup_logger

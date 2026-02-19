@@ -1,6 +1,6 @@
 import platformdirs
 from pathlib import Path
-from chattool.utils.config import BaseEnvConfig, OpenAIConfig
+from chattool.config import BaseEnvConfig, OpenAIConfig
 
 # dirs
 CHATTOOL_CACHE_DIR = Path(platformdirs.user_cache_dir('chattool'))

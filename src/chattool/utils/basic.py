@@ -3,67 +3,10 @@ from pathlib import Path
 from typing import Union, Optional
 
 import chattool
-import chattool.const
-from .config import BaseEnvConfig
+from chattool.config import BaseEnvConfig
 
-def load_envs(path:Union[str, Path, None] = None):
-    """Load the environment variables for the API call
-    
-    Args:
-        path (Union[str, Path], optional): The path to the environment file. 
-        If None, attempts to find .env in default locations.
-        
-    Returns:
-        bool: True if the environment variables are loaded successfully.
-        
-    Examples:
-        load_envs("envfile.env")
-        load_envs() # tries to find .env automatically
-    """
-    if path is None:
-        # Try to find .env in current or parent directories
-        # Simple strategy: look in current dir
-        import os
-        if os.path.exists(".env"):
-            path = ".env"
-        # If still None, we might just rely on OS envs, but BaseEnvConfig.load_all expects a path
-        # Actually BaseEnvConfig.load_all uses dotenv_values(env_path), if env_path is None dotenv might not like it
-        # or might load nothing.
-        
-        # Let's check dotenv behavior. dotenv_values(None) -> {}
-        # But we want to support default behavior.
-        # If path is None, let's assume we want to load from .env if it exists
-        if path is None:
-             # Fallback to empty load if no file found, but still trigger refresh from os.environ
-             # Wait, BaseEnvConfig.load_from_dict merges dict > os.getenv > default.
-             # So even with empty dict, it will refresh from os.getenv.
-             # We can pass an empty path or handle it.
-             # But dotenv_values requires a path-like or stream.
-             
-             # Let's try to locate it relative to project root if possible, or just skip file loading
-             # and only refresh from os.environ
-             pass
-
-    if path:
-        BaseEnvConfig.load_all(path)
-    else:
-        # Just refresh from OS envs
-        BaseEnvConfig.load_from_dict({})
-    
-    # Inject loaded values into const module
-    # This keeps chattool.const.SOME_KEY up-to-date
-    vars(chattool.const).update(BaseEnvConfig.get_all_values())
-    
-    # Re-apply special logic for OPENAI_API_BASE in const
-    # (Since we just overwrote everything, we need to ensure the derived logic runs)
-    
-    _api_base = chattool.const.OPENAI_API_BASE
-    _api_base_url = chattool.const.OPENAI_API_BASE_URL
-    
-    # However, to be safe and consistent with const.py behavior:
-    if not _api_base and _api_base_url:
-         chattool.const.OPENAI_API_BASE = _api_base_url.rstrip('/') + '/v1'
-         
+def load_envs(path:Optional=None):
+    # Deprecated
     return True
 
 def create_env_file(env_file:Union[str, Path], env_vals:Optional[dict] = None):

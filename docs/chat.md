@@ -268,7 +268,7 @@ os.environ["OPENAI_API_KEY"] = "your-api-key"
 os.environ["OPENAI_API_BASE"] = "https://api.openai.com/v1"
 
 # 或者使用 BaseEnvConfig 动态设置（推荐）
-from chattool.utils.config import BaseEnvConfig
+from chattool.config import BaseEnvConfig
 BaseEnvConfig.set("OPENAI_API_KEY", "your-api-key")
 
 # 使用环境变量（自动读取）

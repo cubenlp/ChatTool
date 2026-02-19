@@ -1,5 +1,5 @@
 import click
-from .client import ssl_updater_main, dns_updater_cli, env_cli, mcp_cli, cert_client
+from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client
 from .service import capture_app, cert_app
 from chattool.application.kb.cli import cli as kb_cli
 
@@ -31,9 +31,6 @@ def client():
     pass
 
 client.add_command(cert_client, name='cert')
-
-# Env Group
-cli.add_command(env_cli, name='env')
 
 # MCP Group
 cli.add_command(mcp_cli, name='mcp')

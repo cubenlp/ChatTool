@@ -11,7 +11,7 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.dnspod.v20210323 import dnspod_client, models
 
-from chattool.utils import TencentConfig
+from chattool.config import TencentConfig
 from .base import DNSClient
 
 class TencentDNSClient(DNSClient):

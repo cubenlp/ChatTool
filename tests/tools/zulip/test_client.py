@@ -1,7 +1,7 @@
 import pytest
 import time
 from chattool.tools.zulip.client import ZulipClient
-from chattool.utils.config import ZulipConfig
+from chattool.config import ZulipConfig
 
 def test_zulip_setup():
     print('API Key:', ZulipConfig.ZULIP_BOT_API_KEY.value[:5])

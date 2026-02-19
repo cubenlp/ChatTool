@@ -6,7 +6,7 @@ from chattool.const import CHATTOOL_REPO_DIR
 from chattool.core import Chat
 from chattool.tools import ZulipClient, GitHubClient
 from chattool.cli.service.capture import app as capture_app
-from chattool.utils import BaseEnvConfig, HTTPClient, HTTPConfig, FastAPIManager
+from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
 TEST_PATH = 'tests/testfiles/'
 

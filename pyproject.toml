@@ -74,6 +74,7 @@ Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
 chattool = "chattool.cli:main_cli"
+chatenv = "chattool.cli.chatenv:cli"
 mcp-server-chattool = "chattool.mcp:main"
 
 [tool.setuptools.dynamic]

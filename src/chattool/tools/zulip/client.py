@@ -3,7 +3,7 @@ import logging
 import httpx
 import os
 from typing import List, Dict, Optional, Any, Union
-from chattool.utils.config import ZulipConfig
+from chattool.config import ZulipConfig
 
 class ZulipClient:
     """

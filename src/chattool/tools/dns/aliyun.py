@@ -8,7 +8,7 @@ from alibabacloud_alidns20150109.client import Client as Alidns20150109Client
 from alibabacloud_alidns20150109 import models as alidns_models
 from alibabacloud_tea_openapi import models as open_api_models
 
-from chattool.utils import AliyunConfig
+from chattool.config import AliyunConfig
 
 from .base import DNSClient
 
