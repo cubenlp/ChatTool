@@ -1,14 +1,12 @@
-import os
 import json
-from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from chattool.const import CHATTOOL_CACHE_DIR
 from chattool.application.kb.storage import KBStorage, KBMessage
 from chattool.application.kb.ingest import ZulipIngester
 from chattool.tools.zulip.client import ZulipClient
-from chattool.config import ZulipConfig as EnvZulipConfig
+from chattool.config import ZulipConfig
 
 # Default KB directory inside the cache, organized by site
 DEFAULT_KB_CACHE_DIR = CHATTOOL_CACHE_DIR / "kb"
@@ -25,7 +23,7 @@ class KBManager:
         self.client = ZulipClient() # For reposting and config access
         
         # Determine site hostname for folder organization
-        site_url = EnvZulipConfig.ZULIP_SITE.value
+        site_url = ZulipConfig.ZULIP_SITE.value
         if site_url:
             try:
                 self.site_host = urlparse(site_url).hostname or "unknown_site"
