@@ -7,7 +7,6 @@ from .httpclient import HTTPClient, HTTPConfig
 __all__ = [
     "HTTPClient",
     "HTTPConfig",
-    "load_envs",
     "debug_log",
     "create_env_file",
     "resp2curl",

@@ -2,7 +2,6 @@ from chattool.application import *
 from chattool.cli import *
 from chattool.config import *
 from chattool.core import *
-from chattool.fastobj import *
 from chattool.mcp import *
 from chattool.tools import *
 from chattool.utils import *

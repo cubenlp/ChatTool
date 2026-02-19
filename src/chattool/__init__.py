@@ -9,7 +9,8 @@ from chattool.core import (
     Chat, AzureChat, ChatResponse
 )
 from .utils import (
-    debug_log, load_envs, create_env_file, setup_logger, setup_jupyter_async,
+    debug_log, load_envs,
+    create_env_file, setup_logger, setup_jupyter_async,
     HTTPClient, HTTPConfig
 )
 
@@ -22,7 +23,6 @@ __all__ = [
     "ChatResponse",
     "HTTPConfig",
     "debug_log",
-    "load_envs",
     "create_env_file",
     "setup_logger",
 ]
