@@ -38,12 +38,17 @@ pip install chattool --upgrade
 
 ChatTool uses `.env` files for centralized configuration management.
 
-1. **Generate Configuration Template**:
-   ```python
-   from chattool import create_env_file
-   create_env_file(".env")
+1. **CLI Configuration Management** (Recommended):
+   ```bash
+   # Interactive initialization
+   chatenv init -i
+   
+   # Set configuration item
+   chatenv set OPENAI_API_KEY=sk-xxx
+   
+   # View configuration
+   chatenv cat
    ```
-   This generates a `.env` template file in the current directory containing all available configuration options.
 
 2. **Manual Configuration**:
    You can also manually create a `.env` file or set environment variables.

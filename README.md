@@ -36,13 +36,13 @@ ChatTool 使用集中式配置管理，支持`.env`文件、环境变量和默�
 1. **CLI 管理配置**（推荐）：
    ```bash
    # 交互式初始化（引导设置各项配置）
-   chattool env init -i
+   chatenv init -i
    
    # 设置配置项
-   chattool env set OPENAI_API_KEY=sk-xxx
+   chatenv set OPENAI_API_KEY=sk-xxx
    
    # 查看配置
-   chattool env list
+   chatenv cat
    ```
 
 2. **手动配置**：

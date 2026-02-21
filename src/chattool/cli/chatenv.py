@@ -6,6 +6,7 @@ from typing import List, Optional
 from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
+from chattool.cli.test_cmd import test_cmd
 
 @click.group(name='chatenv')
 def cli():
@@ -132,9 +133,20 @@ def delete_env(name):
 
 @cli.command(name='init')
 @click.option('--interactive', '-i', is_flag=True, help='Interactive mode to set values.')
-@click.option('--type', '-t', 'config_types', multiple=True, help='Filter configuration types (case-insensitive title match).')
+@click.option('--type', '-t', 'config_types', multiple=True, help='Filter configuration types (case-insensitive title or alias match).')
 def init(interactive, config_types):
-    """Initialize or update the .env configuration file."""
+    """Initialize or update the .env configuration file.
+    
+    You can filter the configuration types using the -t/--type option.
+
+    \b
+    Supported aliases:
+    - OpenAI: oai, openai
+    - Azure: azure, az
+    - Aliyun: ali, aliyun, alidns
+    - Tencent: tencent, tx, tencent-dns
+    - Zulip: zulip
+    """
     
     # Filter config classes if types are specified
     target_configs = BaseEnvConfig._registry
@@ -148,8 +160,11 @@ def init(interactive, config_types):
         
         if not target_configs:
             click.echo(f"No configuration types matched: {', '.join(config_types)}")
-            titles = [cls._title for cls in BaseEnvConfig._registry]
-            click.echo("Available types: " + ", ".join(titles))
+            click.echo("Available types (and aliases):")
+            for cls in BaseEnvConfig._registry:
+                aliases = getattr(cls, '_aliases', [])
+                alias_str = f" ({', '.join(aliases)})" if aliases else ""
+                click.echo(f"  - {cls._title}{alias_str}")
             return
 
     # Load existing values from file to serve as defaults
@@ -217,6 +232,8 @@ def unset_env(key):
     BaseEnvConfig.set(key, "")
     BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
     click.echo(f"Unset {key}")
+
+cli.add_command(test_cmd)
 
 if __name__ == '__main__':
     cli()
