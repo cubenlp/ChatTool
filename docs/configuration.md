@@ -74,7 +74,7 @@ chat = Chat()
 chatenv save dev
 
 # 列出所有已保存的环境
-chatenv profiles
+chatenv list
 
 # 切换到 'prod' 环境
 chatenv use prod
