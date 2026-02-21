@@ -56,7 +56,8 @@ def test_zulip():
 def test_cmd(target):
     """Test the configuration for a specific service.
     
-    Supported aliases:
+    \b
+    Supported targets:
     - OpenAI: oai, openai
     - Azure: azure, az
     - Aliyun: ali, aliyun, alidns

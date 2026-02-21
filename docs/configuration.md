@@ -22,7 +22,7 @@ ChatTool 提供了便捷的命令行工具 `chatenv` 来管理配置。
 chatenv init -i
 
 # 仅设置特定类别的配置（例如只配置网络和 OpenAI）
-chatenv init -i -t "Network" -t "OpenAI"
+chatenv init -i -t "OpenAI"
 ```
 
 该命令会引导你逐步设置所需的 API Key 和其他参数，并自动保存到 `.env` 文件中。

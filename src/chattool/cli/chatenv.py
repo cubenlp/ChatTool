@@ -138,6 +138,8 @@ def init(interactive, config_types):
     """Initialize or update the .env configuration file.
     
     You can filter the configuration types using the -t/--type option.
+
+    \b
     Supported aliases:
     - OpenAI: oai, openai
     - Azure: azure, az
