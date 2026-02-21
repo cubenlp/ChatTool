@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/chat/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/chat/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/chat/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/client/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/client/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/client/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/configuration/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/configuration/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/configuration/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/application/zulip_kb/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/application/zulip_kb/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/application/zulip_kb/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/application/zulip_structure/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/application/zulip_structure/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/application/zulip_structure/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/blog/code_tool_skill/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/blog/code_tool_skill/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/blog/code_tool_skill/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/mcp/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/mcp/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/mcp/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/mcp/dns/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/mcp/dns/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/mcp/dns/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/mcp/zulip/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/mcp/zulip/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/mcp/zulip/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/tools/dns/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/tools/dns/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/tools/dns/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/tools/frp/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/tools/frp/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/tools/frp/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/chat/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/chat/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devchat/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/client/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/client/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devclient/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/configuration/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/configuration/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devconfiguration/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/application/zulip_kb/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/application/zulip_kb/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devapplication/zulip_kb/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/application/zulip_structure/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/application/zulip_structure/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devapplication/zulip_structure/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/blog/code_tool_skill/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/blog/code_tool_skill/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devblog/code_tool_skill/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/mcp/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/mcp/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devmcp/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/mcp/dns/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/mcp/dns/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devmcp/dns/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/mcp/zulip/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/mcp/zulip/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devmcp/zulip/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/tools/dns/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/tools/dns/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devtools/dns/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/tools/frp/</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/tools/frp/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devtools/frp/"/>
+    </url>
+</urlset>
