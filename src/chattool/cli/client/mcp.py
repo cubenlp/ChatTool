@@ -18,11 +18,19 @@ def start(transport, host, port):
         chattool mcp start                   # Run with stdio (default)
         chattool mcp start --transport http  # Run with HTTP on localhost:8000
     """
+    if not mcp:
+        click.echo("Error: FastMCP is not installed or not supported in this environment.", err=True)
+        return
+        
     mcp.run(transport=transport, host=host, port=port)
 
 @cli.command()
 def info():
     """Inspect the MCP server capabilities."""
+    if not mcp:
+        click.echo("Error: FastMCP is not installed or not supported in this environment.", err=True)
+        return
+
     # Since we can't import fastmcp.cli.inspect easily, we'll just print basic info from our instance
     click.echo(f"MCP Server: {mcp.name}")
     click.echo("\nTools:")

@@ -1,5 +1,10 @@
-from typing import List, Optional, Union, Dict
-from fastmcp import FastMCP
+from typing import List, Optional, Union, Dict, Any
+
+try:
+    from fastmcp import FastMCP
+except ImportError:
+    FastMCP = None
+
 from chattool.tools.zulip import ZulipClient
 
 def list_streams(include_public: bool = True) -> List[Dict]:
@@ -102,8 +107,11 @@ def upload_file(file_path: str) -> str:
     client = ZulipClient()
     return client.upload_file(file_path)
 
-def register(mcp: FastMCP):
+def register(mcp: Any):
     """Register Zulip tools with the MCP server."""
+    if FastMCP is None:
+        return
+        
     mcp.tool(name="zulip_list_streams", tags=["zulip", "read"])(list_streams)
     mcp.tool(name="zulip_get_messages", tags=["zulip", "read"])(get_messages)
     mcp.tool(name="zulip_send_message", tags=["zulip", "write"])(send_message)

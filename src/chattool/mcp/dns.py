@@ -1,6 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 import os
-from fastmcp import FastMCP
+
+try:
+    from fastmcp import FastMCP
+except ImportError:
+    FastMCP = None
+
 from chattool.tools import create_dns_client, DynamicIPUpdater, SSLCertUpdater
 from chattool.utils import setup_logger
 
@@ -152,8 +157,11 @@ async def cert_update(
     )
     return await updater.run_once()
 
-def register(mcp: FastMCP):
+def register(mcp: Any):
     """Register DNS tools with the MCP server."""
+    if FastMCP is None:
+        return
+        
     mcp.tool(name="dns_list_domains", tags=["dns", "read"])(list_domains)
     mcp.tool(name="dns_get_records", tags=["dns", "read"])(get_records)
     mcp.tool(name="dns_add_record", tags=["dns", "write"])(add_record)
