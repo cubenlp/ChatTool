@@ -9,12 +9,14 @@ from typing import Awaitable, Callable, List, Dict, Union, Optional, AsyncGenera
 from batch_executor import batch_async_executor, batch_hybrid_executor
 from pathlib import Path
 
-from chattool.core.response import ChatResponse
 from chattool.utils import (
     valid_models, setup_logger, curl_cmd_of_chat_completion, 
     HTTPClient
 )
 from chattool.config import OpenAIConfig, AzureConfig
+
+from .response import ChatResponse
+
 
 class Chat(HTTPClient):
     def __init__(self, 

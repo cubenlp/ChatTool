@@ -6,6 +6,7 @@ from typing import List, Optional
 from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
+from chattool.utils import mask_secret
 from chattool.cli.test_cmd import test_cmd
 
 @click.group(name='chatenv')
@@ -75,13 +76,7 @@ def cat_env(name, no_mask):
                         raw_val = val_part[1:-1]
                 
                 # Masking logic
-                length = len(raw_val)
-                if length <= 2:
-                    masked = '*' * length
-                elif length <= 6:
-                    masked = raw_val[0] + '*' * (length - 2) + raw_val[-1]
-                else:
-                    masked = raw_val[:2] + '*' * (length - 4) + raw_val[-2:]
+                masked = mask_secret(raw_val)
                 
                 # Reconstruct line with masked value
                 # We try to preserve the key part as is (from split), but we lost the whitespace around =

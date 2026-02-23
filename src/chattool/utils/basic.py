@@ -1,3 +1,4 @@
+import asyncio
 import requests
 from pathlib import Path
 from typing import Union, Optional
@@ -39,9 +40,7 @@ def create_env_file(env_file:Union[str, Path], env_vals:Optional[dict] = None):
 def debug_log( net_url:str="https://www.baidu.com"
              , timeout:int=5
              , message:str="hello world! 你好！"
-             , test_apikey:bool=True
-             , test_response:bool=True
-             , test_model:bool=True):
+             , test_response:bool=True):
     """Debug the API call
 
     Args:
@@ -55,6 +54,7 @@ def debug_log( net_url:str="https://www.baidu.com"
     """
     print("Current version:", chattool.__version__)
     # Network test
+    print("\nNetwork test:")
     try:
         requests.get(net_url, timeout=timeout)
     except:
@@ -65,11 +65,6 @@ def debug_log( net_url:str="https://www.baidu.com"
     # This replaces manual printing of base_url, model, key etc.
     BaseEnvConfig.print_config()
 
-    # Get model list
-    if test_model:
-        print("\nThe model list:")
-        print("Model list functionality temporarily disabled")
-        
     # Test hello world
     if test_response:
         print("\nTest response:", message)
