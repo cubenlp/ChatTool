@@ -1,4 +1,5 @@
 import click
+import sys
 from chattool.mcp.server import mcp
 
 @click.group()
@@ -18,11 +19,18 @@ def start(transport, host, port):
         chattool mcp start                   # Run with stdio (default)
         chattool mcp start --transport http  # Run with HTTP on localhost:8000
     """
+    if mcp is None:
+        click.echo("Error: MCP server is not available. Please install 'fastmcp' (requires Python >= 3.10).", err=True)
+        sys.exit(1)
     mcp.run(transport=transport, host=host, port=port)
 
 @cli.command()
 def info():
     """Inspect the MCP server capabilities."""
+    if mcp is None:
+        click.echo("Error: MCP server is not available. Please install 'fastmcp' (requires Python >= 3.10).", err=True)
+        sys.exit(1)
+
     # Since we can't import fastmcp.cli.inspect easily, we'll just print basic info from our instance
     click.echo(f"MCP Server: {mcp.name}")
     click.echo("\nTools:")

@@ -1,21 +1,31 @@
 import os
-from fastmcp import FastMCP
+try:
+    from fastmcp import FastMCP
+except ImportError:
+    FastMCP = None
 from chattool.utils import setup_logger
 from chattool.mcp import zulip, dns
-
-# Initialize FastMCP server
-mcp = FastMCP("ChatTool DNS Manager")
 
 # Logger for MCP tools
 logger = setup_logger("mcp_server", log_level="INFO")
 
-# Register Modules
-zulip.register(mcp)
-dns.register(mcp)
+if FastMCP:
+    # Initialize FastMCP server
+    mcp = FastMCP("ChatTool DNS Manager")
+    
+    # Register Modules
+    zulip.register(mcp)
+    dns.register(mcp)
+else:
+    mcp = None
+    logger.warning("FastMCP module not found. MCP functionality will be disabled.")
 
 # --- Configuration & Visibility ---
 
 def _configure_visibility():
+    if mcp is None:
+        return
+
     """Configure tool visibility based on environment variables."""
     enable_tags_str = os.getenv("CHATTOOL_MCP_ENABLE_TAGS")
     disable_tags_str = os.getenv("CHATTOOL_MCP_DISABLE_TAGS")

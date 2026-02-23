@@ -1,5 +1,8 @@
-from typing import List, Optional, Union, Dict
-from fastmcp import FastMCP
+from typing import List, Optional, Union, Dict, Any
+try:
+    from fastmcp import FastMCP
+except ImportError:
+    FastMCP = Any
 from chattool.tools.zulip import ZulipClient
 
 def list_streams(include_public: bool = True) -> List[Dict]:

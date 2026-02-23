@@ -1,6 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 import os
-from fastmcp import FastMCP
+try:
+    from fastmcp import FastMCP
+except ImportError:
+    FastMCP = Any
 from chattool.tools import create_dns_client, DynamicIPUpdater, SSLCertUpdater
 from chattool.utils import setup_logger
 
