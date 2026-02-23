@@ -136,6 +136,7 @@ ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprot
 - [MCP 服务指南](mcp/index.md)
 - [DNS 管理服务](mcp/dns.md)
 - [Zulip 集成服务](mcp/zulip.md)
+- [Network Scanner](mcp/network.md)
 
 ### Zulip 知识库
 
@@ -143,6 +144,18 @@ ZulipKB 是 ChatTool 内置的一个知识库管理应用，旨在将 Zulip 中�
 
 - [Zulip 知识库指南](application/zulip_kb.md)
 - [Zulip 知识结构](application/zulip_structure.md)
+
+### 网络扫描工具
+
+ChatTool 提供了网络扫描工具，支持 Ping 扫描和端口扫描。
+
+```bash
+# 扫描网段
+chattool client network ping --network 192.168.1.0/24
+
+# 扫描端口
+chattool client network ssh --network 192.168.1.0/24 --port 22
+```
 
 ### DNS 工具箱
 

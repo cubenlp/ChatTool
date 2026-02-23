@@ -4,7 +4,7 @@ try:
 except ImportError:
     FastMCP = None
 from chattool.utils import setup_logger
-from chattool.mcp import zulip, dns
+from chattool.mcp import zulip, dns, network
 
 # Logger for MCP tools
 logger = setup_logger("mcp_server", log_level="INFO")
@@ -16,6 +16,7 @@ if FastMCP:
     # Register Modules
     zulip.register(mcp)
     dns.register(mcp)
+    network.register(mcp)
 else:
     mcp = None
     logger.warning("FastMCP module not found. MCP functionality will be disabled.")
