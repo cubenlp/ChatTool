@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from .llm import Chat, AzureChat, ChatResponse
 from .utils import (
-    debug_log, load_envs,
+    debug_log, load_envs, mask_secret,
     create_env_file, setup_logger, setup_jupyter_async,
     HTTPClient, HTTPConfig
 )
@@ -27,6 +27,7 @@ __all__ = [
     "HTTPConfig",
     "debug_log",
     "create_env_file",
+    "mask_secret",
     "setup_logger",
     "OpenAIConfig",
     "AzureConfig",
