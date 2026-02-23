@@ -377,11 +377,7 @@ class Chat(HTTPClient):
             model_url = os.path.join(self.config.api_base, 'models')
         else:
             model_url = "https://api.openai.com/v1/models"
-        
-        # 获取API密钥
-        api_key = getattr(self.config, 'api_key', '') or ''
-        
-        return valid_models(api_key, model_url, gpt_only=gpt_only)
+        return valid_models(self.api_key, model_url, gpt_only=gpt_only)
 
     # === 便捷方法 ===
     def ask(self, question: str, update_history: bool = True) -> str:

@@ -1,13 +1,13 @@
 import click
 import shutil
 import os
-from pathlib import Path
-from typing import List, Optional
+
 from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
 from chattool.utils import mask_secret
-from chattool.cli.test_cmd import test_cmd
+
+from .test_cmd import test_cmd
 
 @click.group(name='chatenv')
 def cli():

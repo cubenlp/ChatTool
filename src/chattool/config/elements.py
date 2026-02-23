@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Any, List, Type
 import dotenv
-from chattool.utils.mask import mask_secret
+import chattool
 
 class EnvField:
     """环境变量字段描述符"""
@@ -23,7 +23,7 @@ class EnvField:
         if not self.is_sensitive:
             return str(api_key)
             
-        return mask_secret(api_key)
+        return chattool.mask_secret(api_key)
 
 class BaseEnvConfig:
     """环境变量配置基类"""

@@ -13,6 +13,7 @@ class TestMaskValue(unittest.TestCase):
         self.assertEqual(mask_secret("abcde"), "a***e")
         self.assertEqual(mask_secret("abcdef"), "a****f")
         self.assertEqual(mask_secret("abcdefg"), "ab***fg")
+        self.assertEqual(mask_secret("abcdefgh"), "ab****gh")
         
     def test_env_field_mask_value(self):
         # Non-sensitive
