@@ -5,14 +5,13 @@ __email__ = '1073853456@qq.com'
 __version__ = '5.0.0'
 
 
-from chattool.llm import (
-    Chat, AzureChat, ChatResponse
-)
+from .llm import Chat, AzureChat, ChatResponse
 from .utils import (
     debug_log, load_envs,
     create_env_file, setup_logger, setup_jupyter_async,
     HTTPClient, HTTPConfig
 )
+from .config import OpenAIConfig, AzureConfig, AliyunConfig, TencentConfig, ZulipConfig
 
 setup_jupyter_async()
 
@@ -25,4 +24,9 @@ __all__ = [
     "debug_log",
     "create_env_file",
     "setup_logger",
+    "OpenAIConfig",
+    "AzureConfig",
+    "AliyunConfig",
+    "TencentConfig",
+    "ZulipConfig",
 ]
