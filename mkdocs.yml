@@ -101,8 +101,10 @@ nav:
     - 服务指南: mcp/index.md
     - DNS服务: mcp/dns.md
     - Zulip集成: mcp/zulip.md
+    - 网络扫描: mcp/network.md
   - 工具箱:
     - DNS工具: tools/dns.md
     - FRP内网穿透: tools/frp.md
+    - 网络扫描: tools/network.md
   - 博客:
     - 从代码到 Agent 技能: blog/code_tool_skill.md
