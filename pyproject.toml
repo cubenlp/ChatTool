@@ -49,6 +49,7 @@ tools = [
     "alibabacloud_alidns20150109>=3.5.10",
     "alibabacloud_tea_openapi>=0.3.0",
     "tencentcloud-sdk-python",
+    "netifaces",
 ]
 tests = [
     "coverage",
@@ -67,7 +68,7 @@ docs = [
 ]
 dev = [
     "wheel",
-    "netifaces",
+    "build",
     "twine",
     "chattool[docs,tests,tools]",
 ]
