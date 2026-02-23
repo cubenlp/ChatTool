@@ -5,7 +5,7 @@ __email__ = '1073853456@qq.com'
 __version__ = '5.0.0'
 
 
-from chattool.core import (
+from chattool.llm import (
     Chat, AzureChat, ChatResponse
 )
 from .utils import (

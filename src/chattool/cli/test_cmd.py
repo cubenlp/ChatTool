@@ -1,5 +1,5 @@
 import click
-from chattool.core.chattype import Chat, AzureChat
+from chattool.llm.chattype import Chat, AzureChat
 from chattool.tools.dns.aliyun import AliyunDNSClient
 from chattool.tools.dns.tencent import TencentDNSClient
 from chattool.tools.zulip.client import ZulipClient

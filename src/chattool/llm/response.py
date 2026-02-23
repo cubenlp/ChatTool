@@ -1,6 +1,5 @@
 # Response class for Chattool
 from typing import Dict, Any, Union, Optional
-import json
 
 class ChatResponse:
     """Chat completion 响应包装类"""
