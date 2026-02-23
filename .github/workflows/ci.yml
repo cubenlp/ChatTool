@@ -36,7 +36,6 @@ jobs:
         python -m pip install .[dev]
     - name: Test with pytest and coverage
       run: |
-        pip install coverage
         mkdir -p .logs
         nohup chattool.capture-server --daemon --port 8000 &
         sleep 1

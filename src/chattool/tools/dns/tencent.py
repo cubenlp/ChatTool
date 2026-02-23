@@ -5,11 +5,16 @@ import os
 import logging
 from typing import List, Dict, Optional, Any
 
-from tencentcloud.common import credential
-from tencentcloud.common.profile.client_profile import ClientProfile
-from tencentcloud.common.profile.http_profile import HttpProfile
-from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
-from tencentcloud.dnspod.v20210323 import dnspod_client, models
+try:
+    from tencentcloud.common import credential
+    from tencentcloud.common.profile.client_profile import ClientProfile
+    from tencentcloud.common.profile.http_profile import HttpProfile
+    from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+    from tencentcloud.dnspod.v20210323 import dnspod_client, models
+    TENCENT_AVAILABLE = True
+except ImportError:
+    TENCENT_AVAILABLE = False
+    TencentCloudSDKException = ImportError
 
 from chattool.config import TencentConfig
 from .base import DNSClient
@@ -26,6 +31,9 @@ class TencentDNSClient(DNSClient):
                  endpoint: Optional[str] = None,
                  logger: Optional[logging.Logger] = None):
         
+        if not TENCENT_AVAILABLE:
+            raise ImportError("腾讯云SDK未安装，请安装 chattool[tools] 或 tencentcloud-sdk-python")
+
         super().__init__(logger=logger)
         
         # 参数验证和环境变量回退
