@@ -4,9 +4,16 @@
 import logging
 from typing import List, Dict, Optional, Any
 
-from alibabacloud_alidns20150109.client import Client as Alidns20150109Client
-from alibabacloud_alidns20150109 import models as alidns_models
-from alibabacloud_tea_openapi import models as open_api_models
+try:
+    from alibabacloud_alidns20150109.client import Client as Alidns20150109Client
+    from alibabacloud_alidns20150109 import models as alidns_models
+    from alibabacloud_tea_openapi import models as open_api_models
+    ALIYUN_AVAILABLE = True
+except ImportError:
+    ALIYUN_AVAILABLE = False
+    Alidns20150109Client = None
+    alidns_models = None
+    open_api_models = None
 
 from chattool.config import AliyunConfig
 
@@ -23,6 +30,9 @@ class AliyunDNSClient(DNSClient):
                  endpoint: Optional[str] = None,
                  logger: Optional[logging.Logger] = None):
         
+        if not ALIYUN_AVAILABLE:
+            raise ImportError("阿里云SDK未安装，请安装 chattool[tools] 或 alibabacloud 相关包")
+
         super().__init__(logger=logger)
         
         # 参数验证和环境变量回退

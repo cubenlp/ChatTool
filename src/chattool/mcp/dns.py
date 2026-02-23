@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 import os
 try:
     from fastmcp import FastMCP
@@ -16,18 +16,25 @@ def _get_provider(provider: Optional[str] = None) -> str:
     # Fallback to environment variable or default
     return os.getenv("DNS_PROVIDER", "aliyun")
 
-def list_domains(provider: Optional[str] = None) -> List[dict]:
+def list_domains(provider: Optional[str] = None) -> Union[List[dict], str]:
     """
     List all domains under the DNS account.
     
     Args:
         provider: DNS provider ('aliyun' or 'tencent'). If None, uses default.
     """
-    p = _get_provider(provider)
-    client = create_dns_client(p, logger=logger)
-    return client.describe_domains()
+    try:
+        p = _get_provider(provider)
+        client = create_dns_client(p, logger=logger)
+        return client.describe_domains()
+    except ImportError as e:
+        logger.error(f"Dependency missing: {e}")
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error listing domains: {e}")
+        return f"Error: {str(e)}"
 
-def get_records(domain: str, rr: Optional[str] = None, provider: Optional[str] = None) -> List[dict]:
+def get_records(domain: str, rr: Optional[str] = None, provider: Optional[str] = None) -> Union[List[dict], str]:
     """
     Get DNS records for a domain.
     
@@ -36,11 +43,18 @@ def get_records(domain: str, rr: Optional[str] = None, provider: Optional[str] =
         rr: Optional host record (e.g., www). If provided, filters by RR.
         provider: DNS provider ('aliyun' or 'tencent').
     """
-    p = _get_provider(provider)
-    client = create_dns_client(p, logger=logger)
-    if rr:
-        return client.describe_subdomain_records(domain, rr)
-    return client.describe_domain_records(domain)
+    try:
+        p = _get_provider(provider)
+        client = create_dns_client(p, logger=logger)
+        if rr:
+            return client.describe_subdomain_records(domain, rr)
+        return client.describe_domain_records(domain)
+    except ImportError as e:
+        logger.error(f"Dependency missing: {e}")
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error getting records: {e}")
+        return f"Error: {str(e)}"
 
 def add_record(
     domain: str, 
@@ -64,16 +78,23 @@ def add_record(
     Returns:
         The Record ID of the created record.
     """
-    p = _get_provider(provider)
-    client = create_dns_client(p, logger=logger)
-    return client.add_domain_record(domain, rr, type, value, ttl)
+    try:
+        p = _get_provider(provider)
+        client = create_dns_client(p, logger=logger)
+        return client.add_domain_record(domain, rr, type, value, ttl)
+    except ImportError as e:
+        logger.error(f"Dependency missing: {e}")
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error adding record: {e}")
+        return f"Error: {str(e)}"
 
 def delete_record(
     domain: str, 
     rr: str, 
     type: Optional[str] = None, 
     provider: Optional[str] = None
-) -> bool:
+) -> Union[bool, str]:
     """
     Delete DNS records.
     
@@ -86,16 +107,23 @@ def delete_record(
     Returns:
         True if deletion logic executed successfully.
     """
-    p = _get_provider(provider)
-    client = create_dns_client(p, logger=logger)
-    return client.delete_subdomain_records(domain, rr, type_=type)
+    try:
+        p = _get_provider(provider)
+        client = create_dns_client(p, logger=logger)
+        return client.delete_subdomain_records(domain, rr, type_=type)
+    except ImportError as e:
+        logger.error(f"Dependency missing: {e}")
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error deleting record: {e}")
+        return f"Error: {str(e)}"
 
 async def ddns_update(
     domain: str, 
     rr: str, 
     ip_type: str = 'public', 
     provider: Optional[str] = None
-) -> bool:
+) -> Union[bool, str]:
     """
     Perform a DDNS update (update DNS record with current IP).
     
@@ -108,15 +136,22 @@ async def ddns_update(
     Returns:
         True if update succeeded or no change needed.
     """
-    p = _get_provider(provider)
-    updater = DynamicIPUpdater(
-        domain_name=domain,
-        rr=rr,
-        dns_type=p,
-        ip_type=ip_type,
-        logger=logger
-    )
-    return await updater.run_once()
+    try:
+        p = _get_provider(provider)
+        updater = DynamicIPUpdater(
+            domain_name=domain,
+            rr=rr,
+            dns_type=p,
+            ip_type=ip_type,
+            logger=logger
+        )
+        return await updater.run_once()
+    except ImportError as e:
+        logger.error(f"Dependency missing: {e}")
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error in DDNS update: {e}")
+        return f"Error: {str(e)}"
 
 async def cert_update(
     domains: List[str], 
@@ -124,7 +159,7 @@ async def cert_update(
     provider: Optional[str] = None, 
     staging: bool = False,
     cert_dir: Optional[str] = None
-) -> bool:
+) -> Union[bool, str]:
     """
     Request or renew SSL certificates using Let's Encrypt (DNS-01 challenge).
     
@@ -138,22 +173,29 @@ async def cert_update(
     Returns:
         True if certificate was successfully obtained or renewed.
     """
-    p = _get_provider(provider)
-    
-    # Handle optional cert_dir: pass it only if not None, otherwise let class use default
-    kwargs = {}
-    if cert_dir:
-        kwargs['cert_dir'] = cert_dir
+    try:
+        p = _get_provider(provider)
         
-    updater = SSLCertUpdater(
-        domains=domains,
-        email=email,
-        dns_type=p,
-        staging=staging,
-        logger=logger,
-        **kwargs
-    )
-    return await updater.run_once()
+        # Handle optional cert_dir: pass it only if not None, otherwise let class use default
+        kwargs = {}
+        if cert_dir:
+            kwargs['cert_dir'] = cert_dir
+            
+        updater = SSLCertUpdater(
+            domains=domains,
+            email=email,
+            dns_type=p,
+            staging=staging,
+            logger=logger,
+            **kwargs
+        )
+        return await updater.run_once()
+    except ImportError as e:
+        logger.error(f"Dependency missing: {e}")
+        return f"Error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error in cert update: {e}")
+        return f"Error: {str(e)}"
 
 def register(mcp: FastMCP):
     """Register DNS tools with the MCP server."""

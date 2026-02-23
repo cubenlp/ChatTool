@@ -45,18 +45,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "wheel",
-    "coverage",
-    "netifaces",
-    "twine",
-    "pytest>=3",
-    "pytest-asyncio",
-    "pytest-mock",
+tools = [
     "alibabacloud_alidns20150109>=3.5.10",
     "alibabacloud_tea_openapi>=0.3.0",
     "tencentcloud-sdk-python",
     "dnspython",
+]
+tests = [
+    "coverage",
+    "pytest>=3",
+    "pytest-asyncio",
+    "pytest-mock",
 ]
 docs = [
     "mkdocs>=1.4.0",
@@ -66,6 +65,12 @@ docs = [
     "mkdocs-awesome-pages-plugin>=2.8.0",
     "mkdocs-redirects>=1.2.0",
     "mike>=1.1.2",
+]
+dev = [
+    "wheel",
+    "netifaces",
+    "twine",
+    "chattool[docs,tests,tools]",
 ]
 
 [project.urls]
