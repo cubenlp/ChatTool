@@ -27,6 +27,24 @@ def target_email():
     """Fixture to provide the target user email."""
     return "rexwzh@feishu.leanprover.cn"
 
+def test_quick_start_bot_info(lark_bot):
+    """
+    Test getting bot info (Smoke Test).
+    Ensures app_id and app_secret are valid and bot is accessible.
+    """
+    logger.info("Testing get_bot_info...")
+    response = lark_bot.get_bot_info()
+    
+    if response.code != 0:
+        pytest.fail(f"Failed to get bot info: {response.msg} (Code: {response.code})")
+        
+    import json
+    data = json.loads(response.raw.content)
+    bot_info = data.get("bot", {})
+    
+    logger.info(f"Bot Name: {bot_info.get('app_name')}")
+    assert bot_info.get("activate_status") == 2, "Bot is not activated (status != 2)"
+
 def test_quick_start_send_text(lark_bot, target_user, target_email):
     """
     Test sending a text message (Auto-reply scenario part 1: Sending).

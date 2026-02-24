@@ -25,7 +25,7 @@ class LarkBot:
         builder = lark_oapi.Client.builder() \
             .app_id(self.config.FEISHU_APP_ID.value) \
             .app_secret(self.config.FEISHU_APP_SECRET.value) \
-            .log_level(lark_oapi.LogLevel.DEBUG)
+            .log_level(lark_oapi.LogLevel.INFO)
             
         if self.config.FEISHU_API_BASE.value:
             builder.domain(self.config.FEISHU_API_BASE.value)
@@ -195,4 +195,24 @@ class LarkBot:
             encrypt_key or "", 
             verification_token or ""
         )
+
+    def get_bot_info(self):
+        """Get bot information.
+        
+        This method uses the Get Bot Info API (v3) to retrieve bot details.
+        https://open.feishu.cn/document/client-docs/bot-v3/bot-overview
+        
+        Returns:
+            response: The response from Lark API.
+        """
+        # Construct request manually as bot.v3 might not be available in SDK
+        request = lark_oapi.BaseRequest.builder() \
+            .http_method(lark_oapi.HttpMethod.GET) \
+            .uri("/open-apis/bot/v3/info") \
+            .token_types({lark_oapi.AccessTokenType.TENANT}) \
+            .build()
+            
+        # Use the client's internal request method
+        # Note: client.request is available on the client instance
+        return self.client.request(request)
 
