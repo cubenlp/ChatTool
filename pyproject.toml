@@ -50,6 +50,7 @@ tools = [
     "alibabacloud_tea_openapi>=0.3.0",
     "tencentcloud-sdk-python",
     "netifaces",
+    "lark-oapi==1.5.3",
 ]
 tests = [
     "coverage",

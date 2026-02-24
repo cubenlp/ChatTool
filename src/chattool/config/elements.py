@@ -110,6 +110,20 @@ class BaseEnvConfig:
         return "\n".join(lines)
 
     @classmethod
+    def get_config_by_alias(cls, alias: str) -> Type['BaseEnvConfig']:
+        """根据别名获取配置类"""
+        for config_cls in cls._registry:
+            if alias in config_cls._aliases:
+                return config_cls
+        return None
+
+    @classmethod
+    def test(cls):
+        """测试配置是否可用"""
+        print(f"Testing {cls._title}...")
+        raise NotImplementedError("Test method not implemented for this configuration.")
+
+    @classmethod
     def save_env_file(cls, env_path: str, version: str = "0.0.0"):
         """保存当前配置到 .env 文件"""
         content = cls.generate_env_template(version)
