@@ -52,12 +52,8 @@ bot = LarkBot()  # 自动从环境变量读取
 
 ```python
 from chattool.tools.lark import LarkBot
-from chattool.config import FeishuConfig
 
-config = FeishuConfig()
-config.FEISHU_APP_ID.value = "cli_xxx"
-config.FEISHU_APP_SECRET.value = "xxx"
-bot = LarkBot(config=config)
+bot = LarkBot(app_id="cli_xxx", app_secret="xxx")
 ```
 
 ---
@@ -218,6 +214,8 @@ FEISHU_API_BASE=https://open.larksuite.com
 
 ## 常见错误与排查
 
+### 错误码速查表
+
 | 错误码 | 含义 | 解决方法 |
 |--------|------|----------|
 | `99991663` | 用户不在应用可见范围内 | 在「权限管理」→「成员权限」中添加该用户 |
@@ -226,9 +224,54 @@ FEISHU_API_BASE=https://open.larksuite.com
 | `230002` | 机器人未激活 | 在「应用功能」→「机器人」中开启机器人 |
 | `9499` | 事件订阅未配置 | 在「事件订阅」中添加并订阅事件 |
 
+### WebSocket 连接成功但收不到消息
+
+这是最常见的问题。WebSocket 连接建立成功（能看到 `connected to wss://...`），但给机器人发消息后终端没有任何反应。
+
+**诊断步骤：**
+
+```bash
+# 用 DEBUG 级别启动，观察是否有 receive message 帧
+chattool serve lark echo -l DEBUG
+```
+
+如果只看到 `ping success` / `receive pong`，没有 `receive message`，说明飞书服务端没有推送事件。逐项检查：
+
+1. **事件订阅是否添加**：「事件订阅与回调」→ 已添加事件列表中必须包含 `im.message.receive_v1`（接收消息 v2.0）
+2. **事件权限是否开通**：`im.message.receive_v1` 事件需要开通以下权限之一：
+    - 「读取用户发给机器人的单聊消息」
+    - 「接收群聊中@机器人消息事件」
+    - 「获取群组中所有消息（敏感权限）」
+3. **应用是否已发布**：修改事件订阅后，需要「版本管理与发布」→ 创建版本 → 提交发布，审批通过后才生效
+4. **订阅模式是否正确**：确认选择了「使用长连接接收事件」
+
+!!! warning "权限是关键"
+    即使事件已添加，如果对应的权限没有开通，飞书服务端也不会推送事件。  
+    请务必在「权限管理」中开通事件所需的权限。
+
+### 查看当前权限
+
+```bash
+# 查看已授权的 im 相关权限
+chattool lark scopes -f im
+
+# 按模块分组查看所有权限
+chattool lark scopes -g
+```
+
+### Encrypt Key 和 Verification Token
+
+| 参数 | WebSocket 模式 | Webhook 模式 |
+|------|:---:|:---:|
+| Encrypt Key | 不需要 | 可选（开启后事件内容加密传输） |
+| Verification Token | 不需要 | 可选（用于校验请求来源） |
+
+WebSocket 模式下 SDK 内部使用 `do_without_validation()`，完全跳过 token 校验和解密，这两个参数留空即可。
+
 ---
 
 ## 下一步
 
 - [快速开始](quickstart.md) — 发出第一条消息
 - [接收消息与路由](receiving.md) — 配置好后来这里写处理逻辑
+- [命令行工具](cli.md) — CLI 命令速查
