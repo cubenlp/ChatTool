@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '5.2.0'
+__version__ = '5.3.0'
 
 from dotenv import load_dotenv
 
