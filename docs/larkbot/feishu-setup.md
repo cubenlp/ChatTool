@@ -204,7 +204,7 @@ FEISHU_API_BASE=https://open.larksuite.com
 | `230002` | 机器人未激活 | 在「应用功能」→「机器人」中开启机器人 |
 | `9499` | 事件订阅未配置 | 在「事件订阅」中添加并订阅事件 |
 
-### WebSocket 连接成功但收不到消息
+### WebSocket连接成功但收不到消息
 
 这是最常见的问题。WebSocket 连接建立成功（能看到 `connected to wss://...`），但给机器人发消息后终端没有任何反应。
 

@@ -85,7 +85,7 @@ bot.start()
     2. **事件所需的权限已开通**（「读取用户发给机器人的单聊消息」等）
     3. 应用已创建版本并发布
 
-    用 `chattool serve lark echo -l DEBUG` 排查，详见 [飞书平台配置 - 排查](feishu-setup.md#websocket-连接成功但收不到消息)。
+    用 `chattool serve lark echo -l DEBUG` 排查，详见 [飞书平台配置 - 排查](feishu-setup.md#websocket连接成功但收不到消息)。
 
 ## 5. 加入指令路由
 
