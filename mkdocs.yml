@@ -117,3 +117,4 @@ nav:
     - 命令行工具: larkbot/cli.md
   - 博客:
     - 从代码到 Agent 技能: blog/code_tool_skill.md
+    - v0.5.3 飞书机器人: blog/larkbot_v053.md

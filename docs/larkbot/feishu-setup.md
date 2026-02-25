@@ -10,15 +10,11 @@
 2. 点击右上角「**开发者后台**」。
 3. 在「应用列表」页面，点击「**创建企业自建应用**」。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 「创建企业自建应用」按钮位置 -->
-    ![创建企业自建应用](https://qiniu.wzhecnu.cn/FileBed/source/20260226020952.png){ loading=lazy }
+![创建企业自建应用](https://qiniu.wzhecnu.cn/FileBed/source/20260226020952.png){ loading=lazy }
 
 1. 填写应用名称（如 `AI 助手`）、应用描述，选择应用图标，点击「**确认创建**」。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 填写应用信息表单 -->
-    ![填写应用信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021050.png){ loading=lazy }
+![填写应用信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021050.png){ loading=lazy }
 
 ---
 
@@ -29,9 +25,7 @@
 1. 点击左侧菜单「**凭证与基础信息**」。
 2. 复制 **App ID** 和 **App Secret**（点击「复制」图标）。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 凭证与基础信息页面 -->
-    ![凭证与基础信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021130.png){ loading=lazy }
+![凭证与基础信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021130.png){ loading=lazy }
 
 !!! warning "安全提示"
     App Secret 相当于密码，请勿提交到 Git 仓库。推荐使用 `.env` 文件或环境变量管理：
@@ -65,9 +59,7 @@ bot = LarkBot(app_id="cli_xxx", app_secret="xxx")
 1. 点击左侧菜单「**应用功能**」→「**机器人**」。
 2. 开启「**机器人**」开关。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 开启机器人能力 -->
-    ![开启机器人能力](https://qiniu.wzhecnu.cn/FileBed/source/20260226024745.png){ loading=lazy }
+![开启机器人能力](https://qiniu.wzhecnu.cn/FileBed/source/20260226024745.png){ loading=lazy }
 
 ---
 
@@ -78,9 +70,7 @@ bot = LarkBot(app_id="cli_xxx", app_secret="xxx")
 1. 点击左侧菜单「**权限管理**」。
 2. 在搜索框输入权限名，找到后点击「**申请**」。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 权限管理页面，搜索并申请权限 -->
-    ![权限管理](https://qiniu.wzhecnu.cn/FileBed/source/20260226024831.png){ loading=lazy }
+![权限管理](https://qiniu.wzhecnu.cn/FileBed/source/20260226024831.png){ loading=lazy }
 
 ### 常用权限速查
 
@@ -118,15 +108,11 @@ bot = LarkBot(app_id="cli_xxx", app_secret="xxx")
 2. 「请求方式」选择「**使用长连接接收事件**」。
 3. 无需填写请求 URL。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 事件订阅选择「长连接」 -->
-    ![WebSocket 长连接](https://qiniu.wzhecnu.cn/FileBed/source/20260226030553.png){ loading=lazy }
+![选择长连接接收事件](https://qiniu.wzhecnu.cn/FileBed/source/20260226030553.png){ loading=lazy }
 
 1. 在「**添加事件**」中搜索并订阅所需事件，例如 `接收消息`（`im.message.receive_v1`）。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 添加 im.message.receive_v1 事件 -->
-    ![添加 im.message.receive_v1 事件](https://qiniu.wzhecnu.cn/FileBed/source/20260226034100.png){ loading=lazy }
+![添加事件并开通权限](https://qiniu.wzhecnu.cn/FileBed/source/20260226034100.png){ loading=lazy }
 
 启动相应的监听服务：
 
@@ -146,9 +132,7 @@ bot.start()
 2. 填写「**请求 URL**」（需要 HTTPS 公网地址，例如 `https://your-server.com/webhook/event`）。
 3. 填写 **Encrypt Key** 和 **Verification Token**（可选，用于安全验证）。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → Webhook 配置页面 -->
-    ![Webhook 配置页面](https://qiniu.wzhecnu.cn/FileBed/source/20260226031232.png){ loading=lazy }
+![Webhook 配置页面](https://qiniu.wzhecnu.cn/FileBed/source/20260226031232.png){ loading=lazy }
 
 启动 Flask Webhook 服务：
 
@@ -172,9 +156,7 @@ bot.start(
 1. 点击左侧菜单「**应用发布**」→「**版本管理与发布**」。
 2. 或者点击「**权限管理**」→「**成员权限**」配置可见范围。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 应用可见范围设置 -->
-    ![应用可见范围设置](https://qiniu.wzhecnu.cn/FileBed/source/20260226031502.png){ loading=lazy }
+![应用可见范围设置](https://qiniu.wzhecnu.cn/FileBed/source/20260226031502.png){ loading=lazy }
 
 !!! tip
     在企业内测阶段，可以将可见范围设为「全员」方便测试，发布后再收窄。
@@ -189,9 +171,7 @@ bot.start(
 2. 点击「**创建版本**」，填写更新日志。
 3. 点击「**提交发布**」，等待企业管理员审批。
 
-!!! info "截图占位"
-    <!-- TODO: 上传截图 → 创建版本并提交发布 -->
-    ![创建版本并提交发布](https://qiniu.wzhecnu.cn/FileBed/source/20260226031345.png){ loading=lazy }
+![创建版本并提交发布](https://qiniu.wzhecnu.cn/FileBed/source/20260226031345.png){ loading=lazy }
 
 ---
 
