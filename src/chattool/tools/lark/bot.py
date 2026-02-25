@@ -58,9 +58,9 @@ class LarkBot:
     """
 
     def __init__(self, app_id:str=None, app_secret:str=None, api_base:str=None):
-        app_id = app_id or FeishuConfig().FEISHU_APP_ID.value
-        app_secret = app_secret or FeishuConfig().FEISHU_APP_SECRET.value
-        api_base = api_base or FeishuConfig().FEISHU_API_BASE.value or "https://open.feishu.cn"
+        app_id = app_id or FeishuConfig.FEISHU_APP_ID.value
+        app_secret = app_secret or FeishuConfig.FEISHU_APP_SECRET.value
+        api_base = api_base or FeishuConfig.FEISHU_API_BASE.value or "https://open.feishu.cn"
         assert app_id and app_secret, "Feishu App ID and App Secret are required"
         self.app_id = app_id
         self.app_secret = app_secret
@@ -269,6 +269,13 @@ class LarkBot:
 
         return builder.build()
 
+    _LOG_LEVEL_MAP = {
+        "DEBUG": lark_oapi.LogLevel.DEBUG,
+        "INFO": lark_oapi.LogLevel.INFO,
+        "WARNING": lark_oapi.LogLevel.WARNING,
+        "ERROR": lark_oapi.LogLevel.ERROR,
+    }
+
     def start(
         self,
         mode: str = "ws",
@@ -277,6 +284,7 @@ class LarkBot:
         host: str = "0.0.0.0",
         port: int = 7777,
         path: str = "/webhook/event",
+        log_level: str = "INFO",
     ) -> None:
         """
         Start the bot.
@@ -289,9 +297,12 @@ class LarkBot:
             host: Host for Flask mode.
             port: Port for Flask mode.
             path: URL path for Flask mode.
+            log_level: ``"DEBUG"`` / ``"INFO"`` / ``"WARN"`` / ``"ERROR"``.
         """
+        level = self._LOG_LEVEL_MAP.get(log_level.upper(), lark_oapi.LogLevel.INFO)
+        lark_oapi.logger.setLevel(level.value)
         if mode == "ws":
-            self._start_ws(encrypt_key, verification_token)
+            self._start_ws(encrypt_key, verification_token, level)
         elif mode == "flask":
             self._start_flask(encrypt_key, verification_token, host, port, path)
         else:
@@ -318,14 +329,18 @@ class LarkBot:
         t.start()
         return t
 
-    def _start_ws(self, encrypt_key: str, verification_token: str) -> None:
+    def _start_ws(
+        self,
+        encrypt_key: str,
+        verification_token: str,
+        level: lark_oapi.LogLevel = lark_oapi.LogLevel.INFO,
+    ) -> None:
         event_handler = self._build_event_handler(encrypt_key, verification_token)
-        ws = (
-            WSClient.builder()
-            .app_id(self.app_id)
-            .app_secret(self.app_secret)
-            .event_handler(event_handler)
-            .build()
+        ws = WSClient(
+            app_id=self.app_id,
+            app_secret=self.app_secret,
+            event_handler=event_handler,
+            log_level=level,
         )
         lark_oapi.logger.info("[LarkBot] Starting WebSocket connection...")
         ws.start()
@@ -403,9 +418,79 @@ class LarkBot:
         )
 
     def send_image(self, receive_id: str, receive_id_type: str, image_key: str) -> Any:
-        """Send an image message."""
+        """Send an image message by image_key."""
         return self._send_message(
             receive_id, receive_id_type, "image", json.dumps({"image_key": image_key})
+        )
+
+    def upload_image(self, path: str, image_type: str = "message") -> Any:
+        """Upload an image file and return the response (use resp.data.image_key)."""
+        from lark_oapi.api.im.v1 import CreateImageRequest, CreateImageRequestBody
+        with open(path, "rb") as f:
+            request = (
+                CreateImageRequest.builder()
+                .request_body(
+                    CreateImageRequestBody.builder()
+                    .image_type(image_type)
+                    .image(f)
+                    .build()
+                ).build()
+            )
+            response = self.client.im.v1.image.create(request)
+        if not response.success():
+            lark_oapi.logger.error(
+                f"im.v1.image.create failed, "
+                f"code: {response.code}, msg: {response.msg}"
+            )
+        return response
+
+    def send_image_file(
+        self, receive_id: str, receive_id_type: str, path: str
+    ) -> Any:
+        """Upload a local image and send it in one step."""
+        upload_resp = self.upload_image(path)
+        if not upload_resp.success():
+            return upload_resp
+        return self.send_image(receive_id, receive_id_type, upload_resp.data.image_key)
+
+    def upload_file(
+        self, path: str, file_type: str = "stream", file_name: str = None
+    ) -> Any:
+        """Upload a file and return the response (use resp.data.file_key)."""
+        import os
+        from lark_oapi.api.im.v1 import CreateFileRequest, CreateFileRequestBody
+        if file_name is None:
+            file_name = os.path.basename(path)
+        with open(path, "rb") as f:
+            request = (
+                CreateFileRequest.builder()
+                .request_body(
+                    CreateFileRequestBody.builder()
+                    .file_type(file_type)
+                    .file_name(file_name)
+                    .file(f)
+                    .build()
+                ).build()
+            )
+            response = self.client.im.v1.file.create(request)
+        if not response.success():
+            lark_oapi.logger.error(
+                f"im.v1.file.create failed, "
+                f"code: {response.code}, msg: {response.msg}"
+            )
+        return response
+
+    def send_file(
+        self, receive_id: str, receive_id_type: str, path: str,
+        file_type: str = "stream",
+    ) -> Any:
+        """Upload a local file and send it in one step."""
+        upload_resp = self.upload_file(path, file_type=file_type)
+        if not upload_resp.success():
+            return upload_resp
+        return self._send_message(
+            receive_id, receive_id_type, "file",
+            json.dumps({"file_key": upload_resp.data.file_key}),
         )
 
     def send_card(
@@ -518,6 +603,12 @@ class LarkBot:
             .build()
         )
         return self.client.request(request)
+
+    def get_scopes(self) -> Any:
+        """List all scopes (permissions) of this app and their grant status."""
+        from lark_oapi.api.application.v6 import ListScopeRequest
+        request = ListScopeRequest.builder().build()
+        return self.client.application.v6.scope.list(request)
 
 
 # ---------------------------------------------------------------------------

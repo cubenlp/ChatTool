@@ -110,6 +110,9 @@ class FeishuConfig(BaseEnvConfig):
     FEISHU_APP_SECRET = EnvField("FEISHU_APP_SECRET", desc="Feishu App Secret", is_sensitive=True)
     FEISHU_API_BASE = EnvField("FEISHU_API_BASE", default="https://open.feishu.cn", desc="Feishu API Base URL (Default: https://open.feishu.cn, for Lark: https://open.larksuite.com)")
 
+    FEISHU_ENCRYPT_KEY = EnvField("FEISHU_ENCRYPT_KEY", desc="Feishu Encrypt Key (Get from https://open.feishu.cn/app)")
+    FEISHU_VERIFY_TOKEN = EnvField("FEISHU_VERIFY_TOKEN", desc="Feishu Verify Token (Get from https://open.feishu.cn/app)")
+
     @classmethod
     def test(cls):
         print(f"Testing {cls._title}...")

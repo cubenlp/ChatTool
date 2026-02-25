@@ -87,28 +87,62 @@ resp = bot.send_post("oc_group", "chat_id", content)
 
 ## 图片消息
 
-发送图片需先上传获取 `image_key`，再发送。
+=== "一步发送（推荐）"
 
-```python
-# 1. 上传图片
-from lark_oapi.api.im.v1 import CreateImageRequest, CreateImageRequestBody
+    ```python
+    resp = bot.send_image_file("rexwzh", "user_id", "photo.jpg")
+    ```
 
-with open("photo.jpg", "rb") as f:
-    upload_resp = bot.client.im.v1.image.create(
-        CreateImageRequest.builder()
-        .request_body(
-            CreateImageRequestBody.builder()
-            .image_type("message")
-            .image(f)
-            .build()
-        ).build()
-    )
+=== "CLI"
 
-image_key = upload_resp.data.image_key
+    ```bash
+    chattool lark send rexwzh --image photo.jpg
+    ```
 
-# 2. 发送图片
-resp = bot.send_image("rexwzh", "user_id", image_key)
-```
+=== "分步操作"
+
+    ```python
+    # 1. 上传图片，获取 image_key
+    upload_resp = bot.upload_image("photo.jpg")
+    image_key = upload_resp.data.image_key
+
+    # 2. 用 image_key 发送
+    resp = bot.send_image("rexwzh", "user_id", image_key)
+    ```
+
+!!! tip "仅上传不发送"
+    如果只需要获取 `image_key`（例如用于富文本或卡片内嵌图片），可以单独调用：
+
+    ```python
+    resp = bot.upload_image("photo.jpg")
+    print(resp.data.image_key)  # img_v3_xxxx
+    ```
+
+    CLI: `chattool lark upload photo.jpg`
+
+---
+
+## 文件消息
+
+=== "一步发送"
+
+    ```python
+    resp = bot.send_file("rexwzh", "user_id", "report.pdf")
+    ```
+
+=== "CLI"
+
+    ```bash
+    chattool lark send rexwzh --file report.pdf
+    ```
+
+=== "分步操作"
+
+    ```python
+    upload_resp = bot.upload_file("report.pdf")
+    file_key = upload_resp.data.file_key
+    # 可以用 file_key 发送给多个人
+    ```
 
 ---
 

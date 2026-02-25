@@ -22,6 +22,7 @@ pip install "chattool[tools]"
 在项目根目录创建 `.env` 文件（或直接设置环境变量）：
 
 ```bash title=".env"
+# chatenv init -i -t lark
 FEISHU_APP_ID=cli_xxxxxxxxxxxxxxxx
 FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
@@ -37,9 +38,6 @@ FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 === "Python"
 
     ```python title="send_hello.py"
-    from dotenv import load_dotenv
-    load_dotenv()
-
     from chattool.tools.lark import LarkBot
 
     bot = LarkBot()
@@ -62,9 +60,6 @@ FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ## 4. 接收用户消息并回复
 
 ```python title="echo_bot.py"
-from dotenv import load_dotenv
-load_dotenv()
-
 from chattool.tools.lark import LarkBot
 
 bot = LarkBot()
@@ -84,9 +79,6 @@ bot.start()
 ## 5. 加入指令路由
 
 ```python title="bot_with_commands.py"
-from dotenv import load_dotenv
-load_dotenv()
-
 from chattool.tools.lark import LarkBot
 
 bot = LarkBot()
@@ -117,9 +109,6 @@ bot.start()
 只需 10 行代码，机器人就能用大语言模型回复：
 
 ```python title="ai_bot.py"
-from dotenv import load_dotenv
-load_dotenv()  # 同时需要 OPENAI_API_KEY
-
 from chattool.tools.lark import LarkBot, ChatSession
 
 bot = LarkBot()

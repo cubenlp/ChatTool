@@ -12,13 +12,13 @@
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 「创建企业自建应用」按钮位置 -->
-    ![20260226020952](https://qiniu.wzhecnu.cn/FileBed/source/20260226020952.png){ loading=lazy }
+    ![创建企业自建应用](https://qiniu.wzhecnu.cn/FileBed/source/20260226020952.png){ loading=lazy }
 
 1. 填写应用名称（如 `AI 助手`）、应用描述，选择应用图标，点击「**确认创建**」。
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 填写应用信息表单 -->
-    ![20260226021050](https://qiniu.wzhecnu.cn/FileBed/source/20260226021050.png){ loading=lazy }
+    ![填写应用信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021050.png){ loading=lazy }
 
 ---
 
@@ -31,11 +31,11 @@
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 凭证与基础信息页面 -->
-    ![20260226021130](https://qiniu.wzhecnu.cn/FileBed/source/20260226021130.png){ loading=lazy }
+    ![凭证与基础信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021130.png){ loading=lazy }
 
 !!! warning "安全提示"
     App Secret 相当于密码，请勿提交到 Git 仓库。推荐使用 `.env` 文件或环境变量管理：
-    
+
     ```bash
     chatenv init -i -t feishu
     ```
@@ -52,7 +52,7 @@ bot = LarkBot()  # 自动从环境变量读取
 
 ```python
 from chattool.tools.lark import LarkBot
-from chattool.config.main import FeishuConfig
+from chattool.config import FeishuConfig
 
 config = FeishuConfig()
 config.FEISHU_APP_ID.value = "cli_xxx"
@@ -71,7 +71,7 @@ bot = LarkBot(config=config)
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 开启机器人能力 -->
-    ![开启机器人](../assets/screenshots/larkbot/04_enable_bot.png){ loading=lazy }
+    ![开启机器人能力](https://qiniu.wzhecnu.cn/FileBed/source/20260226024745.png){ loading=lazy }
 
 ---
 
@@ -84,7 +84,7 @@ bot = LarkBot(config=config)
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 权限管理页面，搜索并申请权限 -->
-    ![权限管理](../assets/screenshots/larkbot/05_permissions.png){ loading=lazy }
+    ![权限管理](https://qiniu.wzhecnu.cn/FileBed/source/20260226024831.png){ loading=lazy }
 
 ### 常用权限速查
 
@@ -104,32 +104,44 @@ bot = LarkBot(config=config)
     自建应用的权限申请通常**无需审批**，立即生效。  
     如果是第三方应用，需要企业管理员在管理后台审批。
 
+在 [API 调试台](https://open.feishu.cn/api-explorer)，下拉选择 `receive_id_type` 为 `user_id`，选择目标用户后，可以获取对应的 user_id。类似的，可以获取群聊的 chat_id。
+
+![获取 user_id](https://qiniu.wzhecnu.cn/FileBed/source/20260226024950.png){ loading=lazy }
+
 ---
 
 ## 第五步：配置事件订阅
 
+订阅事件或回调后，飞书开放平台将会在事件（如机器人入群）发生时向请求地址推送消息。注意：事件与回调的处理方式不同。订阅回调后，你需要立即返回响应内容，以反馈用户操作，而事件则不要求返回。
+
+![事件订阅与回调](https://qiniu.wzhecnu.cn/FileBed/source/20260226025419.png){ loading=lazy }
+
 ### 方式一：WebSocket 长连接（推荐本地开发）
 
-1. 点击左侧菜单「**事件订阅**」。
+1. 点击左侧菜单「**事件订阅与回调**」。
 2. 「请求方式」选择「**使用长连接接收事件**」。
 3. 无需填写请求 URL。
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 事件订阅选择「长连接」 -->
-    ![WebSocket 长连接](../assets/screenshots/larkbot/06_websocket_mode.png){ loading=lazy }
+    ![WebSocket 长连接](https://qiniu.wzhecnu.cn/FileBed/source/20260226030553.png){ loading=lazy }
 
-4. 在「**添加事件**」中搜索并订阅所需事件，例如 `接收消息`（`im.message.receive_v1`）。
+1. 在「**添加事件**」中搜索并订阅所需事件，例如 `接收消息`（`im.message.receive_v1`）。
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 添加 im.message.receive_v1 事件 -->
-    ![添加事件](../assets/screenshots/larkbot/07_add_event.png){ loading=lazy }
+    ![添加 im.message.receive_v1 事件](https://qiniu.wzhecnu.cn/FileBed/source/20260226034100.png){ loading=lazy }
 
-启动代码只需一行：
+启动相应的监听服务：
 
 ```python
-bot.start()          # 默认使用 WebSocket 模式
-# 或
-bot.start(mode="ws") # 显式指定
+from chattool import LarkBot
+bot = LarkBot()
+@bot.on_message
+def handle(ctx):
+    ctx.reply(f"收到：{ctx.text}")
+
+bot.start()
 ```
 
 ### 方式二：Webhook（生产环境）
@@ -140,7 +152,7 @@ bot.start(mode="ws") # 显式指定
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → Webhook 配置页面 -->
-    ![Webhook 配置](../assets/screenshots/larkbot/08_webhook_config.png){ loading=lazy }
+    ![Webhook 配置页面](https://qiniu.wzhecnu.cn/FileBed/source/20260226031232.png){ loading=lazy }
 
 启动 Flask Webhook 服务：
 
@@ -166,7 +178,7 @@ bot.start(
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 应用可见范围设置 -->
-    ![可见范围](../assets/screenshots/larkbot/09_visibility.png){ loading=lazy }
+    ![应用可见范围设置](https://qiniu.wzhecnu.cn/FileBed/source/20260226031502.png){ loading=lazy }
 
 !!! tip
     在企业内测阶段，可以将可见范围设为「全员」方便测试，发布后再收窄。
@@ -183,7 +195,7 @@ bot.start(
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 创建版本并提交发布 -->
-    ![发布应用](../assets/screenshots/larkbot/10_publish.png){ loading=lazy }
+    ![创建版本并提交发布](https://qiniu.wzhecnu.cn/FileBed/source/20260226031345.png){ loading=lazy }
 
 ---
 

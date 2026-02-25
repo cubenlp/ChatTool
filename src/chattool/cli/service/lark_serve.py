@@ -8,15 +8,17 @@ Commands:
 """
 import sys
 import click
-try:
-    from chattool.tools.lark import LarkBot
-except Exception as e:
-    LarkBot = None
 
+from chattool.tools.lark import LarkBot
+
+LOG_LEVELS = click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False)
 
 def _get_bot():
-    if LarkBot is None:
-        click.echo("请确认已设置 FEISHU_APP_ID 和 FEISHU_APP_SECRET 环境变量", err=True)
+    try:
+        return LarkBot()
+    except Exception as e:
+        click.echo(f"初始化失败: {e}", err=True)
+        click.echo("请确认已安装 chattool[tools] 并设置 FEISHU_APP_ID 和 FEISHU_APP_SECRET 环境变量", err=True)
         sys.exit(1)
 
 
@@ -37,7 +39,9 @@ def cli():
 @click.option("--host", default="0.0.0.0", help="Flask 监听地址 (仅 flask 模式)")
 @click.option("--port", "-p", default=7777, type=int,
               help="Flask 监听端口 (仅 flask 模式)")
-def echo(mode, host, port):
+@click.option("--log-level", "-l", default="INFO", type=LOG_LEVELS,
+              help="日志级别 (默认 INFO)")
+def echo(mode, host, port, log_level):
     """
     启动回显机器人：原样返回收到的文本消息。
 
@@ -46,6 +50,7 @@ def echo(mode, host, port):
 
     示例:
       chattool serve lark echo
+      chattool serve lark echo --log-level DEBUG
       chattool serve lark echo --mode flask --port 8080
     """
     bot = _get_bot()
@@ -54,8 +59,8 @@ def echo(mode, host, port):
     def handle(ctx):
         ctx.reply(f"Echo: {ctx.text}")
 
-    click.secho(f"🤖 回显机器人启动  mode={mode}", fg="green")
-    _start(bot, mode, host, port)
+    click.secho(f"🤖 回显机器人启动  mode={mode}  log_level={log_level}", fg="green")
+    _start(bot, mode, host, port, log_level)
 
 
 # ------------------------------------------------------------------
@@ -68,13 +73,15 @@ def echo(mode, host, port):
               help="运行模式")
 @click.option("--host", default="0.0.0.0", help="Flask 监听地址")
 @click.option("--port", "-p", default=7777, type=int, help="Flask 监听端口")
+@click.option("--log-level", "-l", default="INFO", type=LOG_LEVELS,
+              help="日志级别 (默认 INFO)")
 @click.option("--system", "-s",
               default="你是一个工作助手，回答简洁专业。",
               help="System Prompt")
 @click.option("--max-history", "-n", default=10, type=int,
               help="每个用户最多保留的对话轮数")
 @click.option("--model", default=None, help="LLM 模型名称 (留空使用默认)")
-def ai(mode, host, port, system, max_history, model):
+def ai(mode, host, port, log_level, system, max_history, model):
     """
     启动 AI 对话机器人：接入 LLM 进行多轮对话。
 
@@ -112,8 +119,8 @@ def ai(mode, host, port, system, max_history, model):
         reply_text = session.chat(ctx.sender_id, ctx.text)
         ctx.reply(reply_text)
 
-    click.secho(f"🤖 AI 机器人启动  mode={mode}  system={system[:40]}...", fg="green")
-    _start(bot, mode, host, port)
+    click.secho(f"🤖 AI 机器人启动  mode={mode}  log_level={log_level}  system={system[:40]}...", fg="green")
+    _start(bot, mode, host, port, log_level)
 
 
 # ------------------------------------------------------------------
@@ -124,9 +131,11 @@ def ai(mode, host, port, system, max_history, model):
 @click.option("--host", default="0.0.0.0", help="监听地址")
 @click.option("--port", "-p", default=7777, type=int, help="监听端口")
 @click.option("--path", default="/webhook/event", help="Webhook 路径")
+@click.option("--log-level", "-l", default="INFO", type=LOG_LEVELS,
+              help="日志级别 (默认 INFO)")
 @click.option("--encrypt-key", default="", help="事件加密 Key")
 @click.option("--verification-token", default="", help="验证 Token")
-def webhook(host, port, path, encrypt_key, verification_token):
+def webhook(host, port, path, log_level, encrypt_key, verification_token):
     """
     启动空 Webhook 服务，用于飞书平台验证 URL。
 
@@ -141,7 +150,7 @@ def webhook(host, port, path, encrypt_key, verification_token):
     """
     bot = _get_bot()
     click.secho(
-        f"🔗 Webhook 服务启动  http://{host}:{port}{path}",
+        f"🔗 Webhook 服务启动  http://{host}:{port}{path}  log_level={log_level}",
         fg="green",
     )
     bot.start(
@@ -151,14 +160,15 @@ def webhook(host, port, path, encrypt_key, verification_token):
         host=host,
         port=port,
         path=path,
+        log_level=log_level,
     )
 
 
-def _start(bot, mode, host, port):
+def _start(bot, mode, host, port, log_level="INFO"):
     try:
         if mode == "ws":
-            bot.start(mode="ws")
+            bot.start(mode="ws", log_level=log_level)
         else:
-            bot.start(mode="flask", host=host, port=port)
+            bot.start(mode="flask", host=host, port=port, log_level=log_level)
     except KeyboardInterrupt:
         click.echo("\n已停止")

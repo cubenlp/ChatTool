@@ -62,8 +62,6 @@ chattool.tools.lark
 
 ```bash
 pip install "chattool[tools]"
-# 或单独安装 lark-oapi
-pip install lark-oapi
 ```
 
 ## 最简示例
