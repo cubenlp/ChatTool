@@ -9,7 +9,6 @@
 
 import asyncio
 import aiohttp
-import netifaces
 import ipaddress
 from typing import Optional, Dict, Any, Union
 
@@ -103,6 +102,7 @@ class DynamicIPUpdater:
         """获取局域网IP地址"""
         try:
             # 获取所有网络接口
+            import netifaces
             interfaces = netifaces.interfaces()
             candidates = []
 

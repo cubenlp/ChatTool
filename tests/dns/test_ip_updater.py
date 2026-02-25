@@ -1,5 +1,4 @@
 import pytest
-import socket
 import netifaces
 from unittest.mock import patch
 from chattool.tools.dns.ip_updater import DynamicIPUpdater
