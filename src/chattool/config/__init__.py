@@ -1,5 +1,7 @@
 from .elements import EnvField, BaseEnvConfig
-from .main import AzureConfig, OpenAIConfig, ZulipConfig, AliyunConfig, TencentConfig
+from .main import (
+    AzureConfig, OpenAIConfig, ZulipConfig, AliyunConfig, TencentConfig, FeishuConfig
+)
 
 __all__ = [
     "EnvField",
@@ -9,4 +11,5 @@ __all__ = [
     "ZulipConfig",
     "AliyunConfig",
     "TencentConfig",
+    "FeishuConfig",
 ]

@@ -2,7 +2,7 @@
 
 __author__ = """Rex Wang"""
 __email__ = '1073853456@qq.com'
-__version__ = '5.2.0'
+__version__ = '5.3.0'
 
 from dotenv import load_dotenv
 
@@ -14,6 +14,7 @@ from .utils import (
 )
 from .const import CHATTOOL_REPO_DIR
 from .config import OpenAIConfig, AzureConfig, AliyunConfig, TencentConfig, ZulipConfig
+from .tools import LarkBot, AliyunDNSClient, TencentDNSClient, DynamicIPUpdater, SSLCertUpdater
 
 setup_jupyter_async()
 load_dotenv(CHATTOOL_REPO_DIR / '.env')
@@ -34,4 +35,9 @@ __all__ = [
     "AliyunConfig",
     "TencentConfig",
     "ZulipConfig",
+    "LarkBot",
+    "AliyunDNSClient",
+    "TencentDNSClient",
+    "DynamicIPUpdater",
+    "SSLCertUpdater",
 ]

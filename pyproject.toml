@@ -50,6 +50,8 @@ tools = [
     "alibabacloud_tea_openapi>=0.3.0",
     "tencentcloud-sdk-python",
     "netifaces",
+    "lark-oapi==1.5.3",
+    "flask",
 ]
 tests = [
     "coverage",
@@ -95,7 +97,8 @@ include-package-data = true
 markers = [
     "integration: mark test as integration test",
     "dns: mark test as dns test",
-    "mcp: mark test as mcp test"
+    "mcp: mark test as mcp test",
+    "lark: mark test as lark test"
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",
