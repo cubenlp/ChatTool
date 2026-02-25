@@ -24,7 +24,7 @@
 [![Updates](https://pyup.io/repos/github/cubenlp/chattool/shield.svg)](https://pyup.io/repos/github/cubenlp/chattool/) 
 -->
 
-Toolkit for Chat API, supporting multi-turn dialogue and asynchronous data processing.
+A Python toolkit integrating LLM chat, Feishu/Lark bots, DNS management, SSL certificates, and more.
 
 ## Installation
 
@@ -32,149 +32,128 @@ Toolkit for Chat API, supporting multi-turn dialogue and asynchronous data proce
 pip install chattool --upgrade
 ```
 
-## Usage
+## Features
 
-### Configuration
+### 1. Environment Management (`chatenv`)
 
-ChatTool uses `.env` files for centralized configuration management.
-
-1. **CLI Configuration Management** (Recommended):
-   ```bash
-   # Interactive initialization
-   chatenv init -i
-   
-   # Set configuration item
-   chatenv set OPENAI_API_KEY=sk-xxx
-   
-   # View configuration
-   chatenv cat
-   ```
-
-2. **Manual Configuration**:
-   You can also manually create a `.env` file or set environment variables.
-
-   **OpenAI Configuration**
-   ```bash
-   export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   export OPENAI_API_BASE="https://api.example.com/v1" 
-   export OPENAI_API_MODEL="gpt-3.5-turbo"
-   ```
-
-   **Aliyun DNS Configuration**
-   ```bash
-   export ALIBABA_CLOUD_ACCESS_KEY_ID="your-access-key-id"
-   export ALIBABA_CLOUD_ACCESS_KEY_SECRET="your-access-key-secret"
-   export ALIBABA_CLOUD_REGION_ID="cn-hangzhou"
-   ```
-
-   **Tencent DNS Configuration**
-   ```bash
-   export TENCENT_SECRET_ID="your-secret-id"
-   export TENCENT_SECRET_KEY="your-secret-key"
-   export TENCENT_REGION_ID="ap-guangzhou"
-   ```
-
-### Chat Examples
-
-Example 1, simulate multi-turn dialogue:
-
-```python
-# first chat
-chat = Chat("Hello!")
-resp = chat.get_response()
-
-# continue the chat
-chat.user("How are you?")
-next_resp = chat.get_response()
-
-# add response manually
-chat.user("What's your name?")
-chat.assistant("My name is GPT-3.5.")
-
-# save the chat history
-chat.save("chat.json", mode="w") # default to "a"
-
-# print the chat history
-chat.print_log()
-```
-
-Example 2, process data in batch (serial), and append to a checkpoint file `chat.jsonl`:
-
-```python
-msgs = [str(i) for i in range(1, 10)]
-results = []
-for m in msgs:
-    chat = Chat()
-    chat.system("You are a helpful translator for numbers.")
-    resp = chat.user(f"Translate this digit to Roman numerals: {m}").get_response()
-    results.append(resp.content)
-    chat.save("chat.jsonl", mode="a")
-```
-
-Example 3, asynchronous concurrency and streaming:
-
-```python
-import asyncio
-from chattool import Chat
-
-async def run():
-    # concurrent Q&A
-    base = Chat().system("You are a helpful assistant")
-    tasks = [base.copy().user(f"Explain topic {i}").async_get_response() for i in range(2)]
-    responses = await asyncio.gather(*tasks)
-    for r in responses:
-        print(r.content)
-
-    # streaming output
-    print("Streaming: ", end="")
-    async for chunk in Chat().user("Write a short poem about spring").async_get_response_stream():
-        if chunk.delta_content:
-            print(chunk.delta_content, end="", flush=True)
-    print()
-
-asyncio.run(run())
-```
-
-### DNS Toolkit
-
-ChatTool provides a unified DNS management interface supporting Alibaba Cloud and Tencent Cloud.
-
-```python
-from chattool.tools.dns import create_dns_client
-
-# Create Aliyun client
-aliyun = create_dns_client("aliyun")
-aliyun.add_domain_record("example.com", "www", "A", "1.1.1.1")
-
-# Create Tencent Cloud client
-tencent = create_dns_client("tencent")
-tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
-```
-
-**Command Line Interface (CLI)**
-
-A convenient DDNS (Dynamic DNS) updater tool and SSL certificate manager are provided:
+Centralized configuration with automatic secret masking and hidden input for sensitive fields.
 
 ```bash
-# Get DNS record
-chattool dns get test.example.com
+# Interactive init (sensitive fields hidden automatically)
+chatenv init -i
 
-# Set DNS record
+# Init only specific service config
+chatenv init -i -t openai
+chatenv init -i -t feishu
+
+# View config (secrets auto-masked)
+chatenv cat
+
+# Filter by type
+chatenv cat -t feishu
+
+# Set / get individual values
+chatenv set OPENAI_API_KEY=sk-xxx
+chatenv get OPENAI_API_KEY
+
+# Profile management
+chatenv save work && chatenv use work
+```
+
+### 2. Chat (`chattool.Chat`)
+
+OpenAI-compatible chat objects with multi-turn dialogue, batch processing, async concurrency, and streaming.
+
+```python
+from chattool import Chat
+
+# Multi-turn dialogue
+chat = Chat("Hello!")
+resp = chat.get_response()
+chat.user("How are you?")
+chat.get_response()
+chat.save("chat.json", mode="w")
+
+# Async concurrency
+import asyncio
+base = Chat().system("You are a helpful assistant")
+tasks = [base.copy().user(f"Topic {i}").async_get_response() for i in range(5)]
+responses = asyncio.run(asyncio.gather(*tasks))
+
+# Streaming
+async for chunk in Chat().user("Write a poem").async_get_response_stream():
+    if chunk.delta_content:
+        print(chunk.delta_content, end="", flush=True)
+```
+
+### 3. Feishu/Lark Bot (`chattool lark`)
+
+Send messages, start Echo/AI bots with one command. Supports text, image, file, and rich-text messages.
+
+```bash
+# Send messages
+chattool lark send -r USER_ID -m "Hello"
+chattool lark send -r USER_ID --image photo.png
+chattool lark send -r USER_ID --file report.pdf
+
+# Start Echo bot (WebSocket)
+chattool serve lark echo
+
+# Start AI conversation bot
+chattool serve lark ai --model gpt-4o
+
+# View bot info and permissions
+chattool lark info
+chattool lark scopes
+```
+
+```python
+from chattool.tools.lark import LarkBot
+
+bot = LarkBot()
+bot.send_text("ou_xxx", "open_id", "Hello!")
+bot.send_image_file("ou_xxx", "open_id", "photo.png")
+
+@bot.on_message
+def handle(ctx):
+    ctx.reply_text(f"Received: {ctx.text}")
+
+bot.start()
+```
+
+### 4. DNS Management (`chattool dns`)
+
+Unified DNS interface for Alibaba Cloud and Tencent Cloud, with DDNS and automatic SSL certificate renewal.
+
+```bash
+# Query / set DNS records
+chattool dns get test.example.com
 chattool dns set test.example.com -v 1.2.3.4
 
-# Aliyun DDNS updater
+# DDNS (public / LAN IP)
 chattool dns ddns -d example.com -r home --monitor
+chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
 
-# SSL Certificate Auto-Update
+# SSL certificate auto-renewal
 chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
 ```
 
+### 5. Other Tools
+
+| Tool | Command | Description |
+|------|---------|-------------|
+| Network Scan | `chattool network scan` | Scan LAN for active hosts and SSH ports |
+| MCP Server | `chattool mcp inspect` | Inspect MCP server capabilities |
+| Screenshot | `chattool serve capture` | Local webpage screenshot service |
+| Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
+
 ## License
 
-This package is licensed under the MIT license. See the LICENSE file for more details.
+MIT License. See the LICENSE file for details.
 
-## Update Log
+## Changelog
 
-- Current version `4.1.0`: unified `Chat` API (sync/async/stream), default env-based configuration, improved retries and debugging helpers.
-- History `2.x–3.x`: iterative improvements to async and batch usage.
+- `5.3.0` — Feishu/Lark bot (messaging, event routing, AI chat), CLI tools (`chattool lark`, `chattool serve lark`)
+- `5.0.0` — DNS management (Aliyun/Tencent), DDNS, SSL cert auto-renewal, centralized env config
+- `4.1.0` — Unified `Chat` API (sync/async/stream), env-based configuration
 - For earlier changes, please refer to the repository commits.

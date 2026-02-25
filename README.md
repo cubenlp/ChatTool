@@ -19,161 +19,136 @@
 [English](README_en.md) | [简体中文](README.md)
 </div>
 
-基于 OpenAI API 的 `Chat` 对象，支持多轮对话以及异步处理数据等。
+集成 LLM 对话、飞书机器人、DNS 管理、SSL 证书等工具的 Python 开发套件。
 
-## 安装方法
+## 安装
 
 ```bash
 pip install chattool --upgrade
 ```
 
-## 使用方法
+## 功能概览
 
-### 环境变量配置
+### 1. 环境变量管理 (`chatenv`)
 
-ChatTool 使用集中式配置管理，支持`.env`文件、环境变量和默认值。
-
-1. **CLI 管理配置**（推荐）：
-   ```bash
-   # 交互式初始化（引导设置各项配置）
-   chatenv init -i
-   
-   # 设置配置项
-   chatenv set OPENAI_API_KEY=sk-xxx
-   
-   # 查看配置
-   chatenv cat
-   ```
-
-2. **手动配置**：
-   你可以手动创建 `.env` 文件或设置环境变量。
-
-   **OpenAI 配置**
-   ```bash
-   export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   export OPENAI_API_BASE="https://api.example.com/v1"
-   export OPENAI_API_MODEL="gpt-3.5-turbo"
-   ```
-
-   **阿里云 DNS 配置**
-   ```bash
-   export ALIBABA_CLOUD_ACCESS_KEY_ID="your-access-key-id"
-   export ALIBABA_CLOUD_ACCESS_KEY_SECRET="your-access-key-secret"
-   export ALIBABA_CLOUD_REGION_ID="cn-hangzhou"
-   ```
-
-   **腾讯云 DNS 配置**
-   ```bash
-   export TENCENT_SECRET_ID="your-secret-id"
-   export TENCENT_SECRET_KEY="your-secret-key"
-   export TENCENT_REGION_ID="ap-guangzhou"
-   ```
-
-### Chat 对象使用
-
-示例1，多轮对话：
-
-```python
-# 初次对话
-chat = Chat("Hello!")
-resp = chat.get_response()
-
-# 继续对话
-chat.user("How are you?")
-next_resp = chat.get_response()
-
-# 人为添加返回内容
-chat.user("What's your name?")
-chat.assistant("My name is GPT-3.5.")
-
-# 保存对话内容
-chat.save("chat.json", mode="w") # 默认为 "a"
-
-# 打印对话历史
-chat.print_log()
-```
-
-示例2，批量处理数据（串行），并使用缓存文件 `chat.jsonl`：
-
-```python
-# 串行处理（按需保存）
-msgs = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-results = []
-for m in msgs:
-    chat = Chat()
-    chat.system("你是一个熟练的数字翻译家。")
-    resp = chat.user(f"请将该数字翻译为罗马数字：{m}").get_response()
-    results.append(resp.content)
-    chat.save("chat.jsonl", mode="a")
-```
-
-示例3，异步并发与流式输出：
-
-```python
-import asyncio
-from chattool import Chat
-
-async def run():
-    # 并发问答
-    base = Chat().system("你是一个有用的助手")
-    tasks = [base.copy().user(f"请解释：主题 {i}").async_get_response() for i in range(2)]
-    responses = await asyncio.gather(*tasks)
-    for r in responses:
-        print(r.content)
-
-    # 流式输出
-    print("流式: ", end="")
-    async for chunk in Chat().user("写一首关于春天的短诗").async_get_response_stream():
-        if chunk.delta_content:
-            print(chunk.delta_content, end="", flush=True)
-    print()
-
-asyncio.run(run())
-```
-
-### DNS 工具箱
-
-ChatTool 提供了统一的 DNS 管理接口，支持阿里云和腾讯云。
-
-```python
-from chattool.tools.dns import create_dns_client
-
-# 创建阿里云客户端
-aliyun = create_dns_client("aliyun")
-aliyun.add_domain_record("example.com", "www", "A", "1.1.1.1")
-
-# 创建腾讯云客户端
-tencent = create_dns_client("tencent")
-tencent.add_domain_record("example.com", "www", "A", "1.1.1.1")
-```
-
-**命令行工具 (CLI)**
-
-提供了便捷的 DDNS（动态域名解析）更新工具和 SSL 证书管理：
+集中式配置管理，密码类字段自动脱敏显示，交互模式隐藏敏感输入。
 
 ```bash
-# 获取 DNS 记录
-chattool dns get test.example.com
+# 交互式初始化（敏感字段自动隐藏输入）
+chatenv init -i
 
-# 设置 DNS 记录
+# 仅初始化指定服务配置
+chatenv init -i -t openai
+chatenv init -i -t feishu
+
+# 查看全部配置（敏感值自动打码）
+chatenv cat
+
+# 按类型过滤查看
+chatenv cat -t feishu
+
+# 设置 / 查看单项
+chatenv set OPENAI_API_KEY=sk-xxx
+chatenv get OPENAI_API_KEY
+
+# 多配置 profile 管理
+chatenv save work && chatenv use work
+```
+
+### 2. Chat 对话 (`chattool.Chat`)
+
+基于 OpenAI API 的对话对象，支持多轮对话、批量处理、异步并发和流式输出。
+
+```python
+from chattool import Chat
+
+# 多轮对话
+chat = Chat("Hello!")
+resp = chat.get_response()
+chat.user("How are you?")
+chat.get_response()
+chat.save("chat.json", mode="w")
+
+# 异步并发
+import asyncio
+base = Chat().system("你是一个有用的助手")
+tasks = [base.copy().user(f"主题 {i}").async_get_response() for i in range(5)]
+responses = asyncio.run(asyncio.gather(*tasks))
+
+# 流式输出
+async for chunk in Chat().user("写一首诗").async_get_response_stream():
+    if chunk.delta_content:
+        print(chunk.delta_content, end="", flush=True)
+```
+
+### 3. 飞书/Lark 机器人 (`chattool lark`)
+
+一行命令发消息、启动 Echo/AI 机器人，支持文本、图片、文件、富文本等消息类型。
+
+```bash
+# 发送消息
+chattool lark send -r USER_ID -m "Hello"
+chattool lark send -r USER_ID --image photo.png
+chattool lark send -r USER_ID --file report.pdf
+
+# 启动 Echo 机器人（WebSocket）
+chattool serve lark echo
+
+# 启动 AI 对话机器人
+chattool serve lark ai --model gpt-4o
+
+# 查看机器人信息和权限
+chattool lark info
+chattool lark scopes
+```
+
+```python
+from chattool.tools.lark import LarkBot
+
+bot = LarkBot()
+bot.send_text("ou_xxx", "open_id", "Hello!")
+bot.send_image_file("ou_xxx", "open_id", "photo.png")
+
+@bot.on_message
+def handle(ctx):
+    ctx.reply_text(f"收到: {ctx.text}")
+
+bot.start()
+```
+
+### 4. DNS 管理 (`chattool dns`)
+
+统一的 DNS 接口，支持阿里云和腾讯云，提供 DDNS 动态更新和 SSL 证书自动续期。
+
+```bash
+# 查询 / 设置 DNS 记录
+chattool dns get test.example.com
 chattool dns set test.example.com -v 1.2.3.4
 
-# DDNS 动态域名更新 (公网 IP)
+# DDNS 动态域名 (公网 / 局域网)
 chattool dns ddns -d example.com -r home --monitor
-
-# DDNS 动态域名更新 (局域网 IP)
 chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
 
 # SSL 证书自动更新
 chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
 ```
 
+### 5. 其他工具
+
+| 工具 | 命令 | 说明 |
+|------|------|------|
+| 网络扫描 | `chattool network scan` | 扫描局域网活跃主机和 SSH 端口 |
+| MCP 服务 | `chattool mcp inspect` | MCP Server 能力检查 |
+| 截图服务 | `chattool serve capture` | 本地网页截图服务 |
+| 证书分发 | `chattool serve cert` / `chattool client cert` | SSL 证书集中管理与客户端拉取 |
+
 ## 开源协议
 
-使用 MIT 协议开源。
+MIT License
 
 ## 更新日志
 
-- 当前版本 `4.1.0`，统一 `Chat` API（同步/异步/流式），默认环境变量配置，改进重试与调试工具
-- 历史：`2.x-3.x` 阶段逐步完善异步处理与批量用法
-- 更早版本沿革请参考仓库提交记录
+- `5.3.0` — 飞书机器人（消息收发、事件路由、AI 对话）、CLI 工具链（`chattool lark`、`chattool serve lark`）
+- `5.0.0` — DNS 管理（阿里云/腾讯云）、DDNS、SSL 证书自动续期、环境变量集中管理
+- `4.1.0` — 统一 `Chat` API（同步/异步/流式），默认环境变量配置
+- 更早版本请参考仓库提交记录
