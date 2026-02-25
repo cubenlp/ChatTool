@@ -5,6 +5,7 @@ from lark_oapi.api.im.v1 import (
     GetChatRequest, GetChatMembersRequest
 )
 from chattool.config.main import FeishuConfig
+from chattool.tools.lark.elements import BaseMessage
 
 class LarkBot:
     """Lark Bot class for interacting with Feishu/Lark Open Platform."""
@@ -73,6 +74,19 @@ class LarkBot:
             )
         
         return response
+
+    def send_message(self, receive_id: str, receive_id_type: str, message: BaseMessage):
+        """Send a message object.
+
+        Args:
+            receive_id (str): The receive ID.
+            receive_id_type (str): The receive ID type (open_id, user_id, union_id, email, chat_id).
+            message (BaseMessage): The message object to send.
+
+        Returns:
+            response: The response from Lark API.
+        """
+        return self._send_message(receive_id, receive_id_type, message.msg_type, message.to_json())
 
     def send_text(self, receive_id: str, receive_id_type: str, text: str):
         """Send a text message.

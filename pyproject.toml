@@ -96,7 +96,8 @@ include-package-data = true
 markers = [
     "integration: mark test as integration test",
     "dns: mark test as dns test",
-    "mcp: mark test as mcp test"
+    "mcp: mark test as mcp test",
+    "lark: mark test as lark test"
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",
