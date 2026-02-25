@@ -36,18 +36,24 @@ class ChatSession:
         max_history: Maximum number of dialogue *turns* to retain per user
                      (one turn = one user message + one assistant reply).
                      ``None`` means unlimited.
+        model: Model name override (passed to Chat constructor).
+        model_type: ``"openai"`` (default) or ``"azure"``.
         chat_factory: Optional callable that returns a new ``Chat`` instance.
-                      Defaults to ``lambda: Chat(system=system)``.
+                      Overrides ``model`` and ``model_type`` when provided.
     """
 
     def __init__(
         self,
         system: str = "",
         max_history: Optional[int] = None,
+        model: Optional[str] = None,
+        model_type: str = "openai",
         chat_factory: Optional[Callable] = None,
     ):
         self.system = system
         self.max_history = max_history
+        self.model = model
+        self.model_type = model_type
         self._sessions: Dict[str, object] = {}
 
         if chat_factory is not None:
@@ -56,7 +62,11 @@ class ChatSession:
             self._factory = self._default_factory
 
     def _default_factory(self):
-        c = Chat()
+        if self.model_type == "azure":
+            from chattool.llm.chattype import AzureChat
+            c = AzureChat(model=self.model) if self.model else AzureChat()
+        else:
+            c = Chat(model=self.model) if self.model else Chat()
         if self.system:
             c.system(self.system)
         return c

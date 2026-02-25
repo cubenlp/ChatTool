@@ -16,15 +16,6 @@ def test_cmd(target):
     
     Supported targets are defined in the configuration classes.
     """
-    # Load env file first to ensure values are populated?
-    # Usually the app loads env at startup.
-    # But BaseEnvConfig.test() instantiates clients which usually load env.
-    # Let's check if we need to load env explicitly here.
-    # BaseEnvConfig.load_all(".env") ? 
-    # The original test_cmd didn't load env explicitly, assuming it's loaded or handled by libraries.
-    # But usually cli entry point loads env.
-    # I'll assume environment is set up.
-
     config_cls = BaseEnvConfig.get_config_by_alias(target)
     
     if config_cls:

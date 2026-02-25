@@ -9,7 +9,7 @@ Commands:
 import sys
 import click
 
-from chattool.tools.lark import LarkBot
+from chattool.tools import LarkBot, ChatSession
 
 LOG_LEVELS = click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False)
 
@@ -81,7 +81,10 @@ def echo(mode, host, port, log_level):
 @click.option("--max-history", "-n", default=10, type=int,
               help="每个用户最多保留的对话轮数")
 @click.option("--model", default=None, help="LLM 模型名称 (留空使用默认)")
-def ai(mode, host, port, log_level, system, max_history, model):
+@click.option("--model-type", default="openai",
+              type=click.Choice(["openai", "azure"], case_sensitive=False),
+              help="LLM 后端类型 (默认 openai)")
+def ai(mode, host, port, log_level, system, max_history, model, model_type):
     """
     启动 AI 对话机器人：接入 LLM 进行多轮对话。
 
@@ -91,11 +94,11 @@ def ai(mode, host, port, log_level, system, max_history, model):
     示例:
       chattool serve lark ai
       chattool serve lark ai --system "你是一名翻译官" --max-history 20
+      chattool serve lark ai --model-type azure --model gpt-4o
     """
-    from chattool.tools.lark.session import ChatSession
-
     bot = _get_bot()
-    session = ChatSession(system=system, max_history=max_history)
+    session = ChatSession(system=system, max_history=max_history,
+                          model=model, model_type=model_type)
 
     @bot.command("/clear")
     def on_clear(ctx):
