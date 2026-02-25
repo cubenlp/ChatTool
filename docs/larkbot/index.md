@@ -30,6 +30,10 @@
 
     卡片构建、按钮回调、动态更新
 
+- :material-console: **[命令行工具](cli.md)**
+
+    `chattool lark` / `chattool serve lark`
+
 </div>
 
 ---

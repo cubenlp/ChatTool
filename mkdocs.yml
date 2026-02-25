@@ -114,5 +114,6 @@ nav:
     - 接收消息与路由: larkbot/receiving.md
     - AI 对话集成: larkbot/ai-chat.md
     - 交互卡片: larkbot/cards.md
+    - 命令行工具: larkbot/cli.md
   - 博客:
     - 从代码到 Agent 技能: blog/code_tool_skill.md

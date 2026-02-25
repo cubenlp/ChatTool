@@ -28,29 +28,36 @@ FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## 3. 发送第一条消息
 
-```python title="send_hello.py"
-from dotenv import load_dotenv
-load_dotenv()
+=== "CLI"
 
-from chattool.tools.lark import LarkBot
+    ```bash
+    chattool lark send rexwzh "👋 你好，这是来自 chattool 的第一条消息！"
+    ```
 
-bot = LarkBot()
+=== "Python"
 
-# 向指定用户发送文本消息
-# receive_id_type 可选: open_id / user_id / union_id / email / chat_id
-resp = bot.send_text("rexwzh", "user_id", "👋 你好，这是来自 chattool 的第一条消息！")
+    ```python title="send_hello.py"
+    from dotenv import load_dotenv
+    load_dotenv()
 
-if resp.success():
-    print(f"✅ 发送成功，message_id = {resp.data.message_id}")
-else:
-    print(f"❌ 发送失败: code={resp.code}, msg={resp.msg}")
-```
+    from chattool.tools.lark import LarkBot
 
-运行：
+    bot = LarkBot()
 
-```bash
-python send_hello.py
-```
+    resp = bot.send_text("rexwzh", "user_id", "👋 你好，这是来自 chattool 的第一条消息！")
+
+    if resp.success():
+        print(f"✅ 发送成功，message_id = {resp.data.message_id}")
+    else:
+        print(f"❌ 发送失败: code={resp.code}, msg={resp.msg}")
+    ```
+
+    ```bash
+    python send_hello.py
+    ```
+
+!!! tip "快速验证凭证"
+    运行 `chattool lark info` 可验证 App ID / Secret 是否正确。
 
 ## 4. 接收用户消息并回复
 
@@ -131,6 +138,16 @@ def chat(ctx):
 bot.start()
 ```
 
+!!! tip "不写代码？用 CLI"
+    上面的回显机器人和 AI 机器人都可以用一条命令启动：
+
+    ```bash
+    chattool serve lark echo     # 回显机器人
+    chattool serve lark ai       # AI 对话机器人
+    ```
+
+    详见 [命令行工具](cli.md)。
+
 ## 接下来
 
 | 目标 | 文档 |
@@ -139,4 +156,5 @@ bot.start()
 | 深入了解事件路由 | [接收消息与路由](receiving.md) |
 | AI 会话管理进阶 | [AI 对话集成](ai-chat.md) |
 | 发送卡片和处理按钮 | [交互卡片](cards.md) |
+| 命令行一键操作 | [命令行工具](cli.md) |
 | 飞书平台详细配置 | [飞书平台配置](feishu-setup.md) |
