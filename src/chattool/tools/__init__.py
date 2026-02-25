@@ -5,6 +5,7 @@ from .dns import (
     create_dns_client, AliyunDNSClient, TencentDNSClient, DynamicIPUpdater
 )
 from .cert import SSLCertUpdater
+from .lark import LarkBot, ChatSession, MessageContext
 
 __all__ = [
     "ZulipClient", 
@@ -15,4 +16,7 @@ __all__ = [
     "TencentDNSClient",
     "DynamicIPUpdater",
     "SSLCertUpdater",
+    "LarkBot",
+    "ChatSession",
+    "MessageContext",
 ]

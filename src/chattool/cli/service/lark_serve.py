@@ -8,14 +8,14 @@ Commands:
 """
 import sys
 import click
+try:
+    from chattool.tools.lark import LarkBot
+except Exception as e:
+    LarkBot = None
 
 
 def _get_bot():
-    from chattool.tools.lark import LarkBot
-    try:
-        return LarkBot()
-    except Exception as e:
-        click.secho(f"初始化失败: {e}", fg="red", err=True)
+    if LarkBot is None:
         click.echo("请确认已设置 FEISHU_APP_ID 和 FEISHU_APP_SECRET 环境变量", err=True)
         sys.exit(1)
 

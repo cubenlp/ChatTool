@@ -1,7 +1,7 @@
 import pytest
 import time
 from chattool.llm import Chat
-from chattool.tools import ZulipClient, GitHubClient
+from chattool.tools import ZulipClient, GitHubClient, LarkBot
 from chattool.cli.service.capture import app as capture_app
 from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
@@ -63,3 +63,8 @@ def github_client_with_token():
         pytest.skip("需要GITHUB_ACCESS_TOKEN环境变量")
     github_client = GitHubClient(user_name="octocat", token=token)
     return github_client
+
+@pytest.fixture
+def lark_bot():
+    """Fixture to provide a configured LarkBot instance."""
+    return LarkBot()

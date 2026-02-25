@@ -8,9 +8,9 @@ The mock mimics chattool.Chat's actual interface:
   - chat.ask(text) -> str
 """
 import pytest
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
-from chattool.tools.lark.session import ChatSession
+from chattool.tools import ChatSession
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +31,6 @@ def make_session(system="你是助手", max_history=None, reply="AI 回复"):
     session = ChatSession(system=system, max_history=max_history, chat_factory=factory)
     session._call_count = call_count
     return session
-
 
 # ---------------------------------------------------------------------------
 # Tests

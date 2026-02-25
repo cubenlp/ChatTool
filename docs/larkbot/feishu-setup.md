@@ -12,13 +12,13 @@
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 「创建企业自建应用」按钮位置 -->
-    ![创建企业自建应用](../assets/screenshots/larkbot/01_create_app.png){ loading=lazy }
+    ![20260226020952](https://qiniu.wzhecnu.cn/FileBed/source/20260226020952.png){ loading=lazy }
 
-4. 填写应用名称（如 `AI 助手`）、应用描述，选择应用图标，点击「**确认创建**」。
+1. 填写应用名称（如 `AI 助手`）、应用描述，选择应用图标，点击「**确认创建**」。
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 填写应用信息表单 -->
-    ![填写应用信息](../assets/screenshots/larkbot/02_app_info_form.png){ loading=lazy }
+    ![20260226021050](https://qiniu.wzhecnu.cn/FileBed/source/20260226021050.png){ loading=lazy }
 
 ---
 
@@ -31,14 +31,13 @@
 
 !!! info "截图占位"
     <!-- TODO: 上传截图 → 凭证与基础信息页面 -->
-    ![凭证信息](../assets/screenshots/larkbot/03_credentials.png){ loading=lazy }
+    ![20260226021130](https://qiniu.wzhecnu.cn/FileBed/source/20260226021130.png){ loading=lazy }
 
 !!! warning "安全提示"
     App Secret 相当于密码，请勿提交到 Git 仓库。推荐使用 `.env` 文件或环境变量管理：
+    
     ```bash
-    # .env
-    FEISHU_APP_ID=cli_xxxxxxxxxxxxxxxx
-    FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    chatenv init -i -t feishu
     ```
 
 将凭证写入环境变量后，`LarkBot` 会自动读取：

@@ -1,3 +1,4 @@
+import json
 from .elements import BaseEnvConfig, EnvField
 
 # ==================== 具体服务配置定义 ====================
@@ -103,7 +104,7 @@ class ZulipConfig(BaseEnvConfig):
 
 class FeishuConfig(BaseEnvConfig):
     _title = "Feishu Configuration"
-    _aliases = ["feishu"]
+    _aliases = ["feishu", "lark"]
     
     FEISHU_APP_ID = EnvField("FEISHU_APP_ID", desc="Feishu App ID (Get from https://open.feishu.cn/app)")
     FEISHU_APP_SECRET = EnvField("FEISHU_APP_SECRET", desc="Feishu App Secret", is_sensitive=True)
@@ -114,8 +115,6 @@ class FeishuConfig(BaseEnvConfig):
         print(f"Testing {cls._title}...")
         try:
             from chattool.tools.lark.bot import LarkBot
-            import json
-            
             bot = LarkBot()
             # Verify bot info using v3 API
             resp = bot.get_bot_info()

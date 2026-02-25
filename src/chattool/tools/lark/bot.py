@@ -1,18 +1,29 @@
-import json
 import re
+import json
 import threading
+from flask import Flask
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-import lark_oapi
-from lark_oapi.api.im.v1 import (
-    CreateMessageRequest, CreateMessageRequestBody,
-    ReplyMessageRequest, ReplyMessageRequestBody,
-    GetChatRequest, GetChatMembersRequest,
-)
+try:
+    import lark_oapi
+    from lark_oapi.ws import Client as WSClient
+    from lark_oapi.adapter.flask import parse_req, parse_resp
+    from lark_oapi.api.im.v1 import (
+        CreateMessageRequest, CreateMessageRequestBody,
+        ReplyMessageRequest, ReplyMessageRequestBody,
+        GetChatRequest, GetChatMembersRequest, 
+        P2ImChatMemberBotAddedV1,
+        )
+    from lark_oapi.event.callback.model.p2_card_action_trigger import (
+        P2CardActionTriggerResponse,
+        )
+except Exception as e:
+    LarkBot = None
 
-from chattool.config.main import FeishuConfig
-from chattool.tools.lark.elements import BaseMessage
-from chattool.tools.lark.context import MessageContext
+from chattool.config import FeishuConfig
+
+from .elements import BaseMessage
+from .context import MessageContext
 
 
 class LarkBot:
@@ -30,9 +41,6 @@ class LarkBot:
         bot.start()
 
     With LLM::
-
-        from chattool import Chat
-
         sessions = {}
 
         @bot.command("/clear")
@@ -49,20 +57,22 @@ class LarkBot:
         bot.start()
     """
 
-    def __init__(self, config: FeishuConfig = None):
-        if config is None:
-            self.config = FeishuConfig()
-        else:
-            self.config = config
-
+    def __init__(self, app_id:str=None, app_secret:str=None, api_base:str=None):
+        app_id = app_id or FeishuConfig().FEISHU_APP_ID.value
+        app_secret = app_secret or FeishuConfig().FEISHU_APP_SECRET.value
+        api_base = api_base or FeishuConfig().FEISHU_API_BASE.value or "https://open.feishu.cn"
+        assert app_id and app_secret, "Feishu App ID and App Secret are required"
+        self.app_id = app_id
+        self.app_secret = app_secret
+        
         builder = (
             lark_oapi.Client.builder()
-            .app_id(self.config.FEISHU_APP_ID.value)
-            .app_secret(self.config.FEISHU_APP_SECRET.value)
+            .app_id(app_id)
+            .app_secret(app_secret)
             .log_level(lark_oapi.LogLevel.INFO)
         )
-        if self.config.FEISHU_API_BASE.value:
-            builder.domain(self.config.FEISHU_API_BASE.value)
+        if api_base:
+            builder.domain(api_base)
         self.client = builder.build()
 
         # Handler registry
@@ -203,9 +213,6 @@ class LarkBot:
 
     def _dispatch_card_action(self, data: Any):
         """Handle P2CardActionTrigger events."""
-        from lark_oapi.event.callback.model.p2_card_action_trigger import (
-            P2CardActionTriggerResponse,
-        )
         action_value = getattr(getattr(data.event, "action", None), "value", {})
         action_key = None
         if isinstance(action_value, dict):
@@ -238,14 +245,6 @@ class LarkBot:
         encrypt_key: str = "",
         verification_token: str = "",
     ) -> lark_oapi.EventDispatcherHandler:
-        from lark_oapi.api.im.v1 import (
-            P2ImMessageReceiveV1,
-            P2ImChatMemberBotAddedV1,
-        )
-        from lark_oapi.event.callback.model.p2_card_action_trigger import (
-            P2CardActionTrigger,
-        )
-
         builder = lark_oapi.EventDispatcherHandler.builder(
             encrypt_key,
             verification_token,
@@ -320,13 +319,11 @@ class LarkBot:
         return t
 
     def _start_ws(self, encrypt_key: str, verification_token: str) -> None:
-        from lark_oapi.ws import Client as WSClient
-
         event_handler = self._build_event_handler(encrypt_key, verification_token)
         ws = (
             WSClient.builder()
-            .app_id(self.config.FEISHU_APP_ID.value)
-            .app_secret(self.config.FEISHU_APP_SECRET.value)
+            .app_id(self.app_id)
+            .app_secret(self.app_secret)
             .event_handler(event_handler)
             .build()
         )
@@ -341,12 +338,6 @@ class LarkBot:
         port: int,
         path: str,
     ) -> None:
-        try:
-            from flask import Flask, request as flask_request
-            from lark_oapi.adapter.flask import parse_req, parse_resp
-        except ImportError as e:
-            raise ImportError("Flask is required for mode='flask'. pip install flask") from e
-
         event_handler = self._build_event_handler(encrypt_key, verification_token)
         app = Flask(__name__)
 

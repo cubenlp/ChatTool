@@ -22,7 +22,7 @@ Usage::
 """
 
 from typing import Callable, Dict, Optional
-
+from chattool import Chat
 
 class ChatSession:
     """
@@ -56,8 +56,6 @@ class ChatSession:
             self._factory = self._default_factory
 
     def _default_factory(self):
-        from chattool import Chat  # lazy import
-
         c = Chat()
         if self.system:
             c.system(self.system)

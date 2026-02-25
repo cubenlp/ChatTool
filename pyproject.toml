@@ -51,6 +51,7 @@ tools = [
     "tencentcloud-sdk-python",
     "netifaces",
     "lark-oapi==1.5.3",
+    "flask",
 ]
 tests = [
     "coverage",
