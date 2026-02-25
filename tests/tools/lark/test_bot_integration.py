@@ -1,84 +1,300 @@
-import unittest
-import os
-import logging
-from chattool.tools.lark.bot import LarkBot
-from chattool.config.main import FeishuConfig
+"""
+Integration tests for LarkBot — uses the real Feishu API.
 
-# Configure logging to show info
-logging.basicConfig(level=logging.INFO)
+Prerequisites
+-------------
+Set the following environment variables (or put them in .env):
+
+    FEISHU_APP_ID=<your app id>
+    FEISHU_APP_SECRET=<your app secret>
+
+Run only these tests:
+
+    pytest tests/tools/lark/test_bot_integration.py -v -m lark
+
+The test user is ``rexwzh`` (user_id type).  Make sure the bot has been
+granted the following permissions in the Feishu developer console:
+  - im:message          (send / reply messages)
+  - im:message:readonly (read message list)
+  - im:chat:readonly    (get chat info)
+
+Results are logged at INFO level so you can see what was sent.
+"""
+import json
+import logging
+import time
+
+import pytest
+
+from chattool.config.main import FeishuConfig
+from chattool.tools.lark.bot import LarkBot
+
 logger = logging.getLogger(__name__)
 
-class TestLarkBotIntegration(unittest.TestCase):
-    """Integration tests for LarkBot.
-    
-    These tests communicate with the actual Feishu API.
-    They are skipped if credentials are not present in the environment.
-    """
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
-    @classmethod
-    def setUpClass(cls):
-        # Load configuration
-        # BaseEnvConfig loads from env vars automatically if present.
-        # Ensure we have credentials
-        cls.config = FeishuConfig()
-        cls.app_id = cls.config.FEISHU_APP_ID.value
-        cls.app_secret = cls.config.FEISHU_APP_SECRET.value
-        
-        # Determine if we should run tests
-        cls.should_run = cls.app_id and cls.app_secret and cls.app_id != "fake_app_id"
-        
-        if cls.should_run:
-            cls.bot = LarkBot(config=cls.config)
-            # Test target user (user_id)
-            cls.test_user_id = "rexwzh" 
-        else:
-            print("Skipping integration tests: FEISHU_APP_ID or FEISHU_APP_SECRET not set.")
+TEST_USER_ID = "rexwzh"       # receive_id_type = "user_id"
+USER_ID_TYPE = "user_id"
 
-    def setUp(self):
-        if not self.should_run:
-            self.skipTest("Feishu credentials not available")
 
-    def test_get_bot_info(self):
-        """Test getting bot info to verify authentication."""
-        # This usually requires fewer permissions or is a good health check
-        # But Feishu doesn't have a direct "get self info" for bot in IM API easily without scopes.
-        # However, getting app info might be possible? 
-        # Actually, let's just try to list chats or something simple if possible, 
-        # but listing chats also needs scopes.
-        # Let's try sending to a random open_id just to see if we get a different error (like invalid id vs auth error)?
-        # No, better to stick to what we have.
-        # Let's just log that auth seems fine if we got this far (setupClass didn't fail).
-        pass
+# ---------------------------------------------------------------------------
+# Session-scoped fixtures
+# ---------------------------------------------------------------------------
 
-    def test_send_text_to_user(self):
-        """Test sending a text message to a specific user (rexwzh)."""
-        logger.info(f"Attempting to send message to user_id: {self.test_user_id}")
-        
-        # Note: 'user_id' type requires the app to have permission to access user IDs
-        # and the user must be within the app's visibility.
-        # If 'rexwzh' is intended to be a user_id, we use receive_id_type="user_id".
-        # If it is an open_id, we should use "open_id".
-        # Based on user instruction "作为测试用户 user_id", we use "user_id".
-        
-        response = self.bot.send_text(
-            receive_id=self.test_user_id,
-            receive_id_type="user_id",
-            text="[Integration Test] Hello from ChatTool LarkBot! 🤖"
+def _has_credentials() -> bool:
+    cfg = FeishuConfig()
+    return bool(cfg.FEISHU_APP_ID.value and cfg.FEISHU_APP_SECRET.value)
+
+
+@pytest.fixture(scope="module")
+def bot():
+    if not _has_credentials():
+        pytest.skip("Feishu credentials not configured (FEISHU_APP_ID / FEISHU_APP_SECRET)")
+    return LarkBot()
+
+
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+
+def assert_ok(response, label: str = ""):
+    """Assert a Lark API response is successful, print a friendly error otherwise."""
+    if not response.success():
+        hint = ""
+        code = response.code
+        if code in (230013, 99991672):
+            hint = "\n  → 权限不足，请在飞书开放平台「权限管理」中申请对应 Scope"
+        elif code == 99991663:
+            hint = "\n  → 用户不在应用可见范围内"
+        pytest.fail(
+            f"[{label}] API 调用失败: code={code}  msg={response.msg}{hint}"
         )
-        
-        if not response.success():
-            logger.error(f"Failed to send message: code={response.code}, msg={response.msg}")
-            
-            # Check for specific permission error
-            if response.code == 99991672 or "contact:user.employee_id:readonly" in response.msg:
-                hint = "\n[Hint] To send messages using 'user_id', you must enable the 'contact:user.employee_id:readonly' scope in Feishu Console."
-                self.fail(f"API call failed (Missing Permission): {response.msg}{hint}")
-            
-            self.fail(f"API call failed: {response.msg}")
-            
-        self.assertTrue(response.success())
-        self.assertIsNotNone(response.data.message_id)
-        logger.info(f"Successfully sent message. Message ID: {response.data.message_id}")
 
-if __name__ == '__main__':
-    unittest.main()
+
+# ---------------------------------------------------------------------------
+# Bot info
+# ---------------------------------------------------------------------------
+
+@pytest.mark.lark
+def test_get_bot_info(bot):
+    """验证凭证有效，获取机器人基本信息。"""
+    resp = bot.get_bot_info()
+    assert_ok(resp, "get_bot_info")
+
+    data = json.loads(resp.raw.content)
+    bot_info = data.get("bot", {})
+    logger.info("Bot name : %s", bot_info.get("app_name"))
+    logger.info("Bot status: %s", bot_info.get("activate_status"))
+    assert bot_info.get("activate_status") == 2, "机器人未激活（activate_status != 2）"
+
+
+# ---------------------------------------------------------------------------
+# Send messages
+# ---------------------------------------------------------------------------
+
+@pytest.mark.lark
+def test_send_text_to_user(bot):
+    """发送文本消息给 rexwzh。"""
+    resp = bot.send_text(TEST_USER_ID, USER_ID_TYPE, "[test] 你好，这是文本消息 👋")
+    assert_ok(resp, "send_text")
+    msg_id = resp.data.message_id
+    logger.info("发送成功，message_id=%s", msg_id)
+    assert msg_id, "message_id 不应为空"
+
+
+@pytest.mark.lark
+def test_send_post_to_user(bot):
+    """发送富文本消息给 rexwzh。"""
+    content = {
+        "zh_cn": {
+            "title": "[test] 富文本消息",
+            "content": [
+                [
+                    {"tag": "text", "text": "这是一条 "},
+                    {"tag": "a", "text": "富文本消息", "href": "https://open.feishu.cn"},
+                    {"tag": "text", "text": "，包含链接。"},
+                ]
+            ],
+        }
+    }
+    resp = bot.send_post(TEST_USER_ID, USER_ID_TYPE, content)
+    assert_ok(resp, "send_post")
+    logger.info("富文本消息 message_id=%s", resp.data.message_id)
+
+
+@pytest.mark.lark
+def test_send_card_to_user(bot):
+    """发送交互卡片给 rexwzh。"""
+    card = {
+        "config": {"wide_screen_mode": True},
+        "header": {
+            "title": {"tag": "plain_text", "content": "[test] 卡片消息"},
+            "template": "blue",
+        },
+        "elements": [
+            {
+                "tag": "div",
+                "text": {
+                    "tag": "lark_md",
+                    "content": "这是一条**卡片消息**，用于集成测试。\n\n当前时间：`" + time.strftime("%H:%M:%S") + "`",
+                },
+            }
+        ],
+    }
+    resp = bot.send_card(TEST_USER_ID, USER_ID_TYPE, card)
+    assert_ok(resp, "send_card")
+    logger.info("卡片消息 message_id=%s", resp.data.message_id)
+
+
+# ---------------------------------------------------------------------------
+# Reply
+# ---------------------------------------------------------------------------
+
+@pytest.mark.lark
+def test_reply_to_message(bot):
+    """先发一条消息，再对其进行引用回复。"""
+    # Step 1: send original
+    send_resp = bot.send_text(TEST_USER_ID, USER_ID_TYPE, "[test] 原始消息（将被回复）")
+    assert_ok(send_resp, "send for reply")
+    original_id = send_resp.data.message_id
+    logger.info("原始消息 id=%s", original_id)
+
+    # Step 2: reply
+    reply_resp = bot.reply(original_id, "[test] 这是引用回复 ✅")
+    assert_ok(reply_resp, "reply")
+    logger.info("回复消息 id=%s", reply_resp.data.message_id)
+    assert reply_resp.data.message_id != original_id
+
+
+@pytest.mark.lark
+def test_reply_card_to_message(bot):
+    """发一条消息，然后用卡片回复它。"""
+    send_resp = bot.send_text(TEST_USER_ID, USER_ID_TYPE, "[test] 等待卡片回复...")
+    assert_ok(send_resp, "send for card reply")
+    original_id = send_resp.data.message_id
+
+    card = {
+        "config": {"wide_screen_mode": True},
+        "header": {"title": {"tag": "plain_text", "content": "[test] 卡片回复"}, "template": "green"},
+        "elements": [{"tag": "div", "text": {"tag": "lark_md", "content": "✅ 这是对上条消息的卡片引用回复"}}],
+    }
+    reply_resp = bot.reply_card(original_id, card)
+    assert_ok(reply_resp, "reply_card")
+    logger.info("卡片回复 id=%s", reply_resp.data.message_id)
+
+
+# ---------------------------------------------------------------------------
+# MessageContext via dispatch
+# ---------------------------------------------------------------------------
+
+@pytest.mark.lark
+def test_on_message_dispatch_and_reply(bot):
+    """
+    注册 on_message 处理器，构造一条假事件，验证 ctx.reply() 能正确发送消息。
+    （不启动 WebSocket，直接调用内部 _dispatch_message）
+    """
+    from chattool.tools.lark.context import MessageContext
+
+    results = []
+
+    @bot.on_message
+    def handle(ctx: MessageContext):
+        # ctx.reply 会调用 bot.reply(message_id, text)
+        results.append((ctx.text, ctx.sender_id))
+
+    # Build a minimal fake event pointing at rexwzh
+    import json
+    from unittest.mock import MagicMock
+
+    msg = MagicMock()
+    msg.message_type = "text"
+    msg.content = json.dumps({"text": "你好机器人"})
+    msg.message_id = "om_fake_for_dispatch_test"
+    msg.chat_id = "p2p_fake"
+    msg.chat_type = "p2p"
+    msg.thread_id = None
+
+    sid = MagicMock(); sid.open_id = TEST_USER_ID
+    sender = MagicMock(); sender.sender_id = sid; sender.sender_type = "user"
+    event = MagicMock(); event.message = msg; event.sender = sender
+    data = MagicMock(); data.event = event
+
+    bot._dispatch_message(data)
+
+    assert len(results) == 1
+    assert results[0][0] == "你好机器人"
+    assert results[0][1] == TEST_USER_ID
+
+    # Clean up handler so it doesn't interfere with other tests
+    bot._message_handlers.clear()
+
+
+# ---------------------------------------------------------------------------
+# ChatSession integration
+# ---------------------------------------------------------------------------
+
+@pytest.mark.lark
+def test_chat_session_with_real_llm(bot):
+    """
+    用 ChatSession 做一轮真实 LLM 对话，然后验证回复非空并发送给 rexwzh。
+    如果没有配置 OpenAI key，跳过此测试。
+    """
+    import os
+
+    if not os.getenv("OPENAI_API_KEY"):
+        pytest.skip("OPENAI_API_KEY 未配置，跳过 LLM 集成测试")
+
+    from chattool.tools.lark.session import ChatSession
+
+    # ChatSession.chat() calls Chat.ask() internally
+    session = ChatSession(system="你是一个飞书机器人测试助手，请用一句话简短回答。")
+    reply = session.chat(TEST_USER_ID, "用一句话介绍飞书机器人")
+
+    logger.info("LLM 回复: %s", reply)
+    assert reply and len(reply) > 0
+
+    # Send the LLM reply to rexwzh
+    resp = bot.send_text(
+        TEST_USER_ID,
+        USER_ID_TYPE,
+        f"[test/LLM] {reply}",
+    )
+    assert_ok(resp, "send llm reply")
+
+
+# ---------------------------------------------------------------------------
+# Command dispatch
+# ---------------------------------------------------------------------------
+
+@pytest.mark.lark
+def test_command_dispatch(bot):
+    """注册 /ping 指令，通过假事件验证派发正确。"""
+    from unittest.mock import MagicMock
+    import json
+
+    fired = []
+
+    @bot.command("/ping")
+    def on_ping(ctx):
+        fired.append(ctx.text.strip())
+
+    msg = MagicMock()
+    msg.message_type = "text"
+    msg.content = json.dumps({"text": "/ping"})
+    msg.message_id = "om_fake_ping"
+    msg.chat_id = "p2p_fake2"
+    msg.chat_type = "p2p"
+    msg.thread_id = None
+
+    sid = MagicMock(); sid.open_id = TEST_USER_ID
+    sender = MagicMock(); sender.sender_id = sid; sender.sender_type = "user"
+    event = MagicMock(); event.message = msg; event.sender = sender
+    data = MagicMock(); data.event = event
+
+    bot._dispatch_message(data)
+
+    assert fired == ["/ping"]
+    # Clean up
+    bot._command_handlers.pop("/ping", None)

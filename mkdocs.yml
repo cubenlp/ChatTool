@@ -106,5 +106,13 @@ nav:
     - DNS工具: tools/dns.md
     - FRP内网穿透: tools/frp.md
     - 网络扫描: tools/network.md
+  - 飞书机器人:
+    - 概览: larkbot/index.md
+    - 飞书平台配置: larkbot/feishu-setup.md
+    - 快速开始: larkbot/quickstart.md
+    - 消息发送: larkbot/messaging.md
+    - 接收消息与路由: larkbot/receiving.md
+    - AI 对话集成: larkbot/ai-chat.md
+    - 交互卡片: larkbot/cards.md
   - 博客:
     - 从代码到 Agent 技能: blog/code_tool_skill.md

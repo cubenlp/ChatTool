@@ -1,232 +1,560 @@
 import json
+import re
+import threading
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
 import lark_oapi
 from lark_oapi.api.im.v1 import (
     CreateMessageRequest, CreateMessageRequestBody,
-    GetChatRequest, GetChatMembersRequest
+    ReplyMessageRequest, ReplyMessageRequestBody,
+    GetChatRequest, GetChatMembersRequest,
 )
+
 from chattool.config.main import FeishuConfig
 from chattool.tools.lark.elements import BaseMessage
+from chattool.tools.lark.context import MessageContext
+
 
 class LarkBot:
-    """Lark Bot class for interacting with Feishu/Lark Open Platform."""
+    """
+    Lark/Feishu Bot.
+
+    Quick start (WebSocket, no public server needed)::
+
+        bot = LarkBot()
+
+        @bot.on_message
+        def handle(ctx):
+            ctx.reply(f"收到：{ctx.text}")
+
+        bot.start()
+
+    With LLM::
+
+        from chattool import Chat
+
+        sessions = {}
+
+        @bot.command("/clear")
+        def clear(ctx):
+            sessions.pop(ctx.sender_id, None)
+            ctx.reply("记忆已清除 ✅")
+
+        @bot.on_message
+        def chat(ctx):
+            c = sessions.setdefault(ctx.sender_id, Chat(system="你是一个助手"))
+            c.user(ctx.text)
+            ctx.reply(c.assistant())
+
+        bot.start()
+    """
 
     def __init__(self, config: FeishuConfig = None):
-        """Initialize the LarkBot with FeishuConfig.
-
-        Args:
-            config (FeishuConfig, optional): The configuration object. Defaults to None.
-        """
         if config is None:
             self.config = FeishuConfig()
         else:
             self.config = config
 
-        # Initialize the Lark client
-        # Note: lark-oapi uses a builder pattern for client initialization
-        builder = lark_oapi.Client.builder() \
-            .app_id(self.config.FEISHU_APP_ID.value) \
-            .app_secret(self.config.FEISHU_APP_SECRET.value) \
+        builder = (
+            lark_oapi.Client.builder()
+            .app_id(self.config.FEISHU_APP_ID.value)
+            .app_secret(self.config.FEISHU_APP_SECRET.value)
             .log_level(lark_oapi.LogLevel.INFO)
-            
+        )
         if self.config.FEISHU_API_BASE.value:
             builder.domain(self.config.FEISHU_API_BASE.value)
-            
         self.client = builder.build()
 
-    def _send_message(self, receive_id: str, receive_id_type: str, msg_type: str, content: str):
-        """Internal method to send message.
+        # Handler registry
+        self._message_handlers: List[Tuple[Optional[Callable], Callable]] = []
+        # matcher is None → fallback; otherwise a callable(ctx) → bool
+        self._command_handlers: Dict[str, Callable] = {}
+        self._card_handlers: Dict[str, Callable] = {}
+        self._bot_added_handlers: List[Callable] = []
 
-        Args:
-            receive_id (str): The receive ID.
-            receive_id_type (str): The receive ID type (open_id, user_id, union_id, email, chat_id).
-            msg_type (str): The message type (text, post, image, interactive, etc.).
-            content (str): The JSON string content.
-        
-        Returns:
-            response: The response from Lark API.
+    # ------------------------------------------------------------------
+    # Decorators
+    # ------------------------------------------------------------------
+
+    def on_message(
+        self,
+        func: Callable = None,
+        *,
+        group_only: bool = False,
+        private_only: bool = False,
+    ):
         """
-        # Construct request body
-        request_body = CreateMessageRequestBody.builder() \
-            .receive_id(receive_id) \
-            .msg_type(msg_type) \
-            .content(content) \
-            .build()
+        Register a fallback message handler.
 
-        # Construct request
-        request = CreateMessageRequest.builder() \
-            .receive_id_type(receive_id_type) \
-            .request_body(request_body) \
-            .build()
+        Can be used as a plain decorator or with keyword arguments::
 
-        # Send request
-        response = self.client.im.v1.message.create(request)
+            @bot.on_message
+            def handle(ctx): ...
 
-        # Log result
-        if not response.success():
-            lark_oapi.logger.error(
-                f"client.im.v1.message.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}"
-            )
-        else:
-            # Check if response.data is None
-            msg_id = response.data.message_id if response.data else "unknown"
-            lark_oapi.logger.info(
-                f"Message sent successfully, msg_id: {msg_id}"
-            )
-        
-        return response
-
-    def send_message(self, receive_id: str, receive_id_type: str, message: BaseMessage):
-        """Send a message object.
-
-        Args:
-            receive_id (str): The receive ID.
-            receive_id_type (str): The receive ID type (open_id, user_id, union_id, email, chat_id).
-            message (BaseMessage): The message object to send.
-
-        Returns:
-            response: The response from Lark API.
+            @bot.on_message(group_only=True)
+            def group_handler(ctx): ...
         """
-        return self._send_message(receive_id, receive_id_type, message.msg_type, message.to_json())
+        def decorator(f: Callable) -> Callable:
+            def matcher(ctx: MessageContext) -> bool:
+                if group_only and not ctx.is_group:
+                    return False
+                if private_only and ctx.is_group:
+                    return False
+                return True
+            self._message_handlers.append((matcher, f))
+            return f
 
-    def send_text(self, receive_id: str, receive_id_type: str, text: str):
-        """Send a text message.
+        if func is not None:
+            # Used as @bot.on_message without arguments
+            return decorator(func)
+        return decorator
 
-        Args:
-            receive_id (str): The receive ID.
-            receive_id_type (str): The receive ID type.
-            text (str): The text content.
+    def command(self, cmd: str):
         """
-        content = json.dumps({"text": text})
-        return self._send_message(receive_id, receive_id_type, "text", content)
+        Register a handler for a slash command.
 
-    def send_post(self, receive_id: str, receive_id_type: str, content: dict):
-        """Send a post (rich text) message.
+        The command string is matched against the beginning of the message
+        text (case-insensitive, stripped)::
 
-        Args:
-            receive_id (str): The receive ID.
-            receive_id_type (str): The receive ID type.
-            content (dict): The post content structure.
+            @bot.command("/help")
+            def on_help(ctx): ...
         """
-        msg_content = json.dumps(content)
-        return self._send_message(receive_id, receive_id_type, "post", msg_content)
+        def decorator(f: Callable) -> Callable:
+            self._command_handlers[cmd.lower().strip()] = f
+            return f
+        return decorator
 
-    def send_image(self, receive_id: str, receive_id_type: str, image_key: str):
-        """Send an image message.
-
-        Args:
-            receive_id (str): The receive ID.
-            receive_id_type (str): The receive ID type.
-            image_key (str): The image key.
+    def regex(self, pattern: str, flags: int = 0):
         """
-        content = json.dumps({"image_key": image_key})
-        return self._send_message(receive_id, receive_id_type, "image", content)
+        Register a handler that fires when the message text matches *pattern*.
+        The match object is stored as ``ctx._match`` so groups are accessible::
 
-    def send_card(self, receive_id: str, receive_id_type: str, card_content: dict):
-        """Send an interactive card message.
-
-        Args:
-            receive_id (str): The receive ID.
-            receive_id_type (str): The receive ID type (open_id, user_id, email, etc.).
-            card_content (dict): The card content structure (the JSON object for the card).
+            @bot.regex(r"^查询\\s+(.+)$")
+            def on_query(ctx):
+                keyword = ctx._match.group(1)
+                ctx.reply(f"查询：{keyword}")
         """
-        # Note: For interactive messages, the content is just the card JSON string.
-        # But if the user passes the card structure, we serialize it.
-        content = json.dumps(card_content)
-        return self._send_message(receive_id, receive_id_type, "interactive", content)
+        compiled = re.compile(pattern, flags)
 
-    def get_chat_info(self, chat_id: str, user_id_type: str = "open_id"):
-        """Get chat information.
+        def decorator(f: Callable) -> Callable:
+            def matcher(ctx: MessageContext) -> bool:
+                m = compiled.match(ctx.text)
+                if m:
+                    ctx._match = m  # type: ignore[attr-defined]
+                    return True
+                return False
+            self._message_handlers.append((matcher, f))
+            return f
+        return decorator
 
-        Args:
-            chat_id (str): The chat ID.
-            user_id_type (str, optional): The user ID type. Defaults to "open_id".
-        
-        Returns:
-            response: The response from Lark API.
+    def card_action(self, action_key: str):
         """
-        # Construct request
-        request = GetChatRequest.builder() \
-            .chat_id(chat_id) \
-            .user_id_type(user_id_type) \
-            .build()
+        Register a handler for interactive card button callbacks.
 
-        # Send request
-        response = self.client.im.v1.chat.get(request)
+        *action_key* is matched against ``ctx.action_value`` dict's ``"action"``
+        field (or the entire value string if it is not a dict)::
 
-        # Log result
-        if not response.success():
-            lark_oapi.logger.error(
-                f"client.im.v1.chat.get failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}"
-            )
-        
-        return response
-
-    def get_chat_members(self, chat_id: str, member_id_type: str = "open_id", page_size: int = 20, page_token: str = None):
-        """Get chat members.
-
-        Args:
-            chat_id (str): The chat ID.
-            member_id_type (str, optional): The member ID type. Defaults to "open_id".
-            page_size (int, optional): The page size. Defaults to 20.
-            page_token (str, optional): The page token. Defaults to None.
-        
-        Returns:
-            response: The response from Lark API.
+            @bot.card_action("approve")
+            def on_approve(ctx):
+                ctx.update_card(Card("已通过").text("✅").build())
         """
-        # Construct request
-        builder = GetChatMembersRequest.builder() \
-            .chat_id(chat_id) \
-            .member_id_type(member_id_type) \
-            .page_size(page_size)
-            
-        if page_token:
-            builder.page_token(page_token)
-            
-        request = builder.build()
+        def decorator(f: Callable) -> Callable:
+            self._card_handlers[action_key] = f
+            return f
+        return decorator
 
-        # Send request
-        response = self.client.im.v1.chat_members.get(request)
-
-        # Log result
-        if not response.success():
-            lark_oapi.logger.error(
-                f"client.im.v1.chat_members.get failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}"
-            )
-        
-        return response
-
-    def get_event_dispatcher(self, encrypt_key: str = None, verification_token: str = None):
-        """Get an event dispatcher builder.
-        
-        Args:
-            encrypt_key (str, optional): The encrypt key. Defaults to None.
-            verification_token (str, optional): The verification token. Defaults to None.
-            
-        Returns:
-            lark_oapi.EventDispatcherHandler.Builder: The event dispatcher builder.
+    def on_bot_added(self, func: Callable) -> Callable:
         """
-        return lark_oapi.EventDispatcherHandler.builder(
-            encrypt_key or "", 
-            verification_token or ""
+        Register a handler called when the bot is added to a group.
+
+            @bot.on_bot_added
+            def welcome(chat_id):
+                bot.send_text(chat_id, "chat_id", "大家好，我是 AI 助手！")
+        """
+        self._bot_added_handlers.append(func)
+        return func
+
+    # ------------------------------------------------------------------
+    # Dispatch
+    # ------------------------------------------------------------------
+
+    def _dispatch_message(self, data: Any) -> None:
+        ctx = MessageContext(self, data)
+        text_stripped = ctx.text.strip()
+
+        # 1. Try command handlers first
+        for cmd, handler in self._command_handlers.items():
+            if text_stripped.lower().startswith(cmd):
+                try:
+                    handler(ctx)
+                except Exception as e:
+                    lark_oapi.logger.error(f"[LarkBot] command handler error: {e}")
+                return
+
+        # 2. Try registered message handlers in order
+        for matcher, handler in self._message_handlers:
+            try:
+                if matcher is None or matcher(ctx):
+                    handler(ctx)
+                    return
+            except Exception as e:
+                lark_oapi.logger.error(f"[LarkBot] message handler error: {e}")
+                return
+
+    def _dispatch_card_action(self, data: Any):
+        """Handle P2CardActionTrigger events."""
+        from lark_oapi.event.callback.model.p2_card_action_trigger import (
+            P2CardActionTriggerResponse,
+        )
+        action_value = getattr(getattr(data.event, "action", None), "value", {})
+        action_key = None
+        if isinstance(action_value, dict):
+            action_key = action_value.get("action")
+        elif isinstance(action_value, str):
+            action_key = action_value
+
+        resp = P2CardActionTriggerResponse()
+        handler = self._card_handlers.get(action_key) if action_key else None
+        if handler:
+            card_ctx = _CardActionContext(self, data)
+            try:
+                result = handler(card_ctx)
+                if result is not None:
+                    return result
+                if card_ctx._updated_card is not None:
+                    resp.card = card_ctx._updated_card
+                if card_ctx._toast is not None:
+                    resp.toast = card_ctx._toast
+            except Exception as e:
+                lark_oapi.logger.error(f"[LarkBot] card_action handler error: {e}")
+        return resp
+
+    # ------------------------------------------------------------------
+    # Start
+    # ------------------------------------------------------------------
+
+    def _build_event_handler(
+        self,
+        encrypt_key: str = "",
+        verification_token: str = "",
+    ) -> lark_oapi.EventDispatcherHandler:
+        from lark_oapi.api.im.v1 import (
+            P2ImMessageReceiveV1,
+            P2ImChatMemberBotAddedV1,
+        )
+        from lark_oapi.event.callback.model.p2_card_action_trigger import (
+            P2CardActionTrigger,
         )
 
-    def get_bot_info(self):
-        """Get bot information.
-        
-        This method uses the Get Bot Info API (v3) to retrieve bot details.
-        https://open.feishu.cn/document/client-docs/bot-v3/bot-overview
-        
-        Returns:
-            response: The response from Lark API.
+        builder = lark_oapi.EventDispatcherHandler.builder(
+            encrypt_key,
+            verification_token,
+            lark_oapi.LogLevel.DEBUG,
+        ).register_p2_im_message_receive_v1(self._dispatch_message)
+
+        if self._card_handlers:
+            builder = builder.register_p2_card_action_trigger(
+                self._dispatch_card_action
+            )
+
+        if self._bot_added_handlers:
+            def _on_bot_added(data: P2ImChatMemberBotAddedV1) -> None:
+                chat_id = data.event.chat_id
+                for h in self._bot_added_handlers:
+                    try:
+                        h(chat_id)
+                    except Exception as e:
+                        lark_oapi.logger.error(f"[LarkBot] on_bot_added error: {e}")
+
+            builder = builder.register_p2_im_chat_member_bot_added_v1(_on_bot_added)
+
+        return builder.build()
+
+    def start(
+        self,
+        mode: str = "ws",
+        encrypt_key: str = "",
+        verification_token: str = "",
+        host: str = "0.0.0.0",
+        port: int = 7777,
+        path: str = "/webhook/event",
+    ) -> None:
         """
-        # Construct request manually as bot.v3 might not be available in SDK
-        request = lark_oapi.BaseRequest.builder() \
-            .http_method(lark_oapi.HttpMethod.GET) \
-            .uri("/open-apis/bot/v3/info") \
-            .token_types({lark_oapi.AccessTokenType.TENANT}) \
+        Start the bot.
+
+        Args:
+            mode: ``"ws"`` (WebSocket long-polling, default) or
+                  ``"flask"`` (HTTP Webhook via Flask).
+            encrypt_key: Event encryption key (leave empty if not configured).
+            verification_token: Verification token (leave empty if not configured).
+            host: Host for Flask mode.
+            port: Port for Flask mode.
+            path: URL path for Flask mode.
+        """
+        if mode == "ws":
+            self._start_ws(encrypt_key, verification_token)
+        elif mode == "flask":
+            self._start_flask(encrypt_key, verification_token, host, port, path)
+        else:
+            raise ValueError(f"Unknown mode: {mode!r}. Use 'ws' or 'flask'.")
+
+    def start_background(
+        self,
+        mode: str = "ws",
+        encrypt_key: str = "",
+        verification_token: str = "",
+        **kwargs,
+    ) -> threading.Thread:
+        """Start the bot in a background daemon thread and return it."""
+        t = threading.Thread(
+            target=self.start,
+            kwargs=dict(
+                mode=mode,
+                encrypt_key=encrypt_key,
+                verification_token=verification_token,
+                **kwargs,
+            ),
+            daemon=True,
+        )
+        t.start()
+        return t
+
+    def _start_ws(self, encrypt_key: str, verification_token: str) -> None:
+        from lark_oapi.ws import Client as WSClient
+
+        event_handler = self._build_event_handler(encrypt_key, verification_token)
+        ws = (
+            WSClient.builder()
+            .app_id(self.config.FEISHU_APP_ID.value)
+            .app_secret(self.config.FEISHU_APP_SECRET.value)
+            .event_handler(event_handler)
             .build()
-            
-        # Use the client's internal request method
-        # Note: client.request is available on the client instance
+        )
+        lark_oapi.logger.info("[LarkBot] Starting WebSocket connection...")
+        ws.start()
+
+    def _start_flask(
+        self,
+        encrypt_key: str,
+        verification_token: str,
+        host: str,
+        port: int,
+        path: str,
+    ) -> None:
+        try:
+            from flask import Flask, request as flask_request
+            from lark_oapi.adapter.flask import parse_req, parse_resp
+        except ImportError as e:
+            raise ImportError("Flask is required for mode='flask'. pip install flask") from e
+
+        event_handler = self._build_event_handler(encrypt_key, verification_token)
+        app = Flask(__name__)
+
+        @app.route(path, methods=["POST"])
+        def webhook():
+            resp = event_handler.do(parse_req())
+            return parse_resp(resp)
+
+        lark_oapi.logger.info(f"[LarkBot] Starting Flask webhook on {host}:{port}{path}")
+        app.run(host=host, port=port)
+
+    # ------------------------------------------------------------------
+    # Send helpers
+    # ------------------------------------------------------------------
+
+    def _send_message(
+        self,
+        receive_id: str,
+        receive_id_type: str,
+        msg_type: str,
+        content: str,
+    ) -> Any:
+        request_body = (
+            CreateMessageRequestBody.builder()
+            .receive_id(receive_id)
+            .msg_type(msg_type)
+            .content(content)
+            .build()
+        )
+        request = (
+            CreateMessageRequest.builder()
+            .receive_id_type(receive_id_type)
+            .request_body(request_body)
+            .build()
+        )
+        response = self.client.im.v1.message.create(request)
+        if not response.success():
+            lark_oapi.logger.error(
+                f"client.im.v1.message.create failed, "
+                f"code: {response.code}, msg: {response.msg}, "
+                f"log_id: {response.get_log_id()}"
+            )
+        return response
+
+    def send_message(
+        self, receive_id: str, receive_id_type: str, message: BaseMessage
+    ) -> Any:
+        """Send a BaseMessage object."""
+        return self._send_message(
+            receive_id, receive_id_type, message.msg_type, message.to_json()
+        )
+
+    def send_text(self, receive_id: str, receive_id_type: str, text: str) -> Any:
+        """Send a plain-text message."""
+        return self._send_message(
+            receive_id, receive_id_type, "text", json.dumps({"text": text})
+        )
+
+    def send_post(self, receive_id: str, receive_id_type: str, content: dict) -> Any:
+        """Send a rich-text (post) message."""
+        return self._send_message(
+            receive_id, receive_id_type, "post", json.dumps(content)
+        )
+
+    def send_image(self, receive_id: str, receive_id_type: str, image_key: str) -> Any:
+        """Send an image message."""
+        return self._send_message(
+            receive_id, receive_id_type, "image", json.dumps({"image_key": image_key})
+        )
+
+    def send_card(
+        self, receive_id: str, receive_id_type: str, card_content: dict
+    ) -> Any:
+        """Send an interactive card message."""
+        return self._send_message(
+            receive_id, receive_id_type, "interactive", json.dumps(card_content)
+        )
+
+    # ------------------------------------------------------------------
+    # Reply helpers
+    # ------------------------------------------------------------------
+
+    def reply(self, message_id: str, text: str) -> Any:
+        """Quote-reply to *message_id* with plain text."""
+        return self._reply_message(message_id, "text", json.dumps({"text": text}))
+
+    def reply_card(self, message_id: str, card: dict) -> Any:
+        """Quote-reply to *message_id* with an interactive card."""
+        return self._reply_message(message_id, "interactive", json.dumps(card))
+
+    def _reply_message(self, message_id: str, msg_type: str, content: str) -> Any:
+        request = (
+            ReplyMessageRequest.builder()
+            .message_id(message_id)
+            .request_body(
+                ReplyMessageRequestBody.builder()
+                .content(content)
+                .msg_type(msg_type)
+                .build()
+            )
+            .build()
+        )
+        response = self.client.im.v1.message.reply(request)
+        if not response.success():
+            lark_oapi.logger.error(
+                f"client.im.v1.message.reply failed, "
+                f"code: {response.code}, msg: {response.msg}, "
+                f"log_id: {response.get_log_id()}"
+            )
+        return response
+
+    # ------------------------------------------------------------------
+    # Group / Chat helpers
+    # ------------------------------------------------------------------
+
+    def get_chat_info(self, chat_id: str, user_id_type: str = "open_id") -> Any:
+        """Get group/chat information."""
+        request = (
+            GetChatRequest.builder()
+            .chat_id(chat_id)
+            .user_id_type(user_id_type)
+            .build()
+        )
+        response = self.client.im.v1.chat.get(request)
+        if not response.success():
+            lark_oapi.logger.error(
+                f"client.im.v1.chat.get failed, "
+                f"code: {response.code}, msg: {response.msg}"
+            )
+        return response
+
+    def get_chat_members(
+        self,
+        chat_id: str,
+        member_id_type: str = "open_id",
+        page_size: int = 20,
+        page_token: str = None,
+    ) -> Any:
+        """Get members of a group chat."""
+        builder = (
+            GetChatMembersRequest.builder()
+            .chat_id(chat_id)
+            .member_id_type(member_id_type)
+            .page_size(page_size)
+        )
+        if page_token:
+            builder.page_token(page_token)
+        response = self.client.im.v1.chat_members.get(builder.build())
+        if not response.success():
+            lark_oapi.logger.error(
+                f"client.im.v1.chat_members.get failed, "
+                f"code: {response.code}, msg: {response.msg}"
+            )
+        return response
+
+    # ------------------------------------------------------------------
+    # Misc
+    # ------------------------------------------------------------------
+
+    def get_event_dispatcher(
+        self,
+        encrypt_key: str = None,
+        verification_token: str = None,
+    ) -> lark_oapi.EventDispatcherHandler:
+        """Return a raw EventDispatcherHandler builder for advanced use."""
+        return lark_oapi.EventDispatcherHandler.builder(
+            encrypt_key or "",
+            verification_token or "",
+        )
+
+    def get_bot_info(self) -> Any:
+        """Fetch basic bot information via Bot v3 API."""
+        request = (
+            lark_oapi.BaseRequest.builder()
+            .http_method(lark_oapi.HttpMethod.GET)
+            .uri("/open-apis/bot/v3/info")
+            .token_types({lark_oapi.AccessTokenType.TENANT})
+            .build()
+        )
         return self.client.request(request)
 
+
+# ---------------------------------------------------------------------------
+# Card action context (lightweight, used inside card_action handlers)
+# ---------------------------------------------------------------------------
+
+class _CardActionContext:
+    """Context passed to @bot.card_action handlers."""
+
+    def __init__(self, bot: LarkBot, data: Any):
+        self._bot = bot
+        self._data = data
+        self._updated_card: Optional[dict] = None
+        self._toast: Optional[dict] = None
+
+        event = data.event
+        self.action_value: Any = getattr(getattr(event, "action", None), "value", {})
+        self.operator_id: str = getattr(
+            getattr(getattr(event, "operator", None), "open_id", None), "__str__", lambda: ""
+        )()
+        self.message_id: str = getattr(
+            getattr(event, "context", None), "open_message_id", ""
+        ) or ""
+
+    def update_card(self, card: dict) -> None:
+        """Update the card content in the response."""
+        self._updated_card = card
+
+    def toast(self, message: str, type: str = "success") -> None:
+        """Show a toast notification to the user who clicked."""
+        self._toast = {"type": type, "content": message}
