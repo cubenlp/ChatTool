@@ -9,7 +9,7 @@ Commands:
 import sys
 import click
 
-from chattool.tools.lark import LarkBot
+from chattool.tools import LarkBot, ChatSession
 
 LOG_LEVELS = click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False)
 
@@ -92,8 +92,6 @@ def ai(mode, host, port, log_level, system, max_history, model):
       chattool serve lark ai
       chattool serve lark ai --system "你是一名翻译官" --max-history 20
     """
-    from chattool.tools.lark.session import ChatSession
-
     bot = _get_bot()
     session = ChatSession(system=system, max_history=max_history)
 

@@ -7,11 +7,14 @@ Commands:
     chattool lark listen     启动 WebSocket 监听（调试模式）
     chattool lark chat       启动交互式 AI 对话
 """
+import os
 import json
 import sys
-
 import click
+from collections import defaultdict
 
+from chattool.config import FeishuConfig
+from chattool.tools import LarkBot, ChatSession
 
 @click.group()
 def cli():
@@ -21,7 +24,6 @@ def cli():
 
 def _get_bot():
     """Lazy-init a LarkBot from env vars."""
-    from chattool.tools.lark import LarkBot
     try:
         return LarkBot()
     except Exception as e:
@@ -94,7 +96,6 @@ def scopes(show_all, keyword, group):
     sorted_scopes = sorted(scope_list, key=lambda x: x.scope_name or "")
 
     if group:
-        from collections import defaultdict
         groups = defaultdict(list)
         for s in sorted_scopes:
             prefix = (s.scope_name or "unknown").split(":")[0]
@@ -216,7 +217,6 @@ def upload(path, upload_type):
       chattool lark upload report.pdf
       chattool lark upload data.bin -t file
     """
-    import os
     bot = _get_bot()
 
     image_exts = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".ico", ".tiff"}
@@ -284,8 +284,7 @@ def listen(verbose, log_level):
     import lark_oapi as lark
     from lark_oapi.api.im.v1 import P2ImMessageReceiveV1
     from lark_oapi.ws import Client as WSClient
-    from chattool.config.main import FeishuConfig
-
+    
     level_map = {"DEBUG": lark.LogLevel.DEBUG, "INFO": lark.LogLevel.INFO,
                  "WARNING": lark.LogLevel.WARNING, "ERROR": lark.LogLevel.ERROR}
     level = level_map.get(log_level.upper(), lark.LogLevel.INFO)
@@ -357,7 +356,7 @@ def chat(system, max_history, user):
     适合快速调试 System Prompt 和对话效果。
     输入 /clear 清除历史，/quit 退出。
     """
-    from chattool.tools.lark.session import ChatSession
+    
 
     session = ChatSession(system=system, max_history=max_history)
     click.secho(f"💬 AI 对话  (system: {system[:40]}...)", fg="green")
