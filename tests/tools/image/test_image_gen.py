@@ -76,3 +76,89 @@ class TestImageGenerators:
             result = gen.generate("test prompt")
             assert result == b"fake_image_bytes"
             mock_post.assert_called_once()
+
+    def test_liblib_generate_flow(self):
+        with patch.object(LiblibConfig.LIBLIB_ACCESS_KEY, 'value', "ak"), \
+             patch.object(LiblibConfig.LIBLIB_SECRET_KEY, 'value', "sk"):
+            gen = LiblibImageGenerator()
+            
+            # Mock requests
+            with patch("requests.post") as mock_post:
+                # 1. Submit task response
+                mock_submit_resp = MagicMock()
+                mock_submit_resp.status_code = 200
+                mock_submit_resp.json.return_value = {
+                    "code": 0,
+                    "data": {"generateUuid": "uuid-123"}
+                }
+                
+                # 2. Poll status response (waiting)
+                mock_status_waiting = MagicMock()
+                mock_status_waiting.status_code = 200
+                mock_status_waiting.json.return_value = {
+                    "code": 0,
+                    "data": {"generateStatus": 1, "images": []}
+                }
+                
+                # 3. Poll status response (success)
+                mock_status_success = MagicMock()
+                mock_status_success.status_code = 200
+                mock_status_success.json.return_value = {
+                    "code": 0,
+                    "data": {
+                        "generateStatus": 3,
+                        "images": [{"imageUrl": "http://example.com/liblib.png"}]
+                    }
+                }
+                
+                # Sequence of side effects
+                mock_post.side_effect = [
+                    mock_submit_resp,
+                    mock_status_waiting,
+                    mock_status_success
+                ]
+                
+                # We need to mock time.sleep to avoid waiting
+                with patch("time.sleep"):
+                    result = gen.generate("prompt", model_id="model-123")
+                    
+                assert result == "http://example.com/liblib.png"
+                assert mock_post.call_count == 3
+
+    def test_liblib_generate_with_default_model_id(self):
+         with patch.object(LiblibConfig.LIBLIB_ACCESS_KEY, 'value', "ak"), \
+             patch.object(LiblibConfig.LIBLIB_SECRET_KEY, 'value', "sk"), \
+             patch.object(LiblibConfig.LIBLIB_MODEL_ID, 'value', "default-model-id"):
+            
+            gen = LiblibImageGenerator()
+            
+            # Mock requests
+            with patch("requests.post") as mock_post:
+                mock_resp = MagicMock()
+                mock_resp.status_code = 200
+                
+                # Mock _request to avoid complex side effects
+                with patch.object(gen, '_request') as mock_request:
+                     # Mock _request to return success immediately on status poll
+                     mock_request.side_effect = [
+                         {"data": {"generateUuid": "uuid"}}, # submit
+                         {"data": {"generateStatus": 3, "images": [{"imageUrl": "url"}]}} # status
+                     ]
+
+                     with patch("time.sleep"):
+                         gen.generate("prompt") # No model_id provided
+                     
+                     # Check if submit called with default model id
+                     args, _ = mock_request.call_args_list[0]
+                     # args[2] is payload (since _request(method, uri, data))
+                     payload = args[2]
+                     assert payload["generateParams"]["checkPointId"] == "default-model-id"
+
+    def test_liblib_get_models(self):
+        with patch.object(LiblibConfig.LIBLIB_ACCESS_KEY, 'value', "ak"), \
+             patch.object(LiblibConfig.LIBLIB_SECRET_KEY, 'value', "sk"):
+            gen = LiblibImageGenerator()
+            models = gen.get_models()
+            assert isinstance(models, list)
+            assert len(models) > 0
+            assert "id" in models[0]

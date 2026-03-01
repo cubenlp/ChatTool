@@ -19,3 +19,12 @@ class ImageGenerator(ABC):
             Any: The result object (e.g. image URL, bytes, or file path).
         """
         pass
+
+    def get_models(self) -> list:
+        """
+        Get available models for image generation.
+        
+        Returns:
+            list: A list of available model IDs or objects.
+        """
+        return []

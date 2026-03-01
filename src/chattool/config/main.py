@@ -138,7 +138,7 @@ class TongyiConfig(BaseEnvConfig):
     _title = "Tongyi Wanxiang Configuration"
     _aliases = ["tongyi", "dashscope"]
     
-    DASHSCOPE_API_KEY = EnvField("DASHSCOPE_API_KEY", desc="Aliyun DashScope API Key", is_sensitive=True)
+    DASHSCOPE_API_KEY = EnvField("DASHSCOPE_API_KEY", desc="Aliyun DashScope API Key. See https://dashscope.console.aliyun.com/apiKey", is_sensitive=True)
 
     @classmethod
     def test(cls):
@@ -163,7 +163,7 @@ class HuggingFaceConfig(BaseEnvConfig):
     _title = "Hugging Face Configuration"
     _aliases = ["hf", "huggingface"]
     
-    HUGGINGFACE_HUB_TOKEN = EnvField("HUGGINGFACE_HUB_TOKEN", desc="Hugging Face User Access Token", is_sensitive=True)
+    HUGGINGFACE_HUB_TOKEN = EnvField("HUGGINGFACE_HUB_TOKEN", desc="Hugging Face User Access Token. See https://huggingface.co/settings/tokens", is_sensitive=True)
 
     @classmethod
     def test(cls):
@@ -183,8 +183,9 @@ class LiblibConfig(BaseEnvConfig):
     _title = "LiblibAI Configuration"
     _aliases = ["liblib"]
     
-    LIBLIB_ACCESS_KEY = EnvField("LIBLIB_ACCESS_KEY", desc="LiblibAI Access Key", is_sensitive=True)
-    LIBLIB_SECRET_KEY = EnvField("LIBLIB_SECRET_KEY", desc="LiblibAI Secret Key", is_sensitive=True)
+    LIBLIB_MODEL_ID = EnvField("LIBLIB_MODEL_ID", desc="LiblibAI Model ID. Use `chattool image liblib list-models` to get available models.")
+    LIBLIB_ACCESS_KEY = EnvField("LIBLIB_ACCESS_KEY", desc="LiblibAI Access Key. See https://www.liblib.art/apis", is_sensitive=True)
+    LIBLIB_SECRET_KEY = EnvField("LIBLIB_SECRET_KEY", desc="LiblibAI Secret Key. See https://www.liblib.art/apis", is_sensitive=True)
 
     @classmethod
     def test(cls):
@@ -207,7 +208,7 @@ class BingConfig(BaseEnvConfig):
     _title = "Bing Image Creator Configuration"
     _aliases = ["bing"]
     
-    BING_COOKIE_U = EnvField("BING_COOKIE_U", desc="Bing '_U' Cookie Value", is_sensitive=True)
+    BING_COOKIE_U = EnvField("BING_COOKIE_U", desc="Bing '_U' Cookie Value. Get from browser cookies (bing.com)", is_sensitive=True)
 
     @classmethod
     def test(cls):
