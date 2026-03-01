@@ -179,6 +179,10 @@ def init(interactive, config_types):
     - Tencent: tencent, tx, tencent-dns
     - Zulip: zulip
     - Feishu: feishu, lark
+    - Tongyi: tongyi, dashscope
+    - HuggingFace: hf, huggingface
+    - Liblib: liblib
+    - Bing: bing
     """
     
     target_configs = BaseEnvConfig._registry

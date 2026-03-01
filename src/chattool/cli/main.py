@@ -1,5 +1,5 @@
 import click
-from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli
+from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli
 from .service import capture_app, cert_app, lark_serve_cli
 from chattool.application.kb.cli import cli as kb_cli
 
@@ -44,6 +44,9 @@ cli.add_command(kb_cli, name='kb')
 
 # Lark Group
 cli.add_command(lark_cli, name='lark')
+
+# Image Group
+cli.add_command(image_cli, name='image')
 
 def main():
     cli()

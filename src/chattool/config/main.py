@@ -133,3 +133,92 @@ class FeishuConfig(BaseEnvConfig):
                 
         except Exception as e:
             print(f"❌ Failed: {e}")
+
+class TongyiConfig(BaseEnvConfig):
+    _title = "Tongyi Wanxiang Configuration"
+    _aliases = ["tongyi", "dashscope"]
+    
+    DASHSCOPE_API_KEY = EnvField("DASHSCOPE_API_KEY", desc="Aliyun DashScope API Key", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            # 简单验证 key 是否存在
+            if not cls.DASHSCOPE_API_KEY.value:
+                print("❌ Failed: DASHSCOPE_API_KEY not set")
+                return
+
+            # 尝试导入并调用
+            from chattool.tools.image.tongyi import TongyiImageGenerator
+            # 注意：这里我们不真正生成图片，因为那会消耗额度且较慢，
+            # 我们可以尝试初始化 Client，如果 key 格式不对通常会在使用时报错。
+            # 由于 Tongyi 的 SDK 也是惰性的，这里主要检查 import 和 key 存在。
+            client = TongyiImageGenerator(api_key=cls.DASHSCOPE_API_KEY.value)
+            print(f"✅ Success! Client initialized with key: {cls.DASHSCOPE_API_KEY.mask_value()}")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class HuggingFaceConfig(BaseEnvConfig):
+    _title = "Hugging Face Configuration"
+    _aliases = ["hf", "huggingface"]
+    
+    HUGGINGFACE_HUB_TOKEN = EnvField("HUGGINGFACE_HUB_TOKEN", desc="Hugging Face User Access Token", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.HUGGINGFACE_HUB_TOKEN.value:
+                print("❌ Failed: HUGGINGFACE_HUB_TOKEN not set")
+                return
+
+            from chattool.tools.image.huggingface import HuggingFaceImageGenerator
+            client = HuggingFaceImageGenerator(api_key=cls.HUGGINGFACE_HUB_TOKEN.value)
+            print(f"✅ Success! Client initialized with token: {cls.HUGGINGFACE_HUB_TOKEN.mask_value()}")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class LiblibConfig(BaseEnvConfig):
+    _title = "LiblibAI Configuration"
+    _aliases = ["liblib"]
+    
+    LIBLIB_ACCESS_KEY = EnvField("LIBLIB_ACCESS_KEY", desc="LiblibAI Access Key", is_sensitive=True)
+    LIBLIB_SECRET_KEY = EnvField("LIBLIB_SECRET_KEY", desc="LiblibAI Secret Key", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.LIBLIB_ACCESS_KEY.value or not cls.LIBLIB_SECRET_KEY.value:
+                print("❌ Failed: LIBLIB_ACCESS_KEY or LIBLIB_SECRET_KEY not set")
+                return
+
+            from chattool.tools.image.liblib import LiblibImageGenerator
+            client = LiblibImageGenerator(
+                access_key=cls.LIBLIB_ACCESS_KEY.value,
+                secret_key=cls.LIBLIB_SECRET_KEY.value
+            )
+            print(f"✅ Success! Client initialized.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class BingConfig(BaseEnvConfig):
+    _title = "Bing Image Creator Configuration"
+    _aliases = ["bing"]
+    
+    BING_COOKIE_U = EnvField("BING_COOKIE_U", desc="Bing '_U' Cookie Value", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.BING_COOKIE_U.value:
+                print("❌ Failed: BING_COOKIE_U not set")
+                return
+
+            from chattool.tools.image.bing import BingImageGenerator
+            client = BingImageGenerator(cookie_u=cls.BING_COOKIE_U.value)
+            print(f"✅ Success! Client initialized.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
