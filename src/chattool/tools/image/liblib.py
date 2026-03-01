@@ -2,6 +2,7 @@ import os
 import requests
 from typing import Optional, Any
 from .base import ImageGenerator
+from chattool.config import LiblibConfig
 
 class LiblibImageGenerator(ImageGenerator):
     """
@@ -13,8 +14,8 @@ class LiblibImageGenerator(ImageGenerator):
     API_URL = "https://api.liblib.art/v1/generation"
 
     def __init__(self, access_key: Optional[str] = None, secret_key: Optional[str] = None):
-        self.access_key = access_key or os.getenv("LIBLIB_ACCESS_KEY")
-        self.secret_key = secret_key or os.getenv("LIBLIB_SECRET_KEY")
+        self.access_key = access_key or LiblibConfig.LIBLIB_ACCESS_KEY.value
+        self.secret_key = secret_key or LiblibConfig.LIBLIB_SECRET_KEY.value
         if not self.access_key or not self.secret_key:
             raise ValueError("LIBLIB_ACCESS_KEY or LIBLIB_SECRET_KEY not set")
 

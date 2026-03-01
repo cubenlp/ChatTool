@@ -2,6 +2,7 @@ import os
 import requests
 from typing import Optional, Any
 from .base import ImageGenerator
+from chattool.config import HuggingFaceConfig
 
 class HuggingFaceImageGenerator(ImageGenerator):
     """
@@ -11,10 +12,10 @@ class HuggingFaceImageGenerator(ImageGenerator):
     """
     
     DEFAULT_MODEL = "black-forest-labs/FLUX.1-schnell"
-    API_URL_TEMPLATE = "https://api-inference.huggingface.co/models/{model_id}"
+    API_URL_TEMPLATE = "https://router.huggingface.co/hf-inference/models/{model_id}"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("HUGGINGFACE_HUB_TOKEN")
+        self.api_key = api_key or HuggingFaceConfig.HUGGINGFACE_HUB_TOKEN.value
         if not self.api_key:
             raise ValueError("HUGGINGFACE_HUB_TOKEN environment variable not set or api_key not provided")
 

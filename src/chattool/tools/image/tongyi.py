@@ -2,6 +2,7 @@ import os
 import requests
 from typing import Optional, Any
 from .base import ImageGenerator
+from chattool.config import TongyiConfig
 
 class TongyiImageGenerator(ImageGenerator):
     """
@@ -13,7 +14,7 @@ class TongyiImageGenerator(ImageGenerator):
     API_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
+        self.api_key = api_key or TongyiConfig.DASHSCOPE_API_KEY.value
         if not self.api_key:
             raise ValueError("DASHSCOPE_API_KEY environment variable not set or api_key not provided")
 

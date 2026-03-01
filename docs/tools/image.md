@@ -150,3 +150,58 @@
 | **LiblibAI** | 设计师、发烧友 | 模型极其丰富、可控性高、支持训练 |
 | **Bing Image Creator** | 英语学习者、文案创作者 | 语义理解极强 (DALL-E 3)、无需配置、免费无限(慢速) |
 | **Hugging Face** | 开发者、模型研究员 | 最新开源模型首发、代码接入、免费体验 Demo |
+
+---
+
+## 开发者调用指南
+
+本项目已集成上述部分工具的 API 调用。
+
+### 1. 配置环境变量
+
+首先，使用 `chatenv` 命令初始化配置：
+
+```bash
+# 查看支持的配置类型
+chatenv init --help
+
+# 交互式设置 Key (支持 tongyi, hf, liblib, bing 等)
+chatenv init -i -t tongyi -t hf
+```
+
+或者直接编辑 `.env` 文件，添加以下变量：
+*   **通义万相**: `DASHSCOPE_API_KEY`
+*   **Hugging Face**: `HUGGINGFACE_HUB_TOKEN`
+*   **LiblibAI**: `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY`
+*   **Bing**: `BING_COOKIE_U`
+
+### 2. 命令行使用
+
+可以使用 CLI 直接生成图片：
+
+```bash
+# 使用通义万相生成
+chattool client image generate -p tongyi "一只在屋顶晒太阳的赛博朋克猫" -o cat_tongyi.png
+
+# 使用 Hugging Face 生成 (默认 FLUX.1)
+chattool client image generate -p huggingface "A futuristic city at night, neon lights" -o city_hf.png
+
+# 使用 Bing 生成
+chattool client image generate -p bing "An astronaut riding a horse on Mars"
+```
+
+### 3. 代码调用
+
+在 Python 代码中调用：
+
+```python
+from chattool.tools.image import create_generator
+
+# 初始化生成器 (自动读取环境变量)
+generator = create_generator("tongyi") 
+# 或者手动传入 key: create_generator("tongyi", api_key="sk-...")
+
+# 生成图片
+result = generator.generate("一只可爱的猫")
+print(result)
+```

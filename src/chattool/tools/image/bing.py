@@ -1,6 +1,7 @@
 import os
 from typing import Optional, Any
 from .base import ImageGenerator
+from chattool.config import BingConfig
 
 class BingImageGenerator(ImageGenerator):
     """
@@ -11,7 +12,7 @@ class BingImageGenerator(ImageGenerator):
     """
 
     def __init__(self, cookie_u: Optional[str] = None):
-        self.cookie_u = cookie_u or os.getenv("BING_COOKIE_U")
+        self.cookie_u = cookie_u or BingConfig.BING_COOKIE_U.value
         if not self.cookie_u:
             raise ValueError("BING_COOKIE_U environment variable not set or cookie not provided")
 

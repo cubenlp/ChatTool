@@ -32,6 +32,7 @@ def client():
     pass
 
 client.add_command(cert_client, name='cert')
+client.add_command(image_cli, name='image')
 
 # Network Group
 cli.add_command(network_cli, name='network')
@@ -46,7 +47,7 @@ cli.add_command(kb_cli, name='kb')
 cli.add_command(lark_cli, name='lark')
 
 # Image Group
-cli.add_command(image_cli, name='image')
+# cli.add_command(image_cli, name='image')
 
 def main():
     cli()
