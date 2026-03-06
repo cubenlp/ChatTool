@@ -46,13 +46,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tools = [
+dns = [
+    "netifaces",
     "alibabacloud_alidns20150109>=3.5.10",
     "alibabacloud_tea_openapi>=0.3.0",
     "tencentcloud-sdk-python",
-    "netifaces",
+]
+lark = [
     "lark-oapi==1.5.3",
     "flask",
+]
+tools = [
+    "dashscope",
+    "chattool[dns, lark]",
 ]
 tests = [
     "coverage",
