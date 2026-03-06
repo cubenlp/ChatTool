@@ -138,7 +138,7 @@ class TongyiConfig(BaseEnvConfig):
     _title = "Tongyi Wanxiang Configuration"
     _aliases = ["tongyi", "dashscope"]
     
-    DASHSCOPE_API_KEY = EnvField("DASHSCOPE_API_KEY", desc="Aliyun DashScope API Key. See https://dashscope.console.aliyun.com/apiKey", is_sensitive=True)
+    DASHSCOPE_API_KEY = EnvField("DASHSCOPE_API_KEY", desc="Aliyun DashScope API Key. See https://bailian.console.aliyun.com/cn-beijing/?tab=model#/api-key", is_sensitive=True)
 
     @classmethod
     def test(cls):

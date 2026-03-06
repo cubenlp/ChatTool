@@ -25,6 +25,7 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
+    "questionary>=2.1.0",
     "requests>=2.20",
     "aiohttp>=3.8",
     "tqdm>=4.60",
@@ -107,4 +108,3 @@ filterwarnings = [
     "ignore:websockets.legacy is deprecated:DeprecationWarning",
     "ignore:websockets.server.WebSocketServerProtocol is deprecated:DeprecationWarning"
 ]
-

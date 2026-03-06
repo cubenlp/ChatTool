@@ -1,6 +1,8 @@
 import click
 import shutil
 import os
+import sys
+import questionary
 
 from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
@@ -37,6 +39,28 @@ def _resolve_config_types(config_types):
         or any(a.lower() in normalized for a in getattr(cls, '_aliases', []))
     ]
     return matched
+
+def _group_configs(configs):
+    groups = {
+        "Model": [],
+        "DNS": [],
+        "Collaboration": [],
+        "Image": [],
+        "Other": [],
+    }
+    for cfg in configs:
+        name = cfg.__name__
+        if name in ("OpenAIConfig", "AzureConfig"):
+            groups["Model"].append(cfg)
+        elif name in ("AliyunConfig", "TencentConfig"):
+            groups["DNS"].append(cfg)
+        elif name in ("ZulipConfig", "FeishuConfig"):
+            groups["Collaboration"].append(cfg)
+        elif name in ("TongyiConfig", "HuggingFaceConfig", "LiblibConfig", "BingConfig"):
+            groups["Image"].append(cfg)
+        else:
+            groups["Other"].append(cfg)
+    return groups
 
 
 @cli.command(name='cat')
@@ -201,8 +225,66 @@ def init(interactive, config_types):
     if CHATTOOL_ENV_FILE.exists():
         BaseEnvConfig.load_all(CHATTOOL_ENV_FILE)
 
+    if not interactive:
+        interactive = True
+
     if interactive:
         click.echo("Starting interactive configuration...")
+        use_questionary = sys.stdin.isatty() and sys.stdout.isatty()
+        if not config_types:
+            grouped = _group_configs(target_configs)
+            if use_questionary:
+                section_choices = [s for s, cfgs in grouped.items() if cfgs]
+                selected_sections = questionary.checkbox(
+                    "Select sections to configure",
+                    choices=section_choices,
+                    validate=lambda v: True if v else "Please select at least one section",
+                ).ask()
+            else:
+                selected_sections = []
+                click.echo("\nSelect sections to configure:")
+                for section, configs in grouped.items():
+                    if not configs:
+                        continue
+                    if click.confirm(section, default=section == "Model"):
+                        selected_sections.append(section)
+
+            if not selected_sections:
+                click.echo("No section selected. Nothing to update.")
+                return
+
+            selected_configs = []
+            if use_questionary:
+                provider_choices = []
+                for section in selected_sections:
+                    provider_choices.append(questionary.Separator(f"=== {section} ==="))
+                    for config_cls in grouped[section]:
+                        aliases = getattr(config_cls, '_aliases', [])
+                        alias_text = f" ({', '.join(aliases)})" if aliases else ""
+                        provider_choices.append(f"{config_cls._title}{alias_text}")
+                selected_providers = questionary.checkbox(
+                    "Select providers to configure",
+                    choices=provider_choices,
+                    validate=lambda v: True if v else "Please select at least one provider",
+                ).ask()
+                selected_provider_titles = {p.split(" (")[0] for p in selected_providers or []}
+                for section in selected_sections:
+                    for config_cls in grouped[section]:
+                        if config_cls._title in selected_provider_titles:
+                            selected_configs.append(config_cls)
+            else:
+                for section in selected_sections:
+                    click.echo(f"\n[{section}]")
+                    for config_cls in grouped[section]:
+                        aliases = getattr(config_cls, '_aliases', [])
+                        alias_text = f" ({', '.join(aliases)})" if aliases else ""
+                        if click.confirm(f"Configure {config_cls._title}{alias_text}", default=False):
+                            selected_configs.append(config_cls)
+
+            if not selected_configs:
+                click.echo("No provider selected. Nothing to update.")
+                return
+            target_configs = selected_configs
         
         for config_cls in target_configs:
             click.echo(f"\n[{config_cls._title}]")
@@ -214,28 +296,46 @@ def init(interactive, config_types):
                 
                 default_val = field.value if field.value is not None else field.default
 
-                if field.is_sensitive:
-                    hint = mask_secret(default_val) if default_val else ""
-                    if hint:
-                        prompt_text += f" [{hint}]"
-                    new_val = click.prompt(
-                        prompt_text,
-                        default="",
-                        show_default=False,
-                        hide_input=True,
-                        type=str,
-                    )
-                    if new_val:
-                        field.value = new_val
+                if use_questionary:
+                    if field.is_sensitive:
+                        hint = mask_secret(default_val) if default_val else ""
+                        message = f"{prompt_text}"
+                        if hint:
+                            message += f" [current: {hint}]"
+                        message += " (leave blank to keep current)"
+                        new_val = questionary.password(message).ask()
+                        if new_val:
+                            field.value = new_val
+                    else:
+                        new_val = questionary.text(
+                            prompt_text,
+                            default=str(default_val) if default_val is not None else "",
+                        ).ask()
+                        if new_val:
+                            field.value = new_val
                 else:
-                    new_val = click.prompt(
-                        prompt_text,
-                        default=default_val if default_val is not None else "",
-                        show_default=True,
-                        type=str,
-                    )
-                    if new_val:
-                        field.value = new_val
+                    if field.is_sensitive:
+                        hint = mask_secret(default_val) if default_val else ""
+                        if hint:
+                            prompt_text += f" [{hint}]"
+                        new_val = click.prompt(
+                            prompt_text,
+                            default="",
+                            show_default=False,
+                            hide_input=True,
+                            type=str,
+                        )
+                        if new_val:
+                            field.value = new_val
+                    else:
+                        new_val = click.prompt(
+                            prompt_text,
+                            default=default_val if default_val is not None else "",
+                            show_default=True,
+                            type=str,
+                        )
+                        if new_val:
+                            field.value = new_val
     
     BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
     click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
