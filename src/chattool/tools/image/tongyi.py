@@ -1,5 +1,4 @@
 import os
-import requests
 from typing import Optional, Any
 from .base import ImageGenerator
 from chattool.config import TongyiConfig

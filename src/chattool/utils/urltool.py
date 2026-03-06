@@ -1,9 +1,11 @@
-import requests
 import json
-from typing import Union, List, Dict
+from typing import Union, List, Dict, TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
-def resp2curl( resp:requests.Response
+if TYPE_CHECKING:
+    import requests
+
+def resp2curl( resp: "requests.Response"
             , include_headers:Union[List[str], None]=None
             , exclude_headers:Union[List[str], None]=None):
     """
@@ -119,6 +121,7 @@ def valid_models(api_key:str, model_url:str, gpt_only:bool=True):
     Returns:
         List[str]: list of valid models
     """
+    import requests
     headers = {
         "Authorization": "Bearer " + api_key,
     }

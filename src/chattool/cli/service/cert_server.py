@@ -1,6 +1,4 @@
 import click
-import uvicorn
-from chattool.tools.cert.cert_server import app, config
 
 @click.command(name="cert")
 @click.option('--host', default='0.0.0.0', help='监听地址')
@@ -16,6 +14,9 @@ def cert_app(host, port, output, provider, secret_id, secret_key):
     提供证书的异步申请和安全下载功能。
     支持多租户隔离：不同 Token 的数据存储在不同目录下。
     """
+    import uvicorn
+    from chattool.tools.cert.cert_server import app, config
+
     # 更新全局配置
     config["cert_dir"] = output
     config["provider"] = provider

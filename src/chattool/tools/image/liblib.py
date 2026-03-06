@@ -5,7 +5,6 @@ import hmac
 import hashlib
 import base64
 import json
-import requests
 from typing import Optional, Any, List, Dict
 from .base import ImageGenerator
 from chattool.config import LiblibConfig
@@ -42,6 +41,7 @@ class LiblibImageGenerator(ImageGenerator):
         """
         Make a signed request to LiblibAI API.
         """
+        import requests
         timestamp = str(int(time.time() * 1000))
         nonce = str(uuid.uuid4()).replace('-', '')
         sign = self._make_sign(uri, timestamp, nonce)

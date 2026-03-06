@@ -12,10 +12,6 @@ import hashlib
 import time
 import logging
 from typing import List, Callable, Optional
-import requests
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +37,10 @@ def get_crt(account_key: str, csr: str,
     Returns:
         PEM encoded signed certificate
     """
+    import requests
+    from cryptography import x509
+    from cryptography.hazmat.primitives import serialization, hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
     
     # Helper function for base64url encoding
     def _b64(b):

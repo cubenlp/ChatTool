@@ -2,7 +2,8 @@ import click
 import shutil
 import os
 import sys
-import questionary
+import warnings
+warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
 
 from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
@@ -62,6 +63,7 @@ def _group_configs(configs):
 
 def _get_style():
     """Custom style for questionary."""
+    import questionary
     return questionary.Style([
         ('qmark', 'fg:#5f819d bold'),       # token in front of the question
         ('question', 'bold'),               # question text
@@ -78,6 +80,7 @@ def _get_style():
 
 def _configure_provider(config_cls, style):
     """Interactively configure a single provider."""
+    import questionary
     click.echo(f"\nConfiguring {config_cls._title}...")
     for name, field in config_cls.get_fields().items():
         prompt_text = f"{name}"
@@ -108,6 +111,7 @@ def _configure_provider(config_cls, style):
 
 def _interactive_config_loop(grouped_configs):
     """Main loop for interactive configuration using questionary."""
+    import questionary
     style = _get_style()
     
     while True:
@@ -338,6 +342,10 @@ def init(interactive, config_types):
         use_questionary = sys.stdin.isatty() and sys.stdout.isatty()
         
         if use_questionary:
+            try:
+                import questionary
+            except ImportError:
+                use_questionary = False
             style = _get_style()
             if not config_types:
                 grouped = _group_configs(target_configs)

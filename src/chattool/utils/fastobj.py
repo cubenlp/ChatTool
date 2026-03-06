@@ -1,8 +1,10 @@
 import json
 import asyncio
 import threading
-import uvicorn
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import uvicorn
 
 def generate_curl_command(request_info: dict) -> str:
     """
@@ -56,7 +58,7 @@ class FastAPIManager:
         self.host = host
         self.port = port
         self.kwargs = kwargs
-        self.server: Optional[uvicorn.Server] = None
+        self.server: Optional["uvicorn.Server"] = None
         self.thread: Optional[threading.Thread] = None
         self.is_running = False
     
@@ -66,6 +68,7 @@ class FastAPIManager:
             print("服务已在运行中")
             return
         
+        import uvicorn
         config = uvicorn.Config(
             app=self.app,
             host=self.host,

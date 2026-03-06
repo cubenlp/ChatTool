@@ -12,11 +12,6 @@ from datetime import datetime
 from typing import List, Dict, Optional, Union
 from pathlib import Path
 
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa, ec
-from cryptography.x509.oid import NameOID
-
 from chattool.utils import setup_logger
 from chattool.tools.dns.utils import create_dns_client, DNSClientType
 
@@ -205,6 +200,8 @@ class SSLCertUpdater:
     
     def _ensure_account_key(self) -> str:
         """Ensure account key exists and return it. Uses RSA 2048 for account key (ACME requirement/standard)."""
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
         key_path = self.cert_dir / "account.key"
         if not key_path.exists():
             self.logger.info("Generating new account key (RSA 2048)...")
@@ -225,6 +222,8 @@ class SSLCertUpdater:
 
     def _ensure_domain_key(self, domain: str) -> str:
         """Ensure domain key exists and return it. Uses ECDSA secp384r1 for domain key (Modern, shorter)."""
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
         key_path = self.cert_dir / f"{domain}.key"
         if not key_path.exists():
             self.logger.info(f"Generating new private key for {domain} (ECDSA secp384r1)...")
@@ -252,6 +251,9 @@ class SSLCertUpdater:
         Returns:
             True if they match, False otherwise
         """
+        from cryptography import x509
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa, ec
         try:
             cert_pem = cert_path.read_bytes()
             key_pem = key_path.read_bytes()
@@ -284,6 +286,9 @@ class SSLCertUpdater:
     
     def _generate_csr(self, main_domain: str, domains: List[str], domain_key_pem: str) -> str:
         """Generate CSR for the domain list"""
+        from cryptography import x509
+        from cryptography.hazmat.primitives import serialization, hashes
+        from cryptography.x509.oid import NameOID
         
         private_key = serialization.load_pem_private_key(domain_key_pem.encode('utf8'), password=None)
         

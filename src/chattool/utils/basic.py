@@ -1,5 +1,4 @@
 import asyncio
-import requests
 from pathlib import Path
 from typing import Union, Optional
 
@@ -55,6 +54,7 @@ def debug_log( net_url:str="https://www.baidu.com"
     print("Current version:", chattool.__version__)
     # Network test
     print("\nNetwork test:")
+    import requests
     try:
         requests.get(net_url, timeout=timeout)
     except:

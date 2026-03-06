@@ -1,9 +1,11 @@
-import httpx
 import asyncio
 import logging
 import time
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, TYPE_CHECKING
 from chattool.utils import setup_logger
+
+if TYPE_CHECKING:
+    import httpx
 
 class HTTPConfig:
     def __init__(
@@ -66,12 +68,13 @@ class HTTPClient:
             retry_delay=retry_delay,
             **kwargs
         )
-        self._sync_client: Optional[httpx.Client] = None
-        self._async_client: Optional[httpx.AsyncClient] = None
+        self._sync_client: Optional['httpx.Client'] = None
+        self._async_client: Optional['httpx.AsyncClient'] = None
         self.logger = logger or setup_logger(self.__class__.__name__)
     
-    def _get_sync_client(self) -> httpx.Client:
+    def _get_sync_client(self) -> 'httpx.Client':
         """获取同步客户端，懒加载"""
+        import httpx
         if self._sync_client is None:
             self._sync_client = httpx.Client(
                 base_url=self.config.api_base,
@@ -80,8 +83,9 @@ class HTTPClient:
             )
         return self._sync_client
     
-    def _get_async_client(self) -> httpx.AsyncClient:
+    def _get_async_client(self) -> 'httpx.AsyncClient':
         """获取异步客户端，懒加载"""
+        import httpx
         if self._async_client is None:
             self._async_client = httpx.AsyncClient(
                 base_url=self.config.api_base,
@@ -111,6 +115,7 @@ class HTTPClient:
     
     def _retry_request(self, request_func, *args, **kwargs):
         """重试机制装饰器"""
+        import httpx
         last_exception = None
         
         for attempt in range(self.config.max_retries + 1):
@@ -128,6 +133,7 @@ class HTTPClient:
     
     async def _async_retry_request(self, request_func, *args, **kwargs):
         """异步重试机制"""
+        import httpx
         last_exception = None
         
         for attempt in range(self.config.max_retries + 1):
@@ -151,7 +157,7 @@ class HTTPClient:
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         **kwargs
-    ) -> httpx.Response:
+    ) -> 'httpx.Response':
         """同步请求
 
         Args:
@@ -190,7 +196,7 @@ class HTTPClient:
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         **kwargs
-    ) -> httpx.Response:
+    ) -> 'httpx.Response':
         """异步请求
 
         Args:
@@ -216,34 +222,34 @@ class HTTPClient:
                 headers=headers,
                 **kwargs
             )
-        response: httpx.Response = await self._async_retry_request(_make_request)
+        response: 'httpx.Response' = await self._async_retry_request(_make_request)
         response.raise_for_status()
         return response
     
     # 便捷方法
-    def get(self, url: str, **kwargs) -> httpx.Response:
+    def get(self, url: str, **kwargs) -> 'httpx.Response':
         return self.request("GET", url, **kwargs)
     
-    def post(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+    def post(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> 'httpx.Response':
         return self.request("POST", url, data=data, **kwargs)
     
-    def put(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+    def put(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> 'httpx.Response':
         return self.request("PUT", url, data=data, **kwargs)
     
-    def delete(self, url: str, **kwargs) -> httpx.Response:
+    def delete(self, url: str, **kwargs) -> 'httpx.Response':
         return self.request("DELETE", url, **kwargs)
     
     # 异步便捷方法
-    async def async_get(self, url: str, **kwargs) -> httpx.Response:
+    async def async_get(self, url: str, **kwargs) -> 'httpx.Response':
         return await self.async_request("GET", url, **kwargs)
     
-    async def async_post(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+    async def async_post(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> 'httpx.Response':
         return await self.async_request("POST", url, data=data, **kwargs)
     
-    async def async_put(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> httpx.Response:
+    async def async_put(self, url: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> 'httpx.Response':
         return await self.async_request("PUT", url, data=data, **kwargs)
     
-    async def async_delete(self, url: str, **kwargs) -> httpx.Response:
+    async def async_delete(self, url: str, **kwargs) -> 'httpx.Response':
         return await self.async_request("DELETE", url, **kwargs)
     
     def close(self):
