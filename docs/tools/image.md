@@ -9,7 +9,8 @@ ChatTool 已集成多个主流 AI 绘图工具的 API 调用，支持命令行 (
 | **通义万相** | `tongyi` | `DASHSCOPE_API_KEY` | [阿里云 DashScope](https://help.aliyun.com/zh/dashscope/developer-reference/tongyi-wanxiang-api-details) |
 | **Hugging Face** | `huggingface` | `HUGGINGFACE_HUB_TOKEN` | [Inference API](https://huggingface.co/docs/api-inference/detailed_parameters#text-to-image) |
 | **LiblibAI** | `liblib` | `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY` | [Liblib API](https://liblibai.feishu.cn/wiki/UAMVw67NcifQHukf8fpccgS5n6d) |
-| **Bing** | `bing` | `BING_COOKIE_U` | 基于逆向工程，非官方 API |
+| **Pollinations.ai** | `pollinations` | `POLLINATIONS_API_KEY`, `POLLINATIONS_MODEL_ID`(可选) | [Pollinations API](https://enter.pollinations.ai/api/docs) |
+| **SiliconFlow** | `siliconflow` | `SILICONFLOW_API_KEY`, `SILICONFLOW_MODEL_ID` | [SiliconFlow API](https://docs.siliconflow.cn/) |
 
 ## 1. 配置环境变量
 
@@ -20,14 +21,54 @@ ChatTool 已集成多个主流 AI 绘图工具的 API 调用，支持命令行 (
 chatenv init --help
 
 # 交互式设置 Key
-chatenv init -i -t tongyi -t hf -t liblib
+chatenv init -i -t pollinations -t siliconflow
 ```
 
 或者直接编辑 `.env` 文件。
 
+### SiliconFlow (硅基流动) 说明
+
+SiliconFlow 提供免费和付费模型。
+
+*   **免费模型**：实名认证后可使用全部免费模型。免费模型调用费用为 0。
+*   **Rate Limits**：免费模型有固定的速率限制。详情请参考 [SiliconFlow Rate Limits](https://docs.siliconflow.cn/cn/userguide/rate-limits/rate-limit-and-upgradation)。
+*   **模型区分**：免费版按原名称命名（如 `black-forest-labs/FLUX.1-schnell`），收费版通常有 `Pro/` 前缀。
+
 ## 2. 命令行使用 (CLI)
 
-### 生成图片
+### Pollinations.ai 说明
+
+Pollinations.ai 账户 API 需要密钥，免费额度为每个账户每周 1.5 Pollen（无需信用卡）。
+
+*   API 文档入口：`https://enter.pollinations.ai/api/docs`
+*   图片 endpoint：`https://gen.pollinations.ai/image/{prompt}`
+*   需要配置：`POLLINATIONS_API_KEY`
+*   默认模型配置项：`POLLINATIONS_MODEL_ID`（默认 `flux`）
+
+### Pollinations.ai 命令
+
+```bash
+# 查看文生图模型列表
+chattool image pollinations list-models
+
+# 默认使用 flux 模型
+chattool image pollinations generate "a cyberpunk cat"
+
+# 指定模型和尺寸
+chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512 --height 512
+```
+
+### SiliconFlow
+
+```bash
+# 生成图片
+chattool image siliconflow generate "a cute dog"
+
+# 指定模型和尺寸
+chattool image siliconflow generate "a cute dog" --model "black-forest-labs/FLUX.1-schnell" --size "1024x1024"
+```
+
+### LiblibAI
 
 使用 `chattool image generate` 命令：
 
@@ -51,7 +92,7 @@ chattool image generate -p liblib "A cute dog" --model-id liblib-sdxl-model -o d
 
 **参数说明：**
 
-*   `-p, --provider`: 指定服务商 (`tongyi`, `huggingface`, `liblib`, `bing`)。
+*   `-p, --provider`: 指定服务商 (`tongyi`, `huggingface`, `pollinations`, `siliconflow`, `liblib`)。
 *   `-o, --output`: 输出文件路径。如果未指定，部分 Provider 可能会直接打印 URL。
 *   `--model-id`: 指定使用的模型 ID（LiblibAI 必填，Hugging Face 可选）。
 

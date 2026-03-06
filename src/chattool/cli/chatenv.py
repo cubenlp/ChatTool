@@ -34,11 +34,31 @@ def _resolve_config_types(config_types):
     if not config_types:
         return None
     normalized = [t.lower() for t in config_types]
-    matched = [
-        cls for cls in BaseEnvConfig._registry
-        if cls._title.lower() in normalized
-        or any(a.lower() in normalized for a in getattr(cls, '_aliases', []))
-    ]
+    
+    matched = []
+    
+    for cls in BaseEnvConfig._registry:
+        is_match = False
+        
+        for t in normalized:
+            # Check title (case-insensitive prefix)
+            if cls._title.lower().startswith(t):
+                is_match = True
+            
+            # Check aliases (case-insensitive prefix)
+            if not is_match:
+                aliases = getattr(cls, '_aliases', [])
+                for alias in aliases:
+                    if alias.lower().startswith(t):
+                        is_match = True
+                        break
+            
+            if is_match:
+                break
+        
+        if is_match:
+            matched.append(cls)
+            
     return matched
 
 def _group_configs(configs):
@@ -50,11 +70,11 @@ def _group_configs(configs):
     }
     for cfg in configs:
         name = cfg.__name__
-        if name in ("OpenAIConfig", "AzureConfig", "DeepSeekConfig", "SiliconFlowConfig"):
+        if name in ("OpenAIConfig", "AzureConfig", "SiliconFlowConfig"):
             groups["Model"].append(cfg)
         elif name in ("AliyunConfig", "TencentConfig"):
             groups["DNS"].append(cfg)
-        elif name in ("TongyiConfig", "HuggingFaceConfig", "LiblibConfig", "BingConfig"):
+        elif name in ("TongyiConfig", "HuggingFaceConfig", "PollinationsConfig", "LiblibConfig"):
             groups["Image"].append(cfg)
         else:
             groups["Other"].append(cfg)
@@ -314,8 +334,9 @@ def init(interactive, config_types):
     - Feishu: feishu, lark
     - Tongyi: tongyi, dashscope
     - HuggingFace: hf, huggingface
+    - Pollinations: pollinations, poll
     - Liblib: liblib
-    - Bing: bing
+    - SiliconFlow: siliconflow (Model & Image)
     """
     
     target_configs = BaseEnvConfig._registry

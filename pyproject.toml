@@ -56,9 +56,12 @@ lark = [
     "lark-oapi==1.5.3",
     "flask",
 ]
-tools = [
+images = [
     "dashscope",
-    "chattool[dns, lark]",
+    "BingImageCreator"
+]
+tools = [
+    "chattool[dns, lark, images]",
 ]
 tests = [
     "coverage",
@@ -81,7 +84,6 @@ dev = [
     "twine",
     "chattool[docs,tests,tools]",
 ]
-
 [project.urls]
 Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
