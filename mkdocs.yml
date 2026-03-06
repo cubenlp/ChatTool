@@ -104,6 +104,7 @@ nav:
     - 网络扫描: mcp/network.md
   - 工具箱:
     - DNS工具: tools/dns.md
+    - AI绘图工具: tools/image.md
     - FRP内网穿透: tools/frp.md
     - 网络扫描: tools/network.md
   - 飞书机器人:
@@ -116,6 +117,7 @@ nav:
     - 交互卡片: larkbot/cards.md
     - 命令行工具: larkbot/cli.md
   - 博客:
+    - 白嫖 AI 生图实战: blog/free-image-guide.md
     - 从代码到 Agent 技能: blog/code_tool_skill.md
     - v0.5.3 飞书机器人: blog/larkbot_v053.md
     - 飞书机器人教程: blog/larkbot-tutorial.md

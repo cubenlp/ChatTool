@@ -57,8 +57,7 @@ lark = [
     "flask",
 ]
 images = [
-    "dashscope",
-    "BingImageCreator"
+    "dashscope"
 ]
 tools = [
     "chattool[dns, lark, images]",

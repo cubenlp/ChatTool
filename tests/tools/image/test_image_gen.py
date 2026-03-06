@@ -6,8 +6,7 @@ from chattool.tools.image import create_generator
 from chattool.tools.image.tongyi import TongyiImageGenerator
 from chattool.tools.image.huggingface import HuggingFaceImageGenerator
 from chattool.tools.image.liblib import LiblibImageGenerator
-from chattool.tools.image.bing import BingImageGenerator
-from chattool.config import TongyiConfig, HuggingFaceConfig, LiblibConfig, BingConfig
+from chattool.config import TongyiConfig, HuggingFaceConfig, LiblibConfig
 
 class TestImageGenerators:
 
@@ -30,12 +29,6 @@ class TestImageGenerators:
             assert isinstance(gen, LiblibImageGenerator)
             assert gen.access_key == "ak"
             assert gen.secret_key == "sk"
-
-    def test_factory_bing(self):
-        with patch.object(BingConfig.BING_COOKIE_U, 'value', "cookie"):
-            gen = create_generator("bing")
-            assert isinstance(gen, BingImageGenerator)
-            assert gen.cookie_u == "cookie"
 
     def test_factory_unknown(self):
         with pytest.raises(ValueError):

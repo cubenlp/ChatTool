@@ -133,7 +133,24 @@ chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.
 chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
 ```
 
-### 5. 其他工具
+### 5. AI 绘图 (`chattool image`)
+
+支持 Tongyi、Hugging Face、LiblibAI、Pollinations.ai、SiliconFlow 等平台。
+
+```bash
+# 安装图像依赖
+pip install "chattool[images]"
+
+# Pollinations（需配置 POLLINATIONS_API_KEY）
+chattool image pollinations list-models
+chattool image pollinations generate "a cat in space" -o cat.png
+
+# SiliconFlow（需配置 SILICONFLOW_API_KEY）
+chattool image siliconflow list-models
+chattool image siliconflow generate "a cute dog" -o dog.png
+```
+
+### 6. 其他工具
 
 | 工具 | 命令 | 说明 |
 |------|------|------|

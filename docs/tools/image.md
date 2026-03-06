@@ -2,6 +2,12 @@
 
 ChatTool 已集成多个主流 AI 绘图工具的 API 调用，支持命令行 (CLI) 和 Python 代码两种调用方式。
 
+## 安装依赖
+
+```bash
+pip install "chattool[images]"
+```
+
 ## 支持平台
 
 | 平台 | Provider ID | 环境变量 | 说明 |
@@ -11,6 +17,16 @@ ChatTool 已集成多个主流 AI 绘图工具的 API 调用，支持命令行 (
 | **LiblibAI** | `liblib` | `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY` | [Liblib API](https://liblibai.feishu.cn/wiki/UAMVw67NcifQHukf8fpccgS5n6d) |
 | **Pollinations.ai** | `pollinations` | `POLLINATIONS_API_KEY`, `POLLINATIONS_MODEL_ID`(可选) | [Pollinations API](https://enter.pollinations.ai/api/docs) |
 | **SiliconFlow** | `siliconflow` | `SILICONFLOW_API_KEY`, `SILICONFLOW_MODEL_ID` | [SiliconFlow API](https://docs.siliconflow.cn/) |
+
+### 选型建议（按目标）
+
+*   快速开跑：Pollinations.ai
+*   低成本长期调用：SiliconFlow 免费模型
+*   阿里云生态：通义万相
+*   开源模型生态：Hugging Face
+*   国内模型平台生态：LiblibAI
+
+另见博客：[白嫖与低成本 AI 生图实战：ChatTool 全平台版](../blog/free-image-guide.md)。
 
 ## 1. 配置环境变量
 
@@ -61,6 +77,9 @@ chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512
 ### SiliconFlow
 
 ```bash
+# 查看文生图模型列表
+chattool image siliconflow list-models
+
 # 生成图片
 chattool image siliconflow generate "a cute dog"
 
@@ -70,39 +89,27 @@ chattool image siliconflow generate "a cute dog" --model "black-forest-labs/FLUX
 
 ### LiblibAI
 
-使用 `chattool image generate` 命令：
-
 ```bash
-# 语法
-chattool image generate -p <provider> <prompt> [options]
+# 查看模型
+chattool image liblib list-models
+
+# 生成图片（可选 --model-id）
+chattool image liblib generate "A cute dog" --model-id liblib-sdxl-model -o dog_liblib.png
 ```
 
-**示例：**
+### Tongyi Wanxiang
 
 ```bash
-# 通义万相
-chattool image generate -p tongyi "一只在屋顶晒太阳的赛博朋克猫" -o cat_tongyi.png
-
-# Hugging Face (默认使用 FLUX.1)
-chattool image generate -p huggingface "A futuristic city at night, neon lights" -o city_hf.png
-
-# LiblibAI (需指定 model-id)
-chattool image generate -p liblib "A cute dog" --model-id liblib-sdxl-model -o dog_liblib.png
+chattool image tongyi generate "一只在屋顶晒太阳的赛博朋克猫" --style "<auto>" --size "1024*1024" -o cat_tongyi.png
 ```
 
-**参数说明：**
-
-*   `-p, --provider`: 指定服务商 (`tongyi`, `huggingface`, `pollinations`, `siliconflow`, `liblib`)。
-*   `-o, --output`: 输出文件路径。如果未指定，部分 Provider 可能会直接打印 URL。
-*   `--model-id`: 指定使用的模型 ID（LiblibAI 必填，Hugging Face 可选）。
-
-### 查看模型列表
-
-使用 `chattool image list-models` 命令查看支持的模型（目前主要支持 LiblibAI）：
+### Hugging Face
 
 ```bash
-chattool image list-models -p liblib
+chattool image huggingface generate "A futuristic city at night, neon lights" -o city_hf.png
 ```
+
+不同 Provider 的参数不完全相同，请以对应子命令 `--help` 为准。
 
 ## 3. Python 代码调用
 
