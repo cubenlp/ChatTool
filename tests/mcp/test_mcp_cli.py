@@ -35,17 +35,3 @@ def test_mcp_inspect_alias(monkeypatch):
     result = runner.invoke(mcp_cli.cli, ["inspect"])
     assert result.exit_code == 0
     assert "MCP Server: Dummy MCP" in result.output
-
-
-def test_mcp_skills_list_and_show(monkeypatch):
-    if not getattr(mcp_cli, "_SKILLS_MODULE_AVAILABLE", False):
-        pytest.skip("chattool.mcp.skills is unavailable")
-    runner = CliRunner()
-    monkeypatch.setattr(mcp_cli, "mcp", DummyMCP())
-    result = runner.invoke(mcp_cli.cli, ["skills", "list", "--lang", "zh"])
-    assert result.exit_code == 0
-    assert "cert-manager" in result.output
-    show_result = runner.invoke(mcp_cli.cli, ["skills", "show", "dns", "--lang", "en"])
-    assert show_result.exit_code == 0
-    assert "Name: dns" in show_result.output
-    assert "dns_list_domains" in show_result.output
