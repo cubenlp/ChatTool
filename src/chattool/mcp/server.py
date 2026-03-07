@@ -6,28 +6,22 @@ except ImportError:
 from chattool.utils import setup_logger
 from chattool.mcp import zulip, dns, network
 
-# Logger for MCP tools
 logger = setup_logger("mcp_server", log_level="INFO")
+SERVER_NAME = "ChatTool MCP Server"
 
 if FastMCP:
-    # Initialize FastMCP server
-    mcp = FastMCP("ChatTool DNS Manager")
-    
-    # Register Modules
-    zulip.register(mcp)
-    dns.register(mcp)
-    network.register(mcp)
+    mcp = FastMCP(SERVER_NAME)
+    for register in (zulip.register, dns.register, network.register):
+        register(mcp)
 else:
     mcp = None
     logger.warning("FastMCP module not found. MCP functionality will be disabled.")
 
-# --- Configuration & Visibility ---
-
 def _configure_visibility():
+    """Configure tool visibility based on environment variables."""
     if mcp is None:
         return
 
-    """Configure tool visibility based on environment variables."""
     enable_tags_str = os.getenv("CHATTOOL_MCP_ENABLE_TAGS")
     disable_tags_str = os.getenv("CHATTOOL_MCP_DISABLE_TAGS")
 
@@ -43,5 +37,4 @@ def _configure_visibility():
             logger.info(f"Disabling tools with tags: {tags}")
             mcp.exclude_tags = tags
 
-# Apply configuration
 _configure_visibility()

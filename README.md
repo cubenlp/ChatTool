@@ -155,7 +155,8 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | 工具 | 命令 | 说明 |
 |------|------|------|
 | 网络扫描 | `chattool network scan` | 扫描局域网活跃主机和 SSH 端口 |
-| MCP 服务 | `chattool mcp inspect` | MCP Server 能力检查 |
+| MCP 服务 | `chattool mcp info` / `chattool mcp inspect` | MCP Server 能力检查（支持 JSON 输出） |
+| Skills 管理 | `chattool mcp skills list` | 查看内置技能清单与说明 |
 | 截图服务 | `chattool serve capture` | 本地网页截图服务 |
 | 证书分发 | `chattool serve cert` / `chattool client cert` | SSL 证书集中管理与客户端拉取 |
 

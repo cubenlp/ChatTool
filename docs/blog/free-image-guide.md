@@ -69,7 +69,16 @@ chatenv init -t pollinations -t siliconflow
 你可以按需初始化全部图像配置：
 
 ```bash
-chatenv init -t pollinations -t siliconflow -t tongyi -t huggingface -t liblib
+❯ chatenv init
+Starting interactive configuration...
+? Select a category to configure (Arrow keys to move, Enter to select): Image
+? [Image] Select a provider to configure (Esc to back): (Use arrow keys)
+ » Tongyi Wanxiang Configuration (tongyi, dashscope)
+   Hugging Face Configuration (hf, huggingface)
+   Pollinations Configuration (pollinations, poll)
+   LiblibAI Configuration (liblib)
+   ---------------
+   Back
 ```
 
 低成本起步至少配置：

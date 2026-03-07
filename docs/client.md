@@ -279,12 +279,27 @@ chattool mcp start --transport http --port 8000
 
 # 查看服务器能力信息
 chattool mcp info
+
+# 兼容旧命令
+chattool mcp inspect
+
+# JSON 输出（便于自动化）
+chattool mcp info --json-output
+
+# 查看内置 skills
+chattool mcp skills list --lang zh
+chattool mcp skills show dns --lang en
 ```
 
 **选项说明 (`start`):**
 - `-t, --transport`: 传输模式，可选 `stdio` (默认) 或 `http`。
 - `--host`: HTTP 服务器主机地址 (默认: `127.0.0.1`)。
 - `--port`: HTTP 服务器端口 (默认: `8000`)。
+
+**其他子命令:**
+- `info` / `inspect`: 查看 MCP 工具清单，支持 `--json-output`。
+- `skills list`: 列出仓库中可用技能（读取 `skills/*/SKILL*.md`）。
+- `skills show <name>`: 展示指定技能的 Manifest 内容。
 
 ---
 

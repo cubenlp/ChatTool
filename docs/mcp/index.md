@@ -9,6 +9,7 @@ ChatTool MCP Server 包含以下核心模块：
 - [DNS 管理](./dns.md): 域名解析、DDNS 和 SSL 证书管理
 - [Zulip 集成](./zulip.md): 消息收发、频道管理
 - [Network Scanner](network.md)
+- [Skills 功能](./skills.md): 扫描与查看 `skills/` 技能清单
 
 ## 安装与使用
 
@@ -85,6 +86,22 @@ chattool mcp start --transport http --port 8000
 
 ```bash
 chattool mcp info
+
+# 兼容旧命令
+chattool mcp inspect
+
+# 输出机器可读 JSON
+chattool mcp info --json-output
+```
+
+### 5. 查看 Skills
+
+```bash
+# 列出内置技能
+chattool mcp skills list --lang zh
+
+# 查看技能详情
+chattool mcp skills show cert-manager --lang en
 ```
 
 ## 配置说明

@@ -160,7 +160,8 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | Tool | Command | Description |
 |------|---------|-------------|
 | Network Scan | `chattool network scan` | Scan LAN for active hosts and SSH ports |
-| MCP Server | `chattool mcp inspect` | Inspect MCP server capabilities |
+| MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
+| Skills | `chattool mcp skills list` | List bundled skills and descriptions |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
 
