@@ -4,6 +4,8 @@ import os
 import sys
 import warnings
 warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
+# Filter DeprecationWarning from lark_oapi (asyncio.get_event_loop)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="lark_oapi.*")
 
 from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
