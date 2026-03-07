@@ -98,8 +98,22 @@ def install_chromedriver(url, target_dir):
         click.echo(f"Failed to install chromedriver: {e}", err=True)
         raise
 
-def setup_chrome_driver():
+def setup_chrome_driver(interactive=False):
     """Main setup function."""
+    # Check if chromedriver is already installed
+    existing_path = shutil.which("chromedriver")
+    if existing_path:
+        click.echo(f"Chromedriver is already installed at {existing_path}")
+        if not interactive:
+            click.echo("Updating existing installation...")
+            target_dir = Path(existing_path).parent
+        else:
+            if not click.confirm("Do you want to update/reinstall?", default=True):
+                return
+            target_dir = Path(existing_path).parent
+    else:
+        target_dir = Path.home() / ".local" / "bin"
+
     version = get_chrome_version()
     if not version:
         click.echo("Could not detect Google Chrome version.", err=True)
@@ -110,11 +124,14 @@ def setup_chrome_driver():
     url = get_chromedriver_url(version)
     if not url:
         click.echo(f"Could not find matching Chromedriver for version {version}", err=True)
-        # Fallback suggestion or manual override could be added here
         return
         
-    default_dir = Path.home() / ".local" / "bin"
-    target_dir = click.prompt("Install directory", default=str(default_dir), type=click.Path(file_okay=False, dir_okay=True, writable=True))
+    if interactive:
+        target_dir = click.prompt(
+            "Install directory", 
+            default=str(target_dir), 
+            type=click.Path(file_okay=False, dir_okay=True, writable=True)
+        )
     
     target_dir = Path(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)

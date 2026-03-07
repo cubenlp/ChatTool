@@ -6,7 +6,9 @@ import tempfile
 import subprocess
 import platform
 from pathlib import Path
-from chattool.utils.tui import ask_with_escape_back, get_style, BACK_VALUE
+from chattool.utils.tui import (
+    ask_select, ask_text, ask_path, ask_confirm, BACK_VALUE
+)
 
 FRP_VERSION_DEFAULT = "0.66.0"
 
@@ -53,16 +55,10 @@ def extract_frp(archive_path, extract_to, binary_name):
     return extracted_bin
 
 def setup_frp():
-    import questionary
-    style = get_style()
-
     # 1. Ask Mode
-    mode = ask_with_escape_back(
-        questionary.select(
-            "Select FRP Mode:",
-            choices=["Client", "Server"],
-            style=style
-        )
+    mode = ask_select(
+        "Select FRP Mode:",
+        choices=["Client", "Server"]
     )
     if mode == BACK_VALUE: return
     
@@ -71,12 +67,9 @@ def setup_frp():
     config_name = "frps.toml" if is_server else "frpc.toml"
 
     # 2. Ask Install Method
-    install_method = ask_with_escape_back(
-        questionary.select(
-            "Select Installation Method:",
-            choices=["Download", "Local File"],
-            style=style
-        )
+    install_method = ask_select(
+        "Select Installation Method:",
+        choices=["Download", "Local File"]
     )
     if install_method == BACK_VALUE: return
 
@@ -86,12 +79,9 @@ def setup_frp():
     final_bin_path = work_dir / binary_name
 
     if install_method == "Download":
-        version = ask_with_escape_back(
-            questionary.text(
-                "Enter FRP Version:",
-                default=FRP_VERSION_DEFAULT,
-                style=style
-            )
+        version = ask_text(
+            "Enter FRP Version:",
+            default=FRP_VERSION_DEFAULT
         )
         if version == BACK_VALUE: return
 
@@ -111,11 +101,8 @@ def setup_frp():
                 return
 
     else: # Local File
-        local_path = ask_with_escape_back(
-            questionary.path(
-                "Enter path to local FRP archive (tar.gz):",
-                style=style
-            )
+        local_path = ask_path(
+            "Enter path to local FRP archive (tar.gz):"
         )
         if local_path == BACK_VALUE: return
         
@@ -137,33 +124,23 @@ def setup_frp():
     config_content = ""
     
     if is_server:
-        bind_port = ask_with_escape_back(
-            questionary.text("Enter Bind Port:", default="7000", style=style)
-        )
+        bind_port = ask_text("Enter Bind Port:", default="7000")
         if bind_port == BACK_VALUE: return
         
-        token = ask_with_escape_back(
-            questionary.text("Enter Authentication Token:", style=style)
-        )
+        token = ask_text("Enter Authentication Token:")
         if token == BACK_VALUE: return
         
-        dashboard_port = ask_with_escape_back(
-            questionary.text("Enter Dashboard Port (optional, press Enter to skip):", default="7500", style=style)
-        )
+        dashboard_port = ask_text("Enter Dashboard Port (optional, press Enter to skip):", default="7500")
         if dashboard_port == BACK_VALUE: return
         
         dashboard_user = "admin"
         dashboard_pwd = "admin"
         
         if dashboard_port:
-            dashboard_user = ask_with_escape_back(
-                questionary.text("Enter Dashboard User:", default="admin", style=style)
-            )
+            dashboard_user = ask_text("Enter Dashboard User:", default="admin")
             if dashboard_user == BACK_VALUE: return
             
-            dashboard_pwd = ask_with_escape_back(
-                questionary.text("Enter Dashboard Password:", default="admin", style=style)
-            )
+            dashboard_pwd = ask_text("Enter Dashboard Password:", default="admin")
             if dashboard_pwd == BACK_VALUE: return
 
         config_content = f"""bindPort = {bind_port}
@@ -179,19 +156,13 @@ webServer.password = "{dashboard_pwd}"
 """
 
     else: # Client
-        server_addr = ask_with_escape_back(
-            questionary.text("Enter Server IP/Domain:", style=style)
-        )
+        server_addr = ask_text("Enter Server IP/Domain:")
         if server_addr == BACK_VALUE: return
         
-        server_port = ask_with_escape_back(
-            questionary.text("Enter Server Port:", default="7000", style=style)
-        )
+        server_port = ask_text("Enter Server Port:", default="7000")
         if server_port == BACK_VALUE: return
         
-        token = ask_with_escape_back(
-            questionary.text("Enter Authentication Token:", style=style)
-        )
+        token = ask_text("Enter Authentication Token:")
         if token == BACK_VALUE: return
 
         config_content = f"""serverAddr = "{server_addr}"
@@ -230,9 +201,7 @@ RestartSec=5s
 WantedBy=multi-user.target
 """
     
-    install_service = ask_with_escape_back(
-        questionary.confirm("Do you want to create a Systemd service?", default=True, style=style)
-    )
+    install_service = ask_confirm("Do you want to create a Systemd service?", default=True)
     
     if install_service and install_service != BACK_VALUE:
         service_file_path = f"/etc/systemd/system/{service_name}.service"

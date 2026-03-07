@@ -11,7 +11,10 @@ from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
 from chattool.utils import mask_secret
-from chattool.utils.tui import get_style, ask_with_escape_back, BACK_VALUE
+from chattool.utils.tui import (
+    ask_select, ask_text, ask_confirm, get_separator, 
+    create_choice, is_interactive_available, BACK_VALUE
+)
 
 from .test_cmd import test_cmd
 
@@ -84,9 +87,8 @@ def _group_configs(configs):
     return groups
 
 
-def _configure_provider(config_cls, style):
+def _configure_provider(config_cls):
     """Interactively configure a single provider."""
-    import questionary
     click.echo(f"\nConfiguring {config_cls._title}...")
     for name, field in config_cls.get_fields().items():
         prompt_text = f"{name}"
@@ -102,17 +104,16 @@ def _configure_provider(config_cls, style):
                 message += f" [current: {hint}]"
             message += " (leave blank to keep current)"
             
-            new_val = ask_with_escape_back(questionary.password(message, style=style))
+            new_val = ask_text(message, password=True)
             if new_val == BACK_VALUE:
                 return
             if new_val:
                 field.value = new_val
         else:
-            new_val = ask_with_escape_back(questionary.text(
+            new_val = ask_text(
                 prompt_text,
-                default=str(default_val) if default_val is not None else "",
-                style=style
-            ))
+                default=str(default_val) if default_val is not None else ""
+            )
             if new_val == BACK_VALUE:
                 return
             if new_val:
@@ -121,9 +122,6 @@ def _configure_provider(config_cls, style):
 
 def _interactive_config_loop(grouped_configs):
     """Main loop for interactive configuration using questionary."""
-    import questionary
-    style = get_style()
-    
     while True:
         # Main Menu
         main_choices = []
@@ -131,23 +129,21 @@ def _interactive_config_loop(grouped_configs):
             if configs:
                 main_choices.append(section)
         
-        main_choices.append(questionary.Separator())
+        main_choices.append(get_separator())
         main_choices.append("Save & Exit")
         main_choices.append("Exit without Saving")
         
-        selected_section = ask_with_escape_back(questionary.select(
+        selected_section = ask_select(
             "Select a category to configure (Arrow keys to move, Enter to select):",
-            choices=main_choices,
-            style=style,
-            use_arrow_keys=True
-        ))
+            choices=main_choices
+        )
         
         if selected_section == "Save & Exit":
             BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
             click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
             break
         elif selected_section == "Exit without Saving":
-            if questionary.confirm("Are you sure you want to exit without saving changes?", default=False, style=style).ask():
+            if ask_confirm("Are you sure you want to exit without saving changes?", default=False):
                 break
             continue
         elif selected_section == BACK_VALUE:
@@ -160,26 +156,24 @@ def _interactive_config_loop(grouped_configs):
             for cfg in configs:
                 aliases = getattr(cfg, '_aliases', [])
                 alias_text = f" ({', '.join(aliases)})" if aliases else ""
-                sub_choices.append(questionary.Choice(
+                sub_choices.append(create_choice(
                     title=f"{cfg._title}{alias_text}",
                     value=cfg
                 ))
             
-            sub_choices.append(questionary.Separator())
-            sub_choices.append(questionary.Choice(title="Back", value="Back"))
+            sub_choices.append(get_separator())
+            sub_choices.append(create_choice(title="Back", value="Back"))
             
-            selected_config = ask_with_escape_back(questionary.select(
+            selected_config = ask_select(
                 f"[{selected_section}] Select a provider to configure (Esc to back):",
-                choices=sub_choices,
-                style=style,
-                use_arrow_keys=True
-            ))
+                choices=sub_choices
+            )
             
             if selected_config == "Back" or selected_config == BACK_VALUE:
                 break
             
             # Configure Provider
-            _configure_provider(selected_config, style)
+            _configure_provider(selected_config)
 
 
 @cli.command(name='cat')
@@ -350,14 +344,9 @@ def init(interactive, config_types):
 
     if interactive:
         click.echo("Starting interactive configuration...")
-        use_questionary = sys.stdin.isatty() and sys.stdout.isatty()
+        use_questionary = is_interactive_available()
         
         if use_questionary:
-            try:
-                import questionary
-            except ImportError:
-                use_questionary = False
-            style = get_style()
             if not config_types:
                 grouped = _group_configs(target_configs)
                 _interactive_config_loop(grouped)
@@ -365,7 +354,7 @@ def init(interactive, config_types):
             else:
                 # Linear config for specific types
                 for config_cls in target_configs:
-                    _configure_provider(config_cls, style)
+                    _configure_provider(config_cls)
                 
                 BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
                 click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
