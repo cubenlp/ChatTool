@@ -1,4 +1,5 @@
 import os
+import requests
 from typing import Optional, Any
 from .base import ImageGenerator
 from chattool.config import HuggingFaceConfig
@@ -30,7 +31,6 @@ class HuggingFaceImageGenerator(ImageGenerator):
         Returns:
             bytes: The generated image bytes.
         """
-        import requests
         headers = {"Authorization": f"Bearer {self.api_key}"}
         payload = {"inputs": prompt, "parameters": kwargs}
         
