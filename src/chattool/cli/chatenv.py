@@ -11,9 +11,9 @@ from chattool.config import BaseEnvConfig
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
 from chattool.utils import mask_secret
+from chattool.utils.tui import get_style, ask_with_escape_back, BACK_VALUE
 
 from .test_cmd import test_cmd
-_BACK_VALUE = "__BACK__"
 
 @click.group(name='chatenv')
 def cli():
@@ -84,37 +84,6 @@ def _group_configs(configs):
     return groups
 
 
-def _get_style():
-    """Custom style for questionary."""
-    import questionary
-    return questionary.Style([
-        ('qmark', 'fg:#5f819d bold'),       # token in front of the question
-        ('question', 'bold'),               # question text
-        ('answer', 'fg:#f44336 bold'),      # submitted answer text
-        ('pointer', 'fg:#673ab7 bold'),     # pointer used in select and checkbox
-        ('highlighted', 'fg:#673ab7 bold'), # highlighted option in select and checkbox
-        ('selected', 'fg:#cc545a'),         # selected checkbox
-        ('separator', 'fg:#cc545a'),        # separator in lists
-        ('instruction', 'fg:#808080'),      # user instructions for select, rawselect, checkbox
-        ('text', ''),                       # plain text
-        ('disabled', 'fg:#858585 italic')   # disabled choices for select and checkbox
-    ])
-
-def _ask_with_escape_back(question):
-    from prompt_toolkit.key_binding import KeyBindings
-    from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
-    from prompt_toolkit.keys import Keys
-    bindings = KeyBindings()
-    @bindings.add(Keys.Escape, eager=True)
-    def _(_event):
-        _event.app.exit(result=_BACK_VALUE)
-    try:
-        question.application.key_bindings = merge_key_bindings([question.application.key_bindings, bindings])
-    except Exception:
-        pass
-    return question.unsafe_ask()
-
-
 def _configure_provider(config_cls, style):
     """Interactively configure a single provider."""
     import questionary
@@ -133,18 +102,18 @@ def _configure_provider(config_cls, style):
                 message += f" [current: {hint}]"
             message += " (leave blank to keep current)"
             
-            new_val = _ask_with_escape_back(questionary.password(message, style=style))
-            if new_val == _BACK_VALUE:
+            new_val = ask_with_escape_back(questionary.password(message, style=style))
+            if new_val == BACK_VALUE:
                 return
             if new_val:
                 field.value = new_val
         else:
-            new_val = _ask_with_escape_back(questionary.text(
+            new_val = ask_with_escape_back(questionary.text(
                 prompt_text,
                 default=str(default_val) if default_val is not None else "",
                 style=style
             ))
-            if new_val == _BACK_VALUE:
+            if new_val == BACK_VALUE:
                 return
             if new_val:
                 field.value = new_val
@@ -153,7 +122,7 @@ def _configure_provider(config_cls, style):
 def _interactive_config_loop(grouped_configs):
     """Main loop for interactive configuration using questionary."""
     import questionary
-    style = _get_style()
+    style = get_style()
     
     while True:
         # Main Menu
@@ -166,7 +135,7 @@ def _interactive_config_loop(grouped_configs):
         main_choices.append("Save & Exit")
         main_choices.append("Exit without Saving")
         
-        selected_section = _ask_with_escape_back(questionary.select(
+        selected_section = ask_with_escape_back(questionary.select(
             "Select a category to configure (Arrow keys to move, Enter to select):",
             choices=main_choices,
             style=style,
@@ -181,7 +150,7 @@ def _interactive_config_loop(grouped_configs):
             if questionary.confirm("Are you sure you want to exit without saving changes?", default=False, style=style).ask():
                 break
             continue
-        elif selected_section == _BACK_VALUE:
+        elif selected_section == BACK_VALUE:
             continue
 
         # Sub Menu
@@ -199,14 +168,14 @@ def _interactive_config_loop(grouped_configs):
             sub_choices.append(questionary.Separator())
             sub_choices.append(questionary.Choice(title="Back", value="Back"))
             
-            selected_config = _ask_with_escape_back(questionary.select(
+            selected_config = ask_with_escape_back(questionary.select(
                 f"[{selected_section}] Select a provider to configure (Esc to back):",
                 choices=sub_choices,
                 style=style,
                 use_arrow_keys=True
             ))
             
-            if selected_config == "Back" or selected_config == _BACK_VALUE:
+            if selected_config == "Back" or selected_config == BACK_VALUE:
                 break
             
             # Configure Provider
@@ -388,7 +357,7 @@ def init(interactive, config_types):
                 import questionary
             except ImportError:
                 use_questionary = False
-            style = _get_style()
+            style = get_style()
             if not config_types:
                 grouped = _group_configs(target_configs)
                 _interactive_config_loop(grouped)
