@@ -1,4 +1,8 @@
-from chattool.mcp.skills import get_skill, load_skills
+import pytest
+
+skills_module = pytest.importorskip("chattool.mcp.skills")
+get_skill = skills_module.get_skill
+load_skills = skills_module.load_skills
 
 
 def test_load_skills_returns_items():

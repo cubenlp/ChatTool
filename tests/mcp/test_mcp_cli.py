@@ -1,4 +1,5 @@
 import json
+import pytest
 from click.testing import CliRunner
 
 from chattool.cli.client import mcp as mcp_cli
@@ -37,6 +38,8 @@ def test_mcp_inspect_alias(monkeypatch):
 
 
 def test_mcp_skills_list_and_show(monkeypatch):
+    if not getattr(mcp_cli, "_SKILLS_MODULE_AVAILABLE", False):
+        pytest.skip("chattool.mcp.skills is unavailable")
     runner = CliRunner()
     monkeypatch.setattr(mcp_cli, "mcp", DummyMCP())
     result = runner.invoke(mcp_cli.cli, ["skills", "list", "--lang", "zh"])

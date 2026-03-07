@@ -286,9 +286,9 @@ chattool mcp inspect
 # JSON 输出（便于自动化）
 chattool mcp info --json-output
 
-# 查看内置 skills
+# 查看内置 skills（可选能力，启用 skills 模块后可用）
 chattool mcp skills list --lang zh
-chattool mcp skills show dns --lang en
+chattool mcp skills show image --lang en
 ```
 
 **选项说明 (`start`):**
@@ -298,8 +298,9 @@ chattool mcp skills show dns --lang en
 
 **其他子命令:**
 - `info` / `inspect`: 查看 MCP 工具清单，支持 `--json-output`。
-- `skills list`: 列出仓库中可用技能（读取 `skills/*/SKILL*.md`）。
-- `skills show <name>`: 展示指定技能的 Manifest 内容。
+- `skills list` / `skills show <name>`: skills 模块可用时，查看 `skills/*/SKILL*.md`。
+
+> 说明：当前若 `chattool.mcp.skills` 未引入，`chattool mcp skills` 会提示模块暂不可用，不影响其他命令。
 
 ---
 
