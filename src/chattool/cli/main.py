@@ -1,6 +1,7 @@
 import click
 from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli, tplogin_cli
 from .service import capture_app, cert_app, lark_serve_cli
+from chattool.serve import serve_chrome
 from chattool.application.kb.cli import cli as kb_cli
 from chattool.setup.cli import setup_group
 
@@ -25,6 +26,7 @@ def serve():
 serve.add_command(capture_app, name='capture')
 serve.add_command(cert_app, name='cert')
 serve.add_command(lark_serve_cli, name='lark')
+serve.add_command(serve_chrome, name='chrome')
 
 # Client Group
 @cli.group()

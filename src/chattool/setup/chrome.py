@@ -117,6 +117,9 @@ def setup_chrome_driver(interactive=False):
     version = get_chrome_version()
     if not version:
         click.echo("Could not detect Google Chrome version.", err=True)
+        click.echo("Please install Google Chrome first:")
+        click.echo("  wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb")
+        click.echo("  sudo apt install ./google-chrome-stable_current_amd64.deb")
         return
         
     click.echo(f"Detected Chrome version: {version}")
