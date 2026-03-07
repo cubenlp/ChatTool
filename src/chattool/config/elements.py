@@ -1,6 +1,5 @@
 import os
 from typing import Dict, Any, List, Type
-import dotenv
 import chattool
 
 class EnvField:
@@ -62,6 +61,7 @@ class BaseEnvConfig:
     @classmethod
     def load_all(cls, env_path: str):
         """加载所有已注册服务的配置"""
+        import dotenv
         env_values = dotenv.dotenv_values(env_path)
         for config_cls in cls._registry:
             config_cls.load_from_dict(env_values)

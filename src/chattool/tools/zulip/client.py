@@ -1,9 +1,11 @@
 import json
 import logging
-import httpx
 import os
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any, Union, TYPE_CHECKING
 from chattool.config import ZulipConfig
+
+if TYPE_CHECKING:
+    import httpx
 
 class ZulipClient:
     """
@@ -27,6 +29,7 @@ class ZulipClient:
         self.base_url = self.site.rstrip("/") + "/api/v1"
         self.auth = (self.email, self.api_key)
         
+        import httpx
         # Initialize HTTP client
         self.client = httpx.Client(auth=self.auth, timeout=30.0)
         self.logger = logging.getLogger("ZulipClient")
@@ -68,6 +71,7 @@ class ZulipClient:
         if files:
             kwargs["files"] = files
 
+        import httpx
         try:
             response = self.client.request(method, url, **kwargs)
             response.raise_for_status()

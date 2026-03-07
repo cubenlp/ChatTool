@@ -1,17 +1,12 @@
 import json
 import logging
-from typing import List, Dict, Optional, Any, Callable
+from typing import List, Dict, Optional
 import os
 from github import Github
 from github.GithubException import GithubException
-from github.Repository import Repository
 from github.ContentFile import ContentFile
-from github.PullRequest import PullRequest
-from github.Issue import Issue
-from github.Commit import Commit
 from chattool.utils import setup_logger
-from batch_executor import batch_executor, batch_thread_executor
-
+from batch_executor import batch_thread_executor
 
 class GitHubClient:
     def __init__(self, 

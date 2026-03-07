@@ -1,5 +1,4 @@
 import logging
-import aiohttp
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Any
 
@@ -164,6 +163,7 @@ class DNSClient(ABC):
 
     async def get_public_ip(self, timeout: int = 10) -> Optional[str]:
         """获取当前公网IP地址 (异步工具方法)"""
+        import aiohttp
         ip_check_urls = [
             "https://ipv4.icanhazip.com",
             "https://api.ipify.org",

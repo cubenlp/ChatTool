@@ -25,6 +25,7 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
+    "questionary>=2.1.0",
     "requests>=2.20",
     "aiohttp>=3.8",
     "tqdm>=4.60",
@@ -45,13 +46,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tools = [
+dns = [
+    "netifaces",
     "alibabacloud_alidns20150109>=3.5.10",
     "alibabacloud_tea_openapi>=0.3.0",
     "tencentcloud-sdk-python",
-    "netifaces",
+]
+lark = [
     "lark-oapi==1.5.3",
     "flask",
+]
+images = [
+    "dashscope"
+]
+tools = [
+    "chattool[dns, lark, images]",
 ]
 tests = [
     "coverage",
@@ -74,7 +83,6 @@ dev = [
     "twine",
     "chattool[docs,tests,tools]",
 ]
-
 [project.urls]
 Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
@@ -107,4 +115,3 @@ filterwarnings = [
     "ignore:websockets.legacy is deprecated:DeprecationWarning",
     "ignore:websockets.server.WebSocketServerProtocol is deprecated:DeprecationWarning"
 ]
-

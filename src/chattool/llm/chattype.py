@@ -1,13 +1,13 @@
-import httpx
 import json
 import os
 import logging
 import hashlib
-from filelock import FileLock
 import tempfile
-from typing import Awaitable, Callable, List, Dict, Union, Optional, AsyncGenerator, Any
-from batch_executor import batch_async_executor, batch_hybrid_executor
+from typing import Awaitable, Callable, List, Dict, Union, Optional, AsyncGenerator, Any, TYPE_CHECKING
 from pathlib import Path
+
+if TYPE_CHECKING:
+    import httpx
 
 from chattool.utils import (
     valid_models, setup_logger, curl_cmd_of_chat_completion, 
@@ -197,6 +197,7 @@ class Chat(HTTPClient):
         # 构建完整 URL
         url = self._build_url(self._get_uri())
         client = self._get_async_client()
+        import httpx
         
         async with client.stream(
             method="POST",
@@ -521,6 +522,8 @@ class Chat(HTTPClient):
                         return chats
         # 开始处理数据
         with tempfile.TemporaryDirectory() as temp_dir:
+            from filelock import FileLock
+            from batch_executor import batch_async_executor, batch_hybrid_executor
             if checkpoint: # TODO: 多进程模式下使用
                 # if pool_id is not None: 
                 #     lock = f'{temp_dir}/{checkpoint.stem}_{pool_id}.lock'

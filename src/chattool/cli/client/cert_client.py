@@ -1,7 +1,5 @@
 import click
-import requests
 import os
-import git
 from rich.console import Console
 from rich.table import Table
 
@@ -9,6 +7,7 @@ console = Console()
 
 def get_git_email():
     """Get email from git config"""
+    import git
     try:
         email = git.Git().config("--get", "user.email")
         if email:
@@ -44,6 +43,7 @@ def cert_client():
 @common_options
 def apply(server, token, domains, email, provider, secret_id, secret_key):
     """申请 SSL 证书"""
+    import requests
     server, token = get_config(server, token)
     headers = {"X-ChatTool-Token": token} if token else {}
     
@@ -77,6 +77,7 @@ def apply(server, token, domains, email, provider, secret_id, secret_key):
 @common_options
 def list_certs(server, token):
     """列出已申请的证书"""
+    import requests
     server, token = get_config(server, token)
     headers = {"X-ChatTool-Token": token} if token else {}
     
@@ -117,6 +118,7 @@ def list_certs(server, token):
 @common_options
 def download(server, token, domain, output_dir):
     """下载证书文件 (cert.pem, privkey.pem)"""
+    import requests
     server, token = get_config(server, token)
     headers = {"X-ChatTool-Token": token} if token else {}
     

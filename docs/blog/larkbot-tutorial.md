@@ -1,227 +1,246 @@
-# 飞书机器人开发全攻略 (LarkBot Tutorial)
+# 如何用 Python 10分钟写一个飞书 AI 助手？(ChatTool 全攻略)
 
-本教程旨在帮助开发者快速掌握如何使用 `chattool` 构建功能丰富的飞书（Lark）机器人。我们将从基础配置开始，逐步深入到 AI 对话、交互卡片和生产环境部署。
+![LarkBot Tutorial Cover](larkbot-tutorial-cover.svg)
 
----
+今天这篇教程，我们来手把手教你用 Python + `chattool` 开发一个功能强大的飞书（Lark）机器人。不仅能聊天，还能发卡片、处理按钮点击，甚至直接在命令行里跑起来。
 
-## 1. 简介与核心架构
-
-`chattool.tools.lark` 模块集成了 `lark-oapi`，为开发者提供了极简的接口来操作飞书机器人。
-
-### 核心组件
-- **[LarkBot](../larkbot/index.md)**：核心类，负责连接、发送消息、路由事件。
-- **[MessageContext](../larkbot/receiving.md)**：消息上下文，封装了快捷回复（`ctx.reply()`）和发送者信息。
-- **[ChatSession](../larkbot/ai-chat.md)**：多用户会话管理器，轻松集成大语言模型（LLM）。
+不整虚的，直接上干货。
 
 ---
 
-## 2. 飞书平台配置快速指南
+## 为什么要用 `chattool`？
 
-在开始编写代码前，你需要在 [飞书开放平台](https://open.feishu.cn/) 完成以下准备工作。
+飞书开放平台的 API 很强大，但文档浩如烟海，光是鉴权（Token 管理）、事件解密、消息结构体就能劝退不少人。
 
-> 详细步骤请参考：[飞书平台配置教程](../larkbot/feishu-setup.md)
+`chattool` 的目标就是**让代码像说话一样简单**。它帮你搞定了：
+- 自动管理 Tenant Access Token（不用自己刷新）
+- 封装了 WebSocket 长连接（本地开发无需内网穿透）
+- 极简的消息发送接口（不用手拼 JSON）
+- 内置 AI 会话管理（自动记忆上下文）
 
-### 第一步：创建应用
-登录开发者后台，点击「**创建企业自建应用**」，填写应用名称（如 `AI 助手`）。
+Ready? Let's go.
+
+---
+
+## 第一步：搞定飞书后台（这步最繁琐，但只需一次）
+
+在写代码之前，我们需要先去 [飞书开放平台](https://open.feishu.cn/) 申请一个“身份证”。
+
+> 如果你已经有 App ID 和 Secret，可以跳过此步。详细步骤请参考：[飞书平台配置教程](../larkbot/feishu-setup.md)
+
+### 1. 创建应用
+登录开发者后台，点击「**创建企业自建应用**」，起个好听的名字，比如 `AI 摸鱼助手`。
 
 ![创建企业自建应用](https://qiniu.wzhecnu.cn/FileBed/source/20260226020952.png)
 
-### 第二步：获取凭证
-进入「凭证与基础信息」，获取 **App ID** 和 **App Secret**。
+### 2. 拿到钥匙 (App ID & Secret)
+进入「凭证与基础信息」，把 **App ID** 和 **App Secret** 复制下来，待会要用。
 
 ![凭证与基础信息](https://qiniu.wzhecnu.cn/FileBed/source/20260226021130.png)
 
-### 第三步：开启机器人能力
-在「应用功能」→「机器人」中，开启机器人开关。
+### 3. 开启机器人
+在「应用功能」→「机器人」中，把开关打开。这一步不做，机器人就是个摆设。
 
 ![开启机器人能力](https://qiniu.wzhecnu.cn/FileBed/source/20260226024745.png)
 
-### 第四步：申请权限
-在「权限管理」中申请以下权限：
-- `im:message`（发送消息）
-- `im:message.receive_v1`（接收消息事件）
-- `contact:user.employee_id:readonly`（如需使用 `user_id` 发送）
+### 4. 申请权限 (Scopes)
+机器人能干什么，全靠权限。在「权限管理」中申请以下 3 个核心权限：
+- `im:message`（我要发消息）
+- `im:message.receive_v1`（我要收消息）
+- `contact:user.employee_id:readonly`（我要知道谁在跟我说话）
 
 ![权限管理](https://qiniu.wzhecnu.cn/FileBed/source/20260226024831.png)
 
-### 第五步：配置事件订阅
-在「事件订阅与回调」中：
-1. 选择 **「使用长连接接收事件」**（WebSocket 模式），无需公网 IP 即可本地调试。
-2. 添加订阅事件：`接收消息 v2.0` (`im.message.receive_v1`)。
+### 5. 订阅消息事件
+怎么知道有人给机器人发消息了？
+推荐用 **WebSocket 长连接**（官方叫“使用长连接接收事件”）。好处是：**不需要公网 IP，不需要配置域名，本地电脑直接能跑！**
+
+记得添加订阅事件：`接收消息 v2.0` (`im.message.receive_v1`)。
 
 ![选择长连接接收事件](https://qiniu.wzhecnu.cn/FileBed/source/20260226030553.png)
 
-### 第六步：发布应用
-创建版本并申请发布，确保权限和订阅生效。
+### 6. 发布应用
+最后，创建版本并点击「申请发布」。
 
 ![创建版本并提交发布](https://qiniu.wzhecnu.cn/FileBed/source/20260226031345.png)
 
 ---
 
-## 3. 快速上手
+## 第二步：Hello World，五行代码跑起来
 
-### 安装
+环境配置好了，终于可以写代码了。
+
+### 1. 安装库
 ```bash
 pip install "chattool[tools]"
 ```
 
-### 配置环境变量
-在项目根目录创建 `.env` 文件：
+### 2. 配置环境变量
+通过 `chatenv init -i -t lark` 初始化配置，填入刚才拿到的钥匙：
+
 ```bash
 FEISHU_APP_ID=cli_xxxxxxxxxxxxxxxx
 FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### Hello World 机器人
-只需几行代码，即可实现一个原样回显消息的机器人：
+### 3. 写个复读机
+
+新建 `bot.py`，代码如下：
 
 ```python
 from chattool.tools.lark import LarkBot
 
-bot = LarkBot() # 自动读取环境变量
+# 自动读取环境变量中的 ID 和 Secret
+bot = LarkBot()
 
 @bot.on_message
-def handle_echo(ctx):
-    """回显用户发送的内容"""
-    ctx.reply(f"你说了：{ctx.text}")
+def handle_msg(ctx):
+    # ctx.text 是用户发来的文字
+    # ctx.reply 是快捷回复
+    ctx.reply(f"收到！你刚才说：{ctx.text}")
 
-# 启动长连接监听
-bot.start()
+# 启动！
+if __name__ == "__main__":
+    bot.start()
 ```
+
+运行 `python bot.py`，然后在飞书里给机器人发句 "Hello"，它应该会秒回你。
 
 ---
 
-## 4. 消息路由与指令
+## 第三步：让它听懂指令
 
-你可以使用装饰器轻松地将不同消息分发到特定的处理函数。
+除了复读，我们通常需要机器人执行特定指令。`LarkBot` 提供了类似 Flask 的路由装饰器。
 
-### 指令路由 (`@bot.command`)
-匹配以 `/` 开头的指令，优先级最高。
 ```python
+# 1. 精确指令：匹配 /help
 @bot.command("/help")
 def on_help(ctx):
-    ctx.reply("📖 这是一个 AI 助手，你可以直接和我对话。")
-```
+    ctx.reply("我是智能助手，你可以问我任何问题，或者发送 /card 查看卡片演示。")
 
-### 正则路由 (`@bot.regex`)
-```python
+# 2. 正则匹配：比如匹配 "查询 xxx"
 @bot.regex(r"^查询\s+(.+)$")
 def on_query(ctx):
+    # 提取正则分组
     keyword = ctx._match.group(1)
-    ctx.reply(f"🔍 正在为你查询：{keyword}")
-```
+    ctx.reply(f"🔍 正在为你查询：{keyword}...")
 
-### 兜底处理器 (`@bot.on_message`)
-```python
+# 3. 私聊兜底：只处理私聊，不干扰群聊
 @bot.on_message(private_only=True)
 def handle_private(ctx):
-    ctx.reply("这是私聊消息处理器")
+    ctx.reply("这是私聊专属服务 😘")
 ```
 
 ---
 
-## 5. 发送多样化消息
+## 第四步：接入 AI 大脑 (ChatGPT)
 
-`LarkBot` 支持发送文本、富文本、图片、文件等。
-
--   **文本消息**：`bot.send_text(receive_id, "user_id", "内容")`
--   **富文本**：支持标题、超链接、代码块等。使用 `bot.send_post()`。
--   **图片/文件**：
-    ```python
-    bot.send_image_file("rexwzh", "user_id", "image.jpg")
-    bot.send_file("rexwzh", "user_id", "report.pdf")
-    ```
-
-> 详情参考：[消息发送指南](../larkbot/messaging.md)
-
----
-
-## 6. AI 对话集成
-
-结合 `ChatSession`，你可以快速赋予机器人智能对话能力。
+这才是重头戏。我们想让机器人接入大模型，实现智能问答。
+`chattool` 内置了 `ChatSession`，帮你管理多用户的对话历史（Memory）。
 
 ```python
 from chattool.tools.lark import LarkBot, ChatSession
 
 bot = LarkBot()
-session = ChatSession(system="你是一个专业的编程助手，请用简洁的代码回答问题。")
+# 定义系统提示词 (System Prompt)
+session = ChatSession(system="你是一个资深 Python 工程师，说话幽默风趣。")
 
 @bot.on_message
 def ai_chat(ctx):
-    # 为每个用户维护独立会话
+    # session.chat 会自动区分不同用户 (ctx.sender_id)
+    # 并在本地维护对话历史
     reply = session.chat(ctx.sender_id, ctx.text)
     ctx.reply(reply)
 
 bot.start()
 ```
 
--   **多用户隔离**：每个用户拥有独立的上下文。
--   **历史限制**：通过 `max_history` 防止 token 消耗过大。
+现在，你的机器人已经是一个能记住上下文的 AI 助手了！
 
-> 详情参考：[AI 对话集成](../larkbot/ai-chat.md)
+> 进阶阅读：[AI 对话集成指南](../larkbot/ai-chat.md)
 
 ---
 
-## 7. 交互式卡片
+## 第五步：整点花活——交互式卡片
 
-卡片可以提供按钮、下拉框等交互控件，极大地提升用户体验。
+纯文字太干了？飞书的**卡片 (Interactive Cards)** 是神器。它可以包含按钮、图片、下拉框，甚至能像网页一样局部刷新。
 
-### 发送卡片
+### 发送一张带按钮的卡片
+
 ```python
-card = {
-    "header": {"title": {"tag": "plain_text", "content": "任务提醒"}, "template": "blue"},
-    "elements": [
-        {"tag": "div", "text": {"tag": "lark_md", "content": "**任务**：完成周报"}},
-        {
-            "tag": "action",
-            "actions": [
-                {"tag": "button", "text": {"tag": "plain_text", "content": "完成"}, "value": {"action": "done"}}
-            ]
-        }
-    ]
-}
-bot.send_card("rexwzh", "user_id", card)
+@bot.command("/card")
+def send_card(ctx):
+    card = {
+        "header": {"title": {"tag": "plain_text", "content": "待办事项"}, "template": "blue"},
+        "elements": [
+            {"tag": "div", "text": {"tag": "lark_md", "content": "**任务**：完成周报撰写"}},
+            {
+                "tag": "action",
+                "actions": [
+                    # 定义一个按钮，value 里藏着 action 名字
+                    {"tag": "button", "text": {"tag": "plain_text", "content": "✅ 标记完成"}, "value": {"action": "done"}}
+                ]
+            }
+        ]
+    }
+    bot.send_card(ctx.sender_id, "user_id", card)
 ```
 
-### 处理回调
+### 处理按钮点击
+
+用户点了按钮，我们需要给反馈。注意这里用 `@bot.card_action` 装饰器。
+
 ```python
 @bot.card_action("done")
 def on_card_done(ctx):
-    ctx.update_card({"header": {"title": {"tag": "plain_text", "content": "任务已完成"}, "template": "green"}})
-    ctx.toast("标记成功！", type="success")
+    # 1. 弹个窗提示用户
+    ctx.toast("干得漂亮！任务已完成", type="success")
+    
+    # 2. 原地更新卡片，把标题变绿
+    ctx.update_card({
+        "header": {"title": {"tag": "plain_text", "content": "✅ 任务已完成"}, "template": "green"},
+        "elements": [{"tag": "div", "text": {"tag": "lark_md", "content": "操作人：User"}}]
+    })
 ```
 
-> 详情参考：[交互卡片深度指南](../larkbot/cards.md)
+效果非常丝滑，完全不需要用户重新发消息。
+
+> 进阶阅读：[交互卡片深度指南](../larkbot/cards.md)
 
 ---
 
-## 8. 命令行工具 (CLI)
+## 第六步：不想写代码？试试 CLI
 
-`chattool` 提供了强大的 CLI 命令，甚至不需要写代码就能启动机器人：
+有时候我们只是想测试一下 token 对不对，或者临时发个通知。`chattool` 贴心地准备了命令行工具。
 
--   **验证凭证**：`chattool lark info`
--   **一键启动 AI 机器人**：
-    ```bash
-    chattool serve lark ai --system "你是一个翻译官"
-    ```
--   **发送测试消息**：`chattool lark send rexwzh "测试消息"`
--   **监听调试**：`chattool lark listen -l DEBUG`
+**1. 验证配置是否正确**
+```bash
+chattool lark info
+```
 
-> 详情参考：[命令行工具手册](../larkbot/cli.md)
+**2. 命令行发消息**
+```bash
+chattool lark send rexwzh "老板，今晚不加班！"
+```
+
+**3. 一键启动 AI 机器人**
+甚至连代码都不用写，直接在终端启动一个 AI 机器人：
+```bash
+chattool serve lark ai --system "你是一个翻译官，把我说的话翻译成英文"
+```
+
+> 进阶阅读：[命令行工具手册](../larkbot/cli.md)
 
 ---
 
-## 9. 生产环境部署
+## 总结
 
-在生产环境中，建议从 WebSocket 切换到 **Webhook (Flask/FastAPI) 模式** 以获得更好的稳定性。
+通过 `chattool`，我们把飞书机器人的开发门槛降到了最低：
+1.  **配置**：环境变量搞定凭证。
+2.  **开发**：装饰器路由，逻辑清晰。
+3.  **智能**：内置 Session 管理，一行代码接 AI。
+4.  **交互**：卡片回调极其简单。
 
-```python
-bot.start(
-    mode="flask",
-    encrypt_key="...",
-    verification_token="...",
-    port=8080
-)
-```
+如果你想在生产环境（服务器）部署，只需要把 `bot.start()` 改成 Webhook 模式即可（支持 Flask/FastAPI），具体可以参考 [接收消息与路由](../larkbot/receiving.md)。
 
-> 更多部署细节见：[接收消息与路由 - Webhook 模式](../larkbot/receiving.md)
+**现在，去动手写一个属于你的飞书机器人吧！** 🚀

@@ -85,6 +85,12 @@ chattool mcp start --transport http --port 8000
 
 ```bash
 chattool mcp info
+
+# 兼容旧命令
+chattool mcp inspect
+
+# 输出机器可读 JSON
+chattool mcp info --json-output
 ```
 
 ## 配置说明

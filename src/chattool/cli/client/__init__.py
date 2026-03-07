@@ -4,6 +4,8 @@ from .dns_updater import cli as dns_updater_cli
 from .mcp import cli as mcp_cli
 from .network import network as network_cli
 from .lark import cli as lark_cli
+from .image import cli as image_cli
+from .tplogin import cli as tplogin_cli
 
 __all__ = [
     "cert_client",
@@ -12,4 +14,6 @@ __all__ = [
     "mcp_cli",
     "network_cli",
     "lark_cli",
+    "image_cli",
+    "tplogin_cli",
 ]

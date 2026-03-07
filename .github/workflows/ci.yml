@@ -35,15 +35,23 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install .[dev]
     - name: Test with pytest and coverage
+      id: tests
+      continue-on-error: true
       run: |
         mkdir -p .logs
         nohup chattool.capture-server --daemon --port 8000 &
         sleep 1
         coverage run -m pytest -s tests/ -m "not dns and not lark"
     - name: Upload coverage to Codecov
+      if: always()
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
+    - name: Check test results
+      if: steps.tests.outcome == 'failure'
+      run: |
+        echo "Tests failed with exit code from previous step"
+        exit 1

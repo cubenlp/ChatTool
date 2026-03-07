@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-TEST_USER_ID = "rexwzh"       # receive_id_type = "user_id"
+TEST_USER_ID = "f25gc16d"
 USER_ID_TYPE = "user_id"
 
 # ---------------------------------------------------------------------------

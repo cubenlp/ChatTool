@@ -1,24 +1,13 @@
 import re
 import json
 import threading
-from flask import Flask
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
-try:
+if TYPE_CHECKING:
+    from flask import Flask
     import lark_oapi
-    from lark_oapi.ws import Client as WSClient
-    from lark_oapi.adapter.flask import parse_req, parse_resp
-    from lark_oapi.api.im.v1 import (
-        CreateMessageRequest, CreateMessageRequestBody,
-        ReplyMessageRequest, ReplyMessageRequestBody,
-        GetChatRequest, GetChatMembersRequest, 
-        P2ImChatMemberBotAddedV1,
-        )
-    from lark_oapi.event.callback.model.p2_card_action_trigger import (
-        P2CardActionTriggerResponse,
-        )
-except Exception as e:
-    LarkBot = None
+    from lark_oapi.event.callback.model.p2_card_action_trigger import P2CardActionTriggerResponse
+    from lark_oapi.api.im.v1 import P2ImChatMemberBotAddedV1
 
 from chattool.config import FeishuConfig
 
@@ -64,7 +53,8 @@ class LarkBot:
         assert app_id and app_secret, "Feishu App ID and App Secret are required"
         self.app_id = app_id
         self.app_secret = app_secret
-        
+
+        import lark_oapi
         builder = (
             lark_oapi.Client.builder()
             .app_id(app_id)
@@ -198,6 +188,7 @@ class LarkBot:
                 try:
                     handler(ctx)
                 except Exception as e:
+                    import lark_oapi
                     lark_oapi.logger.error(f"[LarkBot] command handler error: {e}")
                 return
 
@@ -208,6 +199,7 @@ class LarkBot:
                     handler(ctx)
                     return
             except Exception as e:
+                import lark_oapi
                 lark_oapi.logger.error(f"[LarkBot] message handler error: {e}")
                 return
 
@@ -219,7 +211,8 @@ class LarkBot:
             action_key = action_value.get("action")
         elif isinstance(action_value, str):
             action_key = action_value
-
+        
+        from lark_oapi.event.callback.model.p2_card_action_trigger import P2CardActionTriggerResponse
         resp = P2CardActionTriggerResponse()
         handler = self._card_handlers.get(action_key) if action_key else None
         if handler:
@@ -233,6 +226,7 @@ class LarkBot:
                 if card_ctx._toast is not None:
                     resp.toast = card_ctx._toast
             except Exception as e:
+                import lark_oapi
                 lark_oapi.logger.error(f"[LarkBot] card_action handler error: {e}")
         return resp
 
@@ -244,7 +238,9 @@ class LarkBot:
         self,
         encrypt_key: str = "",
         verification_token: str = "",
-    ) -> lark_oapi.EventDispatcherHandler:
+    ) -> 'lark_oapi.EventDispatcherHandler':
+        import lark_oapi
+        from lark_oapi.api.im.v1 import P2ImChatMemberBotAddedV1
         builder = lark_oapi.EventDispatcherHandler.builder(
             encrypt_key,
             verification_token,
@@ -269,13 +265,6 @@ class LarkBot:
 
         return builder.build()
 
-    _LOG_LEVEL_MAP = {
-        "DEBUG": lark_oapi.LogLevel.DEBUG,
-        "INFO": lark_oapi.LogLevel.INFO,
-        "WARNING": lark_oapi.LogLevel.WARNING,
-        "ERROR": lark_oapi.LogLevel.ERROR,
-    }
-
     def start(
         self,
         mode: str = "ws",
@@ -299,7 +288,14 @@ class LarkBot:
             path: URL path for Flask mode.
             log_level: ``"DEBUG"`` / ``"INFO"`` / ``"WARN"`` / ``"ERROR"``.
         """
-        level = self._LOG_LEVEL_MAP.get(log_level.upper(), lark_oapi.LogLevel.INFO)
+        import lark_oapi
+        _LOG_LEVEL_MAP = {
+            "DEBUG": lark_oapi.LogLevel.DEBUG,
+            "INFO": lark_oapi.LogLevel.INFO,
+            "WARNING": lark_oapi.LogLevel.WARNING,
+            "ERROR": lark_oapi.LogLevel.ERROR,
+        }
+        level = _LOG_LEVEL_MAP.get(log_level.upper(), lark_oapi.LogLevel.INFO)
         lark_oapi.logger.setLevel(level.value)
         if mode == "ws":
             self._start_ws(encrypt_key, verification_token, level)
@@ -333,9 +329,15 @@ class LarkBot:
         self,
         encrypt_key: str,
         verification_token: str,
-        level: lark_oapi.LogLevel = lark_oapi.LogLevel.INFO,
+        level: 'lark_oapi.LogLevel' = None, # type: ignore
     ) -> None:
+        if level is None:
+            import lark_oapi
+            level = lark_oapi.LogLevel.INFO
+            
         event_handler = self._build_event_handler(encrypt_key, verification_token)
+        import lark_oapi
+        from lark_oapi.ws import Client as WSClient
         ws = WSClient(
             app_id=self.app_id,
             app_secret=self.app_secret,
@@ -354,6 +356,10 @@ class LarkBot:
         path: str,
     ) -> None:
         event_handler = self._build_event_handler(encrypt_key, verification_token)
+        from flask import Flask
+        import lark_oapi
+        from lark_oapi.adapter.flask import parse_req, parse_resp
+        
         app = Flask(__name__)
 
         @app.route(path, methods=["POST"])
@@ -375,6 +381,8 @@ class LarkBot:
         msg_type: str,
         content: str,
     ) -> Any:
+        import lark_oapi
+        from lark_oapi.api.im.v1 import CreateMessageRequest, CreateMessageRequestBody
         request_body = (
             CreateMessageRequestBody.builder()
             .receive_id(receive_id)
@@ -425,6 +433,7 @@ class LarkBot:
 
     def upload_image(self, path: str, image_type: str = "message") -> Any:
         """Upload an image file and return the response (use resp.data.image_key)."""
+        import lark_oapi
         from lark_oapi.api.im.v1 import CreateImageRequest, CreateImageRequestBody
         with open(path, "rb") as f:
             request = (
@@ -458,6 +467,7 @@ class LarkBot:
     ) -> Any:
         """Upload a file and return the response (use resp.data.file_key)."""
         import os
+        import lark_oapi
         from lark_oapi.api.im.v1 import CreateFileRequest, CreateFileRequestBody
         if file_name is None:
             file_name = os.path.basename(path)
@@ -514,6 +524,8 @@ class LarkBot:
         return self._reply_message(message_id, "interactive", json.dumps(card))
 
     def _reply_message(self, message_id: str, msg_type: str, content: str) -> Any:
+        import lark_oapi
+        from lark_oapi.api.im.v1 import ReplyMessageRequest, ReplyMessageRequestBody
         request = (
             ReplyMessageRequest.builder()
             .message_id(message_id)
@@ -540,6 +552,8 @@ class LarkBot:
 
     def get_chat_info(self, chat_id: str, user_id_type: str = "open_id") -> Any:
         """Get group/chat information."""
+        import lark_oapi
+        from lark_oapi.api.im.v1 import GetChatRequest
         request = (
             GetChatRequest.builder()
             .chat_id(chat_id)
@@ -562,6 +576,8 @@ class LarkBot:
         page_token: str = None,
     ) -> Any:
         """Get members of a group chat."""
+        import lark_oapi
+        from lark_oapi.api.im.v1 import GetChatMembersRequest
         builder = (
             GetChatMembersRequest.builder()
             .chat_id(chat_id)
@@ -586,8 +602,9 @@ class LarkBot:
         self,
         encrypt_key: str = None,
         verification_token: str = None,
-    ) -> lark_oapi.EventDispatcherHandler:
+    ) -> 'lark_oapi.EventDispatcherHandler':
         """Return a raw EventDispatcherHandler builder for advanced use."""
+        import lark_oapi
         return lark_oapi.EventDispatcherHandler.builder(
             encrypt_key or "",
             verification_token or "",
@@ -595,6 +612,7 @@ class LarkBot:
 
     def get_bot_info(self) -> Any:
         """Fetch basic bot information via Bot v3 API."""
+        import lark_oapi
         request = (
             lark_oapi.BaseRequest.builder()
             .http_method(lark_oapi.HttpMethod.GET)

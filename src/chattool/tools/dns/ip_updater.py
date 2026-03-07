@@ -8,8 +8,6 @@
 """
 
 import asyncio
-import aiohttp
-import netifaces
 import ipaddress
 from typing import Optional, Dict, Any, Union
 
@@ -103,6 +101,7 @@ class DynamicIPUpdater:
         """获取局域网IP地址"""
         try:
             # 获取所有网络接口
+            import netifaces
             interfaces = netifaces.interfaces()
             candidates = []
 
@@ -150,6 +149,7 @@ class DynamicIPUpdater:
 
     async def get_public_ip(self) -> Optional[str]:
         """获取当前公网IP地址"""
+        import aiohttp
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=IP_CHECK_TIMEOUT)) as session:
             for url in self.ip_check_urls:
                 try:
