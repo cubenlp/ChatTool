@@ -1,24 +1,20 @@
-# 白嫖与低成本 AI 生图实战：ChatTool 全平台版
+# AI 生图白嫖指南 ｜ 零成本玩转文生图
 
-这篇文章给你一套可直接落地的 AI 生图方案，目标是：先跑起来、再控成本、最后稳定上线。
+ChatTool 集成了市面上主流的 AI 生图 API，支持通过统一的命令行接口调用 Pollinations、SiliconFlow、通义万相、Hugging Face 和 LiblibAI 等服务。
 
-## 先说结论（按目标选）
+本文主要介绍如何配置这些服务，以及各平台在免费额度、模型生态和适用场景上的差异，帮助你快速选择并接入合适的 AI 绘图能力。
 
-- 想最快开跑：用 Pollinations.ai。
-- 想低成本长期跑：用 SiliconFlow 免费模型。
-- 想要阿里生态：用通义万相。
-- 想用开源社区模型生态：用 Hugging Face。
-- 想用国内平台生态和模型广场：用 LiblibAI。
+注：这些平台都提供了免费额度，无需付费即可使用。
 
-## 平台全览（ChatTool 当前支持）
+## 支持的平台
 
-ChatTool 当前支持 5 个 image provider：
+ChatTool 目前支持以下 5 个图像提供商（Image Provider）：
 
-- `pollinations`
-- `siliconflow`
-- `tongyi`
-- `huggingface`
-- `liblib`
+- **Pollinations.ai** (`pollinations`)：提供每周免费额度，适合快速验证和轻量级测试。
+- **SiliconFlow (硅基流动)** (`siliconflow`)：提供丰富的开源模型，实名认证后包含大量免费模型。
+- **Tongyi (通义万相)** (`tongyi`)：阿里云原生生态，适合国内企业级应用。
+- **Hugging Face** (`huggingface`)：依托庞大的开源社区，拥有海量模型资源。
+- **LiblibAI** (`liblib`)：国内领先的模型分享平台，风格多样，适合探索不同画风。
 
 详细命令和参数总表见 [AI 绘图工具开发者指南](../tools/image.md)。
 
@@ -67,13 +63,13 @@ pip install "chattool[images]"
 ## 2）配置
 
 ```bash
-chatenv init -i -t pollinations -t siliconflow
+chatenv init -t pollinations -t siliconflow
 ```
 
 你可以按需初始化全部图像配置：
 
 ```bash
-chatenv init -i -t pollinations -t siliconflow -t tongyi -t huggingface -t liblib
+chatenv init -t pollinations -t siliconflow -t tongyi -t huggingface -t liblib
 ```
 
 低成本起步至少配置：
@@ -110,7 +106,6 @@ chattool image liblib generate "A cute dog" --model-id liblib-sdxl-model -o libl
 
 ## 避坑清单
 
-- 下载失败优先看 HTTP 状态码（401/402 常见于鉴权和额度问题）。
 - Pollinations 的免费额度是按周重置，不是一次性总额度。
 - SiliconFlow 选模型时注意 `Pro/` 前缀，避免误用收费模型。
 - Tongyi / Hugging Face / LiblibAI 的可用额度与计费以平台账户策略为准。

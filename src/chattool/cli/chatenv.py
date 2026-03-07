@@ -13,6 +13,7 @@ from chattool import __version__
 from chattool.utils import mask_secret
 
 from .test_cmd import test_cmd
+_BACK_VALUE = "__BACK__"
 
 @click.group(name='chatenv')
 def cli():
@@ -99,6 +100,20 @@ def _get_style():
         ('disabled', 'fg:#858585 italic')   # disabled choices for select and checkbox
     ])
 
+def _ask_with_escape_back(question):
+    from prompt_toolkit.key_binding import KeyBindings
+    from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
+    from prompt_toolkit.keys import Keys
+    bindings = KeyBindings()
+    @bindings.add(Keys.Escape, eager=True)
+    def _(_event):
+        _event.app.exit(result=_BACK_VALUE)
+    try:
+        question.application.key_bindings = merge_key_bindings([question.application.key_bindings, bindings])
+    except Exception:
+        pass
+    return question.unsafe_ask()
+
 
 def _configure_provider(config_cls, style):
     """Interactively configure a single provider."""
@@ -118,15 +133,19 @@ def _configure_provider(config_cls, style):
                 message += f" [current: {hint}]"
             message += " (leave blank to keep current)"
             
-            new_val = questionary.password(message, style=style).ask()
+            new_val = _ask_with_escape_back(questionary.password(message, style=style))
+            if new_val == _BACK_VALUE:
+                return
             if new_val:
                 field.value = new_val
         else:
-            new_val = questionary.text(
+            new_val = _ask_with_escape_back(questionary.text(
                 prompt_text,
                 default=str(default_val) if default_val is not None else "",
                 style=style
-            ).ask()
+            ))
+            if new_val == _BACK_VALUE:
+                return
             if new_val:
                 field.value = new_val
 
@@ -147,12 +166,12 @@ def _interactive_config_loop(grouped_configs):
         main_choices.append("Save & Exit")
         main_choices.append("Exit without Saving")
         
-        selected_section = questionary.select(
+        selected_section = _ask_with_escape_back(questionary.select(
             "Select a category to configure (Arrow keys to move, Enter to select):",
             choices=main_choices,
             style=style,
-            use_arrow_keys=True,
-        ).ask()
+            use_arrow_keys=True
+        ))
         
         if selected_section == "Save & Exit":
             BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
@@ -162,8 +181,8 @@ def _interactive_config_loop(grouped_configs):
             if questionary.confirm("Are you sure you want to exit without saving changes?", default=False, style=style).ask():
                 break
             continue
-        elif selected_section is None:
-             break
+        elif selected_section == _BACK_VALUE:
+            continue
 
         # Sub Menu
         while True:
@@ -180,14 +199,14 @@ def _interactive_config_loop(grouped_configs):
             sub_choices.append(questionary.Separator())
             sub_choices.append(questionary.Choice(title="Back", value="Back"))
             
-            selected_config = questionary.select(
-                f"[{selected_section}] Select a provider to configure:",
+            selected_config = _ask_with_escape_back(questionary.select(
+                f"[{selected_section}] Select a provider to configure (Esc to back):",
                 choices=sub_choices,
                 style=style,
-                use_arrow_keys=True,
-            ).ask()
+                use_arrow_keys=True
+            ))
             
-            if selected_config == "Back" or selected_config is None:
+            if selected_config == "Back" or selected_config == _BACK_VALUE:
                 break
             
             # Configure Provider
