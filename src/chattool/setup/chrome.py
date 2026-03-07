@@ -78,7 +78,9 @@ def install_chromedriver(url, target_dir):
             # It might be in a subdirectory like 'chromedriver-linux64/chromedriver'
             driver_info = None
             for info in z.infolist():
-                if info.filename.endswith("chromedriver"):
+                if info.is_dir():
+                    continue
+                if Path(info.filename).name == "chromedriver":
                     driver_info = info
                     break
             
@@ -92,6 +94,10 @@ def install_chromedriver(url, target_dir):
             # Make executable
             st = os.stat(target_path)
             os.chmod(target_path, st.st_mode | stat.S_IEXEC)
+            try:
+                subprocess.run([str(target_path), "--version"], capture_output=True, text=True, check=True)
+            except Exception:
+                raise Exception("Downloaded file is not a valid chromedriver binary")
             click.echo(f"Chromedriver installed to {target_path}")
             
     except Exception as e:
