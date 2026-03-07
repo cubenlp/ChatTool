@@ -4,7 +4,7 @@ services:
     container_name: browserless-chromium
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     environment:
       TOKEN: ${TOKEN:-}
       CONCURRENT: ${CONCURRENT:-5}
