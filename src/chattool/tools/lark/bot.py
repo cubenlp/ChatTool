@@ -46,15 +46,14 @@ class LarkBot:
         bot.start()
     """
 
-    def __init__(self, app_id:str=None, app_secret:str=None, api_base:str=None, tplogin: Any = None):
+    def __init__(self, app_id:str=None, app_secret:str=None, api_base:str=None):
         app_id = app_id or FeishuConfig.FEISHU_APP_ID.value
         app_secret = app_secret or FeishuConfig.FEISHU_APP_SECRET.value
         api_base = api_base or FeishuConfig.FEISHU_API_BASE.value or "https://open.feishu.cn"
         assert app_id and app_secret, "Feishu App ID and App Secret are required"
         self.app_id = app_id
         self.app_secret = app_secret
-        self.tplogin = tplogin
-        
+
         import lark_oapi
         builder = (
             lark_oapi.Client.builder()

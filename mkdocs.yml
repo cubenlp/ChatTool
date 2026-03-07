@@ -102,7 +102,6 @@ nav:
     - DNS服务: mcp/dns.md
     - Zulip集成: mcp/zulip.md
     - 网络扫描: mcp/network.md
-    - Skills功能: mcp/skills.md
   - 工具箱:
     - DNS工具: tools/dns.md
     - AI绘图工具: tools/image.md

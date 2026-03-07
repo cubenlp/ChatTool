@@ -5,10 +5,16 @@ from chattool.utils.httpclient import HTTPClient
 from chattool.config import TPLinkConfig
 
 class TPLogin(HTTPClient):
-    def __init__(self, url: str = None, password: str = None):
+    def __init__(
+        self,
+        url: str = None,
+        password: str = None,
+        auth_key: str = None,
+        auth_dictionary: str = None,
+    ):
         self.url = url or TPLinkConfig.TPLOGIN_URL.value
         self.password = password or TPLinkConfig.TPLOGIN_AUTH_PASSWORD.value
-        
+
         if not self.url:
             raise ValueError("TPLOGIN_URL not set")
         
@@ -41,9 +47,11 @@ class TPLogin(HTTPClient):
         return result
 
     def _org_auth_pwd(self, password: str) -> str:
-        key = "RDpbLfCPsJZ7fiv"
-        dictionary = "yLwVl0zKqws7LgKPRQ84Mdt708T1qQ3Ha7xv3H7NyU84p21BriUWBU43odz3iP4rBL3cD02KZciXTysVXiV8ngg6vL48rPJyAUw0HurW20xqxv9aYb4M9wK1Ae0wlro510qXeU07kV57fQMc8L6aLgMLwygtc0F10a0Dg70TOoouyFhdysuRMO51yY5ZlOZZLEal1h0t9YQW0Ko7oBwmCAHoic4HYbUyVeU3sfQ1xtXcPcf1aT303wAQhv66qzW"
-        return self._security_encode(key, password, dictionary)
+        if not self.auth_key:
+            raise ValueError("TPLOGIN_AUTH_KEY not set")
+        if not self.auth_dictionary:
+            raise ValueError("TPLOGIN_AUTH_DICTIONARY not set")
+        return self._security_encode(self.auth_key, password, self.auth_dictionary)
 
     def login(self) -> Optional[str]:
         if not self.password:
