@@ -4,10 +4,29 @@ import subprocess
 from pathlib import Path
 import click
 
-def setup_codex(preferred_auth_method=None):
+from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
+
+
+def setup_codex(preferred_auth_method=None, interactive=None):
     auth_method = preferred_auth_method
-    if not auth_method:
-        auth_method = click.prompt("preferred_auth_method / OPENAI_API_KEY", hide_input=True)
+    missing_required = not auth_method
+    force_interactive = interactive is True
+    auto_interactive = interactive is None and missing_required
+    need_prompt = force_interactive or auto_interactive
+
+    if need_prompt and not is_interactive_available():
+        if force_interactive:
+            click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
+        else:
+            click.echo("Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.", err=True)
+        click.echo("Usage: chattool setup codex [--preferred-auth-method <value>] [-i|-I]", err=True)
+        raise click.Abort()
+
+    if need_prompt:
+        auth_method = ask_text("preferred_auth_method / OPENAI_API_KEY", password=True)
+        if auth_method == BACK_VALUE:
+            return
+
     if not auth_method:
         click.echo("Missing auth method.", err=True)
         raise click.Abort()
