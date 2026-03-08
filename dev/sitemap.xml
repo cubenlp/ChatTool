@@ -169,6 +169,13 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/setup/codex/"/>
     </url>
     <url>
+        <loc>https://chattool.wzhecnu.cn/dev/setup/docker/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/setup/docker/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/setup/docker/"/>
+    </url>
+    <url>
         <loc>https://chattool.wzhecnu.cn/dev/setup/nginx_proxy/</loc>
         <lastmod>2026-03-08</lastmod>
         <changefreq>daily</changefreq>
@@ -377,6 +384,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/setup/codex/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devsetup/codex/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/setup/docker/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/setup/docker/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devsetup/docker/"/>
     </url>
     <url>
         <loc>https://chattool.wzhecnu.cn/dev/en/setup/nginx_proxy/</loc>
