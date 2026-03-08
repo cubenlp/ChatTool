@@ -4,6 +4,7 @@ from .service import capture_app, cert_app, lark_serve_cli
 from chattool.serve import serve_chrome
 from chattool.application.kb.cli import cli as kb_cli
 from chattool.setup.cli import setup_group
+from chattool.docker.cli import docker_cmd
 
 @click.group()
 def cli():
@@ -57,6 +58,7 @@ cli.add_command(tplogin_cli, name='tplogin')
 
 # Setup Group
 cli.add_command(setup_group, name='setup')
+cli.add_command(docker_cmd, name='docker')
 
 def main():
     cli()
