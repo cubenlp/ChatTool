@@ -1,0 +1,12 @@
+services:
+  playwright:
+    image: ${IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    working_dir: ${WORKING_DIR}
+    tty: true
+    stdin_open: true
+    shm_size: ${SHM_SIZE}
+    volumes:
+      - "${VOLUME}:/workspace"
+    command: ["bash", "-lc", "${COMMAND}"]
