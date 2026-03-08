@@ -8,13 +8,6 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/"/>
     </url>
     <url>
-        <loc>https://chattool.wzhecnu.cn/dev/browser_planning/</loc>
-        <lastmod>2026-03-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/browser_planning/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/browser_planning/"/>
-    </url>
-    <url>
         <loc>https://chattool.wzhecnu.cn/dev/chat/</loc>
         <lastmod>2026-03-08</lastmod>
         <changefreq>daily</changefreq>
@@ -162,6 +155,27 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/mcp/zulip/"/>
     </url>
     <url>
+        <loc>https://chattool.wzhecnu.cn/dev/setup/chrome/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/setup/chrome/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/setup/chrome/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/setup/codex/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/setup/codex/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/setup/codex/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/setup/nginx_proxy/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev/setup/nginx_proxy/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/deven/setup/nginx_proxy/"/>
+    </url>
+    <url>
         <loc>https://chattool.wzhecnu.cn/dev/tools/dns/</loc>
         <lastmod>2026-03-08</lastmod>
         <changefreq>daily</changefreq>
@@ -202,13 +216,6 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/dev"/>
-    </url>
-    <url>
-        <loc>https://chattool.wzhecnu.cn/dev/en/browser_planning/</loc>
-        <lastmod>2026-03-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/browser_planning/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devbrowser_planning/"/>
     </url>
     <url>
         <loc>https://chattool.wzhecnu.cn/dev/en/chat/</loc>
@@ -356,6 +363,27 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/mcp/zulip/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devmcp/zulip/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/setup/chrome/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/setup/chrome/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devsetup/chrome/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/setup/codex/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/setup/codex/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devsetup/codex/"/>
+    </url>
+    <url>
+        <loc>https://chattool.wzhecnu.cn/dev/en/setup/nginx_proxy/</loc>
+        <lastmod>2026-03-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://chattool.wzhecnu.cn/dev/en/setup/nginx_proxy/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://chattool.wzhecnu.cn/devsetup/nginx_proxy/"/>
     </url>
     <url>
         <loc>https://chattool.wzhecnu.cn/dev/en/tools/dns/</loc>
