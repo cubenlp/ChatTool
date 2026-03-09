@@ -1,0 +1,12 @@
+services:
+  chromium:
+    image: ${IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    ports:
+      - "${BIND_IP}:${PORT}:3000"
+    environment:
+      TOKEN: ${TOKEN}
+      CONCURRENT: ${CONCURRENT}
+      TIMEOUT: ${TIMEOUT}
+      QUEUED: ${QUEUED}
