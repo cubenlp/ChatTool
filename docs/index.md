@@ -154,8 +154,16 @@ ChatTool 提供了网络扫描工具，支持 Ping 扫描和端口扫描。
 chattool client network ping --network 192.168.1.0/24
 
 # 扫描端口
-chattool client network ssh --network 192.168.1.0/24 --port 22
+chattool client network network --network 192.168.1.0/24 --port 22
 ```
+
+### 辅助工具安装
+
+ChatTool 提供了多种辅助工具的安装和配置功能：
+
+- [Chrome 驱动安装](setup/chrome.md)
+- [Nginx 反向代理](setup/nginx_proxy.md)
+- [FRP 内网穿透](setup/frp.md) (TODO)
 
 ### DNS 工具箱
 
