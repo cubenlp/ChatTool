@@ -59,8 +59,13 @@ lark = [
 images = [
     "dashscope"
 ]
+screenshot = [
+    "selenium",
+    "pillow",
+    "imageio"
+]
 tools = [
-    "chattool[dns, lark, images]",
+    "chattool[dns, lark, images, screenshot]",
 ]
 tests = [
     "coverage",
