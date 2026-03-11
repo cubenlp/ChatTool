@@ -1,5 +1,6 @@
 import click
-from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli, tplogin_cli, github_cli, browser_cli
+from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli, tplogin_cli, github_cli, browser_cli, zulip_cli
+from .skill import skill_cli
 from .service import capture_app, cert_app, lark_serve_cli
 from chattool.serve import serve_chrome
 from chattool.application.kb.cli import cli as kb_cli
@@ -61,6 +62,11 @@ cli.add_command(github_cli, name='gh')
 
 # Browser Group
 cli.add_command(browser_cli, name='browser')
+# Zulip Group
+cli.add_command(zulip_cli, name='zulip')
+
+# Skill Group
+cli.add_command(skill_cli, name='skill')
 
 # Setup Group
 cli.add_command(setup_group, name='setup')
