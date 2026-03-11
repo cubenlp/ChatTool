@@ -239,14 +239,33 @@ class PlaywrightBrowserClient(BrowserClient):
     def wait_for_selector(self, selector: str, timeout: Optional[int] = None, state: str = 'visible', **kwargs) -> bool:
         """等待元素"""
         try:
+            import time
             page = self._get_page()
             timeout_ms = timeout or self.timeout
-            
-            page.wait_for_selector(selector, timeout=timeout_ms, state=state, **kwargs)
-            self.logger.debug(f"Element found: {selector}")
-            return True
+            quiet = kwargs.pop("quiet", False)
+            deadline = time.monotonic() + (timeout_ms / 1000)
+
+            while time.monotonic() < deadline:
+                handle = page.query_selector(selector)
+                if handle:
+                    if state == "attached":
+                        return True
+                    try:
+                        visible = handle.is_visible()
+                    except Exception:
+                        visible = True
+                    if state == "visible" and visible:
+                        return True
+                    if state == "hidden" and not visible:
+                        return True
+                time.sleep(0.2)
+
+            if not quiet:
+                self.logger.error(f"Wait for selector timeout ({selector})")
+            return False
         except Exception as e:
-            self.logger.error(f"Wait for selector error ({selector}): {e}")
+            if not quiet:
+                self.logger.error(f"Wait for selector error ({selector}): {e}")
             return False
 
     def execute_script(self, script: str, *args) -> Any:

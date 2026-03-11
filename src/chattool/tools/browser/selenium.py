@@ -84,25 +84,14 @@ class SeleniumBrowserClient(BrowserClient):
         if self.remote_url:
             self.logger.info(f"Connecting to remote WebDriver: {self.remote_url}")
             
-            if browser_lower == 'chrome':
-                from selenium.webdriver.chrome.webdriver import WebDriver
-                from selenium.webdriver.chrome.options import Options
-                options = self._options or self._get_browser_options()
-                self._driver = WebDriver(options=options, command_executor=self.remote_url)
-                
-            elif browser_lower == 'firefox':
-                from selenium.webdriver.firefox.webdriver import WebDriver
-                from selenium.webdriver.firefox.options import Options
-                options = self._options or self._get_browser_options()
-                self._driver = WebDriver(options=options, command_executor=self.remote_url)
-                
-            elif browser_lower == 'edge':
-                from selenium.webdriver.edge.webdriver import WebDriver
-                from selenium.webdriver.edge.options import Options
-                options = self._options or self._get_browser_options()
-                self._driver = WebDriver(options=options, command_executor=self.remote_url)
-            else:
+            from selenium import webdriver
+            options = self._options or self._get_browser_options()
+            if browser_lower not in {"chrome", "firefox", "edge"}:
                 raise ValueError(f"Unsupported browser for remote: {self.browser}")
+            self._driver = webdriver.Remote(
+                command_executor=self.remote_url,
+                options=options,
+            )
         else:
             # 本地 WebDriver
             if browser_lower == 'chrome':
@@ -184,7 +173,9 @@ class SeleniumBrowserClient(BrowserClient):
             # 属性选择器 [name=value]
             attr = selector[1:].split('=')[0]
             value = selector[selector.find('=') + 1:].strip('"\'')
-            return By.NAME, value if attr == 'name' else By.CSS_SELECTOR, selector
+            if attr == 'name':
+                return By.NAME, value
+            return By.CSS_SELECTOR, selector
         else:
             return By.CSS_SELECTOR, selector
 
@@ -264,6 +255,22 @@ class SeleniumBrowserClient(BrowserClient):
             self.logger.error(f"Get page content error: {e}")
             return ""
 
+    def get_title(self) -> str:
+        """获取页面标题"""
+        try:
+            driver = self._get_driver()
+            return driver.title or ""
+        except Exception:
+            return ""
+
+    def get_url(self) -> str:
+        """获取当前 URL"""
+        try:
+            driver = self._get_driver()
+            return driver.current_url or ""
+        except Exception:
+            return ""
+
     def click(self, selector: str, timeout: Optional[int] = None, **kwargs) -> bool:
         """点击元素"""
         try:
@@ -332,6 +339,7 @@ class SeleniumBrowserClient(BrowserClient):
             driver = self._get_driver()
             timeout_sec = (timeout or self.timeout) / 1000
             by, value = self._parse_selector(selector)
+            quiet = kwargs.pop("quiet", False)
             
             wait = WebDriverWait(driver, timeout_sec)
             
@@ -345,7 +353,8 @@ class SeleniumBrowserClient(BrowserClient):
             self.logger.debug(f"Element found: {selector}")
             return True
         except Exception as e:
-            self.logger.error(f"Wait for selector error ({selector}): {e}")
+            if not quiet:
+                self.logger.error(f"Wait for selector error ({selector}): {e}")
             return False
 
     def execute_script(self, script: str, *args) -> Any:

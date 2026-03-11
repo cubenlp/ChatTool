@@ -157,20 +157,23 @@ def services(chromium_url, chromium_token, chromedriver_url, playwright_url, tim
         )
         raise SystemExit(2)
 
+    chromium_health = _ensure_path(chromium_url, "/json/version")
     if chromium_token:
-        chromium_url = _append_token(chromium_url, chromium_token)
+        chromium_health = _append_token(chromium_health, chromium_token)
+    chromedriver_health = _ensure_path(chromedriver_url, "/status")
+    playwright_health = playwright_url
 
     targets = [
-        ("chromium", chromium_url),
-        ("chromedriver", chromedriver_url),
-        ("playwright", playwright_url),
+        ("chromium", chromium_health, "websocket"),
+        ("chromedriver", chromedriver_health, "ready"),
+        ("playwright", playwright_health, None),
     ]
 
     failed = 0
-    for expected, url in targets:
+    for name, url, expected in targets:
         result = check_service_url(url, expected, timeout=timeout)
         status = result.status if result.status is not None else "ERR"
-        line = f"[{status}] {expected}: {result.url} ({result.elapsed_ms}ms)"
+        line = f"[{status}] {name}: {result.url} ({result.elapsed_ms}ms)"
         if result.ok:
             click.secho(line, fg="green")
         else:
@@ -192,6 +195,17 @@ def _append_token(url: str, token: str) -> str:
     query["token"] = [token]
     new_query = urlencode(query, doseq=True)
     return urlunparse(parsed._replace(query=new_query))
+
+
+def _ensure_path(url: str, suffix: str) -> str:
+    parsed = urlparse(url)
+    path = parsed.path or "/"
+    if path.endswith(suffix):
+        return url
+    if not path.endswith("/"):
+        path = path + "/"
+    new_path = path.rstrip("/") + suffix
+    return urlunparse(parsed._replace(path=new_path))
 
 if __name__ == '__main__':
     network()

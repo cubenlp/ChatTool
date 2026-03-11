@@ -4,11 +4,13 @@ Browser 自动化工具包
 """
 import logging
 from enum import Enum
-from typing import Union, Optional, Dict, Any
+from typing import Union, Optional, Dict, Any, TYPE_CHECKING
 
 from .base import BrowserClient
-from .playwright_impl import PlaywrightBrowserClient, AsyncPlaywrightBrowserClient
-from .selenium import SeleniumBrowserClient
+
+if TYPE_CHECKING:
+    from .playwright_impl import PlaywrightBrowserClient, AsyncPlaywrightBrowserClient
+    from .selenium import SeleniumBrowserClient
 
 
 class BrowserType(Enum):
@@ -69,6 +71,7 @@ def create_browser_client(
         browser_type = browser_type.value
     
     if browser_type == 'playwright':
+        from .playwright_impl import PlaywrightBrowserClient
         return PlaywrightBrowserClient(
             logger=logger,
             headless=headless,
@@ -80,6 +83,7 @@ def create_browser_client(
             **kwargs
         )
     elif browser_type == 'playwright_async':
+        from .playwright_impl import AsyncPlaywrightBrowserClient
         return AsyncPlaywrightBrowserClient(
             logger=logger,
             headless=headless,
@@ -91,6 +95,7 @@ def create_browser_client(
             **kwargs
         )
     elif browser_type == 'selenium':
+        from .selenium import SeleniumBrowserClient
         return SeleniumBrowserClient(
             logger=logger,
             headless=headless,
@@ -143,3 +148,19 @@ __all__ = [
     'create_browser_client',
     'create_remote_browser_client',
 ]
+
+
+def __getattr__(name: str):
+    if name == "PlaywrightBrowserClient":
+        from .playwright_impl import PlaywrightBrowserClient
+        return PlaywrightBrowserClient
+    if name == "AsyncPlaywrightBrowserClient":
+        from .playwright_impl import AsyncPlaywrightBrowserClient
+        return AsyncPlaywrightBrowserClient
+    if name == "SeleniumBrowserClient":
+        from .selenium import SeleniumBrowserClient
+        return SeleniumBrowserClient
+    if name == "BrowserClient":
+        from .base import BrowserClient as BaseClient
+        return BaseClient
+    raise AttributeError(name)

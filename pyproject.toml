@@ -42,7 +42,8 @@ dependencies = [
     "httpx",
     "gitpython",
     "PyGithub",
-    "filelock"
+    "filelock",
+    "pillow"
 ]
 
 [project.optional-dependencies]
@@ -63,6 +64,12 @@ screenshot = [
     "selenium",
     "pillow",
     "imageio"
+]
+browser = [
+    "selenium",
+    "pillow",
+    "imageio",
+    "playwright"
 ]
 tools = [
     "chattool[dns, lark, images, screenshot]",
