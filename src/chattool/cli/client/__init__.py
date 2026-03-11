@@ -6,7 +6,6 @@ from .network import network as network_cli
 from .lark import cli as lark_cli
 from .image import cli as image_cli
 from .tplogin import cli as tplogin_cli
-from .github import cli as github_cli
 
 __all__ = [
     "cert_client",
@@ -17,5 +16,4 @@ __all__ = [
     "lark_cli",
     "image_cli",
     "tplogin_cli",
-    "github_cli",
 ]

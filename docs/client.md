@@ -149,7 +149,44 @@ chattool client cert download example.com -o ./my-certs --token my-secret-token
 
 ---
 
-## 3. 环境管理 (`env`)
+## 3. 网络工具 (`network`)
+
+提供基础的网络探测与链接校验能力。
+
+### 3.1 存活扫描 (`network ping`)
+```bash
+chattool network ping --network 192.168.1.0/24
+```
+
+### 3.2 端口扫描 (`network ssh`)
+```bash
+chattool network ssh --network 192.168.1.0/24 --port 22
+```
+
+### 3.3 链接有效性检查 (`network links`)
+```bash
+# 从目录内扫描 URL
+chattool network links --path ./docs --glob "*.md"
+
+# 直接检查 URL
+chattool network links --url https://example.com
+```
+
+### 3.4 服务校验 (`network services`)
+用于统一验证 Chromium/Chromedriver/Playwright 服务的连通性与响应特征。
+
+```bash
+export CHATTOOL_CHROMIUM_URL="http://host:8080/token/chromium/json/version"
+export CHATTOOL_CHROMIUM_TOKEN="your-token"
+export CHATTOOL_CHROMEDRIVER_URL="http://host:8080/token/chromedriver/"
+export CHATTOOL_PLAYWRIGHT_URL="http://host:8080/token/playwright/"
+
+chattool network services
+```
+
+---
+
+## 4. 环境管理 (`env`)
 
 管理存储在 `.env` 文件中的全局配置和环境变量。
 
@@ -179,7 +216,7 @@ chattool env unset CHATTOOL_DNS_PROVIDER
 
 ---
 
-## 4. 本地服务器工具 (`serve`)
+## 5. 本地服务器工具 (`serve`)
 
 ### 4.1 请求捕获 (`capture`)
 
@@ -266,7 +303,7 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 
 ---
 
-## 5. MCP 服务器 (`mcp`)
+## 6. MCP 服务器 (`mcp`)
 
 管理 ChatTool 模型上下文协议 (MCP) 服务器。
 
@@ -297,7 +334,7 @@ chattool mcp info --json-output
 
 ---
 
-## 6. 知识库管理 (`kb`)
+## 7. 知识库管理 (`kb`)
 
 管理基于 Zulip 的知识库工作区。支持消息同步、搜索、导出及处理。
 
