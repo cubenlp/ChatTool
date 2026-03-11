@@ -181,7 +181,12 @@ def pr_merge(repo, number, method, title, message, confirm, token):
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
-        result = pr.merge(commit_title=title, commit_message=message, merge_method=method)
+        payload = {"merge_method": method}
+        if title is not None:
+            payload["commit_title"] = title
+        if message is not None:
+            payload["commit_message"] = message
+        result = pr.merge(**payload)
     except GithubException as exc:
         raise click.ClickException(f"GitHub API error: {exc}") from exc
 
