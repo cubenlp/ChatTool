@@ -186,7 +186,37 @@ chattool network services
 
 ---
 
-## 4. 环境管理 (`env`)
+## 4. GitHub 工具 (`gh`)
+
+### 4.1 配置
+环境变量：
+- `GITHUB_ACCESS_TOKEN`: GitHub Personal Access Token（建议使用）
+- `GITHUB_DEFAULT_REPO`: 默认仓库（`owner/name`）
+
+### 4.2 常用命令
+```bash
+export GITHUB_ACCESS_TOKEN="..."
+export GITHUB_DEFAULT_REPO="cubenlp/ChatTool"
+
+# 列出 PR
+chattool gh pr-list --state open --limit 20
+
+# 查看 PR 详情
+chattool gh pr-view --number 123
+
+# 创建 PR
+chattool gh pr-create --base vibe-master --head feature-branch --title "Title" --body "Body"
+
+# 评论 PR
+chattool gh pr-comment --number 123 --body "Looks good"
+
+# 合并 PR
+chattool gh pr-merge --number 123 --method squash --confirm
+```
+
+---
+
+## 5. 环境管理 (`env`)
 
 管理存储在 `.env` 文件中的全局配置和环境变量。
 
@@ -216,7 +246,7 @@ chattool env unset CHATTOOL_DNS_PROVIDER
 
 ---
 
-## 5. 本地服务器工具 (`serve`)
+## 6. 本地服务器工具 (`serve`)
 
 ### 4.1 请求捕获 (`capture`)
 
@@ -303,7 +333,7 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 
 ---
 
-## 6. MCP 服务器 (`mcp`)
+## 7. MCP 服务器 (`mcp`)
 
 管理 ChatTool 模型上下文协议 (MCP) 服务器。
 
@@ -334,7 +364,7 @@ chattool mcp info --json-output
 
 ---
 
-## 7. 知识库管理 (`kb`)
+## 8. 知识库管理 (`kb`)
 
 管理基于 Zulip 的知识库工作区。支持消息同步、搜索、导出及处理。
 
