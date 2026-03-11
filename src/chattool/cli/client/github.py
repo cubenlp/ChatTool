@@ -1,7 +1,5 @@
 import os
 import click
-from github import Github
-from github.GithubException import GithubException
 
 
 @click.group(name="gh")
@@ -28,6 +26,9 @@ def cli():
 )
 def pr_create(repo, base, head, title, body, body_file, token):
     """Create a GitHub pull request."""
+    from github import Github
+    from github.GithubException import GithubException
+
     token = token or os.getenv("GITHUB_ACCESS_TOKEN")
     if not token:
         raise click.ClickException("Missing token. Set GITHUB_ACCESS_TOKEN or pass --token.")
