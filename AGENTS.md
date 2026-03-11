@@ -11,5 +11,4 @@
 - 生成包：`python -m build`
 
 ## 注意事项
-- 仓库包含 `src-old/`，pytest 可能因模块同名冲突导致收集失败。
 - 新增 CLI 请同步更新 `docs/client.md` 和 README。
