@@ -5,6 +5,7 @@ from .main import (
     TPLinkConfig
 )
 from .github import GitHubConfig
+from .browser import BrowserConfig
 
 __all__ = [
     "EnvField",
@@ -21,5 +22,6 @@ __all__ = [
     "LiblibConfig",
     "SiliconFlowConfig",
     "GitHubConfig",
+    "BrowserConfig",
     "TPLinkConfig",
 ]
