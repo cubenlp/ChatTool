@@ -4,6 +4,7 @@ from .main import (
     TongyiConfig, HuggingFaceConfig, PollinationsConfig, LiblibConfig, SiliconFlowConfig ,
     TPLinkConfig
 )
+from .github import GitHubConfig
 
 __all__ = [
     "EnvField",
@@ -19,5 +20,6 @@ __all__ = [
     "PollinationsConfig",
     "LiblibConfig",
     "SiliconFlowConfig",
+    "GitHubConfig",
     "TPLinkConfig",
 ]
