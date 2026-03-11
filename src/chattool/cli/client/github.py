@@ -181,7 +181,12 @@ def pr_merge(repo, number, method, title, message, confirm, token):
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
-        result = pr.merge(commit_title=title, commit_message=message, merge_method=method)
+        payload = {"merge_method": method}
+        if title is not None:
+            payload["commit_title"] = title
+        if message is not None:
+            payload["commit_message"] = message
+        result = pr.merge(**payload)
     except GithubException as exc:
         raise click.ClickException(f"GitHub API error: {exc}") from exc
 
@@ -189,6 +194,52 @@ def pr_merge(repo, number, method, title, message, confirm, token):
         raise click.ClickException(f"Merge failed: {result.message}")
 
     click.echo(f"PR merged: {pr.html_url}")
+
+
+@cli.command(name="pr-update")
+@click.option("--repo", required=False, help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).")
+@click.option("--number", required=True, type=int, help="Pull request number.")
+@click.option("--title", default=None, help="New pull request title.")
+@click.option("--body", default=None, help="New pull request body.")
+@click.option(
+    "--body-file",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Read PR body from file (overrides --body).",
+)
+@click.option("--state", default=None, type=click.Choice(["open", "closed"]), help="Set PR state.")
+@click.option("--base", default=None, help="Change base branch.")
+@click.option("--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN).")
+def pr_update(repo, number, title, body, body_file, state, base, token):
+    """Update pull request metadata (title/body/state/base)."""
+    from github import Github
+    from github.GithubException import GithubException
+
+    if body_file:
+        with open(body_file, "r", encoding="utf-8") as handle:
+            body = handle.read()
+
+    if title is None and body is None and state is None and base is None:
+        raise click.ClickException("No updates provided. Use --title/--body/--state/--base.")
+
+    client = _get_client(token, require_token=True)
+    repo = _resolve_repo(repo)
+    try:
+        repo_obj = client.get_repo(repo)
+        pr = repo_obj.get_pull(number)
+        payload = {}
+        if title is not None:
+            payload["title"] = title
+        if body is not None:
+            payload["body"] = body
+        if state is not None:
+            payload["state"] = state
+        if base is not None:
+            payload["base"] = base
+        pr.edit(**payload)
+    except GithubException as exc:
+        raise click.ClickException(f"GitHub API error: {exc}") from exc
+
+    click.echo(f"PR updated: {pr.html_url}")
 
 
 def _get_client(token: Optional[str], require_token: bool = False):

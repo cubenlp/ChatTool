@@ -13,6 +13,7 @@ CLI按功能分为几个命令组：
 - **`client`**: 远程服务客户端工具。
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
+- **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
 
 ### chatenv
 
@@ -212,11 +213,52 @@ chattool gh pr-comment --number 123 --body "Looks good"
 
 # 合并 PR
 chattool gh pr-merge --number 123 --method squash --confirm
+
+# 更新 PR（标题/正文/状态/基线分支）
+chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 ```
 
 ---
 
-## 5. 环境管理 (`env`)
+## 5. Zulip 工具 (`zulip`)
+
+用于读取 Zulip 社区消息并生成资讯摘要（**只读**，不提供发送接口以避免误发）。
+
+### 5.1 配置
+
+使用 `chatenv` 查看或配置：
+
+```bash
+chattool chatenv cat -t zulip
+```
+
+常用配置项：
+- `ZULIP_BOT_EMAIL`
+- `ZULIP_BOT_API_KEY`
+- `ZULIP_SITE`
+- `ZULIP_NEWS_STREAMS` (逗号分隔的默认 streams)
+- `ZULIP_NEWS_TOPICS` (逗号分隔的默认 topics)
+- `ZULIP_NEWS_SINCE_HOURS` (默认 24)
+- `ZULIP_NEWS_PER_STREAM` (默认 200)
+
+### 5.2 常用命令
+
+```bash
+# 列出订阅的 streams
+chattool zulip streams
+
+# 查看消息（支持过滤）
+chattool zulip messages --stream general --before 20
+
+# 生成资讯摘要（控制台 + Markdown 文件）
+chattool zulip news --since-hours 24 --stream general --stream announcements
+```
+
+默认输出文件：`zulip-news-YYYYMMDD.md`（当前目录），可用 `--output` 覆盖。
+
+---
+
+## 6. 环境管理 (`env`)
 
 管理存储在 `.env` 文件中的全局配置和环境变量。
 
