@@ -213,6 +213,9 @@ chattool gh pr-comment --number 123 --body "Looks good"
 
 # 合并 PR
 chattool gh pr-merge --number 123 --method squash --confirm
+
+# 更新 PR（标题/正文/状态/基线分支）
+chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 ```
 
 ---
