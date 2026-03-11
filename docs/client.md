@@ -375,7 +375,33 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 
 ---
 
-## 7. MCP 服务器 (`mcp`)
+## 7. Skill 管理 (`skill`)
+
+用于安装和管理 ChatTool skills（默认从项目 `skills/` 目录读取）。
+
+```bash
+# 列出可用 skills
+chattool skill list
+
+# 安装单个 skill 到 Codex
+chattool skill install cert-manager --platform codex
+
+# 安装到 Claude Code（可显式指定目标目录）
+chattool skill install cert-manager --platform claude-code --dest ~/.claude-code/skills
+
+# 安装全部 skills
+chattool skill install --all --platform codex
+```
+
+**选项说明 (`install`):**
+- `--platform`: 目标平台（`codex` / `claude-code`）。
+- `--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
+- `--dest`: 目标目录（可覆盖平台默认目录）。
+- `--force`: 覆盖已存在的 skill。
+
+---
+
+## 8. MCP 服务器 (`mcp`)
 
 管理 ChatTool 模型上下文协议 (MCP) 服务器。
 
@@ -406,7 +432,7 @@ chattool mcp info --json-output
 
 ---
 
-## 8. 知识库管理 (`kb`)
+## 9. 知识库管理 (`kb`)
 
 管理基于 Zulip 的知识库工作区。支持消息同步、搜索、导出及处理。
 
