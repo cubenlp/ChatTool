@@ -1,5 +1,5 @@
 import click
-from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli, tplogin_cli
+from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli, tplogin_cli, github_cli
 from .service import capture_app, cert_app, lark_serve_cli
 from chattool.serve import serve_chrome
 from chattool.application.kb.cli import cli as kb_cli
@@ -55,6 +55,9 @@ cli.add_command(image_cli, name='image')
 
 # TPLogin Group
 cli.add_command(tplogin_cli, name='tplogin')
+
+# GitHub Group
+cli.add_command(github_cli, name='gh')
 
 # Setup Group
 cli.add_command(setup_group, name='setup')
