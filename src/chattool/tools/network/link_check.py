@@ -23,7 +23,7 @@ class LinkCheckResult:
 @dataclass(frozen=True)
 class ServiceCheckResult:
     url: str
-    expected: str
+    expected: Optional[str]
     ok: bool
     status: Optional[int]
     elapsed_ms: int
@@ -125,16 +125,19 @@ def _request_text(url: str, timeout: float, max_bytes: int) -> tuple[int, str]:
         return resp.status, text
 
 
-def check_service_url(url: str, expected: str, timeout: float, max_bytes: int = 65536) -> ServiceCheckResult:
+def check_service_url(url: str, expected: Optional[str], timeout: float, max_bytes: int = 65536) -> ServiceCheckResult:
     start = time.monotonic()
-    expected_lower = expected.lower()
+    expected_lower = expected.lower() if expected else None
     try:
         status, text = _request_text(url, timeout, max_bytes)
         elapsed_ms = int((time.monotonic() - start) * 1000)
-        content_lower = text.lower()
-        matched = expected_lower in content_lower or expected_lower in url.lower()
+        if expected_lower:
+            content_lower = text.lower()
+            matched = expected_lower in content_lower or expected_lower in url.lower()
+        else:
+            matched = True
         ok = 200 <= status < 400 and matched
-        error = None if ok else f"missing expected token: {expected}"
+        error = None if ok else (f"missing expected token: {expected}" if expected else "unexpected response")
         return ServiceCheckResult(
             url=url,
             expected=expected,

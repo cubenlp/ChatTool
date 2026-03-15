@@ -67,6 +67,9 @@ class FastAPIManager:
         if self.is_running:
             print("服务已在运行中")
             return
+
+        if not self.port:
+            self.port = 8000
         
         import uvicorn
         config = uvicorn.Config(
@@ -84,6 +87,7 @@ class FastAPIManager:
         self.thread.start()
         self.is_running = True
         print(f"🚀 服务已启动: http://{self.host}:{self.port}")
+
     
     def stop(self):
         """停止服务"""

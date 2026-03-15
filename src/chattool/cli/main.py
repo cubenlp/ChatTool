@@ -72,6 +72,7 @@ cli._lazy_commands.update({
     "image": lambda: _load_attr("chattool.cli.client.image", "cli"),
     "tplogin": lambda: _load_attr("chattool.cli.client.tplogin", "cli"),
     "gh": lambda: _load_attr("chattool.cli.client.github", "cli"),
+    "browser": lambda: _load_attr("chattool.cli.client.browser", "cli"),
     "zulip": lambda: _load_attr("chattool.cli.client.zulip", "cli"),
     "skill": lambda: _load_attr("chattool.cli.skill", "skill_cli"),
     "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
