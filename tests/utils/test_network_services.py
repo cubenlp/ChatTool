@@ -1,4 +1,4 @@
-import chattool.cli.client.network as network_module
+import chattool.tools.network.cli as network_module
 
 
 def test_append_token_adds_when_missing():
