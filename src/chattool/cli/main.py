@@ -72,7 +72,7 @@ cli._lazy_commands.update({
     "gh": lambda: _load_attr("chattool.tools.github.cli", "cli"),
     "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
     "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
-    "skill": lambda: _load_attr("chattool.cli.skill", "skill_cli"),
+    "skill": lambda: _load_attr("chattool.skill.cli", "skill_cli"),
     "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
     "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
 })
