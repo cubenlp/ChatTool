@@ -4,6 +4,8 @@ import click
 
 from chattool.config.github import GitHubConfig
 
+_ENV_LOADED = False
+
 
 @click.group(name="gh")
 def cli():
@@ -245,6 +247,7 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 def _get_client(token: Optional[str], require_token: bool = False):
     from github import Github
 
+    _ensure_env_loaded()
     token = token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
     if require_token and not token:
         raise click.ClickException("Missing token. Set GITHUB_ACCESS_TOKEN or pass --token.")
@@ -255,7 +258,22 @@ def _get_client(token: Optional[str], require_token: bool = False):
 
 
 def _resolve_repo(repo: Optional[str]) -> str:
+    _ensure_env_loaded()
     repo = repo or GitHubConfig.GITHUB_DEFAULT_REPO.value
     if not repo:
         raise click.ClickException("Missing repo. Provide --repo or set GITHUB_DEFAULT_REPO.")
     return repo
+
+
+def _ensure_env_loaded() -> None:
+    global _ENV_LOADED
+    if _ENV_LOADED:
+        return
+    try:
+        from chattool.const import CHATTOOL_ENV_FILE
+        from chattool.config import BaseEnvConfig
+        if CHATTOOL_ENV_FILE.exists():
+            BaseEnvConfig.load_all(CHATTOOL_ENV_FILE)
+    except Exception:
+        pass
+    _ENV_LOADED = True
