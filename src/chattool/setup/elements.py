@@ -82,8 +82,8 @@ SETUP_COMMAND_ELEMENTS = (
         callback=chrome_setup,
         options=(
             SetupOptionElement(
-                param_decls=("--interactive", "-i"),
-                kwargs={"is_flag": True, "help": "Interactive mode to choose install directory."},
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
             ),
         ),
     ),
@@ -98,8 +98,8 @@ SETUP_COMMAND_ELEMENTS = (
         callback=nodejs_setup,
         options=(
             SetupOptionElement(
-                param_decls=("--interactive", "-i"),
-                kwargs={"is_flag": True, "help": "Interactive mode to choose Node.js version."},
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
             ),
         ),
     ),

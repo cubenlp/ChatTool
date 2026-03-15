@@ -301,7 +301,12 @@ def delete_env(name):
     click.echo(f"Deleted profile '{name}'")
 
 @cli.command(name='init')
-@click.option('--interactive', '-i', is_flag=True, help='Interactive mode to set values.')
+@click.option(
+    '--interactive/--no-interactive',
+    '-i/-I',
+    default=None,
+    help='Auto prompt by default, -i forces interactive, -I disables interactive.',
+)
 @click.option('--type', '-t', 'config_types', multiple=True, help='Filter configuration types (case-insensitive title or alias match).')
 def init(interactive, config_types):
     """Initialize or update the .env configuration file.
@@ -335,7 +340,7 @@ def init(interactive, config_types):
                 click.echo(f"  - {cls._title}{alias_str}")
             return
 
-    if not interactive:
+    if interactive is None:
         interactive = True
 
     if interactive:
