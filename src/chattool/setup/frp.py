@@ -5,7 +5,13 @@ import tarfile
 import tempfile
 import subprocess
 import platform
+import click
 from pathlib import Path
+from chattool.setup.interactive import (
+    abort_if_force_without_tty,
+    abort_if_missing_without_tty,
+    resolve_interactive_mode,
+)
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import (
     ask_select, ask_text, ask_path, ask_confirm, BACK_VALUE
@@ -58,8 +64,30 @@ def extract_frp(archive_path, extract_to, binary_name):
     os.chmod(extracted_bin, 0o755)
     return extracted_bin
 
-def setup_frp():
+def setup_frp(interactive=None):
     logger.info("Start frp setup")
+    usage = "Usage: chattool setup frp [-i|-I]"
+    interactive, can_prompt, force_interactive, _, _ = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=True,
+    )
+    abort_if_force_without_tty(force_interactive, can_prompt, usage)
+    if interactive is False:
+        logger.error("FRP setup does not support --no-interactive mode")
+        click.echo("FRP setup currently requires interactive prompts. Remove -I and run in interactive terminal.", err=True)
+        raise click.Abort()
+    try:
+        abort_if_missing_without_tty(
+            missing_required=True,
+            interactive=interactive,
+            can_prompt=can_prompt,
+            message="FRP setup requires an interactive terminal.",
+            usage=usage,
+        )
+    except click.Abort:
+        logger.error("FRP setup requires an interactive terminal")
+        raise
+
     # 1. Ask Mode
     mode = ask_select(
         "Select FRP Mode:",

@@ -55,22 +55,18 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
 
     import click
 
+    from chattool.setup.interactive import (
+        abort_if_force_without_tty,
+        resolve_interactive_mode,
+    )
     from chattool.utils.custom_logger import setup_logger
-    from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
+    from chattool.utils.tui import BACK_VALUE, ask_text
 
     logger = setup_logger("setup_claude")
     claude_dir = Path.home() / ".claude"
     existing = _load_existing_claude_config(claude_dir)
     existing_auth = existing.get("auth_token")
     logger.info("Start claude setup")
-
-    ctx = click.get_current_context(silent=True)
-    if ctx:
-        try:
-            if ctx.get_parameter_source("interactive") == click.core.ParameterSource.DEFAULT:
-                interactive = None
-        except Exception:
-            pass
 
     if isinstance(auth_token, str) and not auth_token.strip():
         auth_token = None
@@ -82,20 +78,20 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
     auth_token = auth_token or existing_auth
     missing_required = not auth_token
     has_existing_config = any(value for value in existing.values())
-    can_prompt = is_interactive_available()
-    force_interactive = interactive is True
-    auto_interactive = interactive is None and can_prompt and (missing_required or has_existing_config)
-    need_prompt = force_interactive or auto_interactive
+    usage = (
+        "Usage: chattool setup claude [--auth-token <value>] [--base-url <value>] "
+        "[--small-fast-model <value>] [-i|-I]"
+    )
+    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=(missing_required or has_existing_config),
+    )
 
-    if force_interactive and not can_prompt:
+    try:
+        abort_if_force_without_tty(force_interactive, can_prompt, usage)
+    except click.Abort:
         logger.error("Interactive mode requested but no TTY is available")
-        click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
-        click.echo(
-            "Usage: chattool setup claude [--auth-token <value>] [--base-url <value>] "
-            "[--small-fast-model <value>] [-i|-I]",
-            err=True,
-        )
-        raise click.Abort()
+        raise
 
     if need_prompt:
         auth_for_prompt = auth_token

@@ -7,6 +7,7 @@ import io
 import stat
 from pathlib import Path
 import click
+from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
 from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_chrome")
@@ -104,13 +105,20 @@ def install_chromedriver(url, target_dir):
         click.echo(f"Failed to install chromedriver: {e}", err=True)
         raise
 
-def setup_chrome_driver(interactive=False):
+def setup_chrome_driver(interactive=None):
     """Main setup function."""
+    usage = "Usage: chattool setup chrome [-i|-I]"
+    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=False,
+    )
+    abort_if_force_without_tty(force_interactive, can_prompt, usage)
+
     # Check if chromedriver is already installed
     existing_path = shutil.which("chromedriver")
     if existing_path:
         click.echo(f"Chromedriver is already installed at {existing_path}")
-        if not interactive:
+        if not need_prompt:
             click.echo("Updating existing installation...")
             target_dir = Path(existing_path).parent
         else:
@@ -135,7 +143,7 @@ def setup_chrome_driver(interactive=False):
         click.echo(f"Could not find matching Chromedriver for version {version}", err=True)
         return
         
-    if interactive:
+    if need_prompt:
         target_dir = click.prompt(
             "Install directory", 
             default=str(target_dir), 
