@@ -20,7 +20,7 @@ Generate a staged readlist for a Zulip topic using only read-only CLI commands a
 3. Produce staged outputs under `playground/<channel>/<topic>/`  
    - `0_posts_full.md`: full thread, chronological, original markdown with timestamp, sender, and link.  
    - `0_posts_5.zh-en.md`: first post + latest 5 posts, original text with Chinese translation.  
-   - `1_overview.md`: Chinese summary and reading guidance (all later stages in Chinese).
+   - `1_overview.md`: Chinese summary and reading guidance (1_ and later are processed content; stop at 1_ for now).
 
 ## Read-only Rules
 
