@@ -56,7 +56,8 @@ mkdocs serve --no-livereload # 本地预览文档
 
 - 新增 CLI 或工具：同步更新 `docs/tools/<name>/index.md`
 - 新增环境变量：同步更新 `docs/configuration.md`
-- 新增板块：在 `mkdocs.yml` nav 中注册，并更新本文件
+- 开发规范与目录边界：同步更新 `docs/development-guide/`
+- 新增板块：在 `mkdocs.yml` nav 中注册，并更新本文件与 `DEVELOP.md`
 
 ### 提交规范
 
