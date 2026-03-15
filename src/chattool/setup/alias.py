@@ -92,7 +92,7 @@ def select_aliases_interactively(default_selected):
     return selected or []
 
 
-def setup_alias(shell=None):
+def setup_alias(shell=None, dry_run=False):
     if os.name != "posix":
         click.echo("setup alias only supports Unix-like systems.", err=True)
         raise click.Abort()
@@ -108,6 +108,17 @@ def setup_alias(shell=None):
         click.echo("No interactive TTY detected, apply default alias set.")
 
     block = render_alias_block(alias_keys)
+    if dry_run:
+        click.echo(f"[dry-run] target shell rc: {rc_path}")
+        if block:
+            click.echo("[dry-run] alias block:")
+            click.echo(block.rstrip("\n"))
+            for key in alias_keys:
+                click.echo(f"  {key} => {ALIAS_MAP[key]}")
+        else:
+            click.echo("[dry-run] alias block would be removed.")
+        return
+
     apply_alias_block(rc_path, block)
 
     if alias_keys:

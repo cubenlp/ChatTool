@@ -36,8 +36,8 @@ def nodejs_setup(interactive):
     setup_nodejs(interactive=interactive)
 
 
-def alias_setup(shell):
-    setup_alias(shell=shell)
+def alias_setup(shell, dry_run):
+    setup_alias(shell=shell, dry_run=dry_run)
 
 
 def codex_setup(preferred_auth_method, base_url, model, interactive):
@@ -67,6 +67,10 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("-s", "--shell"),
                 kwargs={"default": None, "type": click.Choice(["zsh", "bash"]), "help": "Target shell: zsh or bash. Defaults to $SHELL."},
+            ),
+            SetupOptionElement(
+                param_decls=("--dry-run",),
+                kwargs={"is_flag": True, "help": "Preview alias changes without writing to shell rc file."},
             ),
         ),
     ),
