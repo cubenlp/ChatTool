@@ -12,7 +12,7 @@ ALIAS_MAP = {
     "chatenv": "chattool env",
     "chatskills": "chattool skills",
     "chatdns": "chattool dns",
-    "chat": "chattool",
+    "chatgh": "chattool gh",
 }
 
 BLOCK_BEGIN = "# >>> chattool aliases >>>"
