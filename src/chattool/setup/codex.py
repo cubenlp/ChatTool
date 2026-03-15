@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 import click
 
-from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
+from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text, is_interactive_available
 
 DEFAULT_MODEL = "gpt-5.3-codex"
 DEFAULT_BASE_URL = "https://api.openal.com/v1"
@@ -75,7 +75,8 @@ def _load_existing_codex_config(codex_dir):
     return existing
 
 
-def setup_codex(preferred_auth_method=None, base_url=None, model=None, interactive=None):
+def setup_codex(preferred_auth_method=None, base_url=None, model=None, interactive=None, assume_yes=False):
+    click.echo("Starting Codex setup...")
     codex_dir = Path.home() / ".codex"
     existing = _load_existing_codex_config(codex_dir)
     existing_auth = existing.get("openai_api_key") or existing.get("preferred_auth_method")
@@ -148,13 +149,69 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
         click.echo("npm not found. Please run: chattool setup nodejs", err=True)
         raise click.Abort()
 
-    install_cmd = ["npm", "install", "-g", "@openai/codex@latest"]
-    result = subprocess.run(install_cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        click.echo("Failed to install codex.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
-        raise click.Abort()
+    def _npm_bin_has(binary_name):
+        try:
+            result = subprocess.run(["npm", "bin", "-g"], capture_output=True, text=True)
+        except Exception:
+            return False
+        if result.returncode != 0:
+            return False
+        bin_dir = result.stdout.strip()
+        if not bin_dir:
+            return False
+        return (Path(bin_dir) / binary_name).exists()
+
+    def _npm_has_package(package_name):
+        try:
+            result = subprocess.run(
+                ["npm", "list", "-g", "--depth=0", package_name],
+                capture_output=True,
+                text=True,
+            )
+        except Exception:
+            return False
+        return result.returncode == 0
+
+    codex_binary = shutil.which("codex")
+    npm_bin_has = False
+    npm_pkg_has = False
+    if not codex_binary:
+        npm_bin_has = _npm_bin_has("codex")
+        if not npm_bin_has:
+            npm_pkg_has = _npm_has_package("@openai/codex")
+
+    codex_installed = bool(codex_binary or npm_bin_has or npm_pkg_has)
+    can_prompt_install = can_prompt and interactive is not False
+    should_install = True
+    if codex_installed:
+        if codex_binary:
+            click.echo(f"Detected codex binary at: {codex_binary}")
+        elif npm_bin_has:
+            click.echo("Detected codex in npm global bin.")
+        else:
+            click.echo("Detected @openai/codex in global npm packages.")
+        if assume_yes:
+            click.echo("codex already installed; skipping npm install due to -y/--yes.")
+            should_install = False
+        elif not can_prompt_install:
+            click.echo("codex already installed; skipping npm install (non-interactive).")
+            should_install = False
+        else:
+            reinstall = ask_confirm("codex already installed. Reinstall via npm?", default=False)
+            if not reinstall:
+                click.echo("Skipping codex installation.")
+                should_install = False
+
+    if should_install:
+        click.echo("Installing codex via npm...")
+        install_cmd = ["npm", "install", "-g", "@openai/codex@latest"]
+        result = subprocess.run(install_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            click.echo("Failed to install codex.", err=True)
+            if result.stderr:
+                click.echo(result.stderr.strip(), err=True)
+            raise click.Abort()
+        click.echo("codex installation completed.")
 
     base_url = base_url or existing.get("base_url") or DEFAULT_BASE_URL
     model = model or existing.get("model") or DEFAULT_MODEL

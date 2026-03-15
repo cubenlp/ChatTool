@@ -47,7 +47,7 @@ def _load_existing_claude_config(claude_dir):
     return existing
 
 
-def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interactive=None):
+def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interactive=None, assume_yes=False):
     import json
     import shutil
     import subprocess
@@ -55,7 +55,9 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
 
     import click
 
-    from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
+    from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text, is_interactive_available
+
+    click.echo("Starting Claude Code setup...")
 
     claude_dir = Path.home() / ".claude"
     existing = _load_existing_claude_config(claude_dir)
@@ -94,6 +96,7 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         raise click.Abort()
 
     if need_prompt:
+        click.echo("Interactive input enabled. Collecting configuration values...")
         auth_for_prompt = auth_token
         auth_label = "ANTHROPIC_AUTH_TOKEN"
         if auth_for_prompt:
@@ -122,18 +125,75 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         click.echo("npm not found. Please run: chattool setup nodejs", err=True)
         raise click.Abort()
 
-    install_cmd = ["npm", "install", "-g", "@anthropic-ai/claude-code"]
-    result = subprocess.run(install_cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        click.echo("Failed to install claude-code.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
-        raise click.Abort()
+    def _npm_bin_has(binary_name):
+        try:
+            result = subprocess.run(["npm", "bin", "-g"], capture_output=True, text=True)
+        except Exception:
+            return False
+        if result.returncode != 0:
+            return False
+        bin_dir = result.stdout.strip()
+        if not bin_dir:
+            return False
+        return (Path(bin_dir) / binary_name).exists()
+
+    def _npm_has_package(package_name):
+        try:
+            result = subprocess.run(
+                ["npm", "list", "-g", "--depth=0", package_name],
+                capture_output=True,
+                text=True,
+            )
+        except Exception:
+            return False
+        return result.returncode == 0
+
+    claude_binary = shutil.which("claude") or shutil.which("claude-code")
+    npm_bin_has = False
+    npm_pkg_has = False
+    if not claude_binary:
+        npm_bin_has = _npm_bin_has("claude") or _npm_bin_has("claude-code")
+        if not npm_bin_has:
+            npm_pkg_has = _npm_has_package("@anthropic-ai/claude-code")
+
+    claude_code_installed = bool(claude_binary or npm_bin_has or npm_pkg_has)
+    can_prompt_install = can_prompt and interactive is not False
+    should_install = True
+    if claude_code_installed:
+        if claude_binary:
+            click.echo(f"Detected claude binary at: {claude_binary}")
+        elif npm_bin_has:
+            click.echo("Detected claude-code in npm global bin.")
+        else:
+            click.echo("Detected @anthropic-ai/claude-code in global npm packages.")
+        if assume_yes:
+            click.echo("claude-code already installed; skipping npm install due to -y/--yes.")
+            should_install = False
+        elif not can_prompt_install:
+            click.echo("claude-code already installed; skipping npm install (non-interactive).")
+            should_install = False
+        else:
+            reinstall = ask_confirm("claude-code already installed. Reinstall via npm?", default=False)
+            if not reinstall:
+                click.echo("Skipping claude-code installation.")
+                should_install = False
+
+    if should_install:
+        click.echo("Installing claude-code via npm...")
+        install_cmd = ["npm", "install", "-g", "@anthropic-ai/claude-code"]
+        result = subprocess.run(install_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            click.echo("Failed to install claude-code.", err=True)
+            if result.stderr:
+                click.echo(result.stderr.strip(), err=True)
+            raise click.Abort()
+        click.echo("claude-code installation completed.")
 
     base_url = base_url or existing.get("base_url") or DEFAULT_BASE_URL
     small_fast_model = small_fast_model or existing.get("small_fast_model") or DEFAULT_SMALL_FAST_MODEL
     primary_api_key = existing.get("primary_api_key") or "1"
 
+    click.echo("Writing Claude Code configuration files...")
     claude_dir.mkdir(parents=True, exist_ok=True)
 
     settings_json = {
@@ -152,6 +212,8 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
     config_path.write_text(json.dumps(config_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     config_path.chmod(0o600)
 
+    click.echo(f"Base URL: {base_url}")
+    click.echo(f"Small/Fast Model: {small_fast_model}")
     click.echo("Claude Code setup completed.")
     click.echo(f"Settings: {settings_path}")
     click.echo(f"Config: {config_path}")

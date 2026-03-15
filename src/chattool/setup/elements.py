@@ -34,21 +34,23 @@ def nodejs_setup(interactive):
     setup_nodejs(interactive=interactive)
 
 
-def codex_setup(preferred_auth_method, base_url, model, interactive):
+def codex_setup(preferred_auth_method, base_url, model, interactive, yes):
     setup_codex(
         preferred_auth_method=preferred_auth_method,
         base_url=base_url,
         model=model,
         interactive=interactive,
+        assume_yes=yes,
     )
 
 
-def claude_setup(auth_token, base_url, small_fast_model, interactive):
+def claude_setup(auth_token, base_url, small_fast_model, interactive, yes):
     setup_claude(
         auth_token=auth_token,
         base_url=base_url,
         small_fast_model=small_fast_model,
         interactive=interactive,
+        assume_yes=yes,
     )
 
 
@@ -58,6 +60,10 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup Claude Code CLI and config files.",
         callback=claude_setup,
         options=(
+            SetupOptionElement(
+                param_decls=("--yes", "-y"),
+                kwargs={"is_flag": True, "help": "Skip npm install if already installed."},
+            ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
@@ -108,6 +114,10 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup Codex CLI and config files.",
         callback=codex_setup,
         options=(
+            SetupOptionElement(
+                param_decls=("--yes", "-y"),
+                kwargs={"is_flag": True, "help": "Skip npm install if already installed."},
+            ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
