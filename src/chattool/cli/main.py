@@ -1,79 +1,88 @@
-import click
-from .client import ssl_updater_main, dns_updater_cli, mcp_cli, cert_client, network_cli, lark_cli, image_cli, tplogin_cli, github_cli, browser_cli, zulip_cli
-from .skill import skill_cli
-from .service import capture_app, cert_app, lark_serve_cli
-from chattool.serve import serve_chrome
-from chattool.application.kb.cli import cli as kb_cli
-from chattool.setup.cli import setup_group
-from chattool.docker.cli import docker_cmd
+import importlib
+from typing import Callable
 
-@click.group()
+import click
+
+
+class LazyGroup(click.Group):
+    def __init__(self, *args, lazy_commands: dict[str, Callable[[], click.Command]] | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._lazy_commands = dict(lazy_commands or {})
+
+    def list_commands(self, ctx: click.Context) -> list[str]:
+        commands = set(self.commands)
+        commands.update(self._lazy_commands)
+        return sorted(commands)
+
+    def get_command(self, ctx: click.Context, name: str) -> click.Command | None:
+        if name in self._lazy_commands:
+            self.commands[name] = self._lazy_commands.pop(name)()
+        return super().get_command(ctx, name)
+
+
+def _load_attr(module_path: str, attr: str) -> click.Command:
+    module = importlib.import_module(module_path)
+    return getattr(module, attr)
+
+
+def _load_dns_group() -> click.Command:
+    dns_group = _load_attr("chattool.cli.client.dns_updater", "cli")
+    ssl_cmd = _load_attr("chattool.cli.client.cert_updater", "main")
+    dns_group.add_command(ssl_cmd, name="cert-update")
+    return dns_group
+
+
+def _build_serve_group() -> click.Command:
+    return LazyGroup(
+        name="serve",
+        help="Local server tools.",
+        lazy_commands={
+            "capture": lambda: _load_attr("chattool.cli.service.capture", "main"),
+            "cert": lambda: _load_attr("chattool.cli.service.cert_server", "cert_app"),
+            "lark": lambda: _load_attr("chattool.cli.service.lark_serve", "cli"),
+            "chrome": lambda: _load_attr("chattool.serve.chrome", "serve_chrome"),
+        },
+    )
+
+
+def _build_client_group() -> click.Command:
+    return LazyGroup(
+        name="client",
+        help="Remote client tools.",
+        lazy_commands={
+            "cert": lambda: _load_attr("chattool.cli.client.cert_client", "cert_client"),
+        },
+    )
+
+
+@click.group(cls=LazyGroup)
 def cli():
     """ChatTool CLI - Unified entry point for ChatTool services and scripts."""
     pass
 
-# DNS Group
-# dns_updater_cli is already a group containing 'list' and 'ddns'
-cli.add_command(dns_updater_cli, name='dns')
 
-# Add SSL cert updater to DNS group
-dns_updater_cli.add_command(ssl_updater_main, name='cert-update')
+cli._lazy_commands.update({
+    "dns": _load_dns_group,
+    "serve": _build_serve_group,
+    "client": _build_client_group,
+    "network": lambda: _load_attr("chattool.cli.client.network", "network"),
+    "mcp": lambda: _load_attr("chattool.cli.client.mcp", "cli"),
+    "kb": lambda: _load_attr("chattool.application.kb.cli", "cli"),
+    "lark": lambda: _load_attr("chattool.cli.client.lark", "cli"),
+    "image": lambda: _load_attr("chattool.cli.client.image", "cli"),
+    "tplogin": lambda: _load_attr("chattool.cli.client.tplogin", "cli"),
+    "gh": lambda: _load_attr("chattool.cli.client.github", "cli"),
+    "browser": lambda: _load_attr("chattool.cli.client.browser", "cli"),
+    "zulip": lambda: _load_attr("chattool.cli.client.zulip", "cli"),
+    "skill": lambda: _load_attr("chattool.cli.skill", "skill_cli"),
+    "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
+    "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
+})
 
-# Serve Group
-@cli.group()
-def serve():
-    """Local server tools."""
-    pass
-
-serve.add_command(capture_app, name='capture')
-serve.add_command(cert_app, name='cert')
-serve.add_command(lark_serve_cli, name='lark')
-serve.add_command(serve_chrome, name='chrome')
-
-# Client Group
-@cli.group()
-def client():
-    """Remote client tools."""
-    pass
-
-client.add_command(cert_client, name='cert')
-# client.add_command(image_cli, name='image')
-
-# Network Group
-cli.add_command(network_cli, name='network')
-
-# MCP Group
-cli.add_command(mcp_cli, name='mcp')
-
-# KB Group
-cli.add_command(kb_cli, name='kb')
-
-# Lark Group
-cli.add_command(lark_cli, name='lark')
-
-# Image Group
-cli.add_command(image_cli, name='image')
-
-# TPLogin Group
-cli.add_command(tplogin_cli, name='tplogin')
-
-# GitHub Group
-cli.add_command(github_cli, name='gh')
-
-# Browser Group
-cli.add_command(browser_cli, name='browser')
-# Zulip Group
-cli.add_command(zulip_cli, name='zulip')
-
-# Skill Group
-cli.add_command(skill_cli, name='skill')
-
-# Setup Group
-cli.add_command(setup_group, name='setup')
-cli.add_command(docker_cmd, name='docker')
 
 def main():
     cli()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
