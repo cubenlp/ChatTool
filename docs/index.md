@@ -134,9 +134,9 @@ asyncio.run(run())
 ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 标准的服务端，允许 LLM 客户端（如 Claude Desktop, Cursor）直接调用 ChatTool 的功能。
 
 - [MCP 服务指南](mcp/index.md)
-- [DNS 管理服务](tools/dns/mcp.md)
+- [DNS 管理服务](tools/dns/index.md)
 - [Zulip 集成服务](mcp/zulip.md)
-- [Network Scanner](tools/network/mcp.md)
+- [Network Scanner](tools/network/index.md)
 
 ### Zulip 知识库
 

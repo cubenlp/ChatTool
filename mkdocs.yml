@@ -35,8 +35,6 @@ plugins:
         'setup/codex.md': 'env/codex.md'
         'setup/frp.md': 'env/frp.md'
         'setup/nginx_proxy.md': 'env/nginx_proxy.md'
-        'mcp/dns.md': 'tools/dns/mcp.md'
-        'mcp/network.md': 'tools/network/mcp.md'
   # i18n 插件暂时禁用，启用后会导致子目录页面无限刷新，待排查
   # - i18n:
   #     docs_structure: suffix
