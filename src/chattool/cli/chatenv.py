@@ -335,10 +335,6 @@ def init(interactive, config_types):
                 click.echo(f"  - {cls._title}{alias_str}")
             return
 
-    # Load existing values from file to serve as defaults
-    if CHATTOOL_ENV_FILE.exists():
-        BaseEnvConfig.load_all(CHATTOOL_ENV_FILE)
-
     if not interactive:
         interactive = True
 
