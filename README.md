@@ -158,6 +158,7 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | MCP 服务 | `chattool mcp info` / `chattool mcp inspect` | MCP Server 能力检查（支持 JSON 输出） |
 | 截图服务 | `chattool serve capture` | 本地网页截图服务 |
 | 证书分发 | `chattool serve cert` / `chattool client cert` | SSL 证书集中管理与客户端拉取 |
+| 环境初始化 | `chattool setup codex` | 安装 Codex CLI 并写入配置（支持 `--base-url` / `--model`） |
 | Skills 管理 | `chattool skill install` / `chatskill install` | 安装 ChatTool skills 到 Codex / Claude Code |
 
 ## 开源协议

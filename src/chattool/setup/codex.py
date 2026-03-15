@@ -6,9 +6,86 @@ import click
 
 from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
 
+DEFAULT_MODEL = "gpt-5.3-codex"
+DEFAULT_BASE_URL = "https://aispeed.ai/openai"
 
-def setup_codex(preferred_auth_method=None, interactive=None):
-    auth_method = preferred_auth_method
+
+def _mask_secret(value):
+    if not value:
+        return ""
+    value = str(value)
+    if len(value) <= 4:
+        return "*" * len(value)
+    if len(value) <= 8:
+        return f"{value[0]}{'*' * (len(value) - 2)}{value[-1]}"
+    return f"{value[:3]}{'*' * (len(value) - 7)}{value[-4:]}"
+
+
+def _load_existing_codex_config(codex_dir):
+    existing = {
+        "preferred_auth_method": None,
+        "openai_api_key": None,
+        "model": None,
+        "base_url": None,
+    }
+
+    auth_path = codex_dir / "auth.json"
+    if auth_path.exists():
+        try:
+            auth_data = json.loads(auth_path.read_text(encoding="utf-8"))
+            existing["openai_api_key"] = auth_data.get("OPENAI_API_KEY")
+        except Exception:
+            pass
+
+    config_path = codex_dir / "config.toml"
+    if config_path.exists():
+        try:
+            content = config_path.read_text(encoding="utf-8")
+        except Exception:
+            content = ""
+        section = None
+        values = {}
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                section = line[1:-1].strip()
+                continue
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+                value = value[1:-1]
+            values[(section, key)] = value
+
+        existing["preferred_auth_method"] = values.get((None, "preferred_auth_method"))
+        existing["model"] = values.get((None, "model"))
+        provider_name = values.get((None, "model_provider"))
+        if provider_name:
+            existing["base_url"] = values.get((f"model_providers.{provider_name}", "base_url"))
+        if not existing["base_url"]:
+            for (section_name, key), value in values.items():
+                if key == "base_url" and section_name and section_name.startswith("model_providers."):
+                    existing["base_url"] = value
+                    break
+
+    return existing
+
+
+def setup_codex(preferred_auth_method=None, base_url=None, model=None, interactive=None):
+    codex_dir = Path.home() / ".codex"
+    existing = _load_existing_codex_config(codex_dir)
+    existing_auth = existing.get("openai_api_key") or existing.get("preferred_auth_method")
+
+    if isinstance(base_url, str) and not base_url.strip():
+        base_url = None
+    if isinstance(model, str) and not model.strip():
+        model = None
+
+    auth_method = preferred_auth_method or existing_auth
     missing_required = not auth_method
     force_interactive = interactive is True
     auto_interactive = interactive is None and missing_required
@@ -19,12 +96,31 @@ def setup_codex(preferred_auth_method=None, interactive=None):
             click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
         else:
             click.echo("Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.", err=True)
-        click.echo("Usage: chattool setup codex [--preferred-auth-method <value>] [-i|-I]", err=True)
+        click.echo(
+            "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
+            err=True,
+        )
         raise click.Abort()
 
     if need_prompt:
-        auth_method = ask_text("preferred_auth_method / OPENAI_API_KEY", password=True)
+        auth_for_prompt = auth_method
+        auth_label = "preferred_auth_method / OPENAI_API_KEY"
+        if auth_for_prompt:
+            auth_label = f"{auth_label} (current: {_mask_secret(auth_for_prompt)}, enter to keep)"
+        auth_method = ask_text(auth_label, password=True)
         if auth_method == BACK_VALUE:
+            return
+        if not auth_method and auth_for_prompt:
+            auth_method = auth_for_prompt
+
+        base_url_default = base_url or existing.get("base_url") or DEFAULT_BASE_URL
+        base_url = ask_text("base_url (optional)", default=base_url_default)
+        if base_url == BACK_VALUE:
+            return
+
+        model_default = model or existing.get("model") or DEFAULT_MODEL
+        model = ask_text("default model (optional)", default=model_default)
+        if model == BACK_VALUE:
             return
 
     if not auth_method:
@@ -43,18 +139,20 @@ def setup_codex(preferred_auth_method=None, interactive=None):
             click.echo(result.stderr.strip(), err=True)
         raise click.Abort()
 
-    codex_dir = Path.home() / ".codex"
+    base_url = base_url or existing.get("base_url") or DEFAULT_BASE_URL
+    model = model or existing.get("model") or DEFAULT_MODEL
+
     codex_dir.mkdir(parents=True, exist_ok=True)
 
     config_toml = (
         'model_provider = "crs"\n'
-        'model = "gpt-5.3-codex"\n'
+        f'model = "{model}"\n'
         'model_reasoning_effort = "high"\n'
         'disable_response_storage = true\n'
         f'preferred_auth_method = "{auth_method}"\n\n'
         '[model_providers.crs]\n'
         'name = "crs"\n'
-        'base_url = "https://aispeed.ai/openai"\n'
+        f'base_url = "{base_url}"\n'
         'wire_api = "responses"\n'
         'requires_openai_auth = true\n'
     )

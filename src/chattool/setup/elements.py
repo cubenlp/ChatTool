@@ -33,8 +33,13 @@ def nodejs_setup(interactive):
     setup_nodejs(interactive=interactive)
 
 
-def codex_setup(preferred_auth_method, interactive):
-    setup_codex(preferred_auth_method=preferred_auth_method, interactive=interactive)
+def codex_setup(preferred_auth_method, base_url, model, interactive):
+    setup_codex(
+        preferred_auth_method=preferred_auth_method,
+        base_url=base_url,
+        model=model,
+        interactive=interactive,
+    )
 
 
 SETUP_COMMAND_ELEMENTS = (
@@ -77,6 +82,14 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--preferred-auth-method", "--pam"),
                 kwargs={"default": None, "help": "Value for preferred_auth_method and OPENAI_API_KEY."},
+            ),
+            SetupOptionElement(
+                param_decls=("--base-url", "--url"),
+                kwargs={"default": None, "help": "Optional base_url for model provider."},
+            ),
+            SetupOptionElement(
+                param_decls=("--model",),
+                kwargs={"default": None, "help": "Optional default model name."},
             ),
         ),
     ),
