@@ -4,8 +4,13 @@ import subprocess
 from pathlib import Path
 import click
 
+from chattool.setup.interactive import (
+    abort_if_force_without_tty,
+    abort_if_missing_without_tty,
+    resolve_interactive_mode,
+)
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
+from chattool.utils.tui import BACK_VALUE, ask_text
 
 DEFAULT_MODEL = "gpt-5.3-codex"
 DEFAULT_BASE_URL = "https://api.openal.com/v1"
@@ -83,14 +88,6 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     existing_auth = existing.get("openai_api_key") or existing.get("preferred_auth_method")
     logger.info("Start codex setup")
 
-    ctx = click.get_current_context(silent=True)
-    if ctx:
-        try:
-            if ctx.get_parameter_source("interactive") == click.core.ParameterSource.DEFAULT:
-                interactive = None
-        except Exception:
-            pass
-
     if isinstance(base_url, str) and not base_url.strip():
         base_url = None
     if isinstance(model, str) and not model.strip():
@@ -101,28 +98,29 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     has_existing_config = any(
         value for key, value in existing.items() if key != "openai_api_key"
     ) or bool(existing.get("openai_api_key"))
-    can_prompt = is_interactive_available()
-    force_interactive = interactive is True
-    auto_interactive = interactive is None and can_prompt and (missing_required or has_existing_config)
-    need_prompt = force_interactive or auto_interactive
+    usage = "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]"
+    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=(missing_required or has_existing_config),
+    )
 
-    if force_interactive and not can_prompt:
+    try:
+        abort_if_force_without_tty(force_interactive, can_prompt, usage)
+    except click.Abort:
         logger.error("Interactive mode requested but no TTY is available")
-        click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
-        click.echo(
-            "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
-            err=True,
-        )
-        raise click.Abort()
+        raise
 
-    if missing_required and not can_prompt and interactive is None:
-        logger.error("Missing required argument --preferred-auth-method and no TTY available")
-        click.echo("Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.", err=True)
-        click.echo(
-            "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
-            err=True,
+    try:
+        abort_if_missing_without_tty(
+            missing_required=missing_required,
+            interactive=interactive,
+            can_prompt=can_prompt,
+            message="Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.",
+            usage=usage,
         )
-        raise click.Abort()
+    except click.Abort:
+        logger.error("Missing required argument --preferred-auth-method and no TTY available")
+        raise
 
     if need_prompt:
         auth_for_prompt = auth_method

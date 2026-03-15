@@ -26,8 +26,8 @@ def chrome_setup(interactive):
     setup_chrome_driver(interactive=interactive)
 
 
-def frp_setup():
-    setup_frp()
+def frp_setup(interactive):
+    setup_frp(interactive=interactive)
 
 
 def nodejs_setup(interactive):
@@ -91,6 +91,12 @@ SETUP_COMMAND_ELEMENTS = (
         name="frp",
         help="Setup FRP Client/Server.",
         callback=frp_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+        ),
     ),
     SetupCommandElement(
         name="nodejs",

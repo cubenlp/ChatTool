@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 import click
 
+from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
 from chattool.utils.custom_logger import setup_logger
 
 NVM_INSTALL_VERSION = "v0.40.3"
@@ -18,11 +19,18 @@ def _get_cmd_output(command):
         return result.stdout.strip()
     return ""
 
-def setup_nodejs(interactive=False):
+def setup_nodejs(interactive=None):
     logger.info("Start nodejs setup")
+    usage = "Usage: chattool setup nodejs [-i|-I]"
+    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=False,
+    )
+    abort_if_force_without_tty(force_interactive, can_prompt, usage)
+
     node_bin = shutil.which("node")
     npm_bin = shutil.which("npm")
-    if node_bin and npm_bin and not interactive:
+    if node_bin and npm_bin and not need_prompt:
         node_version = _get_cmd_output(["node", "-v"])
         npm_version = _get_cmd_output(["npm", "-v"])
         click.echo(f"Node.js already installed: {node_version}")
@@ -47,7 +55,7 @@ def setup_nodejs(interactive=False):
         click.echo(f"Found nvm: {nvm_sh}")
 
     version_spec = "lts/*"
-    if interactive:
+    if need_prompt:
         version_spec = click.prompt("Node.js version to install via nvm", default="lts/*")
 
     quoted_version = shlex.quote(version_spec)
