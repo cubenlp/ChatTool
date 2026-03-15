@@ -40,7 +40,6 @@ def _build_serve_group() -> click.Command:
             "capture": lambda: _load_attr("chattool.cli.service.capture", "main"),
             "cert": lambda: _load_attr("chattool.cli.service.cert_server", "cert_app"),
             "lark": lambda: _load_attr("chattool.cli.service.lark_serve", "cli"),
-            "chrome": lambda: _load_attr("chattool.serve.chrome", "serve_chrome"),
         },
     )
 
@@ -67,7 +66,6 @@ cli._lazy_commands.update({
     "client": _build_client_group,
     "network": lambda: _load_attr("chattool.cli.client.network", "network"),
     "mcp": lambda: _load_attr("chattool.cli.client.mcp", "cli"),
-    "kb": lambda: _load_attr("chattool.application.kb.cli", "cli"),
     "lark": lambda: _load_attr("chattool.cli.client.lark", "cli"),
     "image": lambda: _load_attr("chattool.cli.client.image", "cli"),
     "tplogin": lambda: _load_attr("chattool.cli.client.tplogin", "cli"),

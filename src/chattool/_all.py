@@ -1,4 +1,3 @@
-from chattool.application import *
 from chattool.cli import *
 from chattool.config import *
 from chattool.llm import *
