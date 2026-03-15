@@ -79,15 +79,13 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
     auth_token = auth_token or existing_auth
     missing_required = not auth_token
     has_existing_config = any(value for value in existing.values())
+    can_prompt = is_interactive_available()
     force_interactive = interactive is True
-    auto_interactive = interactive is None and (missing_required or has_existing_config)
+    auto_interactive = interactive is None and can_prompt and (missing_required or has_existing_config)
     need_prompt = force_interactive or auto_interactive
 
-    if need_prompt and not is_interactive_available():
-        if force_interactive:
-            click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
-        else:
-            click.echo("Missing required argument --auth-token and no TTY is available for interactive prompts.", err=True)
+    if force_interactive and not can_prompt:
+        click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
         click.echo(
             "Usage: chattool setup claude [--auth-token <value>] [--base-url <value>] "
             "[--small-fast-model <value>] [-i|-I]",

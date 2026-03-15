@@ -233,14 +233,16 @@ chattool network services
 ## 4. GitHub 工具 (`gh`)
 
 ### 4.1 配置
-环境变量：
+环境变量（推荐用 `chatenv` 管理）：
 - `GITHUB_ACCESS_TOKEN`: GitHub Personal Access Token（建议使用）
 - `GITHUB_DEFAULT_REPO`: 默认仓库（`owner/name`）
 
 ### 4.2 常用命令
 ```bash
+chatenv cat -t gh
+
 export GITHUB_ACCESS_TOKEN="..."
-export GITHUB_DEFAULT_REPO="cubenlp/ChatTool"
+export GITHUB_DEFAULT_REPO="CubeNLP/ChatTool"
 
 # 列出 PR
 chattool gh pr-list --state open --limit 20
@@ -249,7 +251,7 @@ chattool gh pr-list --state open --limit 20
 chattool gh pr-view --number 123
 
 # 创建 PR
-chattool gh pr-create --base vibe-master --head feature-branch --title "Title" --body "Body"
+chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
 
 # 评论 PR
 chattool gh pr-comment --number 123 --body "Looks good"

@@ -98,15 +98,21 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     has_existing_config = any(
         value for key, value in existing.items() if key != "openai_api_key"
     ) or bool(existing.get("openai_api_key"))
+    can_prompt = is_interactive_available()
     force_interactive = interactive is True
-    auto_interactive = interactive is None and (missing_required or has_existing_config)
+    auto_interactive = interactive is None and can_prompt and (missing_required or has_existing_config)
     need_prompt = force_interactive or auto_interactive
 
-    if need_prompt and not is_interactive_available():
-        if force_interactive:
-            click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
-        else:
-            click.echo("Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.", err=True)
+    if force_interactive and not can_prompt:
+        click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
+        click.echo(
+            "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
+            err=True,
+        )
+        raise click.Abort()
+
+    if missing_required and not can_prompt and interactive is None:
+        click.echo("Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.", err=True)
         click.echo(
             "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
             err=True,
