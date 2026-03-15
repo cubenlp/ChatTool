@@ -55,11 +55,14 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
 
     import click
 
+    from chattool.utils.custom_logger import setup_logger
     from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
 
+    logger = setup_logger("setup_claude")
     claude_dir = Path.home() / ".claude"
     existing = _load_existing_claude_config(claude_dir)
     existing_auth = existing.get("auth_token")
+    logger.info("Start claude setup")
 
     ctx = click.get_current_context(silent=True)
     if ctx:
@@ -85,6 +88,7 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
     need_prompt = force_interactive or auto_interactive
 
     if force_interactive and not can_prompt:
+        logger.error("Interactive mode requested but no TTY is available")
         click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
         click.echo(
             "Usage: chattool setup claude [--auth-token <value>] [--base-url <value>] "
@@ -115,16 +119,20 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
             return
 
     if not auth_token:
+        logger.error("Missing auth token")
         click.echo("Missing auth token.", err=True)
         raise click.Abort()
 
     if not shutil.which("npm"):
+        logger.error("npm not found")
         click.echo("npm not found. Please run: chattool setup nodejs", err=True)
         raise click.Abort()
 
     install_cmd = ["npm", "install", "-g", "@anthropic-ai/claude-code"]
+    logger.info("Installing claude-code cli with npm")
     result = subprocess.run(install_cmd, capture_output=True, text=True)
     if result.returncode != 0:
+        logger.error("Failed to install claude-code cli")
         click.echo("Failed to install claude-code.", err=True)
         if result.stderr:
             click.echo(result.stderr.strip(), err=True)
@@ -146,11 +154,13 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
     settings_path = claude_dir / "settings.json"
     settings_path.write_text(json.dumps(settings_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     settings_path.chmod(0o600)
+    logger.info(f"Wrote settings file: {settings_path}")
 
     config_json = {"primaryApiKey": primary_api_key}
     config_path = claude_dir / "config.json"
     config_path.write_text(json.dumps(config_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     config_path.chmod(0o600)
+    logger.info(f"Wrote config file: {config_path}")
 
     click.echo("Claude Code setup completed.")
     click.echo(f"Settings: {settings_path}")

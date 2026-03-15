@@ -4,10 +4,12 @@ import subprocess
 from pathlib import Path
 import click
 
+from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
 
 DEFAULT_MODEL = "gpt-5.3-codex"
 DEFAULT_BASE_URL = "https://api.openal.com/v1"
+logger = setup_logger("setup_codex")
 
 
 def _mask_secret(value):
@@ -79,6 +81,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     codex_dir = Path.home() / ".codex"
     existing = _load_existing_codex_config(codex_dir)
     existing_auth = existing.get("openai_api_key") or existing.get("preferred_auth_method")
+    logger.info("Start codex setup")
 
     ctx = click.get_current_context(silent=True)
     if ctx:
@@ -104,6 +107,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     need_prompt = force_interactive or auto_interactive
 
     if force_interactive and not can_prompt:
+        logger.error("Interactive mode requested but no TTY is available")
         click.echo("Interactive mode was requested, but no TTY is available in current terminal.", err=True)
         click.echo(
             "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
@@ -112,6 +116,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
         raise click.Abort()
 
     if missing_required and not can_prompt and interactive is None:
+        logger.error("Missing required argument --preferred-auth-method and no TTY available")
         click.echo("Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.", err=True)
         click.echo(
             "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-i|-I]",
@@ -141,16 +146,20 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
             return
 
     if not auth_method:
+        logger.error("Missing auth method")
         click.echo("Missing auth method.", err=True)
         raise click.Abort()
 
     if not shutil.which("npm"):
+        logger.error("npm not found")
         click.echo("npm not found. Please run: chattool setup nodejs", err=True)
         raise click.Abort()
 
     install_cmd = ["npm", "install", "-g", "@openai/codex@latest"]
+    logger.info("Installing codex cli with npm")
     result = subprocess.run(install_cmd, capture_output=True, text=True)
     if result.returncode != 0:
+        logger.error("Failed to install codex cli")
         click.echo("Failed to install codex.", err=True)
         if result.stderr:
             click.echo(result.stderr.strip(), err=True)
@@ -176,11 +185,13 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     config_path = codex_dir / "config.toml"
     config_path.write_text(config_toml, encoding="utf-8")
     config_path.chmod(0o600)
+    logger.info(f"Wrote config file: {config_path}")
 
     auth_json = {"OPENAI_API_KEY": auth_method}
     auth_path = codex_dir / "auth.json"
     auth_path.write_text(json.dumps(auth_json, ensure_ascii=False, indent=2), encoding="utf-8")
     auth_path.chmod(0o600)
+    logger.info(f"Wrote auth file: {auth_path}")
 
     click.echo("Codex setup completed.")
     click.echo(f"Config: {config_path}")
