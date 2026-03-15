@@ -3,6 +3,8 @@ chattool zulip — Zulip CLI helpers
 
 Commands:
     chattool zulip streams     List streams
+    chattool zulip topics      List topics in a stream
+    chattool zulip topic       Export full topic thread
     chattool zulip messages    Get messages
     chattool zulip profile     Show bot profile
     chattool zulip news        Summarize recent updates
@@ -59,6 +61,22 @@ def _clean_text(text: str, max_len: int = 200) -> str:
 def _format_ts(ts: int) -> str:
     return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
 
+def _resolve_stream_id(client: ZulipClient, stream: str) -> Optional[int]:
+    if stream.isdigit():
+        return int(stream)
+
+    subs = client.list_subscriptions()
+    for item in subs:
+        if item.get("name") == stream:
+            return item.get("stream_id")
+
+    items = client.list_streams(include_public=True)
+    for item in items:
+        if item.get("name") == stream:
+            return item.get("stream_id")
+
+    return None
+
 
 @cli.command(name="streams")
 @click.option("--all", "show_all", is_flag=True, help="Show all accessible public streams")
@@ -86,6 +104,32 @@ def streams(show_all: bool, json_output: bool):
         click.echo(f"- {name} (id={stream_id})")
         if desc:
             click.echo(f"  {desc}")
+
+@cli.command(name="topics")
+@click.option("--stream", required=True, help="Stream name or id")
+@click.option("--json-output", is_flag=True, help="Output JSON")
+def topics(stream: str, json_output: bool):
+    """List topics for a stream."""
+    client = _get_client()
+    stream_id = _resolve_stream_id(client, stream)
+    if stream_id is None:
+        raise click.ClickException(f"Stream not found: {stream}")
+
+    items = client.list_topics(stream_id)
+
+    if json_output:
+        click.echo(json.dumps(items, ensure_ascii=False, indent=2))
+        return
+
+    if not items:
+        click.echo("No topics found.")
+        return
+
+    items = sorted(items, key=lambda x: x.get("max_id") or 0, reverse=True)
+    for item in items:
+        name = item.get("name")
+        max_id = item.get("max_id")
+        click.echo(f"- {name} (max_id={max_id})")
 
 
 @cli.command(name="messages")
@@ -133,6 +177,37 @@ def messages(anchor, num_before, num_after, stream, topic, sender, search, json_
         content = _clean_text(msg.get("content", ""), max_len=160)
         click.echo(f"[{ts}] {stream_name} > {topic_name} | {sender_name}")
         click.echo(f"  {content}")
+
+@cli.command(name="topic")
+@click.option("--stream", required=True, help="Stream name or id")
+@click.option("--topic", "topic_name", required=True, help="Topic name")
+@click.option("--limit", type=int, default=None, help="Limit to latest N messages")
+@click.option("--json-output", is_flag=True, help="Output JSON")
+def topic(stream: str, topic_name: str, limit: Optional[int], json_output: bool):
+    """Export full topic thread."""
+    client = _get_client()
+    items = client.get_topic_messages(stream, topic_name)
+
+    if limit:
+        items = items[-limit:]
+
+    if json_output:
+        click.echo(json.dumps(items, ensure_ascii=False, indent=2))
+        return
+
+    if not items:
+        click.echo("No messages found.")
+        return
+
+    click.echo(f"# {stream} / {topic_name}")
+    click.echo("")
+    click.echo(f"Messages: {len(items)}")
+    click.echo("")
+    for msg in items:
+        ts = _format_ts(msg.get("timestamp", 0))
+        sender_name = msg.get("sender_full_name") or "unknown"
+        content = msg.get("content", "")
+        click.echo(f"- {ts} — {sender_name}: {content}")
 
 
 
