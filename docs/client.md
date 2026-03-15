@@ -13,6 +13,8 @@ CLI按功能分为几个命令组：
 - **`client`**: 远程服务客户端工具。
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
+- **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / Chrome / FRP）。
 
 ### chatenv
 
@@ -24,6 +26,48 @@ CLI按功能分为几个命令组：
 - **`cat`**: 查看配置内容。
 
 ---
+
+## 0. 环境初始化 (`setup`)
+
+### 0.1 Codex (`setup codex`)
+
+默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
+
+```bash
+chattool setup codex
+```
+
+直接传参：
+
+```bash
+chattool setup codex --pam "cr_xxx"
+```
+
+可选覆盖 `base_url` 和默认模型：
+
+```bash
+chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+```
+
+### 0.2 Claude Code (`setup claude`)
+
+默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
+
+```bash
+chattool setup claude
+```
+
+直接传参：
+
+```bash
+chattool setup claude --auth-token "sk-ant-xxx"
+```
+
+可选覆盖 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_SMALL_FAST_MODEL`：
+
+```bash
+chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-3-5-haiku-20241022"
+```
 
 ## 1. DNS 管理 (`dns`)
 
@@ -149,7 +193,117 @@ chattool client cert download example.com -o ./my-certs --token my-secret-token
 
 ---
 
-## 3. 环境管理 (`env`)
+## 3. 网络工具 (`network`)
+
+提供基础的网络探测与链接校验能力。
+
+### 3.1 存活扫描 (`network ping`)
+```bash
+chattool network ping --network 192.168.1.0/24
+```
+
+### 3.2 端口扫描 (`network ssh`)
+```bash
+chattool network ssh --network 192.168.1.0/24 --port 22
+```
+
+### 3.3 链接有效性检查 (`network links`)
+```bash
+# 从目录内扫描 URL
+chattool network links --path ./docs --glob "*.md"
+
+# 直接检查 URL
+chattool network links --url https://example.com
+```
+
+### 3.4 服务校验 (`network services`)
+用于统一验证 Chromium/Chromedriver/Playwright 服务的连通性与响应特征。
+
+```bash
+export CHATTOOL_CHROMIUM_URL="http://host:8080/token/chromium/json/version"
+export CHATTOOL_CHROMIUM_TOKEN="your-token"
+export CHATTOOL_CHROMEDRIVER_URL="http://host:8080/token/chromedriver/"
+export CHATTOOL_PLAYWRIGHT_URL="http://host:8080/token/playwright/"
+
+chattool network services
+```
+
+---
+
+## 4. GitHub 工具 (`gh`)
+
+### 4.1 配置
+环境变量（推荐用 `chatenv` 管理）：
+- `GITHUB_ACCESS_TOKEN`: GitHub Personal Access Token（建议使用）
+- `GITHUB_DEFAULT_REPO`: 默认仓库（`owner/name`）
+
+### 4.2 常用命令
+```bash
+chatenv cat -t gh
+
+export GITHUB_ACCESS_TOKEN="..."
+export GITHUB_DEFAULT_REPO="CubeNLP/ChatTool"
+
+# 列出 PR
+chattool gh pr-list --state open --limit 20
+
+# 查看 PR 详情
+chattool gh pr-view --number 123
+
+# 创建 PR
+chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
+
+# 评论 PR
+chattool gh pr-comment --number 123 --body "Looks good"
+
+# 合并 PR
+chattool gh pr-merge --number 123 --method squash --confirm
+
+# 更新 PR（标题/正文/状态/基线分支）
+chattool gh pr-update --number 123 --title "New title" --body "Updated body"
+```
+
+---
+
+## 5. Zulip 工具 (`zulip`)
+
+用于读取 Zulip 社区消息并生成资讯摘要（**只读**，不提供发送接口以避免误发）。
+
+### 5.1 配置
+
+使用 `chatenv` 查看或配置：
+
+```bash
+chattool chatenv cat -t zulip
+```
+
+常用配置项：
+- `ZULIP_BOT_EMAIL`
+- `ZULIP_BOT_API_KEY`
+- `ZULIP_SITE`
+- `ZULIP_NEWS_STREAMS` (逗号分隔的默认 streams)
+- `ZULIP_NEWS_TOPICS` (逗号分隔的默认 topics)
+- `ZULIP_NEWS_SINCE_HOURS` (默认 24)
+- `ZULIP_NEWS_PER_STREAM` (默认 200)
+
+### 5.2 常用命令
+
+```bash
+# 列出订阅的 streams
+chattool zulip streams
+
+# 查看消息（支持过滤）
+chattool zulip messages --stream general --before 20
+
+# 生成资讯摘要（控制台 + Markdown 文件）
+chattool zulip news --since-hours 24 --stream general --stream announcements
+```
+
+默认输出文件：`zulip-news-YYYYMMDD.md`（当前目录），可用 `--output` 覆盖。
+
+---
+
+## 6. 环境管理 (`env`)
 
 管理存储在 `.env` 文件中的全局配置和环境变量。
 
@@ -179,7 +333,7 @@ chattool env unset CHATTOOL_DNS_PROVIDER
 
 ---
 
-## 4. 本地服务器工具 (`serve`)
+## 6. 本地服务器工具 (`serve`)
 
 ### 4.1 请求捕获 (`capture`)
 
@@ -266,7 +420,33 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 
 ---
 
-## 5. MCP 服务器 (`mcp`)
+## 7. Skill 管理 (`skill`)
+
+用于安装和管理 ChatTool skills（默认从项目 `skills/` 目录读取）。
+
+```bash
+# 列出可用 skills
+chattool skill list
+
+# 安装单个 skill 到 Codex
+chattool skill install cert-manager --platform codex
+
+# 安装到 Claude Code（可显式指定目标目录）
+chattool skill install cert-manager --platform claude-code --dest ~/.claude-code/skills
+
+# 安装全部 skills
+chattool skill install --all --platform codex
+```
+
+**选项说明 (`install`):**
+- `--platform`: 目标平台（`codex` / `claude-code`）。
+- `--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
+- `--dest`: 目标目录（可覆盖平台默认目录）。
+- `--force`: 覆盖已存在的 skill。
+
+---
+
+## 8. MCP 服务器 (`mcp`)
 
 管理 ChatTool 模型上下文协议 (MCP) 服务器。
 
@@ -297,7 +477,7 @@ chattool mcp info --json-output
 
 ---
 
-## 6. 知识库管理 (`kb`)
+## 9. 知识库管理 (`kb`)
 
 管理基于 Zulip 的知识库工作区。支持消息同步、搜索、导出及处理。
 

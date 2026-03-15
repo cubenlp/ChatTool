@@ -3,7 +3,7 @@ import os
 from click.testing import CliRunner
 from unittest.mock import patch, MagicMock
 from pathlib import Path
-from chattool.cli.chatenv import cli
+from chattool.config.cli import cli
 from chattool.config import BaseEnvConfig, EnvField
 
 # Mock Config Class for testing
@@ -32,8 +32,8 @@ def mock_env_setup(tmp_path):
     # In chatenv.py: from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
     # So we patch chatenv.CHATTOOL_ENV_DIR and chatenv.CHATTOOL_ENV_FILE
     
-    with patch("chattool.cli.chatenv.CHATTOOL_ENV_DIR", env_dir), \
-         patch("chattool.cli.chatenv.CHATTOOL_ENV_FILE", env_file), \
+    with patch("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir), \
+         patch("chattool.config.cli.CHATTOOL_ENV_FILE", env_file), \
          patch("chattool.config.BaseEnvConfig._registry", [MockConfig]):
         yield env_dir, env_file
 

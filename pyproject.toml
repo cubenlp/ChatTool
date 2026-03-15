@@ -42,7 +42,8 @@ dependencies = [
     "httpx",
     "gitpython",
     "PyGithub",
-    "filelock"
+    "filelock",
+    "pillow"
 ]
 
 [project.optional-dependencies]
@@ -59,8 +60,19 @@ lark = [
 images = [
     "dashscope"
 ]
+screenshot = [
+    "selenium",
+    "pillow",
+    "imageio"
+]
+browser = [
+    "selenium",
+    "pillow",
+    "imageio",
+    "playwright"
+]
 tools = [
-    "chattool[dns, lark, images]",
+    "chattool[dns, lark, images, screenshot]",
 ]
 tests = [
     "coverage",
@@ -88,9 +100,10 @@ Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
-chattool = "chattool.cli:main_cli"
-chatenv = "chattool.cli.chatenv:cli"
+chattool = "chattool.client:main_cli"
+chatenv = "chattool.config.cli:cli"
 mcp-server-chattool = "chattool.mcp:main"
+chatskill = "chattool.skills.cli:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "chattool.__version__"}

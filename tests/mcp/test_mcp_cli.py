@@ -2,7 +2,7 @@ import json
 import pytest
 from click.testing import CliRunner
 
-from chattool.cli.client import mcp as mcp_cli
+import chattool.mcp.cli as mcp_cli
 
 
 class DummyMCP:

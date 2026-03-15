@@ -163,6 +163,8 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
+| Setup | `chattool setup codex` | Install Codex CLI and write config (supports `--base-url` / `--model`) |
+| Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude Code |
 
 ## License
 

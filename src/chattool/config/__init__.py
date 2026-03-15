@@ -4,6 +4,8 @@ from .main import (
     TongyiConfig, HuggingFaceConfig, PollinationsConfig, LiblibConfig, SiliconFlowConfig ,
     TPLinkConfig
 )
+from .github import GitHubConfig
+from .browser import BrowserConfig
 
 __all__ = [
     "EnvField",
@@ -19,5 +21,7 @@ __all__ = [
     "PollinationsConfig",
     "LiblibConfig",
     "SiliconFlowConfig",
+    "GitHubConfig",
+    "BrowserConfig",
     "TPLinkConfig",
 ]

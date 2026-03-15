@@ -1,0 +1,12 @@
+services:
+  chromedriver:
+    image: ${IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    shm_size: ${SHM_SIZE}
+    ports:
+      - "${BIND_IP}:${WEBDRIVER_PORT}:4444"
+      - "${BIND_IP}:${VNC_PORT}:7900"
+    environment:
+      SE_NODE_MAX_SESSIONS: ${SE_NODE_MAX_SESSIONS}
+      SE_VNC_NO_PASSWORD: ${SE_VNC_NO_PASSWORD}

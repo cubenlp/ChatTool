@@ -1,11 +1,13 @@
 import pytest
 import time
+import os
 from chattool.llm import Chat
 from chattool.tools import ZulipClient, GitHubClient, LarkBot
-from chattool.cli.service.capture import app as capture_app
+from chattool.serve.capture import app as capture_app
 from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
 TEST_PATH = 'tests/testfiles/'
+_SERVER_URL = None
 
 @pytest.fixture
 def chat():
@@ -20,9 +22,11 @@ def testpath():
 @pytest.fixture(scope="session", autouse=True)
 def capture_server():
     """Start the capture server for tests"""
-    # Start server on 127.0.0.1:8000
-    manager = FastAPIManager(capture_app, host="127.0.0.1", port=8000)
+    global _SERVER_URL
+    port = int(os.getenv("CHATTOOL_TEST_PORT", "8000"))
+    manager = FastAPIManager(capture_app, host="127.0.0.1", port=port)
     manager.start()
+    _SERVER_URL = f"http://127.0.0.1:{manager.port}"
     time.sleep(1) # Wait for server to start
     yield
     manager.stop()
@@ -30,7 +34,7 @@ def capture_server():
 @pytest.fixture(scope="session")
 def server_url():
     """提供服务器 URL"""
-    return "http://127.0.0.1:8000"
+    return _SERVER_URL
 
 @pytest.fixture(scope="session")
 def config(server_url):

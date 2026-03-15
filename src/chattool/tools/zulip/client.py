@@ -131,6 +131,13 @@ class ZulipClient:
         result = self._request("GET", "/streams", params=params)
         return result.get("streams", [])
 
+    def list_subscriptions(self) -> List[Dict[str, Any]]:
+        """
+        List subscribed streams for the current user/bot.
+        """
+        result = self._request("GET", "/users/me/subscriptions")
+        return result.get("subscriptions", [])
+
     def react_to_message(self, message_id: int, emoji_name: str, reaction_type: str = "unicode") -> Dict[str, Any]:
         """
         Add a reaction to a message.
