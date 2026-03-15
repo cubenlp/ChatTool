@@ -37,7 +37,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - 必要参数缺失时自动触发 interactive 模式
 - `-i` 强制开启交互，`-I` 强制关闭（参数不全则报错）
 - 参数默认值从环境变量读取，敏感值在提示中自动 mask
-- **最小 import**：import 放到函数内部，避免 CLI 启动变慢
+- **Lazy import**：import 放到函数内部，避免 CLI 启动变慢
 
 ### Setup
 
