@@ -5,13 +5,13 @@
 ## CLI
 
 ```bash
-chattool client network [COMMAND] [OPTIONS]
+chattool network [COMMAND] [OPTIONS]
 ```
 
 ### Ping 扫描
 
 ```bash
-chattool client network ping --network 192.168.1.0/24 --output active_hosts.txt
+chattool network ping --network 192.168.1.0/24 --output active_hosts.txt
 ```
 
 | 参数 | 说明 |
@@ -24,10 +24,10 @@ chattool client network ping --network 192.168.1.0/24 --output active_hosts.txt
 
 ```bash
 # 扫描网段的 SSH 端口
-chattool client network ssh --network 192.168.1.0/24 --output ssh_hosts.txt
+chattool network ssh --network 192.168.1.0/24 --output ssh_hosts.txt
 
 # 扫描指定 IP 列表的自定义端口
-chattool client network ssh --input active_hosts.txt --port 8080
+chattool network ssh --input active_hosts.txt --port 8080
 ```
 
 | 参数 | 说明 |
