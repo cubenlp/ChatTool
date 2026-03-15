@@ -3,7 +3,7 @@ import time
 import os
 from chattool.llm import Chat
 from chattool.tools import ZulipClient, GitHubClient, LarkBot
-from chattool.cli.serve.capture import app as capture_app
+from chattool.serve.capture import app as capture_app
 from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
 TEST_PATH = 'tests/testfiles/'

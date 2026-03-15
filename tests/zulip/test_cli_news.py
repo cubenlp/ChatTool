@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 
-from chattool.cli.main import cli
+from chattool.client.main import cli
 
 
 class FakeZulipClient:

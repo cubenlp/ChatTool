@@ -33,15 +33,7 @@ def _load_dns_group() -> click.Command:
 
 
 def _build_serve_group() -> click.Command:
-    return LazyGroup(
-        name="serve",
-        help="Local server tools.",
-        lazy_commands={
-            "capture": lambda: _load_attr("chattool.serve.capture", "main"),
-            "cert": lambda: _load_attr("chattool.serve.cert_server", "cert_app"),
-            "lark": lambda: _load_attr("chattool.serve.lark_serve", "cli"),
-        },
-    )
+    return _load_attr("chattool.serve.cli", "serve_cli")
 
 
 def _build_client_group() -> click.Command:
@@ -49,7 +41,7 @@ def _build_client_group() -> click.Command:
         name="client",
         help="Remote client tools.",
         lazy_commands={
-            "cert": lambda: _load_attr("chattool.cli.client.cert_client", "cert_client"),
+            "cert": lambda: _load_attr("chattool.client.cert_client", "cert_client"),
         },
     )
 

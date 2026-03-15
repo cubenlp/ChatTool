@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, AsyncMock
 from chattool.tools.dns.cli import ddns
 from click.testing import CliRunner
-from chattool.cli.main import cli
+from chattool.client.main import cli
 
 @pytest.fixture
 def runner():
