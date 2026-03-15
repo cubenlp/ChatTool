@@ -134,9 +134,9 @@ asyncio.run(run())
 ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 标准的服务端，允许 LLM 客户端（如 Claude Desktop, Cursor）直接调用 ChatTool 的功能。
 
 - [MCP 服务指南](mcp/index.md)
-- [DNS 管理服务](mcp/dns.md)
+- [DNS 管理服务](tools/dns/mcp.md)
 - [Zulip 集成服务](mcp/zulip.md)
-- [Network Scanner](mcp/network.md)
+- [Network Scanner](tools/network/mcp.md)
 
 ### Zulip 知识库
 
@@ -161,9 +161,9 @@ chattool client network network --network 192.168.1.0/24 --port 22
 
 ChatTool 提供了多种辅助工具的安装和配置功能：
 
-- [Chrome 驱动安装](setup/chrome.md)
-- [Nginx 反向代理](setup/nginx_proxy.md)
-- [FRP 内网穿透](setup/frp.md) (TODO)
+- [Chrome 驱动安装](env/chrome.md)
+- [Nginx 反向代理](env/nginx_proxy.md)
+- [FRP 内网穿透](env/frp.md) (TODO)
 
 ### DNS 工具箱
 
