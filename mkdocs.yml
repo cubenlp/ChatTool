@@ -100,11 +100,11 @@ nav:
   - 主页:
     - 快速开始: index.md
 
-  - LLM:
+  - 模型能力:
     - 客户端指南: client.md
     - Chat 对象: chat.md
 
-  - 配置管理:
+  - 环境变量:
     - 概览: configuration.md
 
   - 工具箱:
@@ -126,7 +126,7 @@ nav:
     - 交互卡片: larkbot/cards.md
     - 命令行工具: larkbot/cli.md
 
-  - 环境配置:
+  - 环境安装:
     - 概览: env/index.md
     - Chrome 环境: env/chrome.md
     - Codex 配置: env/codex.md
