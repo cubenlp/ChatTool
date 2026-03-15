@@ -100,7 +100,7 @@ Homepage = "https://github.com/cubenlp/chattool"
 Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
-chattool = "chattool.cli:main_cli"
+chattool = "chattool.client:main_cli"
 chatenv = "chattool.config.cli:cli"
 mcp-server-chattool = "chattool.mcp:main"
 chatskill = "chattool.skill.cli:main"
