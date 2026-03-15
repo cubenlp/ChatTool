@@ -7,7 +7,7 @@ import click
 from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
 
 DEFAULT_MODEL = "gpt-5.3-codex"
-DEFAULT_BASE_URL = "https://aispeed.ai/openai"
+DEFAULT_BASE_URL = "https://api.openal.com/v1"
 
 
 def _mask_secret(value):
@@ -80,6 +80,14 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
     existing = _load_existing_codex_config(codex_dir)
     existing_auth = existing.get("openai_api_key") or existing.get("preferred_auth_method")
 
+    ctx = click.get_current_context(silent=True)
+    if ctx:
+        try:
+            if ctx.get_parameter_source("interactive") == click.core.ParameterSource.DEFAULT:
+                interactive = None
+        except Exception:
+            pass
+
     if isinstance(base_url, str) and not base_url.strip():
         base_url = None
     if isinstance(model, str) and not model.strip():
@@ -87,8 +95,11 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
 
     auth_method = preferred_auth_method or existing_auth
     missing_required = not auth_method
+    has_existing_config = any(
+        value for key, value in existing.items() if key != "openai_api_key"
+    ) or bool(existing.get("openai_api_key"))
     force_interactive = interactive is True
-    auto_interactive = interactive is None and missing_required
+    auto_interactive = interactive is None and (missing_required or has_existing_config)
     need_prompt = force_interactive or auto_interactive
 
     if need_prompt and not is_interactive_available():
