@@ -61,6 +61,7 @@ mkdocs serve --no-livereload # 本地预览文档
 
 ### 提交规范
 
-- 功能分支：`rex/<feature>`
+- 功能分支：`<username>/<feature>`
 - commit 格式：`feat/fix/docs/refactor: <描述>`
 - 版本号遵循 Semantic Versioning
+
