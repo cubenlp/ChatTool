@@ -37,15 +37,15 @@ def test_render_alias_block():
 def test_apply_alias_block_replace(tmp_path):
     rc = tmp_path / ".zshrc"
     rc.write_text("export PATH=/usr/bin\n", encoding="utf-8")
-    first = render_alias_block(["chat"])
+    first = render_alias_block(["chatgh"])
     apply_alias_block(rc, first)
     content = rc.read_text(encoding="utf-8")
-    assert "alias chat='chattool'" in content
+    assert "alias chatgh='chattool gh'" in content
 
     second = render_alias_block(["chatskills"])
     apply_alias_block(rc, second)
     content = rc.read_text(encoding="utf-8")
-    assert "alias chat='chattool'" not in content
+    assert "alias chatgh='chattool gh'" not in content
     assert "alias chatskills='chattool skills'" in content
 
 
