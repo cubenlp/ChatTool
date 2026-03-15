@@ -41,7 +41,7 @@ plugins:
   - i18n:
       docs_structure: suffix
       fallback_to_default: true
-      reconfigure_material: true
+      reconfigure_material: false
       reconfigure_search: true
       languages:
         - locale: zh
