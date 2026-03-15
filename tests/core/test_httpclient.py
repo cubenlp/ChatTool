@@ -6,7 +6,7 @@ from chattool.utils import HTTPClient
 # 初始化与配置相关测试
 def test_client_initialization(config):
     client = HTTPClient(api_base=config.api_base)
-    assert client.config.api_base == 'http://127.0.0.1:8000'
+    assert client.config.api_base == config.api_base
     assert client.logger is not None
     assert client._sync_client is None
     assert client._async_client is None
