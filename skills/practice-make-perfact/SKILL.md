@@ -30,5 +30,4 @@ Capture the working style that builds functionality first, then consolidates it 
 ## Output Expectations
 
 - Skills must include `SKILL.md` and `SKILL.zh.md`.  
-- Prefer staged file naming (`0_` raw/original; `1_+` processed).  
 - Treat “practice makes perfect” as a living workflow: apply it after each task.
