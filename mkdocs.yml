@@ -35,6 +35,8 @@ plugins:
         'setup/codex.md': 'env/codex.md'
         'setup/frp.md': 'env/frp.md'
         'setup/nginx_proxy.md': 'env/nginx_proxy.md'
+        'design/index.md': 'development-guide/index.md'
+        'design/directory-responsibilities.md': 'development-guide/directory-responsibilities.md'
   # i18n 插件暂时禁用，启用后会导致子目录页面无限刷新，待排查
   # - i18n:
   #     docs_structure: suffix
@@ -129,9 +131,9 @@ nav:
     - Nginx 反向代理: env/nginx_proxy.md
     - Docker 模板: env/docker.md
 
-  - 设计文档:
-    - 设计文档: design/index.md
-    - 目录职责说明: design/directory-responsibilities.md
+  - 开发指南:
+    - 开发指南: development-guide/index.md
+    - 目录职责说明: development-guide/directory-responsibilities.md
 
   - 博客:
     - 白嫖 AI 生图实战: blog/free-image-guide.md
