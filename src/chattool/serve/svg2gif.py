@@ -37,8 +37,7 @@ def _parse_length(value: Optional[str]) -> Optional[float]:
     return float(match.group(1))
 
 
-def _parse_svg_metadata(svg_path: Path) -> Tuple[int, int, float]:
-    content = svg_path.read_text(encoding="utf-8", errors="ignore")
+def _parse_svg_metadata(content: str) -> Tuple[int, int, float]:
 
     duration_ms = None
     match = re.search(r"--animation-duration:\s*([0-9.]+)ms", content)
@@ -67,6 +66,14 @@ def _parse_svg_metadata(svg_path: Path) -> Tuple[int, int, float]:
     height = int(height or 720)
     duration_ms = duration_ms or 1000.0
     return width, height, duration_ms
+
+
+def _extract_keyframe_percentages(content: str) -> list[float]:
+    matches = re.findall(r"([0-9.]+)%\{transform:translateY", content)
+    if not matches:
+        return []
+    values = sorted({float(value) for value in matches})
+    return values
 
 
 def _resolve_paths(svg_path: str, gif_path: Optional[str]) -> Tuple[Path, Path]:
@@ -103,10 +110,24 @@ def _convert_svg_to_gif(
     from PIL import Image
     import io
 
-    width, height, duration_ms = _parse_svg_metadata(svg_path)
+    content = svg_path.read_text(encoding="utf-8", errors="ignore")
+    width, height, duration_ms = _parse_svg_metadata(content)
+    keyframes = _extract_keyframe_percentages(content)
     duration_sec = duration_ms / 1000.0
     fps = max(1, fps)
-    frame_count = max(1, math.ceil(duration_sec * fps))
+
+    if keyframes:
+        if keyframes[0] != 0.0:
+            keyframes.insert(0, 0.0)
+        if keyframes[-1] != 100.0:
+            keyframes.append(100.0)
+        times = [duration_sec * (value / 100.0) for value in keyframes]
+        frame_times = times[:-1]
+        frame_durations = [max(0.001, times[i + 1] - times[i]) for i in range(len(times) - 1)]
+    else:
+        frame_count = max(1, math.ceil(duration_sec * fps))
+        frame_times = [min(i / fps, max(0.0, duration_sec - 0.001)) for i in range(frame_count)]
+        frame_durations = [1 / fps for _ in range(frame_count)]
 
     options = Options()
     if headless:
@@ -134,33 +155,90 @@ def _convert_svg_to_gif(
         wait = WebDriverWait(driver, 10)
         screen_view = wait.until(EC.presence_of_element_located((By.ID, "screen_view")))
         element = wait.until(EC.presence_of_element_located((By.ID, "terminal")))
+        driver.execute_script(
+            """
+            const root = arguments[0];
+            const w = arguments[1];
+            const h = arguments[2];
+            if (root) {
+                root.setAttribute('width', w);
+                root.setAttribute('height', h);
+                root.style.width = `${w}px`;
+                root.style.height = `${h}px`;
+                root.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+                root.style.overflow = 'hidden';
+                root.style.display = 'block';
+            }
+            """,
+            element,
+            width,
+            height,
+        )
+        driver.execute_script(
+            """
+            const screen = document.getElementById('screen');
+            const w = arguments[0];
+            const h = arguments[1];
+            if (screen) {
+                screen.setAttribute('width', w);
+                screen.setAttribute('height', h);
+                screen.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+            }
+            """,
+            width,
+            height,
+        )
+        driver.execute_async_script(
+            """
+            const done = arguments[arguments.length - 1];
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => done());
+            } else {
+                done();
+            }
+            """
+        )
+        driver.set_window_size(width + 4, height + 4)
+        rect = driver.execute_script(
+            """
+            const r = document.getElementById('terminal').getBoundingClientRect();
+            return {x: r.x, y: r.y, width: r.width, height: r.height};
+            """
+        )
+        dpr = driver.execute_script("return window.devicePixelRatio || 1;")
 
         frames = []
-        for index in range(frame_count):
-            t = min(index / fps, max(0.0, duration_sec - 0.001))
-            driver.execute_script(
+        for t in frame_times:
+            driver.execute_async_script(
                 """
                 const el = arguments[0];
                 const t = arguments[1];
                 const duration = arguments[2];
+                const done = arguments[arguments.length - 1];
                 el.style.animationPlayState = 'paused';
                 el.style.animationDelay = `-${t}s`;
                 el.style.animationDuration = `${duration}s`;
                 el.style.animationTimingFunction = 'steps(1,end)';
-                void el.offsetWidth;
+                el.style.animationFillMode = 'both';
+                requestAnimationFrame(() => requestAnimationFrame(done));
                 """,
                 screen_view,
                 t,
                 duration_sec,
             )
-            time.sleep(0.02)
+            time.sleep(0.01)
 
-            png_bytes = element.screenshot_as_png
+            png_bytes = driver.get_screenshot_as_png()
             image = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+            left = max(0, int(rect["x"] * dpr))
+            top = max(0, int(rect["y"] * dpr))
+            right = max(left + 1, int((rect["x"] + rect["width"]) * dpr))
+            bottom = max(top + 1, int((rect["y"] + rect["height"]) * dpr))
+            image = image.crop((left, top, right, bottom))
             frames.append(image)
 
-        imageio.mimsave(str(gif_path), frames, duration=1 / fps)
-        return frame_count, duration_ms
+        imageio.mimsave(str(gif_path), frames, duration=frame_durations, loop=0)
+        return len(frames), duration_ms
     finally:
         driver.quit()
 
