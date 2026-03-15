@@ -28,6 +28,12 @@ chattool setup codex
 chattool setup codex --pam "cr_xxx"
 ```
 
+可选覆盖 `base_url` 和默认模型：
+
+```bash
+chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+```
+
 ## 3) 写入内容
 
 命令会执行：
