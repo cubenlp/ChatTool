@@ -12,6 +12,13 @@ def list_streams(include_public: bool = True) -> List[Dict]:
     client = ZulipClient()
     return client.list_streams(include_public=include_public)
 
+def list_topics(stream_id: int) -> List[Dict]:
+    """
+    List topics for a stream by stream_id.
+    """
+    client = ZulipClient()
+    return client.list_topics(stream_id)
+
 def get_messages(
     anchor: Union[int, str] = "newest", 
     num_before: int = 20, 
@@ -49,6 +56,23 @@ def get_messages(
         num_before=num_before, 
         num_after=num_after,
         narrow=narrow if narrow else None
+    )
+
+def get_topic_messages(
+    stream: Union[int, str],
+    topic: str,
+    batch_size: int = 200,
+    max_requests: int = 200,
+) -> List[Dict]:
+    """
+    Get full topic message history.
+    """
+    client = ZulipClient()
+    return client.get_topic_messages(
+        stream=stream,
+        topic=topic,
+        batch_size=batch_size,
+        max_requests=max_requests,
     )
 
 def send_message(
@@ -108,7 +132,9 @@ def upload_file(file_path: str) -> str:
 def register(mcp: FastMCP):
     """Register Zulip tools with the MCP server."""
     mcp.tool(name="zulip_list_streams", tags=["zulip", "read"])(list_streams)
+    mcp.tool(name="zulip_list_topics", tags=["zulip", "read"])(list_topics)
     mcp.tool(name="zulip_get_messages", tags=["zulip", "read"])(get_messages)
+    mcp.tool(name="zulip_get_topic_messages", tags=["zulip", "read"])(get_topic_messages)
     mcp.tool(name="zulip_send_message", tags=["zulip", "write"])(send_message)
     mcp.tool(name="zulip_react", tags=["zulip", "write"])(react)
     mcp.tool(name="zulip_upload_file", tags=["zulip", "write"])(upload_file)

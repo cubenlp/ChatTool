@@ -138,6 +138,56 @@ class ZulipClient:
         result = self._request("GET", "/users/me/subscriptions")
         return result.get("subscriptions", [])
 
+    def list_topics(self, stream_id: int) -> List[Dict[str, Any]]:
+        """
+        List topics for a specific stream (by stream_id).
+        """
+        result = self._request("GET", f"/users/me/{stream_id}/topics")
+        return result.get("topics", [])
+
+    def get_topic_messages(
+        self,
+        stream: Union[int, str],
+        topic: str,
+        batch_size: int = 200,
+        max_requests: int = 200,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch full message history for a stream/topic (latest first), then return chronologically.
+        """
+        narrow = [
+            {"operator": "stream", "operand": stream},
+            {"operator": "topic", "operand": topic},
+        ]
+        all_messages: List[Dict[str, Any]] = []
+        anchor: Union[int, str] = "newest"
+
+        for _ in range(max_requests):
+            result = self._request(
+                "GET",
+                "/messages",
+                params={
+                    "anchor": anchor,
+                    "num_before": batch_size,
+                    "num_after": 0,
+                    "apply_markdown": False,
+                    "narrow": narrow,
+                },
+            )
+            messages = result.get("messages", [])
+            if not messages:
+                break
+
+            all_messages = messages + all_messages
+
+            if result.get("found_oldest"):
+                break
+
+            anchor = str(messages[0]["id"])
+
+        all_messages.sort(key=lambda m: m.get("id", 0))
+        return all_messages
+
     def react_to_message(self, message_id: int, emoji_name: str, reaction_type: str = "unicode") -> Dict[str, Any]:
         """
         Add a reaction to a message.

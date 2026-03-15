@@ -10,6 +10,12 @@ ChatTool MCP Server 提供了与 Zulip 聊天系统交互的能力。
     - `include_public`: 是否包含所有公开频道 (默认 True)
   - 标签: `zulip`, `read`
 
+- **zulip_list_topics**
+  - 描述: 列出指定频道的 Topic
+  - 参数:
+    - `stream_id`: 频道 ID
+  - 标签: `zulip`, `read`
+
 - **zulip_get_messages**
   - 描述: 获取消息历史（支持高级过滤）
   - 参数:
@@ -19,6 +25,15 @@ ChatTool MCP Server 提供了与 Zulip 聊天系统交互的能力。
     - `topic`: 话题过滤
     - `sender`: 发送者邮箱过滤
     - `search`: 关键词搜索
+  - 标签: `zulip`, `read`
+
+- **zulip_get_topic_messages**
+  - 描述: 获取完整 Topic 历史（批量拉取）
+  - 参数:
+    - `stream`: 频道名称或 ID
+    - `topic`: 话题名称
+    - `batch_size`: 每批数量（默认 200）
+    - `max_requests`: 最大请求次数
   - 标签: `zulip`, `read`
 
 - **zulip_send_message**
