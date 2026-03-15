@@ -156,3 +156,65 @@ class MyCloudDNSClient(DNSClient):
     def update_domain_record(self, ...): ...
     def delete_domain_record(self, ...): ...
 ```
+
+## MCP 工具
+
+### `dns_list_domains`
+
+列出账号下所有域名。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `provider` | str | `aliyun` 或 `tencent`（可选） |
+
+### `dns_get_records`
+
+获取域名的解析记录。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `domain` | str | 域名，如 `example.com` |
+| `rr` | str | 主机记录（可选） |
+| `provider` | str | 云厂商（可选） |
+
+### `dns_add_record`
+
+添加解析记录。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `domain` | str | 域名 |
+| `rr` | str | 主机记录 |
+| `type` | str | 记录类型（A / CNAME / TXT 等） |
+| `value` | str | 记录值 |
+| `ttl` | int | 生存时间（默认 600） |
+
+### `dns_delete_record`
+
+删除解析记录。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `domain` | str | 域名 |
+| `rr` | str | 主机记录 |
+| `type` | str | 记录类型过滤（可选） |
+
+### `dns_ddns_update`
+
+执行一次 DDNS 更新。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `domain` | str | 域名 |
+| `rr` | str | 主机记录 |
+| `ip_type` | str | `public`（公网）或 `local`（内网） |
+
+### `dns_cert_update`
+
+自动申请或更新 Let's Encrypt 证书（DNS-01 验证）。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `domains` | List[str] | 域名列表 |
+| `email` | str | 注册邮箱 |
+| `staging` | bool | 是否使用测试环境（默认 false） |
