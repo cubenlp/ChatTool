@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
 from typing import Callable, Sequence
+import click
 
 from chattool.setup.chrome import setup_chrome_driver
 from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
 from chattool.setup.frp import setup_frp
+from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
 
 
@@ -34,6 +36,10 @@ def nodejs_setup(interactive):
     setup_nodejs(interactive=interactive)
 
 
+def alias_setup(shell):
+    setup_alias(shell=shell)
+
+
 def codex_setup(preferred_auth_method, base_url, model, interactive):
     setup_codex(
         preferred_auth_method=preferred_auth_method,
@@ -53,6 +59,17 @@ def claude_setup(auth_token, base_url, small_fast_model, interactive):
 
 
 SETUP_COMMAND_ELEMENTS = (
+    SetupCommandElement(
+        name="alias",
+        help="Setup shell aliases for ChatTool commands.",
+        callback=alias_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("-s", "--shell"),
+                kwargs={"default": None, "type": click.Choice(["zsh", "bash"]), "help": "Target shell: zsh or bash. Defaults to $SHELL."},
+            ),
+        ),
+    ),
     SetupCommandElement(
         name="claude",
         help="Setup Claude Code CLI and config files.",
