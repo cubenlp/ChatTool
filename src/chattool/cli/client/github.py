@@ -4,6 +4,8 @@ import click
 
 from chattool.config.github import GitHubConfig
 
+_ENV_LOADED = False
+
 
 @click.group(name="gh")
 def cli():
@@ -243,7 +245,7 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 
 
 def _get_client(token: Optional[str], require_token: bool = False):
-    from github import Github
+    from github import Github, Auth
 
     token = token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
     if require_token and not token:
@@ -251,7 +253,7 @@ def _get_client(token: Optional[str], require_token: bool = False):
     if not token:
         click.secho("Warning: no token provided; GitHub API rate limits may apply.", fg="yellow")
         return Github()
-    return Github(token)
+    return Github(auth=Auth.Token(token))
 
 
 def _resolve_repo(repo: Optional[str]) -> str:
@@ -259,3 +261,4 @@ def _resolve_repo(repo: Optional[str]) -> str:
     if not repo:
         raise click.ClickException("Missing repo. Provide --repo or set GITHUB_DEFAULT_REPO.")
     return repo
+

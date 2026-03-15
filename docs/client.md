@@ -14,7 +14,7 @@ CLI按功能分为几个命令组：
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / Chrome / FRP）。
 
 ### chatenv
 
@@ -47,6 +47,26 @@ chattool setup codex --pam "cr_xxx"
 
 ```bash
 chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+```
+
+### 0.2 Claude Code (`setup claude`)
+
+默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
+
+```bash
+chattool setup claude
+```
+
+直接传参：
+
+```bash
+chattool setup claude --auth-token "sk-ant-xxx"
+```
+
+可选覆盖 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_SMALL_FAST_MODEL`：
+
+```bash
+chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-3-5-haiku-20241022"
 ```
 
 ## 1. DNS 管理 (`dns`)
@@ -213,14 +233,16 @@ chattool network services
 ## 4. GitHub 工具 (`gh`)
 
 ### 4.1 配置
-环境变量：
+环境变量（推荐用 `chatenv` 管理）：
 - `GITHUB_ACCESS_TOKEN`: GitHub Personal Access Token（建议使用）
 - `GITHUB_DEFAULT_REPO`: 默认仓库（`owner/name`）
 
 ### 4.2 常用命令
 ```bash
+chatenv cat -t gh
+
 export GITHUB_ACCESS_TOKEN="..."
-export GITHUB_DEFAULT_REPO="cubenlp/ChatTool"
+export GITHUB_DEFAULT_REPO="CubeNLP/ChatTool"
 
 # 列出 PR
 chattool gh pr-list --state open --limit 20
@@ -229,7 +251,7 @@ chattool gh pr-list --state open --limit 20
 chattool gh pr-view --number 123
 
 # 创建 PR
-chattool gh pr-create --base vibe-master --head feature-branch --title "Title" --body "Body"
+chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
 
 # 评论 PR
 chattool gh pr-comment --number 123 --body "Looks good"

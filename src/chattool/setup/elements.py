@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Sequence
 
 from chattool.setup.chrome import setup_chrome_driver
+from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
 from chattool.setup.frp import setup_frp
 from chattool.setup.nodejs import setup_nodejs
@@ -42,7 +43,39 @@ def codex_setup(preferred_auth_method, base_url, model, interactive):
     )
 
 
+def claude_setup(auth_token, base_url, small_fast_model, interactive):
+    setup_claude(
+        auth_token=auth_token,
+        base_url=base_url,
+        small_fast_model=small_fast_model,
+        interactive=interactive,
+    )
+
+
 SETUP_COMMAND_ELEMENTS = (
+    SetupCommandElement(
+        name="claude",
+        help="Setup Claude Code CLI and config files.",
+        callback=claude_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+            SetupOptionElement(
+                param_decls=("--auth-token", "--token"),
+                kwargs={"default": None, "help": "Value for ANTHROPIC_AUTH_TOKEN."},
+            ),
+            SetupOptionElement(
+                param_decls=("--base-url", "--url"),
+                kwargs={"default": None, "help": "Optional ANTHROPIC_BASE_URL value."},
+            ),
+            SetupOptionElement(
+                param_decls=("--small-fast-model", "--sfm"),
+                kwargs={"default": None, "help": "Optional ANTHROPIC_SMALL_FAST_MODEL value."},
+            ),
+        ),
+    ),
     SetupCommandElement(
         name="chrome",
         help="Setup Chrome and Chromedriver.",
