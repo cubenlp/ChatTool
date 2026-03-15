@@ -14,7 +14,7 @@ CLI按功能分为几个命令组：
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / Chrome / FRP）。
 
 ### chatenv
 
@@ -47,6 +47,26 @@ chattool setup codex --pam "cr_xxx"
 
 ```bash
 chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+```
+
+### 0.2 Claude Code (`setup claude`)
+
+默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
+
+```bash
+chattool setup claude
+```
+
+直接传参：
+
+```bash
+chattool setup claude --auth-token "sk-ant-xxx"
+```
+
+可选覆盖 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_SMALL_FAST_MODEL`：
+
+```bash
+chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-3-5-haiku-20241022"
 ```
 
 ## 1. DNS 管理 (`dns`)
