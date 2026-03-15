@@ -107,6 +107,7 @@ nav:
     - 概览: configuration.md
 
   - 工具箱:
+    - 概览: tools/index.md
     - DNS 工具: tools/dns/index.md
     - DNS MCP: tools/dns/mcp.md
     - AI 绘图: tools/image.md
