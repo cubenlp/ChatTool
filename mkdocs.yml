@@ -25,7 +25,8 @@ plugins:
       lang: zh
   - minify:
       minify_html: true
-  - awesome-pages
+  # awesome-pages 暂时禁用，与子目录 index 页面存在冲突
+  # - awesome-pages
   - redirects:
       redirect_maps:
         'setup/docker.md': 'env/docker.md'
@@ -36,8 +37,6 @@ plugins:
         'setup/nginx_proxy.md': 'env/nginx_proxy.md'
         'mcp/dns.md': 'tools/dns/mcp.md'
         'mcp/network.md': 'tools/network/mcp.md'
-        'tools/dns.md': 'tools/dns/index.md'
-        'tools/network.md': 'tools/network/index.md'
   # i18n 插件暂时禁用，启用后会导致子目录页面无限刷新，待排查
   # - i18n:
   #     docs_structure: suffix
@@ -110,11 +109,9 @@ nav:
   - 工具箱:
     - 概览: tools/index.md
     - DNS 工具: tools/dns/index.md
-    - DNS MCP: tools/dns/mcp.md
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
     - 网络扫描: tools/network/index.md
-    - 网络扫描 MCP: tools/network/mcp.md
     - TP-Link 路由器: tools/tplogin.md
     - MCP 服务指南: mcp/index.md
     - Zulip 集成: mcp/zulip.md

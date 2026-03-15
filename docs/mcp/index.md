@@ -6,9 +6,9 @@ ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprot
 
 ChatTool MCP Server 包含以下核心模块：
 
-- [DNS 管理](../tools/dns/mcp.md): 域名解析、DDNS 和 SSL 证书管理
+- [DNS 管理](../tools/dns/index.md#mcp-工具): 域名解析、DDNS 和 SSL 证书管理
 - [Zulip 集成](./zulip.md): 消息收发、频道管理
-- [Network Scanner](../tools/network/mcp.md)
+- [Network Scanner](../tools/network/index.md#mcp-工具)
 
 ## 安装与使用
 

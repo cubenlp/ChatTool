@@ -1,61 +1,64 @@
-# Network Scanning Tools
+# 网络扫描
 
-The `chattool` CLI provides commands for network scanning, allowing you to quickly discover active hosts and open ports directly from the terminal.
+`chattool` 提供网络扫描工具，支持 Ping 扫描和端口扫描，同时提供 MCP 接口供 LLM 客户端调用。
 
-## Usage
-
-The network tools are available under the `network` command group.
+## CLI
 
 ```bash
 chattool client network [COMMAND] [OPTIONS]
 ```
 
-### Ping Scan
-
-Scan a network segment for active hosts using ICMP ping.
-
-```bash
-chattool client network ping --network <CIDR> [OPTIONS]
-```
-
-**Options:**
-
-- `--network`, `-net`: The network segment to scan (e.g., `192.168.1.0/24`). **Required**.
-- `--concurrency`, `-n`: Number of concurrent threads (default: 50).
-- `--output`, `-o`: Path to save the list of active IPs.
-
-**Example:**
+### Ping 扫描
 
 ```bash
 chattool client network ping --network 192.168.1.0/24 --output active_hosts.txt
 ```
 
-### Port Scan (SSH)
+| 参数 | 说明 |
+|------|------|
+| `--network / -net` | 扫描网段（CIDR），必填 |
+| `--concurrency / -n` | 并发线程数（默认 50） |
+| `--output / -o` | 结果保存路径 |
 
-Scan for open ports (defaulting to SSH/22) on a list of IPs or a network segment.
+### 端口扫描
 
 ```bash
-chattool client network ssh [OPTIONS]
-```
-
-**Options:**
-
-- `--input`, `-i`: Input file containing a list of IPs to scan.
-- `--network`, `-net`: Network segment to scan (alternative to input file).
-- `--port`, `-p`: Port to scan (default: 22).
-- `--concurrency`, `-n`: Number of concurrent threads (default: 50).
-- `--output`, `-o`: Path to save the list of hosts with open ports.
-
-**Note:** You must provide either `--input` or `--network`.
-
-**Examples:**
-
-Scan a network for SSH (port 22):
-```bash
+# 扫描网段的 SSH 端口
 chattool client network ssh --network 192.168.1.0/24 --output ssh_hosts.txt
-```
 
-Scan a list of IPs from a file for a custom port:
-```bash
+# 扫描指定 IP 列表的自定义端口
 chattool client network ssh --input active_hosts.txt --port 8080
 ```
+
+| 参数 | 说明 |
+|------|------|
+| `--network / -net` | 扫描网段（与 `--input` 二选一） |
+| `--input / -i` | IP 列表文件（与 `--network` 二选一） |
+| `--port / -p` | 扫描端口（默认 22） |
+| `--concurrency / -n` | 并发线程数（默认 50） |
+| `--output / -o` | 结果保存路径 |
+
+## MCP 工具
+
+### `network_ping_scan`
+
+扫描网段内的活跃主机。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `network_segment` | str | CIDR 格式网段，如 `192.168.1.0/24` |
+| `concurrency` | int | 并发线程数（默认 50） |
+
+返回活跃 IP 列表。
+
+### `network_port_scan`
+
+扫描主机列表的指定端口。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `hosts` | List[str] | IP 地址列表 |
+| `port` | int | 端口号（默认 22） |
+| `concurrency` | int | 并发线程数（默认 50） |
+
+返回端口开放的主机列表。
