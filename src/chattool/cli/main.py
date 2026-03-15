@@ -26,8 +26,8 @@ def _load_attr(module_path: str, attr: str) -> click.Command:
 
 
 def _load_dns_group() -> click.Command:
-    dns_group = _load_attr("chattool.cli.client.dns_updater", "cli")
-    ssl_cmd = _load_attr("chattool.cli.client.cert_updater", "main")
+    dns_group = _load_attr("chattool.tools.dns.cli", "cli")
+    ssl_cmd = _load_attr("chattool.tools.cert.cli", "main")
     dns_group.add_command(ssl_cmd, name="cert-update")
     return dns_group
 
@@ -37,9 +37,9 @@ def _build_serve_group() -> click.Command:
         name="serve",
         help="Local server tools.",
         lazy_commands={
-            "capture": lambda: _load_attr("chattool.cli.service.capture", "main"),
-            "cert": lambda: _load_attr("chattool.cli.service.cert_server", "cert_app"),
-            "lark": lambda: _load_attr("chattool.cli.service.lark_serve", "cli"),
+            "capture": lambda: _load_attr("chattool.serve.capture", "main"),
+            "cert": lambda: _load_attr("chattool.serve.cert_server", "cert_app"),
+            "lark": lambda: _load_attr("chattool.serve.lark_serve", "cli"),
         },
     )
 
@@ -64,14 +64,14 @@ cli._lazy_commands.update({
     "dns": _load_dns_group,
     "serve": _build_serve_group,
     "client": _build_client_group,
-    "network": lambda: _load_attr("chattool.cli.client.network", "network"),
-    "mcp": lambda: _load_attr("chattool.cli.client.mcp", "cli"),
-    "lark": lambda: _load_attr("chattool.cli.client.lark", "cli"),
-    "image": lambda: _load_attr("chattool.cli.client.image", "cli"),
-    "tplogin": lambda: _load_attr("chattool.cli.client.tplogin", "cli"),
-    "gh": lambda: _load_attr("chattool.cli.client.github", "cli"),
-    "browser": lambda: _load_attr("chattool.cli.client.browser", "cli"),
-    "zulip": lambda: _load_attr("chattool.cli.client.zulip", "cli"),
+    "network": lambda: _load_attr("chattool.tools.network.cli", "network"),
+    "mcp": lambda: _load_attr("chattool.mcp.cli", "cli"),
+    "lark": lambda: _load_attr("chattool.tools.lark.cli", "cli"),
+    "image": lambda: _load_attr("chattool.tools.image.cli", "cli"),
+    "tplogin": lambda: _load_attr("chattool.tools.tplogin_cli", "cli"),
+    "gh": lambda: _load_attr("chattool.tools.github.cli", "cli"),
+    "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
+    "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
     "skill": lambda: _load_attr("chattool.cli.skill", "skill_cli"),
     "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
     "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),

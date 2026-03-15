@@ -50,7 +50,7 @@ def test_zulip_help_has_no_send(runner):
 
 
 def test_zulip_news_writes_markdown(monkeypatch, runner, tmp_path):
-    from chattool.cli.client import zulip as zulip_cli
+    import chattool.tools.zulip.cli as zulip_cli
 
     monkeypatch.setattr(zulip_cli, "ZulipClient", FakeZulipClient)
     monkeypatch.setattr(zulip_cli, "Chat", FakeChat)
@@ -68,7 +68,7 @@ def test_zulip_news_writes_markdown(monkeypatch, runner, tmp_path):
 
 
 def test_zulip_news_fallback_on_llm_error(monkeypatch, runner, tmp_path):
-    from chattool.cli.client import zulip as zulip_cli
+    import chattool.tools.zulip.cli as zulip_cli
 
     class FailingChat(FakeChat):
         def get_response(self, **kwargs):

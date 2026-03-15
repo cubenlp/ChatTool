@@ -77,6 +77,10 @@
 - `docs/blog/`：实践文章与经验沉淀。
 - `setup` 与 `docker` 文档可放在同一组导航下统一讲解环境部署。
 
+## 规范文档
+
+- [目录职责说明](directory-responsibilities.md)：目录边界、依赖方向与归位规则。
+
 ## 暂缓处理
 
 - `application/`：当前设计尚未定型，暂不纳入本轮收敛范围。

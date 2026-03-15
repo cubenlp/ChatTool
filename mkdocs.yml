@@ -111,6 +111,7 @@ nav:
 
   - 工具箱:
     - 概览: tools/index.md
+    - 工具接口规范: tools/interfaces.md
     - DNS 工具: tools/dns/index.md
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
@@ -130,6 +131,7 @@ nav:
 
   - 设计文档:
     - 设计文档: design/index.md
+    - 目录职责说明: design/directory-responsibilities.md
 
   - 博客:
     - 白嫖 AI 生图实战: blog/free-image-guide.md

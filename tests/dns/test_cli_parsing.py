@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, AsyncMock
-from chattool.cli.client.dns_updater import ddns
+from chattool.tools.dns.cli import ddns
 from click.testing import CliRunner
 from chattool.cli.main import cli
 
@@ -31,7 +31,7 @@ class TestDNSCLIUsage:
         # But we don't want to actually update DNS in this test.
         # So we'll mock DynamicIPUpdater
         
-        with patch('chattool.cli.client.dns_updater.DynamicIPUpdater') as MockUpdater:
+        with patch('chattool.tools.dns.cli.DynamicIPUpdater') as MockUpdater:
             # Mock run_once as an async method returning True
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
