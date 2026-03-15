@@ -29,7 +29,16 @@ plugins:
   - awesome-pages
   - redirects:
       redirect_maps:
-        # Example: 'old.md': 'new.md'
+        'setup/docker.md': 'env/docker.md'
+        'setup/index.md': 'env/index.md'
+        'setup/chrome.md': 'env/chrome.md'
+        'setup/codex.md': 'env/codex.md'
+        'setup/frp.md': 'env/frp.md'
+        'setup/nginx_proxy.md': 'env/nginx_proxy.md'
+        'mcp/dns.md': 'tools/dns/mcp.md'
+        'mcp/network.md': 'tools/network/mcp.md'
+        'tools/dns.md': 'tools/dns/index.md'
+        'tools/network.md': 'tools/network/index.md'
   - i18n:
       docs_structure: suffix
       fallback_to_default: true
@@ -88,25 +97,25 @@ extra:
     alias: true
 
 nav:
-  - 主页: 
+  - 主页:
     - 快速开始: index.md
-  - 核心组件:
+
+  - LLM:
     - 客户端指南: client.md
-    - Chat对象: chat.md
-    - 配置管理: configuration.md
-  - 应用层:
-    - Zulip知识库: application/zulip_kb.md
-    - Zulip知识结构: application/zulip_structure.md
-  - MCP服务:
-    - 服务指南: mcp/index.md
-    - DNS服务: mcp/dns.md
-    - Zulip集成: mcp/zulip.md
-    - 网络扫描: mcp/network.md
+    - Chat 对象: chat.md
+
+  - 配置管理:
+    - 概览: configuration.md
+
   - 工具箱:
-    - DNS工具: tools/dns.md
-    - AI绘图工具: tools/image.md
-    - FRP内网穿透: tools/frp.md
-    - 网络扫描: tools/network.md
+    - DNS 工具: tools/dns/index.md
+    - DNS MCP: tools/dns/mcp.md
+    - AI 绘图: tools/image.md
+    - FRP 内网穿透: tools/frp.md
+    - 网络扫描: tools/network/index.md
+    - 网络扫描 MCP: tools/network/mcp.md
+    - TP-Link 路由器: tools/tplogin.md
+
   - 飞书机器人:
     - 概览: larkbot/index.md
     - 飞书平台配置: larkbot/feishu-setup.md
@@ -116,6 +125,22 @@ nav:
     - AI 对话集成: larkbot/ai-chat.md
     - 交互卡片: larkbot/cards.md
     - 命令行工具: larkbot/cli.md
+
+  - MCP 服务:
+    - 服务指南: mcp/index.md
+    - Zulip 集成: mcp/zulip.md
+
+  - 环境配置:
+    - 概览: env/index.md
+    - Chrome 环境: env/chrome.md
+    - Codex 配置: env/codex.md
+    - FRP 安装: env/frp.md
+    - Nginx 反向代理: env/nginx_proxy.md
+    - Docker 模板: env/docker.md
+
+  - Design:
+    - 设计文档: design/index.md
+
   - 博客:
     - 白嫖 AI 生图实战: blog/free-image-guide.md
     - 从代码到 Agent 技能: blog/code_tool_skill.md
