@@ -6,11 +6,13 @@ import tempfile
 import subprocess
 import platform
 from pathlib import Path
+from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import (
     ask_select, ask_text, ask_path, ask_confirm, BACK_VALUE
 )
 
 FRP_VERSION_DEFAULT = "0.66.0"
+logger = setup_logger("setup_frp")
 
 def get_system_arch():
     arch = platform.machine()
@@ -25,6 +27,7 @@ def get_system_arch():
 
 def download_file(url, dest_path):
     import requests
+    logger.info(f"Downloading FRP package from: {url}")
     print(f"Downloading from {url}...")
     response = requests.get(url, stream=True)
     response.raise_for_status()
@@ -34,6 +37,7 @@ def download_file(url, dest_path):
     print("Download complete.")
 
 def extract_frp(archive_path, extract_to, binary_name):
+    logger.info(f"Extracting FRP archive: {archive_path}")
     print(f"Extracting {archive_path}...")
     with tarfile.open(archive_path, "r:gz") as tar:
         # Find the binary in the archive
@@ -55,6 +59,7 @@ def extract_frp(archive_path, extract_to, binary_name):
     return extracted_bin
 
 def setup_frp():
+    logger.info("Start frp setup")
     # 1. Ask Mode
     mode = ask_select(
         "Select FRP Mode:",
@@ -97,6 +102,7 @@ def setup_frp():
                 extracted_bin = extract_frp(archive_path, tmpdir, binary_name)
                 shutil.copy2(extracted_bin, final_bin_path)
             except Exception as e:
+                logger.error(f"Error downloading or extracting FRP: {e}")
                 print(f"Error downloading/extracting: {e}")
                 return
 
@@ -107,6 +113,7 @@ def setup_frp():
         if local_path == BACK_VALUE: return
         
         if not os.path.exists(local_path):
+            logger.error(f"Local FRP archive not found: {local_path}")
             print("File not found.")
             return
 
@@ -115,9 +122,11 @@ def setup_frp():
                 extracted_bin = extract_frp(local_path, tmpdir, binary_name)
                 shutil.copy2(extracted_bin, final_bin_path)
             except Exception as e:
+                logger.error(f"Error extracting FRP from local archive: {e}")
                 print(f"Error extracting: {e}")
                 return
 
+    logger.info(f"FRP binary installed at: {final_bin_path}")
     print(f"FRP binary installed at: {final_bin_path}")
 
     # 3. Configure
@@ -182,6 +191,7 @@ auth.token = "{token}"
     with open(config_path, "w") as f:
         f.write(config_content)
     
+    logger.info(f"FRP config saved: {config_path}")
     print(f"Configuration saved to: {config_path}")
 
     # 4. Systemd Service
@@ -209,6 +219,7 @@ WantedBy=multi-user.target
         
         with open(local_service_path, "w") as f:
             f.write(service_content)
+        logger.info(f"Generated systemd service file: {local_service_path}")
             
         print("\nTo install the service, run the following commands:")
         print(f"sudo cp {local_service_path} {service_file_path}")
@@ -220,5 +231,6 @@ WantedBy=multi-user.target
         # Optional: Try to run with sudo if user wants?
         # For now, just printing instructions is safer and requested in prompt "use sudo if needed, or print instructions"
     else:
+        logger.info("Skipping systemd installation, use manual startup command")
         print("\nYou can run FRP manually with:")
         print(f"{final_bin_path} -c {config_path}")
