@@ -4,7 +4,8 @@ try:
     from fastmcp import FastMCP
 except ImportError:
     FastMCP = Any
-from chattool.tools import create_dns_client, DynamicIPUpdater, SSLCertUpdater
+from chattool.tools.cert import SSLCertUpdater
+from chattool.tools.dns import DynamicIPUpdater, create_dns_client
 from chattool.utils import setup_logger
 
 logger = setup_logger("mcp_dns", log_level="INFO")

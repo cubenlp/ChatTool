@@ -8,12 +8,12 @@ class TestMCPServer:
     
     async def test_dns_list_domains(self):
         """Test dns_list_domains tool"""
-        with patch('chattool.mcp.dns.create_dns_client') as mock_create:
+        with patch('chattool.tools.dns.mcp.create_dns_client') as mock_create:
             mock_client = MagicMock()
             mock_client.describe_domains.return_value = [{'DomainName': 'example.com'}]
             mock_create.return_value = mock_client
             
-            from chattool.mcp.dns import list_domains
+            from chattool.tools.dns.mcp import list_domains
             
             result = list_domains(provider='aliyun')
             assert len(result) == 1
@@ -22,12 +22,12 @@ class TestMCPServer:
 
     async def test_dns_add_record(self):
         """Test dns_add_record tool"""
-        with patch('chattool.mcp.dns.create_dns_client') as mock_create:
+        with patch('chattool.tools.dns.mcp.create_dns_client') as mock_create:
             mock_client = MagicMock()
             mock_client.add_domain_record.return_value = '12345'
             mock_create.return_value = mock_client
             
-            from chattool.mcp.dns import add_record
+            from chattool.tools.dns.mcp import add_record
             
             result = add_record(
                 domain='example.com', 
@@ -45,11 +45,11 @@ class TestMCPServer:
 
     async def test_dns_ddns_update(self):
         """Test dns_ddns_update tool"""
-        with patch('chattool.mcp.dns.DynamicIPUpdater') as MockUpdater:
+        with patch('chattool.tools.dns.mcp.DynamicIPUpdater') as MockUpdater:
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
             
-            from chattool.mcp.dns import ddns_update
+            from chattool.tools.dns.mcp import ddns_update
             
             result = await ddns_update(
                 domain='example.com', 
@@ -68,11 +68,11 @@ class TestMCPServer:
 
     async def test_dns_cert_update(self):
         """Test dns_cert_update tool"""
-        with patch('chattool.mcp.dns.SSLCertUpdater') as MockUpdater:
+        with patch('chattool.tools.dns.mcp.SSLCertUpdater') as MockUpdater:
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
             
-            from chattool.mcp.dns import cert_update
+            from chattool.tools.dns.mcp import cert_update
             
             domains = ['example.com', '*.example.com']
             email = 'admin@example.com'
