@@ -53,6 +53,7 @@ def cli():
 
 
 cli._lazy_commands.update({
+    "env": lambda: _load_attr("chattool.config.cli", "cli"),
     "dns": _load_dns_group,
     "serve": _build_serve_group,
     "client": _build_client_group,
