@@ -138,3 +138,9 @@ BaseEnvConfig.print_config()
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
+
+## SVG 转 GIF 服务配置
+
+- `CHATTOOL_CHROMEDRIVER_URL`: chromedriver 服务地址（用于 `chattool serve svg2gif`）
+- `CHATTOOL_SVG2GIF_SERVER`: svg2gif 服务地址（用于 `chattool client svg2gif`）
+- `BROWSER_SELENIUM_REMOTE_URL`: 备用的 Selenium 远程地址（未设置 `CHATTOOL_CHROMEDRIVER_URL` 时使用）
