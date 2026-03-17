@@ -128,6 +128,7 @@ nav:
     - 概览: env/index.md
     - Chrome 环境: env/chrome.md
     - Codex 配置: env/codex.md
+    - OpenCode 配置: env/opencode.md
     - FRP 安装: env/frp.md
     - Nginx 反向代理: env/nginx_proxy.md
     - Docker 模板: env/docker.md

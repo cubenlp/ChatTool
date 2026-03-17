@@ -4,6 +4,26 @@ ChatTool 提供了一系列辅助工具的安装和配置功能。
 
 ## 功能列表
 
+### Codex 配置
+
+使用 `setup codex` 快速安装并写入配置。
+
+```bash
+chattool setup codex
+```
+
+详细文档：[codex.md](codex.md)
+
+### OpenCode 配置
+
+使用 `setup opencode` 快速安装并写入配置。
+
+```bash
+chattool setup opencode
+```
+
+详细文档：[opencode.md](opencode.md)
+
 ### Chrome 浏览器驱动安装
 
 自动安装 Chrome 和 Chromedriver。
