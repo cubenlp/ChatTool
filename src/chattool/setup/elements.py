@@ -6,6 +6,7 @@ from chattool.setup.chrome import setup_chrome_driver
 from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
 from chattool.setup.frp import setup_frp
+from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
 
@@ -54,6 +55,15 @@ def claude_setup(auth_token, base_url, small_fast_model, interactive):
         auth_token=auth_token,
         base_url=base_url,
         small_fast_model=small_fast_model,
+        interactive=interactive,
+    )
+
+
+def opencode_setup(base_url, api_key, model, interactive):
+    setup_opencode(
+        base_url=base_url,
+        api_key=api_key,
+        model=model,
         interactive=interactive,
     )
 
@@ -150,6 +160,29 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--model",),
                 kwargs={"default": None, "help": "Optional default model name."},
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="opencode",
+        help="Setup OpenCode CLI and config files.",
+        callback=opencode_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+            SetupOptionElement(
+                param_decls=("--base-url", "--url"),
+                kwargs={"default": None, "help": "Required base URL for the provider."},
+            ),
+            SetupOptionElement(
+                param_decls=("--api-key", "--key"),
+                kwargs={"default": None, "help": "Required API key for the provider."},
+            ),
+            SetupOptionElement(
+                param_decls=("--model",),
+                kwargs={"default": None, "help": "Required default model name."},
             ),
         ),
     ),
