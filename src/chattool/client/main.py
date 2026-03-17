@@ -42,6 +42,7 @@ def _build_client_group() -> click.Command:
         help="Remote client tools.",
         lazy_commands={
             "cert": lambda: _load_attr("chattool.client.cert_client", "cert_client"),
+            "svg2gif": lambda: _load_attr("chattool.client.svg2gif_client", "svg2gif_client"),
         },
     )
 
