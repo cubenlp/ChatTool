@@ -11,8 +11,14 @@ cli-tests/
 ├── chatenv/
 │   ├── test_chatenv_basic.md   # 文档先行：env 基础链路
 │   └── test_chatenv_basic.py   # 对应 CLI 测试实现
+├── mcp/
+│   └── test_chattool_mcp_basic.md  # 文档先行：mcp 基础链路
+├── zulip/
+│   ├── test_chattool_zulip_news_basic.md   # 文档先行：zulip news
+│   └── test_chattool_zulip_client_basic.md # 文档先行：zulip 客户端
 └── setup/
     ├── test_chattool_setup_alias_basic.md      # alias 基础链路文档
+    ├── test_chattool_setup_cli_basic.md        # setup 命令组基础链路文档
     ├── test_chattool_setup_alias_basic.py      # 对应 CLI 测试实现
     └── test_chattool_setup_interactive_policy_basic.md  # 交互策略文档
 ```
