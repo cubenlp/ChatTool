@@ -8,7 +8,7 @@
 - 目的：验证环境配置的读取与 profile 管理流程。
 - 标签：`cli`
 - 前置条件：无
-- 环境准备：使用临时目录模拟环境配置目录与 `.env` 文件。
+- 环境准备：使用临时目录模拟环境配置目录与 `.env` 文件（设置 `CHATTOOL_CONFIG_DIR`）。
 - 回滚：测试结束后临时目录自动删除。
 
 ## 用例 1：查看当前配置（cat）
@@ -85,6 +85,26 @@ chattool env delete test_profile
 ```sh
 chattool env init -i -t MockConfig
 chattool env init -t NonExistent
+```
+
+## 用例 5：set/get/unset 基础链路
+
+- 初始环境准备：
+  - 准备当前 `.env` 文件。
+- 相关文件：
+  - `<tmp>/.env`
+
+预期过程和结果：
+  1. 执行 `chattool env set KEY=VALUE`，预期写入 `.env`。
+  2. 执行 `chattool env get KEY`，预期输出对应值。
+  3. 执行 `chattool env unset KEY`，预期清空该键。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool env set KEY=VALUE
+chattool env get KEY
+chattool env unset KEY
 ```
 
 ## 清理 / 回滚

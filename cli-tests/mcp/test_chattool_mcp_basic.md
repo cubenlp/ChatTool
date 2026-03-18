@@ -1,63 +1,65 @@
-# chattool mcp 基础用例
+# test_chattool_mcp_basic
+
+测试 `chattool mcp` 的基础链路，覆盖 info/inspect/start 的命令流程。
 
 ## 元信息
 
-- 命令：`chattool mcp <command> [options]`
-- 目的：验证 mcp CLI 的基础信息与别名命令可用。
+- 命令：`chattool mcp <command> [args]`
+- 目的：验证 MCP 管理 CLI 的基础命令可用。
 - 标签：`cli`
-- 前置条件：无
-- 环境准备：无
-- 回滚：无
-- 来源：`tests/mcp/test_mcp_cli.py`
+- 前置条件：MCP 依赖可用（fastmcp）。
+- 环境准备：确保运行环境满足 MCP 要求。
+- 回滚：停止服务进程。
 
-## 状态
+## 用例 1：info 输出
 
-- TODO：需要确认真实 MCP 服务可用性与最小配置要求。
+- 初始环境准备：
+  - MCP 可用。
+- 相关文件：
+  - 无
 
-## 用例 1：info JSON 输出
+预期过程和结果：
+  1. 执行 `chattool mcp info --json-output`，预期输出包含 tools 列表。
 
-### 初始环境准备
-
-- 启动 MCP 服务或确保本地默认可用。
-
-### 相关文件
-
-- 无
-
-### 预期过程和结果
-
-1. 执行 `chattool mcp info --json-output`，预期输出为 JSON 且包含工具列表。
-
-### 参考执行脚本（伪代码）
+参考执行脚本（伪代码）：
 
 ```sh
 chattool mcp info --json-output
 ```
 
-### 清理 / 回滚
+## 用例 2：inspect 别名
 
-- 无
+- 初始环境准备：
+  - MCP 可用。
+- 相关文件：
+  - 无
 
-## 用例 2：inspect 别名命令
+预期过程和结果：
+  1. 执行 `chattool mcp inspect`，预期输出与 info 等价。
 
-### 初始环境准备
-
-- MCP 服务可用。
-
-### 相关文件
-
-- 无
-
-### 预期过程和结果
-
-1. 执行 `chattool mcp inspect`，预期输出包含 MCP Server 信息。
-
-### 参考执行脚本（伪代码）
+参考执行脚本（伪代码）：
 
 ```sh
 chattool mcp inspect
 ```
 
-### 清理 / 回滚
+## 用例 3：start
 
-- 无
+- 初始环境准备：
+  - 选择 stdio 或 http 传输模式。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+  1. 执行 `chattool mcp start --transport http --port 8000`，预期服务启动。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool mcp start --transport http --port 8000
+chattool mcp start --transport stdio
+```
+
+## 清理 / 回滚
+
+- 停止服务进程。
