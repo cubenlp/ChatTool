@@ -23,6 +23,13 @@
 - 开发规范：更新 `docs/development-guide/`
 - 导航变更：同步更新 `mkdocs.yml`
 
+## 测试与文档
+
+- CLI 测试采用文档先行：先写 `cli-tests/*.md` 再实现对应 `.py`。
+- 真实集成测试应标记为 `@pytest.mark.e2e`。
+- 功能变更同步更新 `docs/` 与 `README.md`。
+- 变更记录同步更新 `CHANGELOG.md`。
+
 ## 常用命令
 
 ```bash
