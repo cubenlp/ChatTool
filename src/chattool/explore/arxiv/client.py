@@ -1,5 +1,5 @@
 """arXiv query client wrapping the `arxiv` library."""
-from typing import Iterator, List, Optional
+from typing import Callable, Iterator, List, Optional
 from .models import Paper
 
 
@@ -65,3 +65,33 @@ class ArxivClient:
     def get_by_ids(self, arxiv_ids: List[str]) -> List[Paper]:
         search = self._arxiv.Search(id_list=arxiv_ids)
         return [_to_paper(r) for r in self.client.results(search)]
+
+    # ------------------------------------------------------------------
+    # Filtering helpers
+    # ------------------------------------------------------------------
+
+    def filter_papers(
+        self,
+        papers: List[Paper],
+        categories: Optional[List[str]] = None,
+        keywords: Optional[List[str]] = None,
+        authors: Optional[List[str]] = None,
+    ) -> List[Paper]:
+        """
+        Client-side filtering of papers by category/keyword/author.
+
+        Useful for post-processing search results or daily fetches.
+        """
+        filtered = papers
+        if categories:
+            filtered = [p for p in filtered if any(p.in_category(c) for c in categories)]
+        if keywords:
+            filtered = [p for p in filtered if any(p.has_keyword(k) for k in keywords)]
+        if authors:
+            filtered = [p for p in filtered if any(p.by_author(a) for a in authors)]
+        return filtered
+
+    def filter_by(self, papers: List[Paper], predicate: Callable[[Paper], bool]) -> List[Paper]:
+        """Generic filter with custom predicate."""
+        return [p for p in papers if predicate(p)]
+
