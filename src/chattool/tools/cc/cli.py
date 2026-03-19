@@ -163,6 +163,13 @@ def _write_config(
             lines.append(f"{key} = \"{_toml_string(value)}\"")
     else:
         lines.append("# TODO: fill platform credentials here")
+    if "proxy" not in platform_options:
+        lines.append("# proxy = \"\"  # optional: forward proxy for API calls if your IP is dynamic")
+        lines.append("#             # 可选：正向代理，用于 IP 不固定的场景")
+        lines.append("#             # e.g. \"http://your-vps-ip:8888\" — the VPS IP goes into trusted IP list")
+        lines.append("#             # 示例：\"http://你的VPS-IP:8888\" — 将 VPS IP 加入可信 IP 列表")
+        lines.append("# proxy_username = \"\"  # optional: proxy authentication username / 代理认证用户名")
+        lines.append("# proxy_password = \"\"  # optional: proxy authentication password / 代理认证密码")
     lines.append("")
 
     _ensure_parent(config_path)
@@ -196,6 +203,49 @@ def _prompt_platform_credentials(platform: str, existing: dict[str, str] | None)
         token = click.prompt("token", default=token_default, hide_input=True, confirmation_prompt=True)
         return {"token": token}
     return _prompt_platform_options()
+
+def _mask_proxy_options(options: dict[str, str]) -> dict[str, str]:
+    masked = {}
+    for key in ("proxy", "proxy_username", "proxy_password"):
+        if key in options:
+            value = options.get(key, "")
+            masked[key] = _mask_value(value) if _is_sensitive_key(key) else value
+    return masked
+
+
+def _prompt_proxy_options(existing_options: dict[str, str], current_options: dict[str, str]) -> dict[str, str]:
+    proxy_keys = {"proxy", "proxy_username", "proxy_password"}
+    existing_proxy = existing_options.get("proxy") or ""
+    existing_user = existing_options.get("proxy_username") or ""
+    existing_pass = existing_options.get("proxy_password") or ""
+
+    if proxy_keys.intersection(current_options):
+        masked = _mask_proxy_options(current_options)
+        click.echo(f"检测到已有代理配置: {masked}")
+        if not click.confirm("是否修改代理配置?", default=False):
+            return current_options
+    else:
+        if not click.confirm("是否配置代理?", default=False):
+            return current_options
+
+    proxy = click.prompt("proxy", default=existing_proxy, show_default=bool(existing_proxy))
+    if not proxy:
+        return current_options
+    current_options["proxy"] = proxy
+
+    if click.confirm("代理是否需要认证?", default=bool(existing_user)):
+        proxy_user = click.prompt("proxy_username", default=existing_user, show_default=bool(existing_user))
+        if proxy_user:
+            current_options["proxy_username"] = proxy_user
+            if existing_pass and click.confirm("是否沿用已有 proxy_password?", default=True):
+                current_options["proxy_password"] = existing_pass
+            else:
+                current_options["proxy_password"] = click.prompt(
+                    "proxy_password",
+                    hide_input=True,
+                    confirmation_prompt=True,
+                )
+    return current_options
 
 
 def _check_binary(name: str) -> str | None:
@@ -286,6 +336,7 @@ def setup(interactive: bool | None) -> None:
 @click.option("--platform", default=None, type=click.Choice(PLATFORM_CHOICES), help="Platform type.")
 @click.option("--work-dir", default=None, type=click.Path(file_okay=False, dir_okay=True), help="Agent work dir.")
 @click.option("--mode", default=None, help="Agent mode (depends on agent type).")
+@click.option("--full-options", is_flag=True, help="Prompt advanced options (e.g. proxy).")
 @click.option("--config", "-c", default=None, help="Config file path.")
 @click.option(
     "--interactive/--no-interactive",
@@ -299,6 +350,7 @@ def init(
     platform: str | None,
     work_dir: str | None,
     mode: str | None,
+    full_options: bool,
     config: str | None,
     interactive: bool | None,
 ) -> None:
@@ -392,6 +444,8 @@ def init(
                 platform_options = _prompt_platform_credentials(platform or "feishu", existing_options)
         elif click.confirm("是否填写平台鉴权信息?", default=True):
             platform_options = _prompt_platform_credentials(platform or "feishu", existing_options)
+        if full_options:
+            platform_options = _prompt_proxy_options(existing_options, platform_options)
 
     _write_config(
         config_path=config_path,
