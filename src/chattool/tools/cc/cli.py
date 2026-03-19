@@ -163,6 +163,13 @@ def _write_config(
             lines.append(f"{key} = \"{_toml_string(value)}\"")
     else:
         lines.append("# TODO: fill platform credentials here")
+    if "proxy" not in platform_options:
+        lines.append("# proxy = \"\"  # optional: forward proxy for API calls if your IP is dynamic")
+        lines.append("#             # 可选：正向代理，用于 IP 不固定的场景")
+        lines.append("#             # e.g. \"http://your-vps-ip:8888\" — the VPS IP goes into trusted IP list")
+        lines.append("#             # 示例：\"http://你的VPS-IP:8888\" — 将 VPS IP 加入可信 IP 列表")
+        lines.append("# proxy_username = \"\"  # optional: proxy authentication username / 代理认证用户名")
+        lines.append("# proxy_password = \"\"  # optional: proxy authentication password / 代理认证密码")
     lines.append("")
 
     _ensure_parent(config_path)
