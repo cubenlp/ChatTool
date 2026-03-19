@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -110,8 +111,9 @@ def skill_cli():
 
 @skill_cli.command(name="install")
 @click.argument("name", required=False)
-@click.option("--all", "install_all", is_flag=True, help="Install all skills from source directory.")
+@click.option("-a", "--all", "install_all", is_flag=True, help="Install all skills from source directory.")
 @click.option(
+    "-p",
     "--platform",
     "platform_name",
     type=click.Choice(sorted(PLATFORMS.keys())),
@@ -119,9 +121,9 @@ def skill_cli():
     show_default=True,
     help="Target platform for skill installation.",
 )
-@click.option("--source", "source_dir", type=click.Path(file_okay=False, dir_okay=True), help="Source skills directory.")
-@click.option("--dest", "dest_dir", type=click.Path(file_okay=False, dir_okay=True), help="Destination skills directory.")
-@click.option("--force", is_flag=True, help="Overwrite existing skills.")
+@click.option("-s", "--source", "source_dir", type=click.Path(file_okay=False, dir_okay=True), help="Source skills directory.")
+@click.option("-d", "--dest", "dest_dir", type=click.Path(file_okay=False, dir_okay=True), help="Destination skills directory.")
+@click.option("-f", "--force", is_flag=True, help="Overwrite existing skills.")
 def install_skill(name, install_all, platform_name, source_dir, dest_dir, force):
     if not name and not install_all:
         click.echo("Missing skill name. Use --all to install all skills.", err=True)
@@ -163,8 +165,13 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, force)
         dest_path = dest / skill_name
         if dest_path.exists():
             if not force:
-                skipped.append(skill_name)
-                continue
+                if sys.stdin.isatty() and sys.stdout.isatty():
+                    if not click.confirm(f"Skill already exists: {skill_name}. Overwrite?", default=False):
+                        skipped.append(skill_name)
+                        continue
+                else:
+                    skipped.append(skill_name)
+                    continue
             shutil.rmtree(dest_path)
         shutil.copytree(src_path, dest_path)
         installed.append(skill_name)

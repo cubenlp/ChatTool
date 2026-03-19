@@ -443,20 +443,20 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 chattool skill list
 
 # 安装单个 skill 到 Codex
-chattool skill install cert-manager --platform codex
+chattool skill install cert-manager -p codex
 
 # 安装到 Claude Code（可显式指定目标目录）
-chattool skill install cert-manager --platform claude-code --dest ~/.claude-code/skills
+chattool skill install cert-manager -p claude-code -d ~/.claude-code/skills
 
 # 安装全部 skills
-chattool skill install --all --platform codex
+chattool skill install -a -p codex
 ```
 
 **选项说明 (`install`):**
-- `--platform`: 目标平台（`codex` / `claude-code`）。
-- `--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
-- `--dest`: 目标目录（可覆盖平台默认目录）。
-- `--force`: 覆盖已存在的 skill。
+- `-p/--platform`: 目标平台（`codex` / `claude-code`）。
+- `-s/--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
+- `-d/--dest`: 目标目录（可覆盖平台默认目录）。
+- `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖）。
 
 ---
 
