@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Added
 - `chattool setup claude` — 安装 Claude Code CLI 并写入配置
 - `chattool skill` / `chatskill` — Skills 管理，支持安装到 Codex / Claude Code
+- `chattool cc` — cc-connect 最小可用配置、启动与诊断命令
 
 ## [5.3.0]
 
