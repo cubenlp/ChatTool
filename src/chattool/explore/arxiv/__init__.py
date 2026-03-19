@@ -1,3 +1,7 @@
 """arXiv explore module."""
 
-__all__ = []
+from .models import Paper
+from .client import ArxivClient
+from .harvest import ArxivHarvester
+
+__all__ = ["Paper", "ArxivClient", "ArxivHarvester"]
