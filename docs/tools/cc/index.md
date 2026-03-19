@@ -28,6 +28,7 @@ chattool cc start
 - `chattool cc init -i` 会引导填写 Agent/Platform/Mode 及必要凭证，并在已有配置时作为默认值提示。
 - 飞书平台会直接提示 `app_id` 与 `app_secret`。
 - 生成的配置会包含可选代理字段（`proxy`/`proxy_username`/`proxy_password`）注释。
+- 如需填写代理配置，请使用 `chattool cc init -i --full-options`。
 
 ## 代理说明
 
