@@ -20,6 +20,8 @@ cli-tests/
 │   └── test_chattool_docker_basic.md
 ├── env/
 │   └── test_chattool_env_basic.md
+├── explore/
+│   └── test_chattool_explore_basic.md
 ├── gh/
 │   └── test_chattool_gh_basic.md
 ├── image/

@@ -101,6 +101,14 @@ chattool image pollinations generate "a cat in space" -o cat.png
 chattool image siliconflow generate "a cute dog" -o dog.png
 ```
 
+### 数据探索 (`chattool explore`)
+
+```bash
+chattool explore arxiv search -p ai4math -n 10
+chattool explore arxiv daily -p math-formalization --days 3
+chattool explore arxiv get 1706.03762 -v
+```
+
 ### 其他工具
 
 | 工具 | 命令 | 说明 |

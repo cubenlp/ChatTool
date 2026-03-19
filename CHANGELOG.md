@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `FEISHU_DEFAULT_RECEIVER_ID` — `chattool lark send` 可省略接收者并默认发给配置用户
 - `chattool lark notify-doc` — 创建云文档、追加正文并把文档链接发送给默认用户
 - `chattool lark notify-doc --append-file/--open` — 支持从文件追加正文并在成功后打开文档
+- `chattool explore arxiv` — arXiv 论文搜索、daily 抓取与 preset 检索
 
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
