@@ -19,6 +19,12 @@ def _get_cmd_output(command):
         return result.stdout.strip()
     return ""
 
+def _get_bash_output(command):
+    result = _run_bash(command)
+    if result.returncode == 0:
+        return result.stdout.strip()
+    return ""
+
 def setup_nodejs(interactive=None):
     logger.info("Start nodejs setup")
     usage = "Usage: chattool setup nodejs [-i|-I]"
@@ -59,6 +65,7 @@ def setup_nodejs(interactive=None):
         version_spec = click.prompt("Node.js version to install via nvm", default="lts/*")
 
     quoted_version = shlex.quote(version_spec)
+    click.echo(f"Installing Node.js via nvm ({version_spec})...")
     nvm_cmd = (
         'export NVM_DIR="$HOME/.nvm" && '
         '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
@@ -76,7 +83,29 @@ def setup_nodejs(interactive=None):
         raise click.Abort()
 
     output = (result.stdout or "").strip()
+    error_output = (result.stderr or "").strip()
     if output:
         click.echo(output)
+    if error_output:
+        click.echo(error_output)
+
+    node_version = _get_bash_output(
+        'export NVM_DIR="$HOME/.nvm" && '
+        '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
+        "node -v"
+    )
+    npm_version = _get_bash_output(
+        'export NVM_DIR="$HOME/.nvm" && '
+        '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
+        "npm -v"
+    )
+    if node_version:
+        click.echo(f"Node.js version: {node_version}")
+    if npm_version:
+        click.echo(f"npm version: {npm_version}")
+    if not node_version or not npm_version:
+        click.echo("Node.js was installed but may not be available in current shell.")
+        click.echo("Open a new terminal or run: source ~/.nvm/nvm.sh")
+
     logger.info(f"Node.js setup completed with version target: {version_spec}")
     click.echo(f"Node.js setup completed with version target: {version_spec}")

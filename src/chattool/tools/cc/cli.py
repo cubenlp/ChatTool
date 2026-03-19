@@ -40,6 +40,26 @@ PLATFORM_CHOICES = [
     "line",
 ]
 
+AGENT_MODE_CHOICES: dict[str, list[str]] = {
+    "codex": ["suggest", "auto-edit", "full-auto", "yolo"],
+    "claudecode": ["default", "acceptEdits", "plan", "bypassPermissions", "dontAsk"],
+    "cursor": ["default", "force", "plan", "ask"],
+    "gemini": ["default", "auto-edit", "plan", "yolo"],
+    "qoder": ["default", "yolo"],
+    "opencode": ["default", "yolo"],
+    "iflow": ["default", "auto-edit", "plan", "yolo"],
+}
+
+AGENT_MODE_DEFAULTS: dict[str, str] = {
+    "codex": "suggest",
+    "claudecode": "default",
+    "cursor": "default",
+    "gemini": "default",
+    "qoder": "default",
+    "opencode": "default",
+    "iflow": "default",
+}
+
 
 @click.group(name="cc")
 def cli() -> None:
@@ -107,6 +127,7 @@ def _load_existing_defaults(config_path: Path) -> dict[str, object]:
         "project": project.get("name"),
         "agent": agent.get("type"),
         "work_dir": agent_opts.get("work_dir"),
+        "mode": agent_opts.get("mode"),
         "platform": platform_type,
         "platform_options": platform_opts,
     }
@@ -117,6 +138,7 @@ def _write_config(
     project_name: str,
     agent: str,
     work_dir: str,
+    mode: str,
     platform: str,
     platform_options: dict[str, str] | None,
 ) -> None:
@@ -130,7 +152,7 @@ def _write_config(
     lines.append("")
     lines.append("[projects.agent.options]")
     lines.append(f"work_dir = \"{_toml_string(work_dir)}\"")
-    lines.append("mode = \"default\"")
+    lines.append(f"mode = \"{_toml_string(mode)}\"")
     lines.append("")
     lines.append("[[projects.platforms]]")
     lines.append(f"type = \"{_toml_string(platform)}\"")
@@ -263,6 +285,7 @@ def setup(interactive: bool | None) -> None:
 @click.option("--agent", default=None, type=click.Choice(AGENT_CHOICES), help="Agent type.")
 @click.option("--platform", default=None, type=click.Choice(PLATFORM_CHOICES), help="Platform type.")
 @click.option("--work-dir", default=None, type=click.Path(file_okay=False, dir_okay=True), help="Agent work dir.")
+@click.option("--mode", default=None, help="Agent mode (depends on agent type).")
 @click.option("--config", "-c", default=None, help="Config file path.")
 @click.option(
     "--interactive/--no-interactive",
@@ -275,6 +298,7 @@ def init(
     agent: str | None,
     platform: str | None,
     work_dir: str | None,
+    mode: str | None,
     config: str | None,
     interactive: bool | None,
 ) -> None:
@@ -291,6 +315,7 @@ def init(
     project = project or defaults.get("project") or Path(work_dir).name or "cc-project"
     default_agent = defaults.get("agent")
     default_platform = defaults.get("platform")
+    default_mode = defaults.get("mode")
 
     effective_agent = agent or default_agent
     effective_platform = platform or default_platform
@@ -326,8 +351,24 @@ def init(
                 type=click.Choice(AGENT_CHOICES),
                 default=default_agent or "claudecode",
             )
+        if not mode:
+            mode_choices = AGENT_MODE_CHOICES.get(agent or "")
+            if mode_choices:
+                mode_default = default_mode or AGENT_MODE_DEFAULTS.get(agent or "", "default")
+                mode = click.prompt(
+                    "选择权限模式",
+                    type=click.Choice(mode_choices),
+                    default=mode_default,
+                )
         work_dir = click.prompt("Agent 工作目录", default=work_dir)
         project = click.prompt("项目名称", default=project)
+    elif mode:
+        mode_choices = AGENT_MODE_CHOICES.get(agent or "")
+        if mode_choices and mode not in mode_choices:
+            raise click.BadParameter(
+                f"mode must be one of {', '.join(mode_choices)} for agent {agent}",
+                param_hint="--mode",
+            )
 
     if config_path.exists():
         if not can_prompt or interactive is False:
@@ -357,6 +398,9 @@ def init(
         project_name=project,
         agent=agent or default_agent or "claudecode",
         work_dir=work_dir,
+        mode=mode
+        or default_mode
+        or AGENT_MODE_DEFAULTS.get(agent or default_agent or "claudecode", "default"),
         platform=platform or default_platform or "feishu",
         platform_options=platform_options,
     )

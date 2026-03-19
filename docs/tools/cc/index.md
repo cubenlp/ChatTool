@@ -25,5 +25,5 @@ chattool cc start
 ## 说明
 
 - 一阶段只覆盖高频最小能力，更多高级配置请直接编辑 `config.toml`。
-- `chattool cc init -i` 会引导填写 Agent/Platform 及必要凭证，并在已有配置时作为默认值提示。
+- `chattool cc init -i` 会引导填写 Agent/Platform/Mode 及必要凭证，并在已有配置时作为默认值提示。
 - 飞书平台会直接提示 `app_id` 与 `app_secret`。
