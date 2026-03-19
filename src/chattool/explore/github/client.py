@@ -85,3 +85,22 @@ class GithubExplorer:
         if language:
             query += f" language:{language}"
         return self.search_repos(query, sort="stars", max_results=n)
+
+    def get_languages(self, full_name: str) -> dict:
+        """Return language breakdown (bytes) for a repo."""
+        return self._gh.get_repo(full_name).get_languages()
+
+    def get_commit_activity(self, full_name: str) -> list:
+        """Return weekly commit activity for the past 52 weeks."""
+        return [
+            {"week": s.week, "total": s.total, "days": s.days}
+            for s in self._gh.get_repo(full_name).get_stats_commit_activity()
+        ]
+
+    def rate_limit(self) -> dict:
+        """Return current rate limit status for core and search."""
+        rl = self._gh.get_rate_limit()
+        return {
+            "core": {"limit": rl.core.limit, "remaining": rl.core.remaining, "reset": rl.core.reset},
+            "search": {"limit": rl.search.limit, "remaining": rl.search.remaining, "reset": rl.search.reset},
+        }
