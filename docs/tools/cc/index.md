@@ -28,3 +28,18 @@ chattool cc start
 - `chattool cc init -i` 会引导填写 Agent/Platform/Mode 及必要凭证，并在已有配置时作为默认值提示。
 - 飞书平台会直接提示 `app_id` 与 `app_secret`。
 - 生成的配置会包含可选代理字段（`proxy`/`proxy_username`/`proxy_password`）注释。
+
+## 代理说明
+
+当你的 IP 不固定或平台侧有白名单要求时，可以在平台配置下添加代理字段：
+
+```toml
+# proxy = ""  # optional: forward proxy for API calls if your IP is dynamic
+#             # 可选：正向代理，用于 IP 不固定的场景
+#             # e.g. "http://your-vps-ip:8888" — the VPS IP goes into trusted IP list
+#             # 示例："http://你的VPS-IP:8888" — 将 VPS IP 加入可信 IP 列表
+# proxy_username = ""  # optional: proxy authentication username / 代理认证用户名
+# proxy_password = ""  # optional: proxy authentication password / 代理认证密码
+```
+
+提示：如果你开启了本地代理，建议设置 `NO_PROXY=127.0.0.1,localhost`，避免本地服务请求被代理转发。
