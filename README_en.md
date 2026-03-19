@@ -165,6 +165,7 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
 | Setup | `chattool setup codex` | Install Codex CLI and write config (supports `--base-url` / `--model`) |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude Code |
+| CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 
 ## License
 
