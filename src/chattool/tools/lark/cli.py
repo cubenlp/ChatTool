@@ -392,7 +392,6 @@ def notify_doc(title, text, env_ref, receiver, id_type, folder_token, append_fil
         except Exception as e:
             click.secho(f"⚠️ 打开文档失败: {e}", fg="yellow")
 
-
 # ------------------------------------------------------------------
 # chattool lark upload
 # ------------------------------------------------------------------
