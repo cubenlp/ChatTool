@@ -80,7 +80,7 @@ def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
             "--config",
             str(config_path),
         ],
-        input="\n\n\n\n\n",
+        input="\n\n\n\n\nn\n",
     )
 
     assert result.exit_code == 0
