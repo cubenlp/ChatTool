@@ -1,7 +1,5 @@
 # cc-connect：把你的本地 AI Agent 装进口袋
 
-![cc-connect banner](../images/banner.svg)
-
 你是否也遇到过这样的场景：
 - 下班路上，突然想到一个绝妙的代码思路，想让 AI 试着写写看，但电脑不在手边？
 - 周末在外，服务器突然报警，急需 AI 帮你分析日志，却还要掏出电脑连热点？
@@ -93,7 +91,7 @@ app_id = "cli_xxxxxxxx"       # 飞书开发者后台获取
 app_secret = "xxxxxxxxxxxx"   # 飞书开发者后台获取
 ```
 
-> **提示**：关于如何获取飞书的 App ID 和 Secret，以及如何开启机器人能力，可以参考 [详细文档](../feishu.md)。
+> **提示**：关于如何获取飞书的 App ID 和 Secret，以及如何开启机器人能力，可以参考 [飞书 CLI 使用教程](../tools/lark/index.md)。
 
 ### 第三步：启动
 

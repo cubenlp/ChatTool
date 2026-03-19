@@ -12,6 +12,7 @@ CLI按功能分为几个命令组：
 - **`serve`**: 本地服务器实用工具（例如，请求捕获）。
 - **`client`**: 远程服务客户端工具。
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
+- **`lark`**: 飞书机器人与云文档工具。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
 - **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / OpenCode / Chrome / FRP）。

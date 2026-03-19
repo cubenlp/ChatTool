@@ -177,12 +177,6 @@ chattool serve lark echo -l DEBUG
 
 ## 文档
 
-完整文档见 [飞书机器人开发指南](../larkbot/index.md)：
+完整文档见 [飞书 CLI 使用教程](../tools/lark/index.md)：
 
-- [飞书平台配置](../larkbot/feishu-setup.md) — 从零开始创建应用，含截图
-- [快速开始](../larkbot/quickstart.md) — 5 分钟发出第一条消息
-- [消息发送](../larkbot/messaging.md) — 文本、图片、文件、卡片
-- [接收消息与路由](../larkbot/receiving.md) — WebSocket、指令路由
-- [AI 对话集成](../larkbot/ai-chat.md) — ChatSession 多用户会话
-- [交互卡片](../larkbot/cards.md) — 按钮回调、动态更新
-- [命令行工具](../larkbot/cli.md) — CLI 命令速查
+- [飞书机器人 CLI 教程](../tools/lark/index.md) — 凭证、权限、发送、监听与本地调试

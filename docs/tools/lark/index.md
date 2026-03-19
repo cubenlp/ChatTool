@@ -1,0 +1,341 @@
+# 飞书 CLI 使用教程
+
+这页只讲一件事：如何直接用 `chattool lark` 把飞书机器人跑起来、验证通、发出消息，并排查权限或监听问题。
+
+如果你的目标是“先用起来”，优先走 CLI，不要先写 Python 脚本。
+
+## CLI 能力范围
+
+当前推荐的飞书入口是 `chattool lark`，已覆盖这些日常动作：
+
+- 验证机器人凭证与激活状态：`info`
+- 查看应用权限：`scopes`
+- 发送文本、图片、文件、卡片、富文本：`send`
+- 单独上传图片或文件：`upload`
+- 引用回复已有消息：`reply`
+- 监听长连接事件做调试：`listen`
+- 在本地终端调试 AI 会话：`chat`
+- 创建云文档并通知目标用户：`notify-doc`
+
+## 前置准备
+
+先安装工具依赖：
+
+```bash
+pip install "chattool[tools]"
+```
+
+然后初始化飞书凭证：
+
+```bash
+chattool env init -t feishu
+```
+
+如果你不想走交互式，也可以直接设置环境变量：
+
+```bash
+export FEISHU_APP_ID=cli_xxxxxxxxxxxxxxxx
+export FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+!!! warning "输入边界要清晰"
+    `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET` 只用于放飞书凭证。  
+    如果当前运行环境同时被 OpenClaw、消息网关或其他入口复用，不要再用新的环境变量传接收者、消息内容、文件路径这类业务参数。  
+    这些输入应直接放在 CLI 参数里，避免变量冲突和语义歧义。
+
+如果你经常发消息给同一个测试用户，可以额外配置：
+
+```bash
+chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
+```
+
+配置后，`chattool lark send` 可以省略接收者参数。
+
+## `-e/--env`
+
+如果你不想依赖当前 shell 里的环境变量，可以给子命令显式传一个配置来源：
+
+```bash
+chattool lark info -e ~/.config/chattool/.env
+chattool lark info -e work
+```
+
+`-e/--env` 支持两种形式：
+
+- `.env` 文件路径
+- `chatenv save` 保存过的 profile 名称，例如 `work`
+
+这适合多套飞书应用来回切换，或者在当前 shell 环境比较脏的时候，明确指定一份配置来执行。
+
+## 最短工作流
+
+### 1. 验证凭证
+
+```bash
+chattool lark info
+chattool lark info -e work
+```
+
+这一步用于确认：
+
+- `FEISHU_APP_ID` / `FEISHU_APP_SECRET` 是否正确
+- 机器人是否已激活
+- 当前凭证是否能成功访问飞书 OpenAPI
+
+### 2. 检查权限
+
+```bash
+chattool lark scopes
+chattool lark scopes -f im
+chattool lark scopes -g
+chattool lark scopes -a -g
+```
+
+建议至少先检查消息相关权限是否已授权，再发消息。
+
+如果你只是排查发消息失败，先跑这一条通常最快：
+
+```bash
+chattool lark scopes -f im
+```
+
+### 3. 发一条文本消息
+
+```bash
+chattool lark send "你好，世界"
+chattool lark send rexwzh "你好，世界"
+chattool lark send rexwzh "你好，世界" -e work
+```
+
+默认接收者类型是 `user_id`。如果你要给群发消息，需要显式指定 `chat_id`：
+
+```bash
+chattool lark send oc_xxxxx "群通知" -t chat_id
+```
+
+如果你拿到的是 `open_id`、`email` 或 `union_id`，也可以直接切换：
+
+```bash
+chattool lark send ou_xxxxx "你好" -t open_id
+chattool lark send someone@example.com "你好" -t email
+```
+
+## 发送不同类型的消息
+
+### 文本
+
+```bash
+chattool lark send "测试消息"
+chattool lark send <receiver> "测试消息"
+```
+
+### 图片
+
+```bash
+chattool lark send <receiver> --image ./photo.jpg
+```
+
+### 文件
+
+```bash
+chattool lark send <receiver> --file ./report.pdf
+```
+
+### 卡片消息
+
+```bash
+chattool lark send <receiver> --card ./card.json
+```
+
+### 富文本消息
+
+```bash
+chattool lark send <receiver> --post ./post.json
+```
+
+`send` 会自动根据参数决定发送哪种消息。文本和文件类输入不要混在环境变量里，直接通过命令行参数传入。
+
+如果已配置 `FEISHU_DEFAULT_RECEIVER_ID`，单参数形式会被视为消息文本，自动发给默认用户。
+
+## 只上传资源，不立刻发消息
+
+如果你只想先拿到 `image_key` 或 `file_key`，用 `upload`：
+
+```bash
+chattool lark upload ./photo.jpg
+chattool lark upload ./report.pdf
+chattool lark upload ./data.bin -t file
+```
+
+这通常用于两类场景：
+
+- 先上传资源，再拼卡片 JSON
+- 先拿 key，再嵌入富文本结构
+
+## 引用回复已有消息
+
+```bash
+chattool lark reply om_xxxxxx "收到，已处理"
+```
+
+这里的 `message_id` 来自你已经收到或查询到的那条飞书消息。
+
+## 调试消息接收链路
+
+如果你怀疑“机器人能发不能收”，直接开监听：
+
+```bash
+chattool lark listen
+chattool lark listen -v
+chattool lark listen -l DEBUG
+```
+
+使用 `listen` 之前，需要先在飞书后台确认：
+
+- 已开启长连接模式
+- 已订阅 `im.message.receive_v1`
+- 已开通对应事件权限
+- 新权限或事件配置已经发布生效
+
+## 本地调试 AI 对话
+
+`chattool lark chat` 不经过飞书发消息，只是在终端里复用会话能力，适合先调提示词和上下文。
+
+```bash
+chattool lark chat
+chattool lark chat --system "你是一名飞书助手"
+chattool lark chat --max-history 5
+chattool lark chat --user debug_user
+```
+
+内置命令：
+
+- `/clear`：清空当前用户的历史对话
+- `/quit`：退出终端会话
+
+## 云文档
+
+除了消息收发，`chattool lark` 现在也支持一组最小云文档命令，基于飞书开放平台的 `docx` 服务端接口。
+
+如果你想“一步创建文档并通知到人”，可以直接用：
+
+```bash
+chattool lark notify-doc "周报草稿" "今天完成了接口整理"
+```
+
+这条命令会：
+
+- 创建一篇新文档
+- 把正文追加进去
+- 取回文档链接
+- 把链接发给 `FEISHU_DEFAULT_RECEIVER_ID` 或 `--receiver` 指定的目标
+
+### 创建文档
+
+```bash
+chattool lark doc create "周报草稿"
+chattool lark doc create "会议纪要" --folder-token fldcnxxxxxxxx
+```
+
+### 查看文档信息
+
+```bash
+chattool lark doc get doccnxxxxxxxxxxxx
+```
+
+### 获取纯文本内容
+
+```bash
+chattool lark doc raw doccnxxxxxxxxxxxx
+```
+
+### 查看块结构
+
+```bash
+chattool lark doc blocks doccnxxxxxxxxxxxx
+chattool lark doc blocks doccnxxxxxxxxxxxx --descendants
+```
+
+### 追加一段文本
+
+```bash
+chattool lark doc append-text doccnxxxxxxxxxxxx "今天完成了接口整理"
+```
+
+### 创建后直接通知
+
+```bash
+chattool lark notify-doc "会议纪要" "这里是会议摘要"
+chattool lark notify-doc "发布说明" "这里是更新内容" --receiver f25gc16d
+chattool lark notify-doc "日报" --append-file ./daily.md
+chattool lark notify-doc "日报" --append-file ./daily.md --open
+```
+
+说明：
+
+- `--append-file` 会读取本地 `txt/md` 文件，并按非空行追加到文档正文
+- `--open` 会在发送成功后本地打开文档链接
+
+!!! note "当前范围"
+    这一版先覆盖最常用的文档基础能力：创建、查询、取纯文本、查看块和追加文本。  
+    后续如果要继续扩，可以沿着 `chattool lark doc ...` 这条线补 `update`、`delete children`、`convert` 或 drive/wiki 相关命令。
+
+## 常见排查顺序
+
+### 能否初始化
+
+```bash
+chattool lark info
+```
+
+如果这里就失败，优先检查凭证是否配置正确。
+
+### 权限是否齐
+
+```bash
+chattool lark scopes -f im
+```
+
+如果发送失败或监听不到消息，先看消息相关权限和事件权限。
+
+### 收发链路是否通
+
+```bash
+chattool lark send <receiver> "hello"
+chattool lark listen -l DEBUG
+```
+
+先验证主动发送，再验证被动接收，排查效率最高。
+
+## 一页速查
+
+```bash
+# 1. 配置凭证
+chattool env init -t feishu
+
+# 2. 验证机器人
+chattool lark info
+chattool lark info -e work
+
+# 3. 查看消息相关权限
+chattool lark scopes -f im
+
+# 4. 发送文本
+chattool lark send "你好"
+chattool lark send rexwzh "你好"
+
+# 5. 发送图片
+chattool lark send rexwzh --image ./photo.jpg
+
+# 6. 发送文件
+chattool lark send rexwzh --file ./report.pdf
+
+# 7. 引用回复
+chattool lark reply om_xxxxxx "收到"
+
+# 8. 调试监听
+chattool lark listen -l DEBUG
+
+# 9. 本地调提示词
+chattool lark chat --system "你是一名飞书助手"
+```
