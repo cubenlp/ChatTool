@@ -1,3 +1,6 @@
 """GitHub explore module."""
 
-__all__ = []
+from .models import Repo, Issue
+from .client import GithubExplorer
+
+__all__ = ["Repo", "Issue", "GithubExplorer"]
