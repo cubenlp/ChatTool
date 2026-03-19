@@ -37,6 +37,22 @@ plugins:
         'setup/nginx_proxy.md': 'env/nginx_proxy.md'
         'design/index.md': 'development-guide/index.md'
         'design/directory-responsibilities.md': 'development-guide/directory-responsibilities.md'
+        'larkbot/index.md': 'tools/lark/index.md'
+        'larkbot/quickstart.md': 'tools/lark/index.md'
+        'larkbot/feishu-setup.md': 'tools/lark/index.md'
+        'larkbot/messaging.md': 'tools/lark/index.md'
+        'larkbot/receiving.md': 'tools/lark/index.md'
+        'larkbot/ai-chat.md': 'tools/lark/index.md'
+        'larkbot/cards.md': 'tools/lark/index.md'
+        'larkbot/cli.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/index.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/quickstart.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/feishu-setup.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/messaging.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/receiving.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/ai-chat.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/cards.md': 'tools/lark/index.md'
+        'larkbot-deprecated-docs/cli.md': 'tools/lark/index.md'
   # i18n 插件暂时禁用，启用后会导致子目录页面无限刷新，待排查
   # - i18n:
   #     docs_structure: suffix
@@ -123,7 +139,7 @@ nav:
     - CC-Connect 管理: tools/cc/index.md
     - MCP 服务指南: mcp/index.md
     - Zulip 集成: mcp/zulip.md
-    - 飞书机器人: larkbot/index.md
+    - 飞书机器人: tools/lark/index.md
 
   - 环境安装:
     - 概览: env/index.md

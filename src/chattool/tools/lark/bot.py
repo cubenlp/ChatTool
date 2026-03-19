@@ -1,6 +1,7 @@
 import re
 import json
 import threading
+from uuid import uuid4
 from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -627,6 +628,142 @@ class LarkBot:
         from lark_oapi.api.application.v6 import ListScopeRequest
         request = ListScopeRequest.builder().build()
         return self.client.application.v6.scope.list(request)
+
+    # ------------------------------------------------------------------
+    # Docs / Docx helpers
+    # ------------------------------------------------------------------
+
+    def create_doc_document(self, title: str, folder_token: str = None) -> Any:
+        """Create a Feishu docx document."""
+        from lark_oapi.api.docx.v1 import CreateDocumentRequest, CreateDocumentRequestBody
+
+        body_builder = CreateDocumentRequestBody.builder().title(title)
+        if folder_token:
+            body_builder.folder_token(folder_token)
+
+        request = (
+            CreateDocumentRequest.builder()
+            .request_body(body_builder.build())
+            .build()
+        )
+        return self.client.docx.v1.document.create(request)
+
+    def get_doc_document(self, document_id: str) -> Any:
+        """Fetch Feishu docx document metadata."""
+        from lark_oapi.api.docx.v1 import GetDocumentRequest
+
+        request = GetDocumentRequest.builder().document_id(document_id).build()
+        return self.client.docx.v1.document.get(request)
+
+    def get_doc_raw_content(self, document_id: str, lang: int = None) -> Any:
+        """Fetch Feishu docx raw text content."""
+        from lark_oapi.api.docx.v1 import RawContentDocumentRequest
+
+        builder = RawContentDocumentRequest.builder().document_id(document_id)
+        if lang is not None:
+            builder.lang(lang)
+
+        return self.client.docx.v1.document.raw_content(builder.build())
+
+    def get_doc_block_children(
+        self,
+        document_id: str,
+        block_id: str,
+        page_size: int = None,
+        page_token: str = None,
+        with_descendants: bool = False,
+    ) -> Any:
+        """List child blocks under a specific block."""
+        from lark_oapi.api.docx.v1 import GetDocumentBlockChildrenRequest
+
+        builder = (
+            GetDocumentBlockChildrenRequest.builder()
+            .document_id(document_id)
+            .block_id(block_id)
+        )
+        if page_size is not None:
+            builder.page_size(page_size)
+        if page_token:
+            builder.page_token(page_token)
+        if with_descendants:
+            builder.with_descendants(True)
+
+        return self.client.docx.v1.document_block_children.get(builder.build())
+
+    def append_doc_texts(
+        self,
+        document_id: str,
+        texts: List[str],
+        block_id: str = None,
+        index: int = None,
+    ) -> Any:
+        """Append plain text paragraph blocks to a Feishu docx document."""
+        from lark_oapi.api.docx.v1 import (
+            CreateDocumentBlockChildrenRequest,
+            CreateDocumentBlockChildrenRequestBody,
+            Block,
+            Text,
+            TextElement,
+            TextRun,
+        )
+
+        paragraphs = []
+        for text in texts:
+            text_run = TextRun.builder().content(text).build()
+            text_element = TextElement.builder().text_run(text_run).build()
+            text_block = Text.builder().elements([text_element]).build()
+            paragraphs.append(Block.builder().block_type(2).text(text_block).build())
+
+        body_builder = (
+            CreateDocumentBlockChildrenRequestBody.builder()
+            .children(paragraphs)
+        )
+        if index is not None:
+            body_builder.index(index)
+
+        request = (
+            CreateDocumentBlockChildrenRequest.builder()
+            .document_id(document_id)
+            .block_id(block_id or document_id)
+            .client_token(str(uuid4()))
+            .request_body(body_builder.build())
+            .build()
+        )
+        return self.client.docx.v1.document_block_children.create(request)
+
+    def append_doc_text(
+        self,
+        document_id: str,
+        text: str,
+        block_id: str = None,
+        index: int = None,
+    ) -> Any:
+        """Append a single plain text paragraph block to a Feishu docx document."""
+        return self.append_doc_texts(
+            document_id=document_id,
+            texts=[text],
+            block_id=block_id,
+            index=index,
+        )
+
+    def get_doc_meta(self, document_id: str, with_url: bool = True) -> Any:
+        """Fetch Drive metadata for a docx document."""
+        from lark_oapi.api.drive.v1 import BatchQueryMetaRequest, MetaRequest, RequestDoc
+
+        request_doc = (
+            RequestDoc.builder()
+            .doc_token(document_id)
+            .doc_type("docx")
+            .build()
+        )
+        body = (
+            MetaRequest.builder()
+            .request_docs([request_doc])
+            .with_url(with_url)
+            .build()
+        )
+        request = BatchQueryMetaRequest.builder().request_body(body).build()
+        return self.client.drive.v1.meta.batch_query(request)
 
 
 # ---------------------------------------------------------------------------

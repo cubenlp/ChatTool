@@ -12,6 +12,7 @@ CLI按功能分为几个命令组：
 - **`serve`**: 本地服务器实用工具（例如，请求捕获）。
 - **`client`**: 远程服务客户端工具。
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
+- **`lark`**: 飞书机器人与云文档工具。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
 - **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / OpenCode / Chrome / FRP）。
@@ -443,20 +444,24 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 chattool skill list
 
 # 安装单个 skill 到 Codex
-chattool skill install cert-manager --platform codex
+chattool skill install cert-manager -p codex
 
 # 安装到 Claude Code（可显式指定目标目录）
-chattool skill install cert-manager --platform claude-code --dest ~/.claude-code/skills
+chattool skill install cert-manager -p claude-code -d ~/.claude-code/skills
 
 # 安装全部 skills
-chattool skill install --all --platform codex
+chattool skill install -a -p codex
+
+# 安装时添加 chattool- 前缀
+chattool skill install cert-manager -p codex --prefix
 ```
 
 **选项说明 (`install`):**
-- `--platform`: 目标平台（`codex` / `claude-code`）。
-- `--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
-- `--dest`: 目标目录（可覆盖平台默认目录）。
-- `--force`: 覆盖已存在的 skill。
+- `-p/--platform`: 目标平台（`codex` / `claude-code`）。
+- `-s/--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
+- `-d/--dest`: 目标目录（可覆盖平台默认目录）。
+- `--prefix`: 安装时为 skill 名称添加 `chattool-` 前缀（默认不加）。
+- `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖）。
 
 ---
 

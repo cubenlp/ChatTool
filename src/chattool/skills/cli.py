@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -110,8 +111,9 @@ def skill_cli():
 
 @skill_cli.command(name="install")
 @click.argument("name", required=False)
-@click.option("--all", "install_all", is_flag=True, help="Install all skills from source directory.")
+@click.option("-a", "--all", "install_all", is_flag=True, help="Install all skills from source directory.")
 @click.option(
+    "-p",
     "--platform",
     "platform_name",
     type=click.Choice(sorted(PLATFORMS.keys())),
@@ -119,10 +121,11 @@ def skill_cli():
     show_default=True,
     help="Target platform for skill installation.",
 )
-@click.option("--source", "source_dir", type=click.Path(file_okay=False, dir_okay=True), help="Source skills directory.")
-@click.option("--dest", "dest_dir", type=click.Path(file_okay=False, dir_okay=True), help="Destination skills directory.")
-@click.option("--force", is_flag=True, help="Overwrite existing skills.")
-def install_skill(name, install_all, platform_name, source_dir, dest_dir, force):
+@click.option("-s", "--source", "source_dir", type=click.Path(file_okay=False, dir_okay=True), help="Source skills directory.")
+@click.option("-d", "--dest", "dest_dir", type=click.Path(file_okay=False, dir_okay=True), help="Destination skills directory.")
+@click.option("--prefix", is_flag=True, help="Prefix installed skill names with chattool-.")
+@click.option("-f", "--force", is_flag=True, help="Overwrite existing skills.")
+def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix, force):
     if not name and not install_all:
         click.echo("Missing skill name. Use --all to install all skills.", err=True)
         raise click.Abort()
@@ -160,14 +163,20 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, force)
     skipped = []
     for skill_name in targets:
         src_path = source / skill_name
-        dest_path = dest / skill_name
+        dest_name = f"chattool-{skill_name}" if prefix else skill_name
+        dest_path = dest / dest_name
         if dest_path.exists():
             if not force:
-                skipped.append(skill_name)
-                continue
+                if sys.stdin.isatty() and sys.stdout.isatty():
+                    if not click.confirm(f"Skill already exists: {dest_name}. Overwrite?", default=False):
+                        skipped.append(dest_name)
+                        continue
+                else:
+                    skipped.append(dest_name)
+                    continue
             shutil.rmtree(dest_path)
         shutil.copytree(src_path, dest_path)
-        installed.append(skill_name)
+        installed.append(dest_name)
 
     if installed:
         click.echo(f"Installed skills to {dest} ({platform.name}):")

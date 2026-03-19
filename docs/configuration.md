@@ -138,6 +138,8 @@ BaseEnvConfig.print_config()
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
+- **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID` 等
+- **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录）
 
 ## SVG 转 GIF 服务配置
 
