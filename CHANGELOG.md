@@ -10,10 +10,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup claude` — 安装 Claude Code CLI 并写入配置
 - `chattool skill` / `chatskill` — Skills 管理，支持安装到 Codex / Claude Code
 - `chattool cc` — cc-connect 最小可用配置、启动与诊断命令
+- `chattool skill install --prefix` — 安装时添加 `chattool-` 前缀
+- `CHATTOOL_SKILLS_DIR` — 指定 skills 源目录
+- 新增 skill：`feishu`
 - `chattool cc init --full-options` — 提示填写代理等高级选项
-
-### Fixed
-- `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
+- `chattool lark -e/--env` — 支持从指定 `.env` 文件或保存的 profile 读取飞书鉴权
+- `chattool lark doc` — 支持飞书云文档创建、查询、纯文本读取、块查看与追加文本
+- `FEISHU_DEFAULT_RECEIVER_ID` — `chattool lark send` 可省略接收者并默认发给配置用户
+- `chattool lark notify-doc` — 创建云文档、追加正文并把文档链接发送给默认用户
+- `chattool lark notify-doc --append-file/--open` — 支持从文件追加正文并在成功后打开文档
 
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示

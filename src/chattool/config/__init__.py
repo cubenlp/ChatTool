@@ -2,7 +2,7 @@ from .elements import EnvField, BaseEnvConfig
 from .main import (
     AzureConfig, OpenAIConfig, ZulipConfig, AliyunConfig, TencentConfig, FeishuConfig,
     TongyiConfig, HuggingFaceConfig, PollinationsConfig, LiblibConfig, SiliconFlowConfig ,
-    TPLinkConfig
+    TPLinkConfig, SkillsConfig
 )
 from .github import GitHubConfig
 from .browser import BrowserConfig
@@ -24,4 +24,5 @@ __all__ = [
     "GitHubConfig",
     "BrowserConfig",
     "TPLinkConfig",
+    "SkillsConfig",
 ]
