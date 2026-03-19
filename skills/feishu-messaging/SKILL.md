@@ -1,120 +1,76 @@
 # 飞书消息与文档 Skill
 
-## 概述
+## 目标
 
-此 Skill 提供了通过飞书 OpenAPI 进行消息发送、群聊创建与文档分享等功能，适用于通知、协作与信息分发场景。
+通过 `chattool lark` 快速发送飞书消息/文件，并完成基础的机器人验证与权限检查。
 
-## 核心能力
+## 前置条件
 
-功能 状态 所需权限
-发送文本消息✅ 可用 `im:message:send_as_bot `
-发送富文本消息✅ 可用 `im:message:send_as_bot `
-发送图片消息✅ 可用 `im:message:send_as_bot`
-上传文件✅ 可用 `im:file`  
+1) 配置飞书机器人凭证：
 
+```bash
+chattool env init -t feishu
+# 按提示填写 FEISHU_APP_ID / FEISHU_APP_SECRET
+```
 
-## 使用说明
+2) 验证机器人：
 
-### 发送消息给指定用户
-    给 [姓名] 发一条飞书消息，告诉他 [内容]
+```bash
+chattool lark info
+```
 
-前置条件：需要获取用户的 open_id
+3) 检查权限（可选）：
 
-### 1. 获取群聊id的方法
-    import json
-    import requests
+```bash
+chattool lark scopes
+```
 
-    url = "https://open.feishu.cn/open-apis/im/v1/chats"
-    headers = {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
+必要权限：
+- `im:message:send_as_bot`
+- 发送文件需 `im:file`
 
-    response = requests.get(url, headers=headers)
-    print(json.dumps(response.json(), ensure_ascii=False, indent=2))
+## 常用操作（CLI）
 
-### 2. 创建群聊（私聊可忽略）
-    import requests
-    import json
+### 发送文本消息
 
-    url = "https://open.feishu.cn/open-apis/im/v1/chats"
-    headers = {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "name": "测试群聊",
-        "chat_mode": "group",
-        "description": "用于测试的群聊"
-    }
-    response = requests.post(url, headers=headers, json=payload)
-    print(response.json())
+```bash
+chattool lark send <receiver_id> "你好，世界"
+```
 
-### 3. 邀请用户进群（如果是群聊）
-    import requests
-    import json
+默认 `receiver_id` 类型为 `user_id`。如需其他类型，请加 `-t`：
 
-    url = "https://open.feishu.cn/open-apis/im/v1/chats/{chat_id}/members"
-    headers = {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "id_list": ["open_id_1", "open_id_2"],
-        "member_id_type": "open_id"
-    }
-    response = requests.post(url, headers=headers, json=payload)
-    print(response.json())
+```bash
+# 发送到群聊
+chattool lark send <chat_id> "群消息" -t chat_id
 
-### 4. 更新群名称
-    import requests
-    import json
+# 使用 open_id
+chattool lark send <open_id> "你好" -t open_id
+```
 
-    url = "https://open.feishu.cn/open-apis/im/v1/chats/{chat_id}"
-    headers = {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "name": "新群名称"
-    }
-    response = requests.patch(url, headers=headers, json=payload)
-    print(response.json())
+### 发送图片
 
-### 分享文档给用户或群聊
-    将 [文档链接] 通过飞书分享给 [用户/群聊]
+```bash
+chattool lark send <receiver_id> --image ./photo.jpg
+```
 
-前置条件：已获取文档的 token 和 chat_id
+### 发送文件
 
-### 1. 获取 user_id
-    import requests
-    import json
+```bash
+chattool lark send <receiver_id> --file ./report.pdf
+```
 
-    url = "https://open.feishu.cn/open-apis/contact/v3/users?user_id_type=open_id&department_id=0"
-    headers = {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-    response = requests.get(url, headers=headers)
-    print(json.dumps(response.json(), ensure_ascii=False, indent=2))
+### 发送卡片/富文本
 
-### 2. 分享文档
-    import requests
-    import json
+```bash
+chattool lark send <receiver_id> --card ./card.json
+chattool lark send <receiver_id> --post ./post.json
+```
 
-    url = "https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members"
-    headers = {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "member_type": "openid",
-        "member_id": "ou_xxx",
-        "perm": "view"
-    }
-    response = requests.post(url, headers=headers, json=payload)
-    print(response.json())
+## 常见问题
 
-## 注意事项
+- **提示权限不足**：在飞书开放平台补全权限，并重新发布应用。
+- **发送失败或收不到消息**：确认机器人已加入群聊，且用户在可见范围内。
 
-- 使用前确保机器人具备 `im:message:send_as_bot` 权限
-- 使用的 Token 需来自企业自建应用
-- 群聊消息发送需机器人已加入群
+## 备注
+
+如需更复杂的消息编排（自动拉群、分享文档权限等），建议使用飞书 OpenAPI，并在脚本中调用（无需在此 Skill 内展开）。
