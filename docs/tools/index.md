@@ -14,3 +14,4 @@ ChatTool 提供的各类工具，包括 DNS 管理、AI 绘图、网络扫描、
 - [网络扫描](network/index.md)
 - [SVG 转 GIF](svg2gif.md)
 - [TP-Link 路由器](tplogin.md)
+- [CC-Connect 管理](cc/index.md)

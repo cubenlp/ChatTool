@@ -120,6 +120,7 @@ nav:
     - 网络扫描: tools/network/index.md
     - SVG 转 GIF: tools/svg2gif.md
     - TP-Link 路由器: tools/tplogin.md
+    - CC-Connect 管理: tools/cc/index.md
     - MCP 服务指南: mcp/index.md
     - Zulip 集成: mcp/zulip.md
     - 飞书机器人: larkbot/index.md

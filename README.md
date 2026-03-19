@@ -109,6 +109,7 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup codex/claude` | 安装 Codex / Claude Code 并写入配置 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude Code |
+| CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
 
 ## 文档
 
