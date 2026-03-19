@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
 
+### Fixed
+- `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
+
 ## [5.3.0]
 
 ### Added
