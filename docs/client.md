@@ -450,12 +450,16 @@ chattool skill install cert-manager -p claude-code -d ~/.claude-code/skills
 
 # 安装全部 skills
 chattool skill install -a -p codex
+
+# 安装时添加 chattool- 前缀
+chattool skill install cert-manager -p codex --prefix
 ```
 
 **选项说明 (`install`):**
 - `-p/--platform`: 目标平台（`codex` / `claude-code`）。
 - `-s/--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
 - `-d/--dest`: 目标目录（可覆盖平台默认目录）。
+- `--prefix`: 安装时为 skill 名称添加 `chattool-` 前缀（默认不加）。
 - `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖）。
 
 ---

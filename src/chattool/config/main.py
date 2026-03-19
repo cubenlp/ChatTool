@@ -24,6 +24,16 @@ class OpenAIConfig(BaseEnvConfig):
         except Exception as e:
             print(f"❌ Failed: {e}")
 
+
+class SkillsConfig(BaseEnvConfig):
+    _title = "ChatTool Skills Configuration"
+    _aliases = ["skills", "skill", "chattool-skills"]
+
+    CHATTOOL_SKILLS_DIR = EnvField(
+        "CHATTOOL_SKILLS_DIR",
+        desc="Path to ChatTool skills directory (used by `chattool skill install/list`).",
+    )
+
 class AzureConfig(BaseEnvConfig):
     _title = "Azure OpenAI Configuration"
     _aliases = ["azure", "az"]

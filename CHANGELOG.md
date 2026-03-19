@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup claude` — 安装 Claude Code CLI 并写入配置
 - `chattool skill` / `chatskill` — Skills 管理，支持安装到 Codex / Claude Code
 - `chattool cc` — cc-connect 最小可用配置、启动与诊断命令
+- `chattool skill install --prefix` — 安装时添加 `chattool-` 前缀
+- `CHATTOOL_SKILLS_DIR` — 指定 skills 源目录
+- 新增 skill：`feishu-messaging`
 - `chattool cc init --full-options` — 提示填写代理等高级选项
 
 ### Fixed
