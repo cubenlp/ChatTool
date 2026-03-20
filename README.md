@@ -106,6 +106,7 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 ```bash
 chattool explore arxiv search -p ai4math -n 10
 chattool explore arxiv daily -p math-formalization --days 3
+chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
 chattool explore arxiv get 1706.03762 -v
 ```
 

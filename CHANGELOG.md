@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool lark notify-doc` — 创建云文档、追加正文并把文档链接发送给默认用户
 - `chattool lark notify-doc --append-file/--open` — 支持从文件追加正文并在成功后打开文档
 - `chattool explore arxiv` — arXiv 论文搜索、daily 抓取与 preset 检索
+- `chattool explore arxiv` 新增 `math-formalization-weekly` preset，并补充数学形式化近一周追踪 workflow
+- `skills/arxiv-explore` 新增数学形式化近一周子模块，包含分类索引、真实样例和多查询收集脚本
 
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示

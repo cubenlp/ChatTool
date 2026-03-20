@@ -8,6 +8,7 @@
 chattool explore arxiv search "cat:cs.AI AND ti:transformer" -n 5
 chattool explore arxiv search -p ai4math -n 20
 chattool explore arxiv daily -p math-formalization --days 3
+chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
 chattool explore arxiv get 1706.03762 -v
 chattool explore arxiv presets
 ```
@@ -25,10 +26,13 @@ chattool explore arxiv presets
 
 - `ai4math`
 - `math-formalization`
+- `math-formalization-weekly`
 - `math-programming`
 - `math-reasoning`
 
 当只提供 `--preset` 时，CLI 会自动构造 arXiv 查询；`daily` 还会在抓取后执行更严格的本地关键词过滤，以减少噪声结果。
+
+其中 `math-formalization-weekly` 用于近一周数学形式化论文追踪，适合先做宽召回，再逐步切换到 `ti:` / `abs:` 精确检索。
 
 ## 说明
 

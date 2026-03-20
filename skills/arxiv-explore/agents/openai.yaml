@@ -1,3 +1,3 @@
 interface:
   display_name: "arXiv Explore"
-  short_description: "Search and explore arXiv papers"
+  short_description: "Search arXiv papers and track math formalization weekly"

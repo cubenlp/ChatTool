@@ -91,7 +91,7 @@ chattool explore arxiv get 1706.03762 -v
   - 无
 
 预期过程和结果：
-  1. 执行 `chattool explore arxiv presets`，预期输出包含 `ai4math`、`math-formalization` 等 preset 名称与描述摘要。
+  1. 执行 `chattool explore arxiv presets`，预期输出包含 `ai4math`、`math-formalization`、`math-formalization-weekly` 等 preset 名称与描述摘要。
 
 参考执行脚本（伪代码）：
 

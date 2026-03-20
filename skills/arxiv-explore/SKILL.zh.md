@@ -1,6 +1,6 @@
 ---
 name: arxiv-explore
-description: "通过 ChatTool CLI 搜索和探索 arXiv 论文。当用户询问搜索论文、获取每日最新提交、按 ID 获取论文，或使用 ai4math 等领域预设时使用。"
+description: "通过 ChatTool CLI 搜索和探索 arXiv 论文。当用户询问搜索论文、获取每日最新提交、按 ID 获取论文，或使用 ai4math、math-formalization-weekly 等领域预设时使用。"
 ---
 
 # arXiv 论文探索
@@ -11,6 +11,7 @@ description: "通过 ChatTool CLI 搜索和探索 arXiv 论文。当用户询问
 # 使用预设（推荐）
 chattool explore arxiv daily -p ai4math
 chattool explore arxiv daily -p math-formalization --days 3 -v
+chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
 
 # 手动搜索
 chattool explore arxiv search "cat:cs.AI AND all:transformer" -n 10
@@ -21,6 +22,15 @@ chattool explore arxiv presets
 # 按 ID 获取论文
 chattool explore arxiv get 1706.03762
 ```
+
+## 领域子模块
+
+- 数学形式化近一周追踪：
+  见 [references/math-formalization-weekly.zh.md](references/math-formalization-weekly.zh.md)
+- 英文版：
+  见 [references/math-formalization-weekly.md](references/math-formalization-weekly.md)
+- 多路查询收集脚本：
+  `python skills/arxiv-explore/scripts/collect_math_formalization_weekly.py --days 7 --per-query 20`
 
 ## 核心命令
 
@@ -36,6 +46,7 @@ chattool explore arxiv presets
 |--------|------|
 | `ai4math` | 定理证明、自动形式化、神经符号数学 |
 | `math-formalization` | Lean/Coq/Isabelle + LLM 自动形式化 |
+| `math-formalization-weekly` | 近一周数学形式化追踪，召回更宽、后过滤更严 |
 | `math-programming` | 符号计算、神经符号、代码化数学求解 |
 | `math-reasoning` | LLM 数学推理基准、思维链、竞赛数学 |
 
@@ -55,6 +66,7 @@ chattool explore arxiv daily [OPTIONS]
 ```bash
 chattool explore arxiv daily -p ai4math
 chattool explore arxiv daily -p math-formalization --days 3
+chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
 chattool explore arxiv daily -c cs.AI -c cs.LG --days 7 -v
 ```
 
@@ -75,9 +87,43 @@ chattool explore arxiv search [QUERY] [OPTIONS]
 示例：
 ```bash
 chattool explore arxiv search -p ai4math -n 30
+chattool explore arxiv search -p math-formalization-weekly --sort submittedDate -n 50
 chattool explore arxiv search "au:Avigad" --sort submittedDate -n 20
 chattool explore arxiv search "ti:lean AND abs:formalization" -n 15 -v
 ```
+
+## 数学形式化近一周追踪流程
+
+先从近一周 preset 开始：
+
+```bash
+chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
+```
+
+如果结果太少，先放宽召回：
+
+```bash
+chattool explore arxiv search -p math-formalization-weekly --sort submittedDate -n 80
+chattool explore arxiv search "cat:cs.LO AND (all:lean4 OR all:mathlib OR all:coq OR all:isabelle)" --sort submittedDate -n 50
+chattool explore arxiv search "cat:math.LO AND (all:formal mathematics OR all:theorem proving)" --sort submittedDate -n 50
+```
+
+如果噪声太多，改成更严格的标题/摘要检索：
+
+```bash
+chattool explore arxiv search "ti:lean AND abs:autoformalization" --sort submittedDate -n 30 -v
+chattool explore arxiv search "abs:\"interactive theorem proving\" AND (all:mathlib OR all:coq)" --sort submittedDate -n 30 -v
+```
+
+推荐的调整策略：
+
+1. 先跑 `daily -p math-formalization-weekly --days 7`。
+2. 如果召回偏低，优先扩分类范围，如 `cs.LO`、`cs.PL`、`math.LO`，再补短关键词。
+3. 如果噪声偏高，从 broad preset 改成 `ti:` / `abs:` 精确检索。
+4. 当出现明确子主题时，转向系统名检索：`lean4`、`mathlib`、`coq`、`isabelle`、`metamath`。
+5. 找到候选论文后，用 `get <ARXIV_ID>` 查看完整摘要。
+
+如果你要做“厚积薄发”式的近一周积累，请继续加载 [references/math-formalization-weekly.zh.md](references/math-formalization-weekly.zh.md)。里面包含分层 query、真实样例和批量收集脚本。
 
 ### 按 ID 获取
 
@@ -131,6 +177,8 @@ papers = client.search(q.build(), max_results=50)
 - neurosymbolic、neuro-symbolic、AlphaProof
 
 **监控分类：** cs.AI, cs.LO, cs.CL, cs.PL, math.LO
+
+`math-formalization-weekly` 适合近一周扫描：先用更宽的 query keyword 提高召回，再用更严格的 filter keyword 清理噪声。
 
 ## 注意事项
 

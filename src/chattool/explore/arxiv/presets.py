@@ -127,6 +127,60 @@ _register(SearchPreset(
 ))
 
 # ---------------------------------------------------------------------------
+# math-formalization-weekly — broader weekly tracking for recent papers
+# ---------------------------------------------------------------------------
+
+_register(SearchPreset(
+    name="math-formalization-weekly",
+    description="Weekly tracking for mathematical formalization papers with broader recall and strict post-filtering",
+    categories=["cs.AI", "cs.LO", "cs.CL", "cs.PL", "math.LO"],
+    query_keywords=[
+        "autoformalization",
+        "formal mathematics",
+        "formalized mathematics",
+        "theorem proving",
+        "proof assistant",
+        "interactive theorem proving",
+        "formal proof",
+        "lean4",
+        "mathlib",
+        "coq",
+        "isabelle",
+        "hol light",
+        "metamath",
+        "premise selection",
+        "proof search",
+        "informal-to-formal",
+    ],
+    filter_keywords=[
+        "autoformalization",
+        "formal mathematics",
+        "formalized mathematics",
+        "mathematical formalization",
+        "interactive theorem proving",
+        "theorem proving",
+        "formal proof",
+        "proof assistant",
+        "informal-to-formal",
+        "lean 4",
+        "lean4",
+        "mathlib",
+        "coq",
+        "isabelle",
+        "hol light",
+        "metamath",
+        "premise selection",
+        "proof search",
+        "tactic prediction",
+        "proof generation",
+        "miniF2F",
+        "ProofNet",
+        "FIMO",
+        "formal theorem proving",
+    ],
+))
+
+# ---------------------------------------------------------------------------
 # math-programming — symbolic / neurosymbolic / code-based math
 # ---------------------------------------------------------------------------
 

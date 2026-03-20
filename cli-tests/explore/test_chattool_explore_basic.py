@@ -148,3 +148,4 @@ def test_explore_arxiv_presets_lists_known_entries(runner):
     assert result.exit_code == 0
     assert "ai4math" in result.output
     assert "math-formalization" in result.output
+    assert "math-formalization-weekly" in result.output
