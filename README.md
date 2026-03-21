@@ -26,6 +26,7 @@
 ```bash
 pip install chattool --upgrade
 pip install "chattool[images]"   # 含图像工具
+pip install "chattool[pypi]"     # 含 Python 包构建/发布依赖
 pip install "chattool[dev]"      # 含 MCP 等开发依赖
 ```
 
@@ -106,6 +107,7 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | 工具 | 命令 | 说明 |
 |------|------|------|
 | 网络扫描 | `chattool network` | 扫描局域网主机和端口 |
+| PyPI 工具 | `chattool pypi` | 检查、构建、校验与发布 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup codex/claude` | 安装 Codex / Claude Code 并写入配置 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude Code |
@@ -114,6 +116,8 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 ## 文档
 
 完整文档见 [chattool.wzhecnu.cn](https://chattool.wzhecnu.cn)
+仓库结构设计草案见 `docs/design/python-library-repo-structure.md`
+PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
 ## 开源协议
 

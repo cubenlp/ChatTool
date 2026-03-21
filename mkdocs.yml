@@ -131,6 +131,7 @@ nav:
     - 概览: tools/index.md
     - 工具接口规范: tools/interfaces.md
     - DNS 工具: tools/dns/index.md
+    - PyPI 工具: tools/pypi/index.md
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
     - 网络扫描: tools/network/index.md
@@ -154,6 +155,8 @@ nav:
     - 开发指南: development-guide/index.md
     - 目录职责说明: development-guide/directory-responsibilities.md
     - 任务驱动沉淀: development-guide/task-driven-iteration.md
+    - Python 库仓库构成设计: design/python-library-repo-structure.md
+    - ChatTool PyPI CLI 设计: design/chattool-pypi-cli-design.md
 
   - 博客:
     - 白嫖 AI 生图实战: blog/free-image-guide.md

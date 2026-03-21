@@ -56,6 +56,7 @@ def cli():
 cli._lazy_commands.update({
     "env": lambda: _load_attr("chattool.config.cli", "cli"),
     "dns": _load_dns_group,
+    "pypi": lambda: _load_attr("chattool.tools.pypi.cli", "cli"),
     "serve": _build_serve_group,
     "client": _build_client_group,
     "network": lambda: _load_attr("chattool.tools.network.cli", "network"),

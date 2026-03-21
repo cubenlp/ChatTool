@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `FEISHU_DEFAULT_RECEIVER_ID` — `chattool lark send` 可省略接收者并默认发给配置用户
 - `chattool lark notify-doc` — 创建云文档、追加正文并把文档链接发送给默认用户
 - `chattool lark notify-doc --append-file/--open` — 支持从文件追加正文并在成功后打开文档
+- `chattool pypi` — 新增 Python 包 doctor/build/check/publish/release CLI
+- 文档：新增“Python 库仓库构成设计”，明确 PyPI 包、源码、测试、CLI 测试与 skills 的目录边界
+- 设计：新增 `chattool pypi` CLI 文档，定义 build/check/publish/release 的命令边界与安全策略
 
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
