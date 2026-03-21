@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+import subprocess
+import sys
 
 from chattool.client.main import cli
 
@@ -37,9 +39,20 @@ def test_chattool_pypi_basic(tmp_path):
     init = runner.invoke(cli, ["pypi", "init", "mychat", "--project-dir", str(project_dir)])
     assert init.exit_code == 0
     assert (project_dir / "src" / "mychat" / "__init__.py").exists()
+    assert (project_dir / "tests" / "conftest.py").exists()
 
     doctor = runner.invoke(cli, ["pypi", "doctor", "--project-dir", str(project_dir)])
     assert "[OK] pyproject.toml" in doctor.output
+
+    pytest_result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q"],
+        cwd=project_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert pytest_result.returncode == 0, pytest_result.stdout + pytest_result.stderr
+    assert "1 passed" in pytest_result.stdout
 
     release = runner.invoke(
         cli,

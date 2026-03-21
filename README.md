@@ -119,6 +119,12 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 仓库结构设计草案见 `docs/design/python-library-repo-structure.md`
 PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
+快速建包可直接运行：
+
+```bash
+chattool pypi init -i
+```
+
 ## 开源协议
 
 MIT License

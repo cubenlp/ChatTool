@@ -216,12 +216,36 @@ def test_scaffold_package_creates_expected_src_layout(tmp_path):
     assert (project_dir / "LICENSE").exists()
     assert (project_dir / ".gitignore").exists()
     assert (project_dir / "src" / "mychat" / "__init__.py").exists()
+    assert (project_dir / "tests" / "conftest.py").exists()
     assert (project_dir / "tests" / "test_version.py").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
     assert 'name = "mychat"' in pyproject_text
     assert 'version = {attr = "mychat.__version__"}' in pyproject_text
     assert 'license = "MIT"' in pyproject_text
     assert 'authors = [{name = "Rex", email = "rex@example.com"}]' in pyproject_text
+
+
+def test_scaffold_package_generated_project_pytest_passes(tmp_path):
+    project_dir = tmp_path / "mychat"
+    scaffold_package(
+        package_name="mychat",
+        project_dir=project_dir,
+        description="My chat package",
+    )
+
+    result = sys.executable
+    import subprocess
+
+    process = subprocess.run(
+        [result, "-m", "pytest", "-q"],
+        cwd=project_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert process.returncode == 0, process.stdout + process.stderr
+    assert "1 passed" in process.stdout
 
 
 def test_scaffold_package_rejects_non_empty_target_directory(tmp_path):

@@ -19,7 +19,8 @@
   - `<tmp>/mychat/`
 
 预期过程和结果：
-  1. 执行 `chattool pypi init mychat --project-dir <tmp>/mychat`，预期生成 `pyproject.toml`、`README.md`、`LICENSE`、`src/mychat/__init__.py`、`tests/test_version.py`。
+  1. 执行 `chattool pypi init mychat --project-dir <tmp>/mychat`，预期生成 `pyproject.toml`、`README.md`、`LICENSE`、`src/mychat/__init__.py`、`tests/conftest.py`、`tests/test_version.py`。
+  2. 当缺少包名且存在 TTY 时，`chattool pypi init` 应进入统一向导，继续提示 `Package name`、`project_dir`、`description`、`requires_python`、`license`、`author`、`email`，并展示默认值。
 
 参考执行脚本（伪代码）：
 
@@ -54,11 +55,30 @@ chattool pypi doctor --project-dir /tmp/mychat
 
 预期过程和结果：
   1. 执行 `chattool pypi release --project-dir <tmp>/mychat --dry-run`，预期输出 build/check/publish 顺序计划，但不真正执行构建和上传。
+  2. 若显式使用 `-i`，应继续提示当前命令相关的目录、构建、校验和发布参数，而不是只做局部补问。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool pypi release --project-dir /tmp/mychat --dry-run
+```
+
+## 用例 4：生成后可直接运行 pytest
+
+- 初始环境准备：
+  - 已完成 `chattool pypi init mychat`。
+- 相关文件：
+  - `<tmp>/mychat/tests/conftest.py`
+  - `<tmp>/mychat/tests/test_version.py`
+
+预期过程和结果：
+  1. 进入 `<tmp>/mychat` 后执行 `python -m pytest -q`，预期测试通过，不需要手动设置 `PYTHONPATH`。
+
+参考执行脚本（伪代码）：
+
+```sh
+cd /tmp/mychat
+python -m pytest -q
 ```
 
 ## 清理 / 回滚

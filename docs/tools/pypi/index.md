@@ -27,11 +27,19 @@ pip install "chattool[pypi]"
 - 发布到正式 `pypi` 时必须显式 `--yes` 或交互确认
 - CLI 认证默认复用 `.pypirc`、`TWINE_USERNAME`、`TWINE_PASSWORD`
 
+## 交互规范
+
+- 所有 `chattool pypi` 子命令都遵守仓库统一 CLI 规范：缺参自动交互，`-i` 强制完整交互，`-I` 强制非交互。
+- 进入交互后，会把当前任务相关的关键参数继续问完，并把真实默认值直接展示在 prompt 中，而不是只补一个参数后静默结束。
+- 交互 prompt 统一走 ChatTool 的 TUI 风格，凭证类字段自动隐藏或脱敏。
+
 ## 常用示例
 
 ```bash
 chattool pypi init mychat
+chattool pypi init -i
 chattool pypi doctor
+chattool pypi build -i
 chattool pypi build
 chattool pypi check
 chattool pypi release --dry-run
@@ -44,6 +52,7 @@ chattool pypi publish --repository pypi --yes
 ```bash
 chattool pypi init mychat --description "My chat package"
 cd mychat
+python -m pytest -q
 chattool pypi doctor --project-dir .
 chattool pypi build --project-dir .
 chattool pypi check --project-dir .
@@ -56,7 +65,10 @@ chattool pypi check --project-dir .
 - `LICENSE`
 - `.gitignore`
 - `src/<module>/__init__.py`
+- `tests/conftest.py`
 - `tests/test_version.py`
+
+其中 `tests/conftest.py` 会自动把 `src/` 加入导入路径，因此生成后可以直接运行 `python -m pytest -q`。
 
 ## 认证说明
 
@@ -66,7 +78,9 @@ chattool pypi check --project-dir .
 
 ## 交互模式
 
-- `-i`：强制允许交互确认或凭证输入
-- `-I`：禁止交互；当需要确认时直接失败
+- `chattool pypi init` 在缺少包名时会进入完整向导，依次提示 `Package name`、`project_dir`、`description`、`requires_python`、`license`、`author`、`email`，并显示默认值。
+- `chattool pypi doctor/build/check/publish/release -i` 会先提示当前命令相关的目录、校验或发布参数，再执行实际动作。
+- `publish/release` 的确认、仓库和凭证补全也遵循同一套 TUI 规则。
+- `-I`：禁止交互；当需要确认或缺少必要输入时直接失败。
 
 这和仓库现有 CLI 约定保持一致，适合本地人工发版与 CI 自动化两种场景。

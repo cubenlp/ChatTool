@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import subprocess
 
 import click
 
-from chattool.setup.interactive import abort_if_force_without_tty, normalize_interactive
-from chattool.utils.tui import is_interactive_available
+from chattool.setup.interactive import (
+    abort_if_force_without_tty,
+    abort_if_missing_without_tty,
+    normalize_interactive,
+    resolve_interactive_mode,
+)
+from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text, is_interactive_available
 
 from .main import (
     PyPICommandError,
@@ -76,7 +82,7 @@ def _resolve_publish_confirmation(repository: str, yes: bool, interactive) -> No
     abort_if_force_without_tty(force_interactive, can_prompt, "Usage: chattool pypi publish --repository pypi --yes")
     if interactive is False or not can_prompt:
         raise click.ClickException("Publishing to `pypi` requires `--yes` or an interactive confirmation.")
-    if not click.confirm("Publish to the real PyPI index?", default=False):
+    if not _prompt_confirm("Publish to the real PyPI index?", default=False):
         raise click.Abort()
 
 
@@ -92,14 +98,14 @@ def _maybe_prompt_credentials(username: str | None, password: str | None, intera
         return env_username, env_password
 
     if interactive is True:
-        username = env_username or click.prompt("Twine username", default="__token__")
-        password = env_password or click.prompt("Twine password", hide_input=True)
+        username = _prompt_text_value("twine username", default=env_username or "__token__")
+        password = _prompt_password_value("twine password", current_value=env_password)
         return username, password
 
     if interactive is None and can_prompt and not (env_username and env_password):
-        if click.confirm("Prompt for Twine credentials now?", default=False):
-            username = env_username or click.prompt("Twine username", default="__token__")
-            password = env_password or click.prompt("Twine password", hide_input=True)
+        if _prompt_confirm("Prompt for Twine credentials now?", default=False):
+            username = _prompt_text_value("twine username", default=env_username or "__token__")
+            password = _prompt_password_value("twine password", current_value=env_password)
             return username, password
 
     return env_username, env_password
@@ -115,22 +121,331 @@ def _raise_click_error(exc: Exception) -> None:
     raise click.ClickException(str(exc)) from exc
 
 
-def _resolve_init_name(name: str | None, project_dir: Path | None, interactive):
-    interactive = normalize_interactive(interactive)
-    can_prompt = is_interactive_available()
-    force_interactive = interactive is True
-    abort_if_force_without_tty(force_interactive, can_prompt, "Usage: chattool pypi init [NAME] [-i|-I]")
+def _git_config_default(key: str) -> str | None:
+    result = subprocess.run(
+        ["git", "config", "--get", key],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    value = result.stdout.strip()
+    return value or None
 
-    if name:
-        return name.strip()
-    if project_dir is not None and project_dir.name:
-        return project_dir.name
-    if interactive is False or not can_prompt:
-        raise click.ClickException("Package name is required when project directory cannot imply one.")
-    package_name = click.prompt("Package name")
-    if not package_name.strip():
-        raise click.ClickException("Package name cannot be empty.")
-    return package_name.strip()
+
+def _normalize_optional_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
+def _mask_secret(value: str | None) -> str:
+    if not value:
+        return ""
+    value = str(value)
+    if len(value) <= 4:
+        return "*" * len(value)
+    if len(value) <= 8:
+        return f"{value[0]}{'*' * (len(value) - 2)}{value[-1]}"
+    return f"{value[:3]}{'*' * (len(value) - 7)}{value[-4:]}"
+
+
+def _prompt_text_value(label: str, default: str | None = None) -> str:
+    answer = ask_text(label, default=default or "")
+    if answer == BACK_VALUE:
+        raise click.Abort()
+    return answer.strip()
+
+
+def _prompt_password_value(label: str, current_value: str | None = None) -> str | None:
+    prompt_label = label
+    if current_value:
+        prompt_label = f"{prompt_label} (current: {_mask_secret(current_value)}, enter to keep)"
+    answer = ask_text(prompt_label, password=True)
+    if answer == BACK_VALUE:
+        raise click.Abort()
+    answer = answer.strip()
+    if answer:
+        return answer
+    return current_value
+
+
+def _prompt_confirm(label: str, *, default: bool) -> bool:
+    answer = ask_confirm(label, default=default)
+    if answer == BACK_VALUE:
+        raise click.Abort()
+    return bool(answer)
+
+
+def _prompt_required_value(label: str, default: str | None = None, error_message: str | None = None) -> str:
+    value = _prompt_text_value(label, default=default)
+    if value:
+        return value
+    raise click.ClickException(error_message or f"{label} cannot be empty.")
+
+
+def _prompt_path_value(label: str, default: str | None = None, error_message: str | None = None) -> Path:
+    return Path(_prompt_required_value(label, default=default, error_message=error_message))
+
+
+def _prompt_choice_value(label: str, choices: tuple[str, ...], default: str) -> str:
+    value = _prompt_required_value(label, default=default)
+    if value in choices:
+        return value
+    raise click.ClickException(f"{label} must be one of: {', '.join(choices)}.")
+
+
+def _resolve_project_inputs(
+    *,
+    command_name: str,
+    usage: str,
+    project_dir: Path,
+    dist_dir: Path | None,
+    interactive,
+    auto_prompt_condition: bool = False,
+    start_message: str,
+) -> tuple[Path, Path, object]:
+    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=auto_prompt_condition,
+    )
+    abort_if_force_without_tty(force_interactive, can_prompt, usage)
+
+    if need_prompt:
+        click.echo(start_message)
+        project_dir = _prompt_path_value(
+            "project_dir",
+            default=str(project_dir),
+            error_message="project_dir cannot be empty.",
+        )
+        dist_default = str(dist_dir) if dist_dir else str(resolve_dist_dir(project_dir, None))
+        dist_dir = _prompt_path_value(
+            "dist_dir",
+            default=dist_default,
+            error_message="dist_dir cannot be empty.",
+        )
+
+    resolved_project_dir = project_dir.resolve()
+    resolved_dist_dir = resolve_dist_dir(
+        resolved_project_dir,
+        dist_dir.resolve() if dist_dir else None,
+    )
+    return resolved_project_dir, resolved_dist_dir, interactive
+
+
+def _default_build_target(sdist: bool, wheel: bool) -> str:
+    if sdist and not wheel:
+        return "sdist"
+    if wheel and not sdist:
+        return "wheel"
+    return "both"
+
+
+def _resolve_build_inputs(
+    *,
+    project_dir: Path,
+    dist_dir: Path | None,
+    interactive,
+    clean: bool,
+    sdist: bool,
+    wheel: bool,
+) -> tuple[Path, Path, bool, bool, bool]:
+    usage = (
+        "Usage: chattool pypi build [--project-dir PATH] [--dist-dir PATH] "
+        "[--wheel] [--sdist] [--clean/--no-clean] [-i|-I]"
+    )
+    project_dir, dist_dir, _ = _resolve_project_inputs(
+        command_name="build",
+        usage=usage,
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        start_message="Starting interactive package build...",
+    )
+    if normalize_interactive(interactive) is True:
+        build_target = _prompt_choice_value(
+            "build_target",
+            choices=("both", "sdist", "wheel"),
+            default=_default_build_target(sdist, wheel),
+        )
+        clean = _prompt_confirm("clean old dist artifacts?", default=clean)
+        sdist = build_target == "sdist"
+        wheel = build_target == "wheel"
+    return project_dir, dist_dir, clean, sdist, wheel
+
+
+def _resolve_check_inputs(
+    *,
+    project_dir: Path,
+    dist_dir: Path | None,
+    interactive,
+    strict: bool,
+) -> tuple[Path, Path, bool]:
+    usage = (
+        "Usage: chattool pypi check [--project-dir PATH] [--dist-dir PATH] "
+        "[--strict] [-i|-I]"
+    )
+    project_dir, dist_dir, _ = _resolve_project_inputs(
+        command_name="check",
+        usage=usage,
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        start_message="Starting interactive package check...",
+    )
+    if normalize_interactive(interactive) is True:
+        strict = _prompt_confirm("strict twine check?", default=strict)
+    return project_dir, dist_dir, strict
+
+
+def _resolve_publish_inputs(
+    *,
+    project_dir: Path,
+    dist_dir: Path | None,
+    interactive,
+    repository: str,
+    repository_url: str | None,
+    skip_existing: bool,
+    yes: bool,
+    username: str | None,
+    password: str | None,
+    command_name: str,
+    dry_run: bool = False,
+) -> tuple[Path, Path, str, str | None, bool, bool, str | None, str | None, object]:
+    usage = (
+        f"Usage: chattool pypi {command_name} [--project-dir PATH] [--dist-dir PATH] "
+        "[--repository testpypi|pypi] [--repository-url URL] [--skip-existing] "
+        "[--username TEXT] [--password TEXT] [--yes] [-i|-I]"
+    )
+    project_dir, dist_dir, interactive = _resolve_project_inputs(
+        command_name=command_name,
+        usage=usage,
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        start_message=f"Starting interactive package {command_name}...",
+    )
+    interactive_mode = normalize_interactive(interactive)
+    env_username = username or os.getenv("TWINE_USERNAME")
+    env_password = password or os.getenv("TWINE_PASSWORD")
+
+    if interactive_mode is True:
+        repository = _prompt_choice_value(
+            "repository",
+            choices=("testpypi", "pypi"),
+            default=repository,
+        )
+        repository_url = _normalize_optional_text(
+            _prompt_text_value("repository_url (optional)", default=repository_url or "")
+        )
+        skip_existing = _prompt_confirm("skip_existing", default=skip_existing)
+        if not dry_run and repository == "pypi":
+            yes = _prompt_confirm("Publish to the real PyPI index?", default=yes)
+            if not yes:
+                raise click.Abort()
+        username = _normalize_optional_text(
+            _prompt_text_value("twine username (optional)", default=env_username or "__token__")
+        )
+        password = _prompt_password_value("twine password (optional)", current_value=env_password)
+    else:
+        username = env_username
+        password = env_password
+
+    return (
+        project_dir,
+        dist_dir,
+        repository,
+        repository_url,
+        skip_existing,
+        yes,
+        username,
+        password,
+        interactive,
+    )
+
+
+def _resolve_init_inputs(
+    *,
+    name: str | None,
+    description: str | None,
+    requires_python: str,
+    license_name: str,
+    author: str | None,
+    email: str | None,
+    project_dir: Path | None,
+    interactive,
+) -> tuple[str, str | None, str, str, str | None, str | None, Path]:
+    inferred_name = _normalize_optional_text(name)
+    if not inferred_name and project_dir is not None and project_dir.name:
+        inferred_name = project_dir.name
+
+    missing_required = not inferred_name
+    usage = "Usage: chattool pypi init [NAME] [--project-dir PATH] [--description TEXT] [--python SPEC] [--license TEXT] [--author TEXT] [--email TEXT] [-i|-I]"
+    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
+        interactive=interactive,
+        auto_prompt_condition=missing_required,
+    )
+
+    abort_if_force_without_tty(force_interactive, can_prompt, usage)
+    abort_if_missing_without_tty(
+        missing_required=missing_required,
+        interactive=interactive,
+        can_prompt=can_prompt,
+        message="Missing required package name and no TTY is available for interactive prompts.",
+        usage=usage,
+    )
+
+    default_name = inferred_name or ""
+    default_project_dir = str(project_dir) if project_dir is not None else (default_name or "")
+    default_description = description or (f"{default_name} package" if default_name else "")
+    default_python = requires_python or ">=3.10"
+    default_license = license_name or "MIT"
+    default_author = author or _git_config_default("user.name") or ""
+    default_email = email or _git_config_default("user.email") or ""
+
+    if need_prompt:
+        click.echo("Starting interactive package scaffold...")
+        package_name = _prompt_required_value("Package name", default=default_name, error_message="Package name cannot be empty.")
+        project_dir_text = _prompt_required_value(
+            "project_dir",
+            default=default_project_dir or package_name,
+            error_message="project_dir cannot be empty.",
+        )
+        description_text = _prompt_required_value(
+            "description",
+            default=default_description or f"{package_name} package",
+            error_message="description cannot be empty.",
+        )
+        requires_python_text = _prompt_required_value("requires_python", default=default_python, error_message="requires_python cannot be empty.")
+        license_text = _prompt_required_value("license", default=default_license, error_message="license cannot be empty.")
+        author_text = _prompt_text_value("author (optional)", default=default_author)
+        email_text = _prompt_text_value("email (optional)", default=default_email)
+
+        return (
+            package_name,
+            _normalize_optional_text(description_text),
+            requires_python_text or ">=3.10",
+            license_text or "MIT",
+            _normalize_optional_text(author_text),
+            _normalize_optional_text(email_text),
+            Path(project_dir_text),
+        )
+
+    package_name = inferred_name
+    if not package_name:
+        raise click.ClickException("Package name is required.")
+    target_dir = project_dir or Path(package_name)
+    return (
+        package_name,
+        _normalize_optional_text(description) or f"{package_name} package",
+        requires_python or ">=3.10",
+        license_name or "MIT",
+        _normalize_optional_text(author),
+        _normalize_optional_text(email),
+        target_dir,
+    )
 
 
 @click.group(name="pypi")
@@ -164,8 +479,17 @@ def init(
     interactive,
 ):
     """Scaffold a minimal src-layout Python package."""
-    package_name = _resolve_init_name(name, project_dir, interactive)
-    target_dir = (project_dir or Path(package_name)).resolve()
+    package_name, description, requires_python, license_name, author, email, target_dir = _resolve_init_inputs(
+        name=name,
+        description=description,
+        requires_python=requires_python,
+        license_name=license_name,
+        author=author,
+        email=email,
+        project_dir=project_dir,
+        interactive=interactive,
+    )
+    target_dir = target_dir.resolve()
     try:
         result = scaffold_package(
             package_name=package_name,
@@ -190,9 +514,14 @@ def init(
 @_interactive_options
 def doctor(project_dir: Path, dist_dir: Path | None, interactive):
     """Check pyproject metadata, package files, and packaging dependencies."""
-    del interactive
-    project_dir = project_dir.resolve()
-    dist_dir = resolve_dist_dir(project_dir, dist_dir.resolve() if dist_dir else None)
+    project_dir, dist_dir, _ = _resolve_project_inputs(
+        command_name="doctor",
+        usage="Usage: chattool pypi doctor [--project-dir PATH] [--dist-dir PATH] [-i|-I]",
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        start_message="Starting interactive package doctor...",
+    )
     checks = collect_doctor_checks(project_dir, dist_dir)
     for check in checks:
         click.echo(f"[{check.status.upper()}] {check.label}: {check.detail}")
@@ -211,9 +540,14 @@ def doctor(project_dir: Path, dist_dir: Path | None, interactive):
 @_interactive_options
 def build(project_dir: Path, dist_dir: Path | None, interactive, clean: bool, sdist: bool, wheel: bool):
     """Build wheel and/or source distribution with python -m build."""
-    del interactive
-    project_dir = project_dir.resolve()
-    dist_dir = resolve_dist_dir(project_dir, dist_dir.resolve() if dist_dir else None)
+    project_dir, dist_dir, clean, sdist, wheel = _resolve_build_inputs(
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        clean=clean,
+        sdist=sdist,
+        wheel=wheel,
+    )
     try:
         result, files = build_package(
             project_dir,
@@ -234,9 +568,12 @@ def build(project_dir: Path, dist_dir: Path | None, interactive, clean: bool, sd
 @_interactive_options
 def check(project_dir: Path, dist_dir: Path | None, interactive, strict: bool):
     """Validate built distributions with twine check."""
-    del interactive
-    project_dir = project_dir.resolve()
-    dist_dir = resolve_dist_dir(project_dir, dist_dir.resolve() if dist_dir else None)
+    project_dir, dist_dir, strict = _resolve_check_inputs(
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        strict=strict,
+    )
     try:
         result, files = check_distributions(
             project_dir,
@@ -276,10 +613,21 @@ def publish(
     password: str | None,
 ):
     """Upload built distributions with twine upload."""
-    project_dir = project_dir.resolve()
-    dist_dir = resolve_dist_dir(project_dir, dist_dir.resolve() if dist_dir else None)
+    project_dir, dist_dir, repository, repository_url, skip_existing, yes, username, password, interactive = _resolve_publish_inputs(
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        repository=repository,
+        repository_url=repository_url,
+        skip_existing=skip_existing,
+        yes=yes,
+        username=username,
+        password=password,
+        command_name="publish",
+    )
     _resolve_publish_confirmation(repository, yes, interactive)
-    username, password = _maybe_prompt_credentials(username, password, interactive)
+    if normalize_interactive(interactive) is not True:
+        username, password = _maybe_prompt_credentials(username, password, interactive)
     try:
         result, files = publish_distributions(
             project_dir,
@@ -334,8 +682,30 @@ def release(
     dry_run: bool,
 ):
     """Run build -> check -> publish as one guarded flow."""
-    project_dir = project_dir.resolve()
-    dist_dir = resolve_dist_dir(project_dir, dist_dir.resolve() if dist_dir else None)
+    project_dir, dist_dir, repository, repository_url, skip_existing, yes, username, password, interactive = _resolve_publish_inputs(
+        project_dir=project_dir,
+        dist_dir=dist_dir,
+        interactive=interactive,
+        repository=repository,
+        repository_url=repository_url,
+        skip_existing=skip_existing,
+        yes=yes,
+        username=username,
+        password=password,
+        command_name="release",
+        dry_run=dry_run,
+    )
+    if normalize_interactive(interactive) is True:
+        build_target = _prompt_choice_value(
+            "build_target",
+            choices=("both", "sdist", "wheel"),
+            default=_default_build_target(sdist, wheel),
+        )
+        clean = _prompt_confirm("clean old dist artifacts?", default=clean)
+        strict = _prompt_confirm("strict twine check?", default=strict)
+        sdist = build_target == "sdist"
+        wheel = build_target == "wheel"
+
     click.echo("Release plan:")
     for item in build_release_plan(
         project_dir,
@@ -351,7 +721,8 @@ def release(
         return
 
     _resolve_publish_confirmation(repository, yes, interactive)
-    username, password = _maybe_prompt_credentials(username, password, interactive)
+    if normalize_interactive(interactive) is not True:
+        username, password = _maybe_prompt_credentials(username, password, interactive)
     try:
         summary = release_package(
             project_dir,

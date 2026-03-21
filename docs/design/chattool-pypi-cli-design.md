@@ -11,7 +11,6 @@
 
 ## 非目标
 
-- 一阶段不负责创建 Python 项目模板。
 - 一阶段不自动修改版本号、不自动打 git tag、不自动推送 commit。
 - 一阶段不替代 CI 发布流程，主要服务于本地手工发版与排障。
 
@@ -42,6 +41,7 @@ src/chattool/tools/pypi/
 ## 命令总览（阶段一）
 
 ```bash
+chattool pypi init
 chattool pypi doctor
 chattool pypi build
 chattool pypi check
@@ -60,7 +60,34 @@ chattool pypi release
 
 ## 命令设计
 
-### 1) `chattool pypi doctor`
+### 1) `chattool pypi init`
+
+- 作用：生成一个最小可发布的 `src/` 布局 Python 包骨架
+- 默认行为：
+  - 缺少包名时自动进入向导
+  - `-i` 进入完整交互，按顺序补全 `Package name`、`project_dir`、`description`、`requires_python`、`license`、`author`、`email`
+  - 所有 prompt 展示实际默认值
+  - 生成的项目可直接运行 `python -m pytest -q`
+
+建议选项：
+
+- `NAME`
+- `--project-dir PATH`
+- `--description TEXT`
+- `--python SPEC`
+- `--license TEXT`
+- `--author TEXT`
+- `--email TEXT`
+- `-i/--interactive`
+- `-I/--no-interactive`
+
+输出重点：
+
+- 创建后的项目目录
+- 规范化后的模块名
+- 生成文件列表
+
+### 2) `chattool pypi doctor`
 
 - 作用：发版前自检
 - 检查项：
@@ -82,7 +109,7 @@ chattool pypi release
 - `-i/--interactive`
 - `-I/--no-interactive`
 
-### 2) `chattool pypi build`
+### 3) `chattool pypi build`
 
 - 作用：生成 wheel / sdist
 - 默认行为：
@@ -103,9 +130,10 @@ chattool pypi release
 行为约束：
 
 - 若 `pyproject.toml` 缺失，直接失败
-- 若指定 `-I` 且缺少必要参数，不进入交互，直接报错
+- 若指定 `-i`，提示 `project_dir`、`dist_dir`、`build_target`、`clean`
+- 若指定 `-I`，不进入交互
 
-### 3) `chattool pypi check`
+### 4) `chattool pypi check`
 
 - 作用：检查构建产物元数据与长描述
 - 默认行为：
@@ -123,8 +151,9 @@ chattool pypi release
 - 哪些文件被检查
 - 哪些元数据失败
 - README 渲染或 metadata 问题的定位提示
+- 若指定 `-i`，提示 `project_dir`、`dist_dir`、`strict`
 
-### 4) `chattool pypi publish`
+### 5) `chattool pypi publish`
 
 - 作用：上传构建产物到 TestPyPI 或 PyPI
 - 默认行为：
@@ -149,8 +178,9 @@ chattool pypi release
 - 发布到 `pypi` 时，如果没有 `--yes`，必须二次确认
 - 若当前目录仍有未处理构建失败痕迹，可提示用户先 `build` / `check`
 - 不在日志中打印 token 明文
+- 若指定 `-i`，提示目录、仓库、上传参数与凭证默认值
 
-### 5) `chattool pypi release`
+### 6) `chattool pypi release`
 
 - 作用：串联 `build -> check -> publish`
 - 默认行为：
@@ -173,6 +203,7 @@ chattool pypi release
 
 - 这是面向高频发版路径的快捷命令
 - 一阶段不做版本递增，只消费当前仓库已有版本
+- 若指定 `-i`，提示目录、构建参数、检查参数、发布参数与凭证默认值
 
 ## 交互式流程（草案）
 

@@ -202,6 +202,16 @@ def scaffold_package(
 
             __version__ = "0.1.0"
         ''').strip() + "\n",
+        tests_dir / "conftest.py": textwrap.dedent("""
+            from pathlib import Path
+            import sys
+
+
+            ROOT = Path(__file__).resolve().parents[1]
+            SRC = ROOT / "src"
+            if str(SRC) not in sys.path:
+                sys.path.insert(0, str(SRC))
+        """).strip() + "\n",
         tests_dir / "test_version.py": textwrap.dedent(f"""
             from {module_name} import __version__
 

@@ -13,6 +13,9 @@
 
 - 新能力先落 `tools/<name>/`，再接入 `client/mcp/serve`。
 - CLI 统一 `-i/-I` 与缺参自动交互规则。
+- 所有 CLI 交互统一走 `utils/tui.py`。
+- 进入 interactive 后，补全当前任务相关的关键参数。
+- prompt 默认值必须与实际执行一致，敏感值默认脱敏。
 - setup 命令必须记录关键阶段日志。
 - 入口层只做编排，不承载业务实现。
 
