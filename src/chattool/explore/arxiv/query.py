@@ -1,6 +1,22 @@
 """arXiv query builder — construct structured search queries."""
 from dataclasses import dataclass, field
 from typing import List, Optional
+import re
+
+
+def _quote_if_needed(text: str) -> str:
+    """Quote phrases for arXiv field queries when they contain whitespace."""
+    if not text:
+        return text
+    if text.startswith('"') and text.endswith('"'):
+        return text
+    if re.search(r"\s", text):
+        return '"' + text.replace('"', '\\"') + '"'
+    return text
+
+
+def _field(field: str, value: str) -> str:
+    return f"{field}:{_quote_if_needed(value)}"
 
 
 @dataclass
@@ -22,32 +38,32 @@ class ArxivQuery:
 
     def category(self, cat: str) -> "ArxivQuery":
         """Filter by arXiv category, e.g. 'cs.AI', 'math.CO'."""
-        self._parts.append(f"cat:{cat}")
+        self._parts.append(_field("cat", cat))
         return self
 
     def keyword(self, kw: str) -> "ArxivQuery":
         """Search all fields (title + abstract + ...) for a keyword."""
-        self._parts.append(f"all:{kw}")
+        self._parts.append(_field("all", kw))
         return self
 
     def title(self, text: str) -> "ArxivQuery":
         """Match text in title."""
-        self._parts.append(f"ti:{text}")
+        self._parts.append(_field("ti", text))
         return self
 
     def abstract(self, text: str) -> "ArxivQuery":
         """Match text in abstract."""
-        self._parts.append(f"abs:{text}")
+        self._parts.append(_field("abs", text))
         return self
 
     def author(self, name: str) -> "ArxivQuery":
         """Match author name."""
-        self._parts.append(f"au:{name}")
+        self._parts.append(_field("au", name))
         return self
 
     def journal(self, ref: str) -> "ArxivQuery":
         """Match journal reference."""
-        self._parts.append(f"jr:{ref}")
+        self._parts.append(_field("jr", ref))
         return self
 
     # ------------------------------------------------------------------
@@ -100,13 +116,13 @@ def build_query(
     """
     parts = []
     if categories:
-        parts.append("(" + " OR ".join(f"cat:{c}" for c in categories) + ")")
+        parts.append("(" + " OR ".join(_field("cat", c) for c in categories) + ")")
     if keywords:
-        parts.append("(" + " OR ".join(f"all:{k}" for k in keywords) + ")")
+        parts.append("(" + " OR ".join(_field("all", k) for k in keywords) + ")")
     if title:
-        parts.append(f"ti:{title}")
+        parts.append(_field("ti", title))
     if abstract:
-        parts.append(f"abs:{abstract}")
+        parts.append(_field("abs", abstract))
     if author:
-        parts.append(f"au:{author}")
+        parts.append(_field("au", author))
     return " AND ".join(parts)

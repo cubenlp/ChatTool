@@ -106,7 +106,9 @@ class DailyFetcher:
         max_results: int = 500,
     ) -> List[Paper]:
         """Fetch papers submitted in the last N days."""
-        from_date = _today_utc() - timedelta(days=days)
+        if days < 1:
+            raise ValueError("days must be >= 1")
+        from_date = _today_utc() - timedelta(days=days - 1)
         return self._fetch(
             from_date, until_date=_today_utc(),
             categories=categories, keywords=keywords,
