@@ -18,7 +18,7 @@
 ## 阶段 2：命令逐个迁移
 
 - 按 `chattool` 命令列表逐一补齐 `.md`：
-  - browser / client / dns / docker / env / gh / image / lark / mcp / network / serve / setup / skill / tplogin / zulip
+  - browser / client / dns / docker / env / explore / gh / image / lark / mcp / network / serve / setup / skill / tplogin / zulip
 
 ## 阶段 3：真实环境补齐与回归
 
