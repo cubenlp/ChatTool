@@ -32,9 +32,11 @@ license = {text = "MIT"}
 
 def test_chattool_pypi_basic(tmp_path):
     runner = CliRunner()
-    project_dir = tmp_path / "pkg"
-    project_dir.mkdir()
-    _write_minimal_project(project_dir)
+    project_dir = tmp_path / "mychat"
+
+    init = runner.invoke(cli, ["pypi", "init", "mychat", "--project-dir", str(project_dir)])
+    assert init.exit_code == 0
+    assert (project_dir / "src" / "mychat" / "__init__.py").exists()
 
     doctor = runner.invoke(cli, ["pypi", "doctor", "--project-dir", str(project_dir)])
     assert "[OK] pyproject.toml" in doctor.output

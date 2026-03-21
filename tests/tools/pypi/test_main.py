@@ -8,8 +8,10 @@ from chattool.tools.pypi.main import (
     build_package,
     check_distributions,
     collect_doctor_checks,
+    normalize_module_name,
     publish_distributions,
     release_package,
+    scaffold_package,
 )
 
 
@@ -191,3 +193,41 @@ def test_release_package_runs_build_check_publish_in_order(tmp_path):
         ["twine", "upload", "--repository", "testpypi", "--non-interactive", str(artifact.resolve())],
     ]
     assert summary["files"] == [artifact.resolve()]
+
+
+def test_normalize_module_name_rewrites_hyphenated_package_name():
+    assert normalize_module_name("my-chat") == "my_chat"
+
+
+def test_scaffold_package_creates_expected_src_layout(tmp_path):
+    project_dir = tmp_path / "mychat"
+
+    result = scaffold_package(
+        package_name="mychat",
+        project_dir=project_dir,
+        description="My chat package",
+        author="Rex",
+        email="rex@example.com",
+    )
+
+    assert result.module_name == "mychat"
+    assert (project_dir / "pyproject.toml").exists()
+    assert (project_dir / "README.md").exists()
+    assert (project_dir / "LICENSE").exists()
+    assert (project_dir / ".gitignore").exists()
+    assert (project_dir / "src" / "mychat" / "__init__.py").exists()
+    assert (project_dir / "tests" / "test_version.py").exists()
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'name = "mychat"' in pyproject_text
+    assert 'version = {attr = "mychat.__version__"}' in pyproject_text
+    assert 'license = "MIT"' in pyproject_text
+    assert 'authors = [{name = "Rex", email = "rex@example.com"}]' in pyproject_text
+
+
+def test_scaffold_package_rejects_non_empty_target_directory(tmp_path):
+    project_dir = tmp_path / "mychat"
+    project_dir.mkdir()
+    (project_dir / "existing.txt").write_text("data", encoding="utf-8")
+
+    with pytest.raises(PyPICommandError):
+        scaffold_package("mychat", project_dir)

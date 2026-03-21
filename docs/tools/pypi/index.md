@@ -13,6 +13,7 @@ pip install "chattool[pypi]"
 ## 命令
 
 - `chattool pypi doctor`：检查 `pyproject.toml`、`README`、`LICENSE`、`build`、`twine` 与旧的 `dist/` 产物
+- `chattool pypi init`：生成一个最小可发布的 `src/` 布局 Python 包骨架
 - `chattool pypi build`：执行 `python -m build`
 - `chattool pypi check`：执行 `python -m twine check`
 - `chattool pypi publish`：执行 `python -m twine upload`
@@ -29,6 +30,7 @@ pip install "chattool[pypi]"
 ## 常用示例
 
 ```bash
+chattool pypi init mychat
 chattool pypi doctor
 chattool pypi build
 chattool pypi check
@@ -36,6 +38,25 @@ chattool pypi release --dry-run
 chattool pypi release --repository testpypi
 chattool pypi publish --repository pypi --yes
 ```
+
+## 快速建包
+
+```bash
+chattool pypi init mychat --description "My chat package"
+cd mychat
+chattool pypi doctor --project-dir .
+chattool pypi build --project-dir .
+chattool pypi check --project-dir .
+```
+
+默认会生成：
+
+- `pyproject.toml`
+- `README.md`
+- `LICENSE`
+- `.gitignore`
+- `src/<module>/__init__.py`
+- `tests/test_version.py`
 
 ## 认证说明
 

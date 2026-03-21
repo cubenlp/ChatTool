@@ -32,8 +32,32 @@ def test_root_cli_registers_pypi_group():
     result = runner.invoke(root_cli, ["pypi", "--help"])
 
     assert result.exit_code == 0
+    assert "init" in result.output
     assert "doctor" in result.output
     assert "release" in result.output
+
+
+def test_init_command_creates_package_scaffold(tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "mychat"
+
+    result = runner.invoke(
+        pypi_cli.cli,
+        [
+            "init",
+            "mychat",
+            "--project-dir",
+            str(project_dir),
+            "--description",
+            "My chat package",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Created Python package scaffold: mychat" in result.output
+    assert (project_dir / "pyproject.toml").exists()
+    assert (project_dir / "src" / "mychat" / "__init__.py").exists()
+    assert (project_dir / "tests" / "test_version.py").exists()
 
 
 def test_doctor_command_reports_expected_checks(tmp_path):

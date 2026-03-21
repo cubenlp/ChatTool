@@ -18,6 +18,7 @@ from .main import (
     publish_distributions,
     release_package,
     resolve_dist_dir,
+    scaffold_package,
 )
 
 
@@ -114,10 +115,74 @@ def _raise_click_error(exc: Exception) -> None:
     raise click.ClickException(str(exc)) from exc
 
 
+def _resolve_init_name(name: str | None, project_dir: Path | None, interactive):
+    interactive = normalize_interactive(interactive)
+    can_prompt = is_interactive_available()
+    force_interactive = interactive is True
+    abort_if_force_without_tty(force_interactive, can_prompt, "Usage: chattool pypi init [NAME] [-i|-I]")
+
+    if name:
+        return name.strip()
+    if project_dir is not None and project_dir.name:
+        return project_dir.name
+    if interactive is False or not can_prompt:
+        raise click.ClickException("Package name is required when project directory cannot imply one.")
+    package_name = click.prompt("Package name")
+    if not package_name.strip():
+        raise click.ClickException("Package name cannot be empty.")
+    return package_name.strip()
+
+
 @click.group(name="pypi")
 def cli():
     """Python package build/check/publish helpers."""
     pass
+
+
+@cli.command(name="init")
+@click.argument("name", required=False)
+@click.option("--email", default=None, help="Author email to record in pyproject.toml.")
+@click.option("--author", default=None, help="Author name to record in pyproject.toml.")
+@click.option("--license", "license_name", default="MIT", show_default=True, help="Project license label.")
+@click.option("--python", "requires_python", default=">=3.10", show_default=True, help="Supported Python version specifier.")
+@click.option("--description", default=None, help="Project description.")
+@click.option(
+    "--project-dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    default=None,
+    help="Target directory to create. Defaults to ./{name}.",
+)
+@_interactive_options
+def init(
+    name: str | None,
+    description: str | None,
+    requires_python: str,
+    license_name: str,
+    author: str | None,
+    email: str | None,
+    project_dir: Path | None,
+    interactive,
+):
+    """Scaffold a minimal src-layout Python package."""
+    package_name = _resolve_init_name(name, project_dir, interactive)
+    target_dir = (project_dir or Path(package_name)).resolve()
+    try:
+        result = scaffold_package(
+            package_name=package_name,
+            project_dir=target_dir,
+            description=description,
+            requires_python=requires_python,
+            license_name=license_name,
+            author=author,
+            email=email,
+        )
+    except PyPICommandError as exc:
+        _raise_click_error(exc)
+
+    click.echo(f"Created Python package scaffold: {result.package_name}")
+    click.echo(f"project_dir={result.project_dir}")
+    click.echo(f"module_name={result.module_name}")
+    _print_files(result.created_files, "Created files:")
 
 
 @cli.command(name="doctor")

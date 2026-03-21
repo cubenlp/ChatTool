@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import textwrap
 
 try:
     import tomllib
@@ -47,10 +48,179 @@ class CommandResult:
     stderr: str
 
 
+@dataclass
+class ScaffoldResult:
+    project_dir: Path
+    package_name: str
+    module_name: str
+    created_files: list[Path]
+
+
 def resolve_dist_dir(project_dir: Path, dist_dir: Path | None = None) -> Path:
     if dist_dir is None:
         return project_dir / DEFAULT_DIST_DIRNAME
     return dist_dir
+
+
+def normalize_module_name(package_name: str) -> str:
+    normalized = package_name.strip().replace("-", "_").replace(" ", "_")
+    parts = [char if (char.isalnum() or char == "_") else "_" for char in normalized]
+    module_name = "".join(parts).strip("_").lower()
+    while "__" in module_name:
+        module_name = module_name.replace("__", "_")
+    if not module_name:
+        raise PyPICommandError("Package name must contain at least one valid letter or digit.")
+    if module_name[0].isdigit():
+        raise PyPICommandError("Module name cannot start with a digit.")
+    return module_name
+
+
+def _toml_escape(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _ensure_empty_or_missing(project_dir: Path) -> None:
+    if not project_dir.exists():
+        return
+    if not project_dir.is_dir():
+        raise PyPICommandError(f"Target path exists and is not a directory: {project_dir}")
+    if any(project_dir.iterdir()):
+        raise PyPICommandError(f"Target directory is not empty: {project_dir}")
+
+
+def _build_pyproject_content(
+    package_name: str,
+    module_name: str,
+    description: str,
+    requires_python: str,
+    license_name: str,
+    author: str | None,
+    email: str | None,
+) -> str:
+    lines = [
+        "[build-system]",
+        'requires = ["setuptools>=61.0", "wheel"]',
+        'build-backend = "setuptools.build_meta"',
+        "",
+        "[project]",
+        f'name = "{_toml_escape(package_name)}"',
+        'dynamic = ["version"]',
+        f'description = "{_toml_escape(description)}"',
+        'readme = "README.md"',
+        f'requires-python = "{_toml_escape(requires_python)}"',
+        f'license = "{_toml_escape(license_name)}"',
+    ]
+    if author and email:
+        lines.append(f'authors = [{{name = "{_toml_escape(author)}", email = "{_toml_escape(email)}"}}]')
+    elif author:
+        lines.append(f'authors = [{{name = "{_toml_escape(author)}"}}]')
+    elif email:
+        lines.append(f'authors = [{{email = "{_toml_escape(email)}"}}]')
+    lines.extend([
+        f'keywords = ["{_toml_escape(module_name)}"]',
+        'classifiers = [',
+        '    "Programming Language :: Python :: 3",',
+        '    "Operating System :: OS Independent",',
+        ']',
+        "",
+        "[tool.setuptools.dynamic]",
+        f'version = {{attr = "{module_name}.__version__"}}',
+        "",
+        "[tool.setuptools.packages.find]",
+        'where = ["src"]',
+        "",
+        "[tool.setuptools]",
+        "include-package-data = true",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def scaffold_package(
+    package_name: str,
+    project_dir: Path,
+    *,
+    description: str | None = None,
+    requires_python: str = ">=3.10",
+    license_name: str = "MIT",
+    author: str | None = None,
+    email: str | None = None,
+) -> ScaffoldResult:
+    package_name = package_name.strip()
+    if not package_name:
+        raise PyPICommandError("Package name is required.")
+
+    module_name = normalize_module_name(package_name)
+    project_dir = Path(project_dir)
+    _ensure_empty_or_missing(project_dir)
+    project_dir.mkdir(parents=True, exist_ok=True)
+
+    description = description or f"{package_name} package"
+    src_dir = project_dir / "src" / module_name
+    tests_dir = project_dir / "tests"
+    created_files: list[Path] = []
+
+    src_dir.mkdir(parents=True, exist_ok=True)
+    tests_dir.mkdir(parents=True, exist_ok=True)
+
+    file_map = {
+        project_dir / "pyproject.toml": _build_pyproject_content(
+            package_name=package_name,
+            module_name=module_name,
+            description=description,
+            requires_python=requires_python,
+            license_name=license_name,
+            author=author,
+            email=email,
+        ),
+        project_dir / "README.md": textwrap.dedent(f"""
+            # {package_name}
+
+            {description}
+
+            ## Quick Start
+
+            ```bash
+            chattool pypi doctor --project-dir .
+            chattool pypi build --project-dir .
+            chattool pypi check --project-dir .
+            ```
+        """).strip() + "\n",
+        project_dir / "LICENSE": f"{license_name}\n",
+        project_dir / ".gitignore": textwrap.dedent("""
+            __pycache__/
+            .pytest_cache/
+            .venv/
+            build/
+            dist/
+            *.egg-info/
+        """).strip() + "\n",
+        src_dir / "__init__.py": textwrap.dedent(f'''
+            """{package_name} package."""
+
+            __all__ = ["__version__"]
+
+            __version__ = "0.1.0"
+        ''').strip() + "\n",
+        tests_dir / "test_version.py": textwrap.dedent(f"""
+            from {module_name} import __version__
+
+
+            def test_version_present():
+                assert __version__ == "0.1.0"
+        """).strip() + "\n",
+    }
+
+    for path, content in file_map.items():
+        path.write_text(content, encoding="utf-8")
+        created_files.append(path)
+
+    return ScaffoldResult(
+        project_dir=project_dir,
+        package_name=package_name,
+        module_name=module_name,
+        created_files=sorted(created_files),
+    )
 
 
 def _load_pyproject(project_dir: Path) -> dict:
