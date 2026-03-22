@@ -1,6 +1,7 @@
 ---
 name: "network-scanner"
 description: "专业的网络扫描工具，用于发现网段内的存活主机及开放端口。"
+version: 0.1.0
 ---
 
 # 网络扫描器 (Network Scanner)

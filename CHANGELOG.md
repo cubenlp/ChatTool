@@ -6,9 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- `skills/practice-make-perfact` 现在明确作为 ChatTool 仓库任务的默认开发流程：先执行任务，再做 review 与文档同步，并默认推进到 `chattool gh` 的 PR/MR 阶段
+- `playground/` 现在带有默认 `.gitignore`，作为模型探索和临时试验的试炼场
+
+## [6.2.0]
+
 ### Added
 - `chattool setup claude` — 安装 Claude Code CLI 并写入配置
 - `chattool skill` / `chatskill` — Skills 管理，支持安装到 Codex / Claude Code
+- 新增 skill：`chattool-dev-review`
+- ChatTool skills 约定维护 `version` frontmatter，新建 skill 以 `0.1.0` 为初始版本
+- 所有仓库内 skills 现在都提供对应的 `SKILL.zh.md`
 - `chattool cc` — cc-connect 最小可用配置、启动与诊断命令
 - `chattool skill install --prefix` — 安装时添加 `chattool-` 前缀
 - `CHATTOOL_SKILLS_DIR` — 指定 skills 源目录
@@ -29,6 +38,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `skills/arxiv-explore` 新增数学形式化近一周子模块，包含分类索引、真实样例和多查询收集脚本
 
 ### Fixed
+- `chattool skill install` 现在会在安装前校验 `SKILL.md` 的 YAML frontmatter，并在缺少 `name`/`description` 时直接报错，避免把无效 skills 复制到 Codex / Claude Code
+- `chattool skill install` 现在同时校验 `version` frontmatter，并要求使用 `0.1.0` 这类语义化版本格式
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
 - `chattool pypi init` 现在按统一 CLI 规范补全向导参数，并生成可直接运行 `python -m pytest -q` 的测试骨架
 - `chattool pypi doctor/build/check/publish/release -i` 现在按统一 TUI 规范提示当前命令相关参数

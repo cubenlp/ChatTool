@@ -1,6 +1,7 @@
 ---
 name: zulip-post-preview
 description: Create staged previews of Zulip topics using read-only CLI queries, including full-thread originals, a small zh-en translation slice, and a Chinese overview under playground/<channel>/<topic>. Use when asked to preview, summarize, or translate Zulip thread content.
+version: 0.1.0
 ---
 
 # Zulip Post Preview

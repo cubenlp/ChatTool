@@ -1,3 +1,9 @@
+---
+name: zulip-post-preview
+description: 从 Zulip 读取指定主题，生成原文、翻译对照和中文导读的分阶段预览材料。
+version: 0.1.0
+---
+
 # Zulip 帖子预览（中文）
 
 目标：从 Zulip 读取指定主题，按阶段输出原文、翻译对照和中文导读。

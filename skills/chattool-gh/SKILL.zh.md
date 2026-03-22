@@ -1,3 +1,9 @@
+---
+name: chattool-gh
+description: 使用 `chattool gh` 完成 PR 创建、更新、查看与列表查询，并确保正文 Markdown 正确渲染。
+version: 0.1.0
+---
+
 # ChatTool GitHub 帮助（中文）
 
 目标：用 `chattool gh` 完成 PR 创建与更新，确保正文 Markdown 正确渲染。

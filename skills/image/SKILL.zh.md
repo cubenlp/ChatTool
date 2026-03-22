@@ -1,6 +1,7 @@
 ---
 name: "image"
 description: "使用 ChatTool 调用多平台 AI 生图能力（Pollinations、SiliconFlow、Tongyi、Hugging Face、Liblib）。"
+version: 0.1.0
 ---
 
 # Image 生图助手

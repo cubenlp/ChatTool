@@ -1,6 +1,7 @@
 ---
 name: frp-configurator
 description: "Automates FRP (Fast Reverse Proxy) deployment. Configures Client/Server, sets up Systemd services/Web UI, and generates pairing installers for the counterpart platform. Invoke when user wants to setup FRP, tunneling, or remote access."
+version: 0.1.0
 ---
 
 # FRP Configurator

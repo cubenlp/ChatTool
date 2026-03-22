@@ -1,6 +1,7 @@
 ---
 name: "image"
 description: "Use ChatTool to generate AI images across Pollinations, SiliconFlow, Tongyi, Hugging Face, and Liblib."
+version: 0.1.0
 ---
 
 # Image Generation Assistant

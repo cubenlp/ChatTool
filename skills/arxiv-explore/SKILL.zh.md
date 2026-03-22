@@ -1,6 +1,7 @@
 ---
 name: arxiv-explore
 description: "通过 ChatTool CLI 搜索和探索 arXiv 论文。当用户询问搜索论文、获取每日最新提交、按 ID 获取论文，或使用 ai4math、math-formalization-weekly 等领域预设时使用。"
+version: 0.1.0
 ---
 
 # arXiv 论文探索

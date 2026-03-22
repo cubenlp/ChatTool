@@ -13,6 +13,14 @@ ALIAS_MAP = {
     "chatskills": "chattool skills",
     "chatdns": "chattool dns",
     "chatgh": "chattool gh",
+    "chatcc": "chattool cc",
+    "chatcli": "chattool client",
+    "chatpypi": "chattool pypi",
+    "chatdns": "chattool dns",
+    "chatup": "chattool setup",
+    "chatlark": "chattool lark",
+    "chatimg": "chattool image",
+    "chatnet": "chattool network",
 }
 
 BLOCK_BEGIN = "# >>> chattool aliases >>>"
