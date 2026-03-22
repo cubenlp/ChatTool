@@ -1,6 +1,7 @@
 ---
 name: frp-configurator
 description: "自动化 FRP (Fast Reverse Proxy) 部署。配置客户端/服务端，设置 Systemd 服务/Web UI，并为对应平台生成配对安装包。当用户想要设置 FRP、隧道或远程访问时调用。"
+version: 0.1.0
 ---
 
 # FRP 配置器

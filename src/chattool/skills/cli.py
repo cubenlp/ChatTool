@@ -38,7 +38,8 @@ def _build_platforms() -> dict[str, PlatformSpec]:
 
 
 PLATFORMS = _build_platforms()
-REQUIRED_FRONTMATTER_KEYS = ("name", "description")
+REQUIRED_FRONTMATTER_KEYS = ("name", "description", "version")
+SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 
 def _find_repo_skills_dir() -> Path | None:
@@ -105,15 +106,15 @@ def _list_skill_dirs(source_dir: Path) -> list[str]:
     return sorted(skills)
 
 
-def _extract_frontmatter_keys(skill_md: Path) -> tuple[set[str], list[str]]:
+def _extract_frontmatter_values(skill_md: Path) -> tuple[dict[str, str], list[str]]:
     try:
         content = skill_md.read_text(encoding="utf-8")
     except OSError as exc:
-        return set(), [f"failed to read file: {exc}"]
+        return {}, [f"failed to read file: {exc}"]
 
     lines = content.lstrip("\ufeff").splitlines()
     if not lines or lines[0].strip() != "---":
-        return set(), ["missing YAML frontmatter delimited by ---"]
+        return {}, ["missing YAML frontmatter delimited by ---"]
 
     closing_index = None
     for idx, line in enumerate(lines[1:], start=1):
@@ -122,18 +123,20 @@ def _extract_frontmatter_keys(skill_md: Path) -> tuple[set[str], list[str]]:
             break
 
     if closing_index is None:
-        return set(), ["missing closing YAML frontmatter delimiter ---"]
+        return {}, ["missing closing YAML frontmatter delimiter ---"]
 
-    keys = set()
+    values = {}
     key_pattern = re.compile(r"^([A-Za-z0-9_-]+)\s*:")
     for raw_line in lines[1:closing_index]:
         if not raw_line.strip() or raw_line[:1].isspace():
             continue
         match = key_pattern.match(raw_line)
         if match:
-            keys.add(match.group(1))
+            key = match.group(1)
+            value = raw_line.split(":", 1)[1].strip().strip('"').strip("'")
+            values[key] = value
 
-    return keys, []
+    return values, []
 
 
 def _validate_skill_dir(skill_dir: Path) -> list[str]:
@@ -141,13 +144,17 @@ def _validate_skill_dir(skill_dir: Path) -> list[str]:
     if not skill_md.exists():
         return ["missing SKILL.md"]
 
-    keys, errors = _extract_frontmatter_keys(skill_md)
+    values, errors = _extract_frontmatter_values(skill_md)
     if errors:
         return errors
 
-    missing = [key for key in REQUIRED_FRONTMATTER_KEYS if key not in keys]
+    missing = [key for key in REQUIRED_FRONTMATTER_KEYS if key not in values]
     if missing:
         return [f"missing required frontmatter keys: {', '.join(missing)}"]
+
+    version = values.get("version", "")
+    if not SEMVER_PATTERN.match(version):
+        return [f"invalid version '{version}', expected semantic version like 0.1.0"]
 
     return []
 

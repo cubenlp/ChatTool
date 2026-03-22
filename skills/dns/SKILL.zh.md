@@ -1,6 +1,7 @@
 ---
 name: "dns"
 description: "使用 ChatTool 管理 DNS 记录、DDNS 和 SSL 证书。当用户想要列出域名、修改 DNS 记录或更新证书时调用。"
+version: 0.1.0
 ---
 
 # DNS 管理器

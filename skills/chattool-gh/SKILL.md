@@ -1,6 +1,7 @@
 ---
 name: chattool-gh
 description: Use ChatTool GitHub CLI helpers (chattool gh) to create, update, list, and manage PRs. Use when tasks require opening PRs, updating PR metadata, or interacting with GitHub via ChatTool CLI.
+version: 0.1.0
 ---
 
 # ChatTool GitHub Helpers

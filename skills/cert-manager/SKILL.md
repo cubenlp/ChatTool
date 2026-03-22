@@ -1,6 +1,7 @@
 ---
 name: cert-manager
 description: A comprehensive toolset for automated SSL certificate generation and management using DNS validation (Let's Encrypt). This skill supports multiple usage routes including direct code import, command-line interface (CLI), client-server architecture, and MCP protocol integration.
+version: 0.1.0
 ---
 
 # Cert Manager Skill

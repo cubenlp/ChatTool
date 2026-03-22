@@ -1,6 +1,7 @@
 ---
 name: arxiv-explore
 description: "Search and explore arXiv papers via ChatTool CLI. Use when user asks to search papers, get daily submissions, fetch specific arXiv papers by ID, or use domain presets like ai4math and math-formalization-weekly."
+version: 0.1.0
 ---
 
 # arXiv Explore

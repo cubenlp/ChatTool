@@ -1,3 +1,9 @@
+---
+name: python-package-starter
+description: 用 `chattool pypi init` 快速生成最小可发布的 Python 包骨架，并立刻用 doctor/build/check 验证。
+version: 0.1.0
+---
+
 # Python 包起步（中文）
 
 目标：用 `chattool pypi init` 快速生成一个最小可发布的 Python 包骨架，并立刻用 `doctor/build/check` 验证。

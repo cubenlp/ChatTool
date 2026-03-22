@@ -1,6 +1,7 @@
 ---
 name: "dns"
 description: "Manages DNS records, DDNS, and SSL certificates using ChatTool. Invoke when user wants to list domains, modify DNS records, or update certificates."
+version: 0.1.0
 ---
 
 # DNS Manager

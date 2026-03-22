@@ -1,6 +1,7 @@
 ---
 name: "network-scanner"
 description: "Professional network scanning utility for discovering active hosts and open ports within a network segment."
+version: 0.1.0
 ---
 
 # Network Scanner

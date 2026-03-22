@@ -1,3 +1,9 @@
+---
+name: practice-make-perfact
+description: 把“先完成任务、后复盘规范”的工作方式沉淀成可复用流程，持续推动 ChatTool 成长。
+version: 0.1.0
+---
+
 # Practice Make Perfact（中文）
 
 目标：把“先完成任务、后复盘规范”的工作方式沉淀成可复用流程，持续推动 ChatTool 成长。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "ChatTool Dev Review"
+  short_description: "Review ChatTool feature quality after implementation"
+  default_prompt: "Use $chattool-dev-review to audit this ChatTool feature for lazy imports, interactive behavior, and docs/test updates."

@@ -236,6 +236,7 @@ skills/
 ---
 name: <skill-name>
 description: "<一句话描述，用于触发判断>"
+version: 0.1.0
 ---
 
 ## Quick Start
@@ -244,6 +245,12 @@ description: "<一句话描述，用于触发判断>"
 chattool ...
 \`\`\`
 ```
+
+**ChatTool 仓库约定**
+
+- ChatTool 仓库内的 skill frontmatter 除了 `name`、`description` 外，还要求维护 `version`
+- `version` 使用 Semantic Versioning，例如 `0.1.0`
+- 新增 skill 时以 `0.1.0` 作为初始版本；后续改动 skill 内容时同步递增
 
 **跨平台适配建议**
 

@@ -1,6 +1,7 @@
 ---
 name: cert-manager
 description: 一个使用 DNS 验证（Let's Encrypt）进行自动化 SSL 证书生成和管理的综合工具集。该技能支持多种使用途径，包括直接代码导入、命令行界面（CLI）、客户端-服务器架构和 MCP 协议集成。
+version: 0.1.0
 ---
 
 # Cert Manager Skill (证书管理技能)

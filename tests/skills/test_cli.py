@@ -24,6 +24,7 @@ def test_skill_install_copies_valid_skill(runner, tmp_path):
         """---
 name: demo
 description: Demo skill for install testing.
+version: 0.1.0
 ---
 
 # Demo
@@ -69,6 +70,7 @@ def test_skill_install_rejects_missing_required_frontmatter_keys(runner, tmp_pat
         source / "incomplete",
         """---
 name: incomplete
+version: 0.1.0
 ---
 
 # Incomplete
@@ -85,6 +87,30 @@ name: incomplete
     assert not (dest / "incomplete").exists()
 
 
+def test_skill_install_rejects_missing_version(runner, tmp_path):
+    source = tmp_path / "source"
+    dest = tmp_path / "dest"
+    _write_skill(
+        source / "noversion",
+        """---
+name: noversion
+description: Missing version.
+---
+
+# No Version
+""",
+    )
+
+    result = runner.invoke(
+        cli,
+        ["skill", "install", "noversion", "--source", str(source), "--dest", str(dest)],
+    )
+
+    assert result.exit_code != 0
+    assert "missing required frontmatter keys: version" in result.output
+    assert not (dest / "noversion").exists()
+
+
 def test_skill_install_all_aborts_when_any_target_is_invalid(runner, tmp_path):
     source = tmp_path / "source"
     dest = tmp_path / "dest"
@@ -93,6 +119,7 @@ def test_skill_install_all_aborts_when_any_target_is_invalid(runner, tmp_path):
         """---
 name: good
 description: Good skill.
+version: 0.1.0
 ---
 
 # Good

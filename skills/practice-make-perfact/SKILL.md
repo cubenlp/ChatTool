@@ -1,6 +1,7 @@
 ---
 name: practice-make-perfact
 description: Codify a task-first workflow that turns real execution into reusable tools and skills. Use when asked to record process, standardize execution habits, or evolve ChatTool by adding general capabilities to src/ and task-specific guidance to skills/.
+version: 0.1.0
 ---
 
 # Practice Make Perfact

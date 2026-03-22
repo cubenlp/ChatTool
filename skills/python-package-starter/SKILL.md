@@ -1,6 +1,7 @@
 ---
 name: python-package-starter
 description: Use `chattool pypi init` to scaffold a minimal Python package, then validate it with doctor/build/check. Example package name: `mychat`.
+version: 0.1.0
 ---
 
 # Python Package Starter

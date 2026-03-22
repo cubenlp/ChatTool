@@ -1,6 +1,7 @@
 ---
 name: zulip-news
 description: "Aggregate and summarize Zulip community updates via ChatTool CLI. Use when user asks to fetch latest Zulip news, list streams/messages, or generate periodic summaries from configured streams/topics."
+version: 0.1.0
 ---
 
 # Zulip News
