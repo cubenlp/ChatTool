@@ -57,3 +57,24 @@ chattool cc init -I \
 ```sh
 chattool cc init -i --config /tmp/config.toml
 ```
+
+## Case 4: 飞书初始化复用 chatenv 候选值
+
+### 初始环境准备
+
+- 当前 `chatenv` 已配置 `FEISHU_APP_ID` 与 `FEISHU_APP_SECRET`
+- 使用新的临时 `config.toml`，确保没有已有平台配置可复用
+
+### 预期过程和结果
+
+- 执行 `chattool cc init -i --agent claudecode --platform feishu --config <path>` 返回 0
+- 交互阶段提示检测到 `chatenv` 的飞书配置候选
+- `app_id` 提示默认值来自 `FEISHU_APP_ID`
+- 选择沿用默认 `app_secret` 后，生成的配置文件写入对应飞书凭证
+
+### 参考执行脚本（伪代码）
+
+```sh
+chatenv cat -t feishu
+chattool cc init -i --agent claudecode --platform feishu --config /tmp/config.toml
+```
