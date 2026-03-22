@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import importlib
+import json
 import importlib.util
 import os
 from pathlib import Path
 import subprocess
 import sys
 import textwrap
+from urllib import error as urllib_error
+from urllib import parse as urllib_parse
+from urllib import request as urllib_request
 
 try:
     import tomllib
@@ -54,6 +59,14 @@ class ScaffoldResult:
     package_name: str
     module_name: str
     created_files: list[Path]
+
+
+@dataclass
+class RepositoryCheck:
+    label: str
+    status: str
+    detail: str
+    hint: str | None = None
 
 
 def resolve_dist_dir(project_dir: Path, dist_dir: Path | None = None) -> Path:
@@ -140,6 +153,7 @@ def scaffold_package(
     package_name: str,
     project_dir: Path,
     *,
+    initial_version: str = "0.1.0",
     description: str | None = None,
     requires_python: str = ">=3.10",
     license_name: str = "MIT",
@@ -200,7 +214,7 @@ def scaffold_package(
 
             __all__ = ["__version__"]
 
-            __version__ = "0.1.0"
+            __version__ = "{initial_version}"
         ''').strip() + "\n",
         tests_dir / "conftest.py": textwrap.dedent("""
             from pathlib import Path
@@ -217,7 +231,7 @@ def scaffold_package(
 
 
             def test_version_present():
-                assert __version__ == "0.1.0"
+                assert __version__ == "{initial_version}"
         """).strip() + "\n",
     }
 
@@ -277,6 +291,61 @@ def _resolve_dynamic_version_source(pyproject: dict, dynamic_fields: list[str]) 
     return "dynamic"
 
 
+def _load_attr_version(project_dir: Path, attr_path: str) -> str | None:
+    module_path, _, attribute = attr_path.rpartition(".")
+    if not module_path or not attribute:
+        return None
+    relative_parts = module_path.split(".")
+    candidate_files = []
+    for base_dir in (project_dir / "src", project_dir):
+        candidate_files.append(base_dir.joinpath(*relative_parts, "__init__.py"))
+        candidate_files.append(base_dir.joinpath(*relative_parts).with_suffix(".py"))
+
+    for candidate in candidate_files:
+        if not candidate.exists():
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location(
+                f"_chattool_pypi_dynamic_{candidate.stem}_{abs(hash(candidate))}",
+                candidate,
+            )
+            if spec is None or spec.loader is None:
+                continue
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            value = getattr(module, attribute, None)
+        except Exception:  # pragma: no cover
+            continue
+        if value is not None:
+            return str(value)
+    return None
+
+
+def _load_file_version(project_dir: Path, relative_path: str) -> str | None:
+    target = project_dir / relative_path
+    if not target.exists():
+        return None
+    content = target.read_text(encoding="utf-8").strip()
+    return content or None
+
+
+def _resolve_dynamic_version_value(project_dir: Path, pyproject: dict, dynamic_fields: list[str]) -> str | None:
+    if "version" not in dynamic_fields:
+        return None
+    tool_data = pyproject.get("tool", {})
+    setuptools_data = tool_data.get("setuptools", {}) if isinstance(tool_data, dict) else {}
+    dynamic_data = setuptools_data.get("dynamic", {}) if isinstance(setuptools_data, dict) else {}
+    version_data = dynamic_data.get("version") if isinstance(dynamic_data, dict) else None
+    if isinstance(version_data, dict):
+        attr_path = version_data.get("attr")
+        if isinstance(attr_path, str):
+            return _load_attr_version(project_dir, attr_path)
+        file_path = version_data.get("file")
+        if isinstance(file_path, str):
+            return _load_file_version(project_dir, file_path)
+    return None
+
+
 def read_project_metadata(project_dir: Path) -> ProjectMetadata:
     pyproject = _load_pyproject(project_dir)
     project_data = pyproject.get("project")
@@ -291,6 +360,7 @@ def read_project_metadata(project_dir: Path) -> ProjectMetadata:
     version_source = None
     if not version:
         version_source = _resolve_dynamic_version_source(pyproject, dynamic_fields)
+        version = _resolve_dynamic_version_value(project_dir, pyproject, dynamic_fields)
 
     return ProjectMetadata(
         name=project_data.get("name"),
@@ -346,6 +416,8 @@ def collect_doctor_checks(project_dir: Path, dist_dir: Path | None = None) -> li
     ))
     if metadata.version:
         version_detail = metadata.version
+        if metadata.version_source:
+            version_detail = f"{metadata.version} ({metadata.version_source})"
         status = "ok"
     elif metadata.version_source:
         version_detail = metadata.version_source
@@ -425,6 +497,100 @@ def find_distributions(dist_dir: Path) -> list[Path]:
     for pattern in ("*.whl", "*.tar.gz", "*.zip"):
         found.extend(dist_dir.glob(pattern))
     return sorted(set(path.resolve() for path in found))
+
+
+def _repository_json_base(repository: str, repository_url: str | None = None) -> str:
+    if repository_url:
+        parsed = urllib_parse.urlparse(repository_url)
+        host = parsed.netloc.lower()
+        if host == "upload.pypi.org":
+            return "https://pypi.org"
+        if host == "test.pypi.org":
+            return "https://test.pypi.org"
+        return f"{parsed.scheme}://{parsed.netloc}"
+    if repository == "pypi":
+        return "https://pypi.org"
+    return "https://test.pypi.org"
+
+
+def _fetch_repository_json(url: str, timeout: float = 5.0) -> tuple[int, dict | None]:
+    request = urllib_request.Request(
+        url,
+        headers={"Accept": "application/json"},
+    )
+    try:
+        with urllib_request.urlopen(request, timeout=timeout) as response:
+            payload = response.read().decode("utf-8")
+            return response.status, json.loads(payload)
+    except urllib_error.HTTPError as exc:
+        if exc.code == 404:
+            return 404, None
+        detail = exc.read().decode("utf-8", errors="replace").strip()
+        raise PyPICommandError(f"Repository query failed for {url}: HTTP {exc.code} {detail or exc.reason}") from exc
+    except urllib_error.URLError as exc:
+        raise PyPICommandError(f"Repository query failed for {url}: {exc.reason}") from exc
+    except json.JSONDecodeError as exc:
+        raise PyPICommandError(f"Repository query returned invalid JSON for {url}: {exc}") from exc
+
+
+def check_repository_conflicts(
+    package_name: str,
+    version: str | None,
+    *,
+    repository: str = "testpypi",
+    repository_url: str | None = None,
+    timeout: float = 5.0,
+    fetcher=_fetch_repository_json,
+) -> list[RepositoryCheck]:
+    package_name = package_name.strip()
+    if not package_name:
+        raise PyPICommandError("Package name is required for repository conflict checks.")
+
+    base_url = _repository_json_base(repository, repository_url)
+    package_url = f"{base_url}/pypi/{urllib_parse.quote(package_name)}/json"
+    package_status, _ = fetcher(package_url, timeout=timeout)
+    target_label = repository_url or repository
+
+    checks: list[RepositoryCheck] = []
+    if package_status == 404:
+        checks.append(RepositoryCheck(
+            label="repository.project",
+            status="ok",
+            detail=f"{package_name} is available on {target_label}",
+        ))
+    else:
+        checks.append(RepositoryCheck(
+            label="repository.project",
+            status="warn",
+            detail=f"{package_name} already exists on {target_label}",
+            hint="Existing projects are normal if you own the package; use a new name if this is a first publish.",
+        ))
+
+    if not version:
+        checks.append(RepositoryCheck(
+            label="repository.version",
+            status="warn",
+            detail=f"version unavailable; skip release check on {target_label}",
+            hint="Set [project].version or pass --version to verify whether the target release already exists.",
+        ))
+        return checks
+
+    version_url = f"{base_url}/pypi/{urllib_parse.quote(package_name)}/{urllib_parse.quote(version)}/json"
+    version_status, _ = fetcher(version_url, timeout=timeout)
+    if version_status == 404:
+        checks.append(RepositoryCheck(
+            label="repository.version",
+            status="ok",
+            detail=f"{package_name}=={version} is available on {target_label}",
+        ))
+    else:
+        checks.append(RepositoryCheck(
+            label="repository.version",
+            status="fail",
+            detail=f"{package_name}=={version} already exists on {target_label}",
+            hint="Bump the project version or choose another package name before uploading.",
+        ))
+    return checks
 
 
 def _clean_dist_dir(dist_dir: Path) -> None:

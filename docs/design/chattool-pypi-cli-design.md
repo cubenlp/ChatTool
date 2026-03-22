@@ -139,6 +139,7 @@ chattool pypi release
 - 默认行为：
   - 若 `dist/` 不存在，提示先执行 `chattool pypi build`
   - 调用底层 `twine check dist/*`
+  - 尽量保持与 `twine check` 行为一致，不默认掺入远端仓库占用逻辑
 
 建议选项：
 
@@ -159,7 +160,7 @@ chattool pypi release
 - 默认行为：
   - 默认目标仓库为 `testpypi`
   - 默认要求先有可用构建产物
-  - 认证优先复用 `.pypirc` 或 `TWINE_USERNAME` / `TWINE_PASSWORD`
+  - 认证优先复用 `.pypirc`，其次才是 `TWINE_USERNAME` / `TWINE_PASSWORD`
   - 若进入交互，可提示输入 token，但回显必须脱敏
 
 建议选项：
@@ -204,6 +205,24 @@ chattool pypi release
 - 这是面向高频发版路径的快捷命令
 - 一阶段不做版本递增，只消费当前仓库已有版本
 - 若指定 `-i`，提示目录、构建参数、检查参数、发布参数与凭证默认值
+
+### 5.1) `chattool pypi probe`
+
+- 作用：检查候选包名和版本在目标仓库是否已被占用
+- 默认行为：
+  - 默认从当前项目的 `pyproject.toml` 读取名称和版本
+  - 支持通过 `--name`、`--version` 覆盖，便于在改名或改版本前先探测
+  - 默认目标仓库为 `testpypi`
+
+建议选项：
+
+- `--project-dir PATH`
+- `--repository [testpypi|pypi]`
+- `--repository-url URL`
+- `--name TEXT`
+- `--version TEXT`
+- `-i/--interactive`
+- `-I/--no-interactive`
 
 ## 交互式流程（草案）
 

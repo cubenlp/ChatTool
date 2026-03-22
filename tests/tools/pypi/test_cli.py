@@ -82,6 +82,7 @@ def test_init_command_uses_tui_prompt_when_name_missing(tmp_path, monkeypatch):
             "Package name": "mychat",
             "project_dir": "mychat",
             "description": "mychat package",
+            "initial_version": "0.1.0",
             "requires_python": ">=3.10",
             "license": "MIT",
             "author (optional)": "",
@@ -102,6 +103,7 @@ def test_init_command_uses_tui_prompt_when_name_missing(tmp_path, monkeypatch):
             ("Package name", "", False),
             ("project_dir", "mychat", False),
             ("description", "mychat package", False),
+            ("initial_version", "0.1.0", False),
             ("requires_python", ">=3.10", False),
             ("license", "MIT", False),
             ("author (optional)", "", False),
@@ -158,6 +160,7 @@ def test_init_command_forced_interactive_prompts_defaults(monkeypatch, tmp_path)
         ("Package name", "mychat", False),
         ("project_dir", str(project_dir), False),
         ("description", "mychat package", False),
+        ("initial_version", "0.1.0", False),
         ("requires_python", ">=3.10", False),
         ("license", "MIT", False),
         ("author (optional)", "Rex", False),
@@ -199,6 +202,7 @@ def test_doctor_command_forced_interactive_prompts_defaults(monkeypatch, tmp_pat
     prompts = []
 
     _enable_interactive(monkeypatch)
+    monkeypatch.setattr(pypi_cli, "_pypirc_credentials", lambda repository, repository_url: (None, None))
 
     def fake_ask_text(message, default="", password=False, style=None):
         prompts.append((message, default, password))
@@ -386,6 +390,7 @@ def test_publish_command_forced_interactive_prompts_defaults(monkeypatch, tmp_pa
     captured = {}
 
     _enable_interactive(monkeypatch)
+    monkeypatch.setattr(pypi_cli, "_pypirc_credentials", lambda repository, repository_url: (None, None))
 
     def fake_ask_text(message, default="", password=False, style=None):
         prompts.append((message, default, password))
@@ -430,6 +435,73 @@ def test_publish_command_forced_interactive_prompts_defaults(monkeypatch, tmp_pa
     assert captured["kwargs"]["password"] == "secret-token"
     assert captured["kwargs"]["non_interactive"] is False
     assert "Starting interactive package publish..." in result.output
+
+
+def test_publish_uses_pypirc_before_prompting(monkeypatch, tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "pkg"
+    project_dir.mkdir()
+    _write_minimal_project(project_dir)
+    dist_dir = project_dir / "dist"
+    dist_dir.mkdir()
+    artifact = dist_dir / "demo_pkg-0.1.0-py3-none-any.whl"
+    artifact.write_text("wheel", encoding="utf-8")
+    confirms = []
+    captured = {}
+
+    _enable_interactive(monkeypatch)
+    monkeypatch.setattr(pypi_cli, "_pypirc_credentials", lambda repository, repository_url: ("__token__", "pypi-token"))
+    monkeypatch.setattr(
+        pypi_cli,
+        "ask_text",
+        lambda *args, **kwargs: pytest.fail("ask_text should not be used when .pypirc has credentials"),
+    )
+
+    def fake_ask_confirm(message, default=True, style=None):
+        confirms.append((message, default))
+        return False
+
+    def fake_publish_distributions(project_dir, dist_dir, **kwargs):
+        captured["kwargs"] = kwargs
+        return type("Result", (), {"stdout": "publish ok", "stderr": ""})(), [artifact.resolve()]
+
+    monkeypatch.setattr(pypi_cli, "ask_confirm", fake_ask_confirm)
+    monkeypatch.setattr(pypi_cli, "publish_distributions", fake_publish_distributions)
+
+    result = runner.invoke(
+        pypi_cli.cli,
+        ["publish", "--project-dir", str(project_dir)],
+    )
+
+    assert result.exit_code == 0
+    assert confirms == []
+    assert captured["kwargs"]["username"] is None
+    assert captured["kwargs"]["password"] is None
+
+
+def test_probe_command_reports_repository_conflicts(monkeypatch, tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "pkg"
+    project_dir.mkdir()
+    _write_minimal_project(project_dir)
+
+    monkeypatch.setattr(
+        pypi_cli,
+        "check_repository_conflicts",
+        lambda *args, **kwargs: [
+            type("Check", (), {"status": "warn", "label": "repository.project", "detail": "demo-pkg already exists", "hint": None})(),
+            type("Check", (), {"status": "ok", "label": "repository.version", "detail": "demo-pkg==0.1.0 is available", "hint": None})(),
+        ],
+    )
+
+    result = runner.invoke(
+        pypi_cli.cli,
+        ["probe", "--project-dir", str(project_dir)],
+    )
+
+    assert result.exit_code == 0
+    assert "[WARN] repository.project: demo-pkg already exists" in result.output
+    assert "[OK] repository.version: demo-pkg==0.1.0 is available" in result.output
 
 
 def test_release_dry_run_forced_interactive_prompts_defaults(monkeypatch, tmp_path):

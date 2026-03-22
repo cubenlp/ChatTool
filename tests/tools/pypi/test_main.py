@@ -7,9 +7,11 @@ from chattool.tools.pypi.main import (
     PyPICommandError,
     build_package,
     check_distributions,
+    check_repository_conflicts,
     collect_doctor_checks,
     normalize_module_name,
     publish_distributions,
+    read_project_metadata,
     release_package,
     scaffold_package,
 )
@@ -60,6 +62,9 @@ version = {attr = "demo.__version__"}
     )
     (project_dir / "README.md").write_text("# demo\n", encoding="utf-8")
     (project_dir / "LICENSE").write_text("MIT\n", encoding="utf-8")
+    src_dir = project_dir / "src" / "demo"
+    src_dir.mkdir(parents=True)
+    (src_dir / "__init__.py").write_text('__version__ = "0.2.0"\n', encoding="utf-8")
     dist_dir = project_dir / "dist"
     dist_dir.mkdir()
     (dist_dir / "demo_pkg-0.1.0-py3-none-any.whl").write_text("wheel", encoding="utf-8")
@@ -69,8 +74,40 @@ version = {attr = "demo.__version__"}
     artifact_check = next(check for check in checks if check.label == "dist artifacts")
 
     assert version_check.status == "ok"
-    assert version_check.detail == "dynamic via attr=demo.__version__"
+    assert version_check.detail == "0.2.0 (dynamic via attr=demo.__version__)"
     assert artifact_check.status == "warn"
+
+
+def test_read_project_metadata_resolves_dynamic_attr_version(tmp_path):
+    project_dir = tmp_path / "pkg"
+    project_dir.mkdir()
+    (project_dir / "pyproject.toml").write_text(
+        """
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "demo-pkg"
+dynamic = ["version"]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[tool.setuptools.dynamic]
+version = {attr = "demo.__version__"}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (project_dir / "README.md").write_text("# demo\n", encoding="utf-8")
+    (project_dir / "src" / "demo").mkdir(parents=True)
+    (project_dir / "src" / "demo" / "__init__.py").write_text('__version__ = "1.2.3"\n', encoding="utf-8")
+
+    metadata = read_project_metadata(project_dir)
+
+    assert metadata.version == "1.2.3"
+    assert metadata.version_source == "dynamic via attr=demo.__version__"
 
 
 def test_build_package_cleans_old_artifacts_and_returns_new_files(tmp_path):
@@ -246,6 +283,42 @@ def test_scaffold_package_generated_project_pytest_passes(tmp_path):
 
     assert process.returncode == 0, process.stdout + process.stderr
     assert "1 passed" in process.stdout
+
+
+def test_scaffold_package_supports_custom_initial_version(tmp_path):
+    project_dir = tmp_path / "mychat"
+
+    scaffold_package(
+        package_name="mychat",
+        project_dir=project_dir,
+        initial_version="0.3.5",
+        description="My chat package",
+    )
+
+    init_text = (project_dir / "src" / "mychat" / "__init__.py").read_text(encoding="utf-8")
+    test_text = (project_dir / "tests" / "test_version.py").read_text(encoding="utf-8")
+
+    assert '__version__ = "0.3.5"' in init_text
+    assert 'assert __version__ == "0.3.5"' in test_text
+
+
+def test_check_repository_conflicts_detects_existing_release():
+    def fake_fetcher(url, timeout=5.0):
+        if url.endswith("/pypi/demo-pkg/json"):
+            return 200, {}
+        if url.endswith("/pypi/demo-pkg/0.1.0/json"):
+            return 200, {}
+        raise AssertionError(url)
+
+    checks = check_repository_conflicts(
+        "demo-pkg",
+        "0.1.0",
+        repository="pypi",
+        fetcher=fake_fetcher,
+    )
+
+    assert checks[0].status == "warn"
+    assert checks[1].status == "fail"
 
 
 def test_scaffold_package_rejects_non_empty_target_directory(tmp_path):

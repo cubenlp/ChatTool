@@ -16,6 +16,7 @@ pip install "chattool[pypi]"
 - `chattool pypi init`：生成一个最小可发布的 `src/` 布局 Python 包骨架
 - `chattool pypi build`：执行 `python -m build`
 - `chattool pypi check`：执行 `python -m twine check`
+- `chattool pypi probe`：检查包名和版本在 PyPI 或 TestPyPI 是否已存在
 - `chattool pypi publish`：执行 `python -m twine upload`
 - `chattool pypi release`：串联 `build -> check -> publish`
 
@@ -26,6 +27,7 @@ pip install "chattool[pypi]"
 - 默认目标仓库为 `testpypi`
 - 发布到正式 `pypi` 时必须显式 `--yes` 或交互确认
 - CLI 认证默认复用 `.pypirc`、`TWINE_USERNAME`、`TWINE_PASSWORD`
+- `init --version` 可直接设置模板初始版本，`doctor/probe` 会解析 dynamic version 的真实值
 
 ## 交互规范
 
@@ -37,11 +39,14 @@ pip install "chattool[pypi]"
 
 ```bash
 chattool pypi init mychat
+chattool pypi init mychat --version 0.3.0
 chattool pypi init -i
 chattool pypi doctor
 chattool pypi build -i
 chattool pypi build
 chattool pypi check
+chattool pypi probe --repository pypi
+chattool pypi probe --name mychat --repository pypi
 chattool pypi release --dry-run
 chattool pypi release --repository testpypi
 chattool pypi publish --repository pypi --yes
@@ -75,10 +80,12 @@ chattool pypi check --project-dir .
 - 优先使用 `.pypirc`
 - 也可以通过 `TWINE_USERNAME` 和 `TWINE_PASSWORD` 提供认证
 - 交互模式下可临时输入凭证，不会自动写回配置文件
+- `publish/release` 在发现 `.pypirc` 可用时不会先弹凭证输入框
 
 ## 交互模式
 
 - `chattool pypi init` 在缺少包名时会进入完整向导，依次提示 `Package name`、`project_dir`、`description`、`requires_python`、`license`、`author`、`email`，并显示默认值。
+- `chattool pypi init` 也支持通过 `--version` 或交互中的 `initial_version` 设置模板初始版本。
 - `chattool pypi doctor/build/check/publish/release -i` 会先提示当前命令相关的目录、校验或发布参数，再执行实际动作。
 - `publish/release` 的确认、仓库和凭证补全也遵循同一套 TUI 规则。
 - `-I`：禁止交互；当需要确认或缺少必要输入时直接失败。
