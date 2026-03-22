@@ -6,11 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [6.3.0]
+
 ### Changed
 - `skills/practice-make-perfact` 现在明确作为 ChatTool 仓库任务的默认开发流程：先执行任务，再做 review 与文档同步，并默认推进到 `chattool gh` 的 PR/MR 阶段
 - `playground/` 现在带有默认 `.gitignore`，作为模型探索和临时试验的试炼场
 - `chattool setup nodejs` 现在改为写入仓库内置的 `nvm.sh` 与 shell 初始化块，不再通过 `curl` 从 GitHub 拉取 nvm 安装脚本
 - `chattool cc init -i` 在选择飞书平台时，现会把当前 `chatenv` 中的 `FEISHU_APP_ID` / `FEISHU_APP_SECRET` 作为默认候选值
+- `chattool skill` / `chatskill` 现在在未显式传 `--source` 时，会正确读取 `chatenv` 中的 `CHATTOOL_SKILLS_DIR`
+- skill CLI 代码目录现统一为 `src/chattool/skill/`，避免与仓库根目录 `skills/` 资产目录混淆
+- `chatenv init -t skill` 中 `CHATTOOL_SKILLS_DIR` 的交互提示已缩短，避免占用过多输入空间
+
+### Fixed
+- `chattool setup alias` 现在会把 `chatskills` 正确映射到 `chattool skill`
 
 ## [6.2.0]
 
