@@ -132,6 +132,7 @@ nav:
     - 工具接口规范: tools/interfaces.md
     - DNS 工具: tools/dns/index.md
     - PyPI 工具: tools/pypi/index.md
+    - Explore 数据探索: tools/explore/index.md
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
     - 网络扫描: tools/network/index.md

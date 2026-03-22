@@ -23,6 +23,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool pypi init` — 快速生成最小可发布的 `src/` 布局 Python 包骨架
 - 文档：新增“Python 库仓库构成设计”，明确 PyPI 包、源码、测试、CLI 测试与 skills 的目录边界
 - 设计：新增 `chattool pypi` CLI 文档，定义 build/check/publish/release 的命令边界与安全策略
+- `chattool explore arxiv` — arXiv 论文搜索、daily 抓取与 preset 检索
+- `chattool explore arxiv` 新增 `math-formalization-weekly` preset，并补充数学形式化近一周追踪 workflow
+- `skills/arxiv-explore` 新增数学形式化近一周子模块，包含分类索引、真实样例和多查询收集脚本
 
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示

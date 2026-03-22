@@ -10,6 +10,7 @@ ChatTool 提供的各类工具，包括 DNS 管理、AI 绘图、网络扫描、
 
 - [DNS 工具](dns/index.md)
 - [飞书机器人](lark/index.md)
+- [Explore 数据探索](explore/index.md)
 - [AI 绘图](image.md)
 - [FRP 内网穿透](frp.md)
 - [网络扫描](network/index.md)

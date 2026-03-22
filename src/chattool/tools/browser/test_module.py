@@ -1,22 +1,35 @@
 #!/usr/bin/env python3
 """
 Browser 客户端测试脚本
-用于验证 Browser 工具模块的正确性
+用于验证 Browser 工具模块的正确性。
+
+这是手工 smoke script，不应阻塞自动化 pytest。
 """
+from pathlib import Path
 import sys
-import os
-
-# 设置正确的路径
-os.chdir('/workspace')
-sys.path.insert(0, '/workspace')
-
-# 手动加载模块避免 chattool 包的依赖问题
 import types
+
+try:
+    import pytest
+except ImportError:  # pragma: no cover - script fallback
+    pytest = None
+else:
+    if __name__ != "__main__":
+        pytestmark = pytest.mark.skip(
+            reason="Manual browser smoke script; excluded from automated pytest runs."
+        )
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+BROWSER_DIR = REPO_ROOT / "src" / "chattool" / "tools" / "browser"
+SRC_ROOT = REPO_ROOT / "src"
+
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 def setup_modules():
     """设置模块加载环境"""
     browser_pkg = types.ModuleType('chattool.tools.browser')
-    browser_pkg.__path__ = ['chattool/src/chattool/tools/browser']
+    browser_pkg.__path__ = [str(BROWSER_DIR)]
     
     sys.modules['chattool'] = types.ModuleType('chattool')
     sys.modules['chattool.tools'] = types.ModuleType('chattool.tools')
@@ -27,7 +40,7 @@ def setup_modules():
     # 加载 base
     spec = importlib.util.spec_from_file_location(
         'chattool.tools.browser.base', 
-        'chattool/src/chattool/tools/browser/base.py'
+        BROWSER_DIR / 'base.py'
     )
     base = importlib.util.module_from_spec(spec)
     sys.modules['chattool.tools.browser.base'] = base
@@ -37,7 +50,7 @@ def setup_modules():
     # 加载 playwright_impl
     spec = importlib.util.spec_from_file_location(
         'chattool.tools.browser.playwright_impl', 
-        'chattool/src/chattool/tools/browser/playwright_impl.py'
+        BROWSER_DIR / 'playwright_impl.py'
     )
     pw = importlib.util.module_from_spec(spec)
     sys.modules['chattool.tools.browser.playwright_impl'] = pw
@@ -47,7 +60,7 @@ def setup_modules():
     # 加载 selenium
     spec = importlib.util.spec_from_file_location(
         'chattool.tools.browser.selenium', 
-        'chattool/src/chattool/tools/browser/selenium.py'
+        BROWSER_DIR / 'selenium.py'
     )
     sel = importlib.util.module_from_spec(spec)
     sys.modules['chattool.tools.browser.selenium'] = sel
@@ -57,7 +70,7 @@ def setup_modules():
     # 加载 __init__
     spec = importlib.util.spec_from_file_location(
         'chattool.tools.browser', 
-        'chattool/src/chattool/tools/browser/__init__.py'
+        BROWSER_DIR / '__init__.py'
     )
     init = importlib.util.module_from_spec(spec)
     sys.modules['chattool.tools.browser'] = init

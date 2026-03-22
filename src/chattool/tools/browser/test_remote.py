@@ -1,10 +1,25 @@
 #!/usr/bin/env python3
 """
 Browser 客户端测试脚本 - 独立版本
-用于验证连接到远程 CDP 浏览器
+用于验证连接到远程 CDP 浏览器。
+
+这是手工 smoke script，不应阻塞自动化 pytest。
 """
+from pathlib import Path
 import sys
 import logging
+
+try:
+    import pytest
+except ImportError:  # pragma: no cover - script fallback
+    pytest = None
+else:
+    if __name__ != "__main__":
+        pytestmark = pytest.mark.skip(
+            reason="Manual browser smoke script; excluded from automated pytest runs."
+        )
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
 
 # 设置日志
 logging.basicConfig(
@@ -12,10 +27,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# 导入 playwright
-from playwright.sync_api import sync_playwright
-
 
 class SimplePlaywrightClient:
     """简化的 Playwright 客户端，用于测试"""
@@ -28,6 +39,8 @@ class SimplePlaywrightClient:
         self._page = None
     
     def __enter__(self):
+        from playwright.sync_api import sync_playwright
+
         self._playwright = sync_playwright().start()
         
         if self.cdp_url:
@@ -106,8 +119,9 @@ def test_remote_browser(cdp_url: str):
         
         # 测试截图
         logger.info("Testing screenshot...")
-        if client.screenshot('/workspace/test_remote_screenshot.png'):
-            logger.info("Screenshot saved to /workspace/test_remote_screenshot.png")
+        screenshot_path = str(REPO_ROOT / 'test_remote_screenshot.png')
+        if client.screenshot(screenshot_path):
+            logger.info(f"Screenshot saved to {screenshot_path}")
         
         # 测试脚本执行
         logger.info("Testing execute_script...")

@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
 """
 Browser 客户端测试脚本
-用于验证连接到远程 CDP 浏览器
+用于验证连接到远程 CDP 浏览器。
+
+这是手工 smoke script，不应阻塞自动化 pytest。
 """
+from pathlib import Path
 import sys
-import os
 import logging
 
-# 添加项目路径并避免导入 chattool 顶层
-sys.path.insert(0, '/workspace/chattool/src')
+try:
+    import pytest
+except ImportError:  # pragma: no cover - script fallback
+    pytest = None
+else:
+    if __name__ != "__main__":
+        pytestmark = pytest.mark.skip(
+            reason="Manual browser smoke script; excluded from automated pytest runs."
+        )
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+SRC_ROOT = REPO_ROOT / "src"
+
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 # 直接导入 browser 模块，避免依赖问题
 from chattool.tools.browser import create_browser_client
@@ -48,7 +63,7 @@ def test_remote_browser(cdp_url: str = 'http://rexpc.oray.wzhecnu.cn:9222'):
         
         # 测试截图
         logger.info("Testing screenshot...")
-        screenshot_path = '/workspace/test_screenshot.png'
+        screenshot_path = str(REPO_ROOT / 'test_screenshot.png')
         result = client.screenshot(path=screenshot_path, full_page=False)
         if result:
             logger.info(f"Screenshot saved to: {screenshot_path}")
@@ -121,7 +136,7 @@ def test_local_browser():
         logger.info(f"URL: {client.get_url()}")
         logger.info(f"Title: {client.get_title()}")
         
-        screenshot_path = '/workspace/test_local_screenshot.png'
+        screenshot_path = str(REPO_ROOT / 'test_local_screenshot.png')
         client.screenshot(path=screenshot_path)
         logger.info(f"Screenshot saved: {screenshot_path}")
         
