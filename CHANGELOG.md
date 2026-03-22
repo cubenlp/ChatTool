@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool skill` / `chatskill` — Skills 管理，支持安装到 Codex / Claude Code
 - 新增 skill：`chattool-dev-review`
 - ChatTool skills 约定维护 `version` frontmatter，新建 skill 以 `0.1.0` 为初始版本
+- 所有仓库内 skills 现在都提供对应的 `SKILL.zh.md`
 - `chattool cc` — cc-connect 最小可用配置、启动与诊断命令
 - `chattool skill install --prefix` — 安装时添加 `chattool-` 前缀
 - `CHATTOOL_SKILLS_DIR` — 指定 skills 源目录
