@@ -5,7 +5,7 @@
 - 主语言：Python
 - CLI 入口：`chattool`、`chatenv`、`chatskill`
 - 代码路径：`src/chattool/`
-- Skills 目录：`src/chattool/skills/`
+- Skills CLI 代码目录：`src/chattool/skill/`
 - 文档：`docs/`，用 mkdocs-material 构建
 
 ## 板块结构
@@ -19,7 +19,7 @@ src/chattool/
 ├── mcp/        # MCP 入口与编排（工具实现下放到 tools/*/mcp.py）
 ├── setup/      # 环境安装脚本
 ├── serve/      # 服务端（截图、证书分发等）
-└── skills/     # skills CLI 与相关能力
+└── skill/      # skill CLI 与相关能力
 ```
 
 ## 常用命令

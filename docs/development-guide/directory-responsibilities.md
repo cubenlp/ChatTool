@@ -52,7 +52,7 @@
 - 负责 docker 模板生成、示例参数与部署配置组织。
 - 为 setup 与工具运行环境提供容器化入口。
 
-### `src/chattool/skills/`
+### `src/chattool/skill/`
 
 - 负责面向 Agent 的能力封装与场景化组织。
 - 聚合已存在能力，不重复实现底层工具。

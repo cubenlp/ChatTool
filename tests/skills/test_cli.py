@@ -6,7 +6,7 @@ from click.testing import CliRunner
 
 from chattool.client.main import cli
 
-skill_cli_module = importlib.import_module("chattool.skills.cli")
+skill_cli_module = importlib.import_module("chattool.skill.cli")
 
 
 @pytest.fixture
