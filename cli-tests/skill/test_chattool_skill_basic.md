@@ -9,6 +9,7 @@
 - 标签：`cli`
 - 前置条件：技能目录存在。
 - 环境准备：设置 `CHATTOOL_SKILLS_DIR` 或 `--source`。
+- 若未显式传 `--source`，也可通过 `chatenv` 中的 `CHATTOOL_SKILLS_DIR` 提供默认技能源目录。
 - 回滚：删除安装的技能目录。
 
 ## 用例 1：列出技能
@@ -25,6 +26,7 @@
 
 ```sh
 chattool skill list --source /path/to/skills
+chatskill list
 ```
 
 ## 用例 2：安装技能
@@ -42,6 +44,7 @@ chattool skill list --source /path/to/skills
 ```sh
 chattool skill install demo --source /path/to/skills --dest /tmp/skills
 chattool skill install --all --source /path/to/skills --dest /tmp/skills
+chatskill install demo --dest /tmp/skills
 ```
 
 ## 用例 3：拒绝安装无效 skill

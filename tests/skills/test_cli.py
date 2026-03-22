@@ -1,9 +1,12 @@
+import importlib
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
 
 from chattool.client.main import cli
+
+skill_cli_module = importlib.import_module("chattool.skills.cli")
 
 
 @pytest.fixture
@@ -140,3 +143,62 @@ version: 0.1.0
     assert "missing YAML frontmatter delimited by ---" in result.output
     assert not (dest / "good").exists()
     assert not (dest / "bad").exists()
+
+
+def test_skill_list_uses_chatenv_skills_dir(runner, tmp_path, monkeypatch):
+    source = tmp_path / "source"
+    _write_skill(
+        source / "demo",
+        """---
+name: demo
+description: Demo skill for list testing.
+version: 0.1.0
+---
+
+# Demo
+""",
+    )
+
+    monkeypatch.delenv("CHATTOOL_SKILLS_DIR", raising=False)
+    monkeypatch.setattr(skill_cli_module, "_find_repo_skills_dir", lambda: None)
+    monkeypatch.setattr(
+        "chattool.config.main.SkillsConfig.CHATTOOL_SKILLS_DIR",
+        type("Field", (), {"value": str(source)})(),
+    )
+
+    result = runner.invoke(skill_cli_module.skill_cli, ["list"])
+
+    assert result.exit_code == 0
+    assert f"Available skills in {source}" in result.output
+    assert "demo" in result.output
+
+
+def test_skill_install_uses_chatenv_skills_dir(runner, tmp_path, monkeypatch):
+    source = tmp_path / "source"
+    dest = tmp_path / "dest"
+    _write_skill(
+        source / "demo",
+        """---
+name: demo
+description: Demo skill for install testing.
+version: 0.1.0
+---
+
+# Demo
+""",
+    )
+
+    monkeypatch.delenv("CHATTOOL_SKILLS_DIR", raising=False)
+    monkeypatch.setattr(skill_cli_module, "_find_repo_skills_dir", lambda: None)
+    monkeypatch.setattr(
+        "chattool.config.main.SkillsConfig.CHATTOOL_SKILLS_DIR",
+        type("Field", (), {"value": str(source)})(),
+    )
+
+    result = runner.invoke(
+        skill_cli_module.skill_cli,
+        ["install", "demo", "--dest", str(dest)],
+    )
+
+    assert result.exit_code == 0
+    assert (dest / "demo" / "SKILL.md").exists()

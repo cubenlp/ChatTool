@@ -51,10 +51,20 @@ def _find_repo_skills_dir() -> Path | None:
     return None
 
 
+def _get_skills_source_env() -> str | None:
+    env_source = os.getenv("CHATTOOL_SKILLS_DIR")
+    if env_source:
+        return env_source
+
+    from chattool.config import SkillsConfig
+
+    return SkillsConfig.CHATTOOL_SKILLS_DIR.value or None
+
+
 def _resolve_source_dir(source: str | None) -> Path | None:
     if source:
         return Path(source).expanduser().resolve()
-    env_source = os.getenv("CHATTOOL_SKILLS_DIR")
+    env_source = _get_skills_source_env()
     if env_source:
         return Path(env_source).expanduser().resolve()
     return _find_repo_skills_dir()

@@ -8,6 +8,9 @@
 chattool setup nodejs
 ```
 
+`chattool setup nodejs` 现在会直接写入内置的 `nvm.sh`，不再通过 `curl` 访问 GitHub 获取安装脚本。
+后续的 `nvm install` 仍会联网下载 Node.js 本体。
+
 交互式选择版本：
 
 ```bash
