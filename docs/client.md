@@ -463,6 +463,11 @@ chattool skill install cert-manager -p codex --prefix
 - `--prefix`: 安装时为 skill 名称添加 `chattool-` 前缀（默认不加）。
 - `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖）。
 
+安装前会校验源 skill 的 `SKILL.md`。当前要求：
+- 文件开头必须包含 `---` 包裹的 YAML frontmatter
+- frontmatter 至少包含 `name` 和 `description`
+- `openai.yaml`/`openai.yml` 不是必需文件
+
 ---
 
 ## 8. MCP 服务器 (`mcp`)

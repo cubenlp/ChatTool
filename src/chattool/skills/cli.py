@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import shutil
 from dataclasses import dataclass
@@ -37,6 +38,7 @@ def _build_platforms() -> dict[str, PlatformSpec]:
 
 
 PLATFORMS = _build_platforms()
+REQUIRED_FRONTMATTER_KEYS = ("name", "description")
 
 
 def _find_repo_skills_dir() -> Path | None:
@@ -103,6 +105,53 @@ def _list_skill_dirs(source_dir: Path) -> list[str]:
     return sorted(skills)
 
 
+def _extract_frontmatter_keys(skill_md: Path) -> tuple[set[str], list[str]]:
+    try:
+        content = skill_md.read_text(encoding="utf-8")
+    except OSError as exc:
+        return set(), [f"failed to read file: {exc}"]
+
+    lines = content.lstrip("\ufeff").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return set(), ["missing YAML frontmatter delimited by ---"]
+
+    closing_index = None
+    for idx, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            closing_index = idx
+            break
+
+    if closing_index is None:
+        return set(), ["missing closing YAML frontmatter delimiter ---"]
+
+    keys = set()
+    key_pattern = re.compile(r"^([A-Za-z0-9_-]+)\s*:")
+    for raw_line in lines[1:closing_index]:
+        if not raw_line.strip() or raw_line[:1].isspace():
+            continue
+        match = key_pattern.match(raw_line)
+        if match:
+            keys.add(match.group(1))
+
+    return keys, []
+
+
+def _validate_skill_dir(skill_dir: Path) -> list[str]:
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        return ["missing SKILL.md"]
+
+    keys, errors = _extract_frontmatter_keys(skill_md)
+    if errors:
+        return errors
+
+    missing = [key for key in REQUIRED_FRONTMATTER_KEYS if key not in keys]
+    if missing:
+        return [f"missing required frontmatter keys: {', '.join(missing)}"]
+
+    return []
+
+
 @click.group(name="skill")
 def skill_cli():
     """Manage ChatTool skills."""
@@ -154,6 +203,20 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
                 click.echo(f"  - {item}", err=True)
             raise click.Abort()
         targets = [name]
+
+    invalid_targets = []
+    for skill_name in targets:
+        skill_path = source / skill_name
+        errors = _validate_skill_dir(skill_path)
+        if errors:
+            invalid_targets.append((skill_path / "SKILL.md", errors))
+
+    if invalid_targets:
+        click.echo("Invalid skill definitions detected:", err=True)
+        for skill_md, errors in invalid_targets:
+            for error in errors:
+                click.echo(f"  - {skill_md}: {error}", err=True)
+        raise click.Abort()
 
     platform = _resolve_platform(platform_name)
     dest = _resolve_dest_dir(platform, dest_dir)
