@@ -88,4 +88,4 @@ def ask_confirm(message, default=True, style=None):
     import questionary
     if style is None:
         style = get_style()
-    return questionary.confirm(message, default=default, style=style).ask()
+    return ask_with_escape_back(questionary.confirm(message, default=default, style=style))

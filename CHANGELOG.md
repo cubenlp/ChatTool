@@ -19,12 +19,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `FEISHU_DEFAULT_RECEIVER_ID` — `chattool lark send` 可省略接收者并默认发给配置用户
 - `chattool lark notify-doc` — 创建云文档、追加正文并把文档链接发送给默认用户
 - `chattool lark notify-doc --append-file/--open` — 支持从文件追加正文并在成功后打开文档
+- `chattool pypi` — 新增 Python 包 doctor/build/check/publish/release CLI
+- `chattool pypi init` — 快速生成最小可发布的 `src/` 布局 Python 包骨架
+- `chattool pypi probe` — 检查包名和版本在 PyPI/TestPyPI 上是否已被占用
+- 文档：新增“Python 库仓库构成设计”，明确 PyPI 包、源码、测试、CLI 测试与 skills 的目录边界
+- 设计：新增 `chattool pypi` CLI 文档，定义 build/check/publish/release 的命令边界与安全策略
 - `chattool explore arxiv` — arXiv 论文搜索、daily 抓取与 preset 检索
 - `chattool explore arxiv` 新增 `math-formalization-weekly` preset，并补充数学形式化近一周追踪 workflow
 - `skills/arxiv-explore` 新增数学形式化近一周子模块，包含分类索引、真实样例和多查询收集脚本
 
 ### Fixed
 - `chattool setup nodejs` 现在会输出版本信息并在当前 shell 不可用时给出提示
+- `chattool pypi init` 现在按统一 CLI 规范补全向导参数，并生成可直接运行 `python -m pytest -q` 的测试骨架
+- `chattool pypi doctor/build/check/publish/release -i` 现在按统一 TUI 规范提示当前命令相关参数
+- `chattool pypi init --version` 现在支持设置初始版本，并在 dynamic version 场景下解析真实版本值
+- `chattool pypi publish/release` 现在优先复用 `.pypirc`，只有缺少配置时才回退到交互输入
 
 ## [5.3.0]
 

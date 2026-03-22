@@ -71,6 +71,10 @@ browser = [
     "imageio",
     "playwright"
 ]
+pypi = [
+    "build",
+    "twine",
+]
 tools = [
     "chattool[dns, lark, images, screenshot]",
 ]

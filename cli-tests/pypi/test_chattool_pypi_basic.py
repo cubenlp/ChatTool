@@ -1,0 +1,63 @@
+from pathlib import Path
+
+import pytest
+from click.testing import CliRunner
+import subprocess
+import sys
+
+from chattool.client.main import cli
+
+
+pytestmark = [pytest.mark.e2e]
+
+
+def _write_minimal_project(root: Path) -> None:
+    (root / "pyproject.toml").write_text(
+        """
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "demo-pkg"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (root / "README.md").write_text("# demo\n", encoding="utf-8")
+    (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+
+
+def test_chattool_pypi_basic(tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "mychat"
+
+    init = runner.invoke(cli, ["pypi", "init", "mychat", "--project-dir", str(project_dir)])
+    assert init.exit_code == 0
+    assert (project_dir / "src" / "mychat" / "__init__.py").exists()
+    assert (project_dir / "tests" / "conftest.py").exists()
+
+    doctor = runner.invoke(cli, ["pypi", "doctor", "--project-dir", str(project_dir)])
+    assert "[OK] pyproject.toml" in doctor.output
+
+    pytest_result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q"],
+        cwd=project_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert pytest_result.returncode == 0, pytest_result.stdout + pytest_result.stderr
+    assert "1 passed" in pytest_result.stdout
+
+    release = runner.invoke(
+        cli,
+        ["pypi", "release", "--project-dir", str(project_dir), "--dry-run"],
+    )
+    assert release.exit_code == 0
+    assert "Release plan:" in release.output
+    assert "Dry run only; no commands executed." in release.output
