@@ -1,6 +1,7 @@
 import re
 import json
 import threading
+from types import SimpleNamespace
 from uuid import uuid4
 from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
@@ -730,6 +731,143 @@ class LarkBot:
             .build()
         )
         return self.client.docx.v1.document_block_children.create(request)
+
+    def append_doc_blocks(
+        self,
+        document_id: str,
+        blocks: List[dict],
+        block_id: str = None,
+        index: int = None,
+    ) -> Any:
+        """Append structured docx blocks to a Feishu docx document."""
+        from lark_oapi.api.docx.v1 import (
+            Block,
+            CreateDocumentBlockChildrenRequest,
+            CreateDocumentBlockChildrenRequestBody,
+        )
+
+        normalized_blocks = []
+        for block in blocks:
+            block_data = dict(block)
+            for key in ["block_id", "parent_id", "children", "comment_ids"]:
+                block_data.pop(key, None)
+            normalized_blocks.append(Block(block_data))
+
+        body_builder = (
+            CreateDocumentBlockChildrenRequestBody.builder()
+            .children(normalized_blocks)
+        )
+        if index is not None:
+            body_builder.index(index)
+
+        request = (
+            CreateDocumentBlockChildrenRequest.builder()
+            .document_id(document_id)
+            .block_id(block_id or document_id)
+            .client_token(str(uuid4()))
+            .request_body(body_builder.build())
+            .build()
+        )
+        return self.client.docx.v1.document_block_children.create(request)
+
+    def append_doc_blocks_safe(
+        self,
+        document_id: str,
+        blocks: List[dict],
+        block_id: str = None,
+        index: int = None,
+        batch_size: int = 20,
+    ) -> Any:
+        """Append structured blocks in small batches."""
+        normalized = [block for block in blocks if isinstance(block, dict)]
+        if not normalized:
+            return SimpleNamespace(
+                code=0,
+                msg="ok",
+                data=SimpleNamespace(document_revision_id=None, children=[]),
+                success=lambda: True,
+            )
+
+        if batch_size <= 0:
+            batch_size = 1
+
+        all_children = []
+        revision_id = None
+        for offset in range(0, len(normalized), batch_size):
+            chunk = normalized[offset: offset + batch_size]
+            resp = self.append_doc_blocks(
+                document_id=document_id,
+                blocks=chunk,
+                block_id=block_id,
+                index=index,
+            )
+            if getattr(resp, "code", 0) != 0:
+                return resp
+            revision_id = getattr(resp.data, "document_revision_id", revision_id)
+            all_children.extend(getattr(resp.data, "children", None) or [])
+
+        return SimpleNamespace(
+            code=0,
+            msg="ok",
+            data=SimpleNamespace(document_revision_id=revision_id, children=all_children),
+            success=lambda: True,
+        )
+
+    def append_doc_texts_safe(
+        self,
+        document_id: str,
+        texts: List[str],
+        block_id: str = None,
+        index: int = None,
+        batch_size: int = 20,
+    ) -> Any:
+        """Append text paragraphs in small batches, with single-paragraph fallback."""
+        normalized = [text for text in texts if text and text.strip()]
+        if not normalized:
+            return SimpleNamespace(
+                code=0,
+                msg="ok",
+                data=SimpleNamespace(document_revision_id=None, children=[]),
+                success=lambda: True,
+            )
+
+        if batch_size <= 0:
+            batch_size = 1
+
+        all_children = []
+        revision_id = None
+
+        for offset in range(0, len(normalized), batch_size):
+            chunk = normalized[offset: offset + batch_size]
+            resp = self.append_doc_texts(
+                document_id=document_id,
+                texts=chunk,
+                block_id=block_id,
+                index=index,
+            )
+            if getattr(resp, "code", 0) == 0:
+                revision_id = getattr(resp.data, "document_revision_id", revision_id)
+                all_children.extend(getattr(resp.data, "children", None) or [])
+                continue
+
+            for text in chunk:
+                single_resp = self.append_doc_text(
+                    document_id=document_id,
+                    text=text,
+                    block_id=block_id,
+                    index=index,
+                )
+                if getattr(single_resp, "code", 0) != 0:
+                    return single_resp
+                revision_id = getattr(single_resp.data, "document_revision_id", revision_id)
+                all_children.extend(getattr(single_resp.data, "children", None) or [])
+
+        return SimpleNamespace(
+            code=0,
+            msg="ok",
+            data=SimpleNamespace(document_revision_id=revision_id, children=all_children),
+            success=lambda: True,
+        )
 
     def append_doc_text(
         self,

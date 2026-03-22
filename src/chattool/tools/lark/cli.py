@@ -9,6 +9,7 @@ Commands:
 """
 import os
 import json
+import re
 import sys
 from pathlib import Path
 import click
@@ -17,6 +18,7 @@ from collections import defaultdict
 from chattool.config import BaseEnvConfig, FeishuConfig
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 from chattool.tools import LarkBot, ChatSession
+from chattool.tools.lark.markdown_blocks import parse_markdown_blocks
 
 @click.group()
 def cli():
@@ -109,12 +111,83 @@ def _resolve_message_receiver(receiver: str | None) -> str | None:
 
 
 def _read_append_file_paragraphs(path: str | None) -> list[str]:
-    """Read a local text file and convert non-empty lines into paragraphs."""
+    """Read a local text/markdown file and convert it into plain-text paragraphs."""
     if not path:
         return []
 
-    with open(path, "r", encoding="utf-8") as f:
-        return [line.strip() for line in f.read().splitlines() if line.strip()]
+    file_path = Path(path)
+    with file_path.open("r", encoding="utf-8") as f:
+        content = f.read()
+
+    if file_path.suffix.lower() == ".md":
+        return _markdown_to_paragraphs(content)
+    return [line.strip() for line in content.splitlines() if line.strip()]
+
+
+def _strip_markdown_inline(text: str) -> str:
+    text = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", r"\1 \2", text)
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1 (\2)", text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    text = re.sub(r"(\*\*|__)(.*?)\1", r"\2", text)
+    text = re.sub(r"(\*|_)(.*?)\1", r"\2", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _markdown_to_paragraphs(content: str) -> list[str]:
+    paragraphs = []
+    current = []
+    in_code_block = False
+
+    def flush():
+        if current:
+            paragraph = " ".join(part for part in current if part).strip()
+            if paragraph:
+                paragraphs.append(paragraph)
+            current.clear()
+
+    for raw_line in content.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+
+        if stripped.startswith("```"):
+            flush()
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            if stripped:
+                paragraphs.append(stripped)
+            continue
+        if not stripped:
+            flush()
+            continue
+
+        stripped = re.sub(r"^\s{0,3}#{1,6}\s+", "", stripped)
+        stripped = re.sub(r"^\s*>\s?", "", stripped)
+        stripped = re.sub(r"^\s*[-*+]\s+", "• ", stripped)
+        stripped = re.sub(r"^\s*(\d+)\.\s+", r"\1. ", stripped)
+        stripped = _strip_markdown_inline(stripped)
+        if not stripped:
+            continue
+
+        if stripped.startswith("• ") or re.match(r"^\d+\.\s", stripped):
+            flush()
+            paragraphs.append(stripped)
+            continue
+
+        current.append(stripped)
+
+    flush()
+    return paragraphs
+
+
+def _append_doc_paragraphs(bot, document_id, paragraphs, block_id=None, index=None, batch_size=20):
+    return bot.append_doc_texts_safe(
+        document_id=document_id,
+        texts=paragraphs,
+        block_id=block_id,
+        index=index,
+        batch_size=batch_size,
+    )
 
 
 # ------------------------------------------------------------------
@@ -329,9 +402,11 @@ def send(receiver, text, env_ref, id_type, image_path, file_path, card_file, pos
               help="可选：父文件夹 token")
 @click.option("--append-file", type=click.Path(exists=True, dir_okay=False),
               default=None, help="从本地 txt/md 文件追加正文")
+@click.option("--batch-size", type=int, default=20, show_default=True,
+              help="每次向飞书文档追加的段落数，失败时会自动回退到单段写入")
 @click.option("--open/--no-open", "open_after", default=False,
               help="成功后在本地打开文档链接")
-def notify_doc(title, text, env_ref, receiver, id_type, folder_token, append_file, open_after):
+def notify_doc(title, text, env_ref, receiver, id_type, folder_token, append_file, batch_size, open_after):
     """创建文档并把链接发送给目标用户"""
     _load_runtime_env(env_ref)
     receiver = _resolve_message_receiver(receiver)
@@ -354,7 +429,12 @@ def notify_doc(title, text, env_ref, receiver, id_type, folder_token, append_fil
     paragraphs.extend(_read_append_file_paragraphs(append_file))
 
     if paragraphs:
-        append_resp = bot.append_doc_texts(document.document_id, texts=paragraphs)
+        append_resp = _append_doc_paragraphs(
+            bot,
+            document.document_id,
+            paragraphs,
+            batch_size=batch_size,
+        )
         if _print_lark_error("追加文档文本", append_resp):
             return
         document.revision_id = getattr(append_resp.data, "document_revision_id", document.revision_id)
@@ -595,6 +675,111 @@ def doc_append_text(document_id, text, env_ref, block_id, index):
     click.secho("✅ 追加成功", fg="green")
     if revision_id is not None:
         click.echo(f"revision  : {revision_id}")
+    children = getattr(resp.data, "children", None) or []
+    click.echo(f"children   : {len(children)}")
+
+
+@doc.command("append-file")
+@click.argument("document_id")
+@click.argument("path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--block-id", default=None,
+              help="父 block_id，默认使用 document_id")
+@click.option("--index", type=int, default=None,
+              help="插入位置，留空则交由服务端处理")
+@click.option("--batch-size", type=int, default=20, show_default=True,
+              help="每次向飞书文档追加的段落数，失败时会自动回退到单段写入")
+def doc_append_file(document_id, path, env_ref, block_id, index, batch_size):
+    """向文档追加本地 txt/md 文件内容"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    paragraphs = _read_append_file_paragraphs(path)
+    if not paragraphs:
+        click.secho("文件中没有可追加的正文段落", fg="yellow")
+        return
+
+    resp = _append_doc_paragraphs(
+        bot,
+        document_id=document_id,
+        paragraphs=paragraphs,
+        block_id=block_id,
+        index=index,
+        batch_size=batch_size,
+    )
+    if _print_lark_error("追加文档文件", resp):
+        return
+
+    revision_id = getattr(resp.data, "document_revision_id", None)
+    click.secho("✅ 文件追加成功", fg="green")
+    click.echo(f"paragraphs : {len(paragraphs)}")
+    if revision_id is not None:
+        click.echo(f"revision   : {revision_id}")
+    children = getattr(resp.data, "children", None) or []
+    click.echo(f"children   : {len(children)}")
+
+
+@doc.command("parse-md")
+@click.argument("path", type=click.Path(exists=True, dir_okay=False))
+@click.option("-o", "--output", type=click.Path(dir_okay=False), default=None,
+              help="输出 JSON 文件路径，默认打印到标准输出")
+@click.option("--compact/--pretty", default=False,
+              help="输出紧凑 JSON，默认使用 pretty 格式")
+def doc_parse_md(path, output, compact):
+    """将 Markdown 转换为飞书 docx block JSON"""
+    file_path = Path(path)
+    content = file_path.read_text(encoding="utf-8")
+    blocks = parse_markdown_blocks(content)
+    payload = json.dumps(
+        blocks,
+        ensure_ascii=False,
+        separators=(",", ":") if compact else None,
+        indent=None if compact else 2,
+    )
+
+    if output:
+        Path(output).write_text(payload + ("\n" if not compact else ""), encoding="utf-8")
+        click.secho(f"✅ 已写入 {output}", fg="green")
+        click.echo(f"blocks     : {len(blocks)}")
+        return
+
+    click.echo(payload)
+
+
+@doc.command("append-json")
+@click.argument("document_id")
+@click.argument("path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--block-id", default=None,
+              help="父 block_id，默认使用 document_id")
+@click.option("--index", type=int, default=None,
+              help="插入位置，留空则交由服务端处理")
+@click.option("--batch-size", type=int, default=20, show_default=True,
+              help="每次向飞书文档追加的 block 数")
+def doc_append_json(document_id, path, env_ref, block_id, index, batch_size):
+    """将 block JSON 追加到飞书文档"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise click.ClickException("JSON 顶层必须是 block 数组")
+
+    resp = bot.append_doc_blocks_safe(
+        document_id=document_id,
+        blocks=payload,
+        block_id=block_id,
+        index=index,
+        batch_size=batch_size,
+    )
+    if _print_lark_error("追加文档 JSON", resp):
+        return
+
+    revision_id = getattr(resp.data, "document_revision_id", None)
+    click.secho("✅ JSON 追加成功", fg="green")
+    click.echo(f"blocks     : {len(payload)}")
+    if revision_id is not None:
+        click.echo(f"revision   : {revision_id}")
     children = getattr(resp.data, "children", None) or []
     click.echo(f"children   : {len(children)}")
 

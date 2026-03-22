@@ -119,4 +119,5 @@
 ## 规范文档
 
 - [目录职责说明](directory-responsibilities.md)：目录边界、依赖方向与归位规则。
+- [架构概览与设计特点](architecture-overview.md)：分层结构、设计目标、能力沉淀路径与架构优势。
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。

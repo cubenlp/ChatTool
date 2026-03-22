@@ -262,6 +262,17 @@ chattool lark doc blocks doccnxxxxxxxxxxxx --descendants
 chattool lark doc append-text doccnxxxxxxxxxxxx "今天完成了接口整理"
 ```
 
+### 从本地文件追加正文
+
+```bash
+chattool lark doc parse-md ./daily.md
+chattool lark doc parse-md ./daily.md -o ./daily.blocks.json
+chattool lark doc append-json doccnxxxxxxxxxxxx ./daily.blocks.json
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.txt
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md --batch-size 10
+```
+
 ### 创建后直接通知
 
 ```bash
@@ -269,11 +280,17 @@ chattool lark notify-doc "会议纪要" "这里是会议摘要"
 chattool lark notify-doc "发布说明" "这里是更新内容" --receiver f25gc16d
 chattool lark notify-doc "日报" --append-file ./daily.md
 chattool lark notify-doc "日报" --append-file ./daily.md --open
+chattool lark notify-doc "日报" --append-file ./daily.md --batch-size 10
 ```
 
 说明：
 
-- `--append-file` 会读取本地 `txt/md` 文件，并按非空行追加到文档正文
+- `chattool lark doc append-file` 适合往已有文档追加本地 `txt/md` 文件
+- `chattool lark doc parse-md` 适合先检查 Markdown 将映射成哪些飞书 block
+- `chattool lark doc append-json` 适合直接消费结构化 block JSON 写入文档
+- `notify-doc --append-file` 适合创建文档、写入正文并把链接发给指定用户
+- `.md` 文件会先整理为飞书兼容的纯文本段落，再写入文档
+- 批量写入失败时，CLI 会自动回退到单段写入，降低 `field validation failed` 这类错误的影响
 - `--open` 会在发送成功后本地打开文档链接
 
 !!! note "当前范围"
