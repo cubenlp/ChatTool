@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- `skills/practice-make-perfact` 现在明确作为 ChatTool 仓库任务的默认开发流程：先执行任务，再做 review 与文档同步，并默认推进到 `chattool gh` 的 PR/MR 阶段
+- `playground/` 现在带有默认 `.gitignore`，作为模型探索和临时试验的试炼场
+
 ## [6.2.0]
 
 ### Added
