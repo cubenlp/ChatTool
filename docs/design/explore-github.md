@@ -66,6 +66,17 @@ GET /search/repositories?q=created:>2025-03-12&sort=stars&order=desc
 
 项目已依赖 `PyGithub`，直接复用，不引入新依赖。
 
+实现和扩展时建议优先查阅：
+
+- GitHub REST API: https://docs.github.com/en/rest
+- Pull requests API: https://docs.github.com/en/rest/pulls/pulls
+- Check runs API: https://docs.github.com/en/rest/checks/runs
+- Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
+- Commit statuses API: https://docs.github.com/en/rest/commits/statuses
+- PyGithub 文档: https://pygithub.readthedocs.io/
+- PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
+- PyGithub `Repository` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html
+
 ---
 
 ## 模块设计

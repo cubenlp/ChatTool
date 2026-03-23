@@ -139,6 +139,40 @@ def pr_view(repo, number, json_output, token):
     click.echo(f"Merged: {payload['merged_at']}")
 
 
+@cli.command(name="pr-check")
+@click.option("--repo", required=False, help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).")
+@click.option("--number", required=True, type=int, help="Pull request number.")
+@click.option("--check-limit", default=20, type=int, show_default=True, help="Max check runs to show.")
+@click.option("--workflow-limit", default=10, type=int, show_default=True, help="Max workflow runs to show.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN).")
+def pr_check(repo, number, check_limit, workflow_limit, json_output, token):
+    """Show CI/check status for a pull request."""
+    from github.GithubException import GithubException
+
+    client = _get_client(token)
+    repo = _resolve_repo(repo)
+    try:
+        repo_obj = client.get_repo(repo)
+        pr = repo_obj.get_pull(number)
+        commit = repo_obj.get_commit(pr.head.sha)
+        payload = _build_pr_check_payload(
+            pr,
+            commit,
+            repo_obj,
+            check_limit=check_limit,
+            workflow_limit=workflow_limit,
+        )
+    except GithubException as exc:
+        raise click.ClickException(f"GitHub API error: {exc}") from exc
+
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    _echo_pr_check_payload(payload)
+
+
 @cli.command(name="pr-comment")
 @click.option("--repo", required=False, help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).")
 @click.option("--number", required=True, type=int, help="Pull request number.")
@@ -262,3 +296,120 @@ def _resolve_repo(repo: Optional[str]) -> str:
         raise click.ClickException("Missing repo. Provide --repo or set GITHUB_DEFAULT_REPO.")
     return repo
 
+
+def _build_pr_check_payload(pr, commit, repo_obj, check_limit: int, workflow_limit: int) -> dict:
+    combined_status = commit.get_combined_status()
+    statuses = []
+    for status in combined_status.statuses:
+        statuses.append({
+            "context": status.context,
+            "state": status.state,
+            "description": status.description,
+            "target_url": status.target_url,
+            "updated_at": _isoformat(status.updated_at),
+        })
+
+    check_runs = []
+    for check_run in commit.get_check_runs():
+        check_runs.append({
+            "name": check_run.name,
+            "status": check_run.status,
+            "conclusion": check_run.conclusion,
+            "details_url": check_run.details_url,
+            "html_url": getattr(check_run, "html_url", None),
+            "app": check_run.app.name if getattr(check_run, "app", None) else None,
+            "started_at": _isoformat(check_run.started_at),
+            "completed_at": _isoformat(check_run.completed_at),
+        })
+        if len(check_runs) >= check_limit:
+            break
+
+    workflow_runs = []
+    for workflow_run in repo_obj.get_workflow_runs(head_sha=pr.head.sha):
+        workflow_runs.append({
+            "name": workflow_run.name,
+            "display_title": workflow_run.display_title,
+            "event": workflow_run.event,
+            "status": workflow_run.status,
+            "conclusion": workflow_run.conclusion,
+            "html_url": workflow_run.html_url,
+            "created_at": _isoformat(workflow_run.created_at),
+            "updated_at": _isoformat(workflow_run.updated_at),
+            "run_started_at": _isoformat(getattr(workflow_run, "run_started_at", None)),
+            "head_branch": workflow_run.head_branch,
+            "head_sha": workflow_run.head_sha,
+            "run_number": workflow_run.run_number,
+        })
+        if len(workflow_runs) >= workflow_limit:
+            break
+
+    return {
+        "number": pr.number,
+        "title": pr.title,
+        "state": pr.state,
+        "url": pr.html_url,
+        "author": pr.user.login if pr.user else None,
+        "base": pr.base.ref if pr.base else None,
+        "head": pr.head.ref if pr.head else None,
+        "head_sha": pr.head.sha if pr.head else None,
+        "combined_status": {
+            "state": combined_status.state,
+            "sha": combined_status.sha,
+            "total_count": combined_status.total_count,
+            "statuses": statuses,
+        },
+        "check_runs": check_runs,
+        "workflow_runs": workflow_runs,
+    }
+
+
+def _echo_pr_check_payload(payload: dict) -> None:
+    click.echo(f"#{payload['number']} [{payload['state']}] {payload['title']}")
+    click.echo(f"Author: {payload['author']}")
+    click.echo(f"URL: {payload['url']}")
+    click.echo(f"Base: {payload['base']}  Head: {payload['head']}")
+    click.echo(f"Head SHA: {payload['head_sha']}")
+
+    combined = payload["combined_status"]
+    click.echo(
+        f"Combined status: {combined['state']} "
+        f"({combined['total_count']} status{'es' if combined['total_count'] != 1 else ''})"
+    )
+
+    if combined["statuses"]:
+        click.echo("Statuses:")
+        for status in combined["statuses"]:
+            desc = f" - {status['description']}" if status["description"] else ""
+            click.echo(f"  - {status['context']}: {status['state']}{desc}")
+            if status["target_url"]:
+                click.echo(f"    {status['target_url']}")
+    else:
+        click.echo("Statuses: none")
+
+    if payload["check_runs"]:
+        click.echo("Check runs:")
+        for check_run in payload["check_runs"]:
+            conclusion = check_run["conclusion"] or "-"
+            app = f" [{check_run['app']}]" if check_run["app"] else ""
+            click.echo(f"  - {check_run['name']}: {check_run['status']}/{conclusion}{app}")
+            if check_run["details_url"]:
+                click.echo(f"    {check_run['details_url']}")
+    else:
+        click.echo("Check runs: none")
+
+    if payload["workflow_runs"]:
+        click.echo("Workflow runs:")
+        for workflow_run in payload["workflow_runs"]:
+            conclusion = workflow_run["conclusion"] or "-"
+            click.echo(
+                f"  - {workflow_run['name']}: {workflow_run['status']}/{conclusion} "
+                f"(event={workflow_run['event']}, run={workflow_run['run_number']})"
+            )
+            if workflow_run["html_url"]:
+                click.echo(f"    {workflow_run['html_url']}")
+    else:
+        click.echo("Workflow runs: none")
+
+
+def _isoformat(value) -> Optional[str]:
+    return value.isoformat() if value else None
