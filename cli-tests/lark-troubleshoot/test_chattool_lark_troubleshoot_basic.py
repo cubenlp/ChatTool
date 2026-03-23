@@ -1,4 +1,5 @@
 import pytest
+import json
 
 
 pytestmark = [pytest.mark.e2e, pytest.mark.lark]
@@ -18,6 +19,32 @@ def test_chattool_lark_troubleshoot_basic(lark_testkit):
 
     check_scopes = lark_testkit.invoke("lark", "troubleshoot", "check-scopes")
     assert "scopes 检查完成" in check_scopes.output
+
+    card_path = lark_testkit.tmp_path / "scope-check-card.json"
+    scope_card = lark_testkit.invoke(
+        "lark",
+        "troubleshoot",
+        "check-scopes",
+        "--card-file",
+        str(card_path),
+    )
+    assert card_path.exists()
+    card_payload = json.loads(card_path.read_text(encoding="utf-8"))
+    assert card_payload["header"]["title"]["content"] == "ChatTool Feishu Scope Check"
+    assert "card_file" in scope_card.output
+
+    if lark_testkit.message_receiver_id:
+        send_scope_card = lark_testkit.invoke(
+            "lark",
+            "troubleshoot",
+            "check-scopes",
+            "--send-card",
+            "--receiver",
+            lark_testkit.message_receiver_id,
+            "--type",
+            lark_testkit.message_receiver_type,
+        )
+        assert "card_message_id:" in send_scope_card.output
 
     check_events = lark_testkit.invoke("lark", "troubleshoot", "check-events")
     assert "事件订阅检查" in check_events.output

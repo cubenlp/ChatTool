@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool lark` 相关文档现在统一使用“双轨文档模型”描述云文档能力：稳定正文轨用于可靠写入，结构化 docx 轨用于 block 级增强
 - `chattool lark scopes` 现在会在列出权限后补充关键能力分类摘要，并在匹配到未授权 scope 时直接标记为权限问题
 - `chattool lark doc append-json` 现在会在写入前归一化 code block 的 `style.language` 字段，避免 `parse-md -> append-json` 因非法语言值整批失败
+- `chattool lark troubleshoot check-scopes` 现在支持导出权限诊断卡片 JSON，并可直接把诊断卡片发给默认接收者或显式指定的目标
 
 ### Added
 - `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE` 配置项，用于 `chatenv cat -t feishu` 和 `@pytest.mark.lark` 真实测试共享测试用户配置

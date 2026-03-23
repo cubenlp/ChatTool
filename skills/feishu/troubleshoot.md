@@ -17,6 +17,8 @@ chattool lark troubleshoot check-events
 chattool lark troubleshoot check-card-action
 ```
 
+其中 `check-scopes` 现在既可做终端诊断，也可导出或直接发送权限诊断卡片，便于把缺失分类发给应用维护者继续处理。
+
 ## 第一阶段主线
 
 优先把 `doctor` 做成统一诊断入口，覆盖这些检查：

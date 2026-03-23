@@ -65,3 +65,23 @@ chattool lark troubleshoot check-scopes
 chattool lark troubleshoot check-events
 chattool lark troubleshoot check-card-action
 ```
+
+## 用例 4：导出权限诊断卡片
+
+- 初始环境准备：
+  - 飞书凭证可用。
+  - 若要直接发送卡片，需配置 `FEISHU_DEFAULT_RECEIVER_ID` 或显式传入接收者。
+- 相关文件：
+  - `<tmp>/scope-check-card.json`
+
+预期过程和结果：
+  1. 执行 `chattool lark troubleshoot check-scopes --card-file <path>`。
+  2. 预期输出 scopes 诊断结果，并把可发送的飞书卡片 JSON 写到指定文件。
+  3. 若继续执行 `chattool lark troubleshoot check-scopes --send-card`，预期把该诊断卡片发给目标接收者。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool lark troubleshoot check-scopes --card-file /tmp/scope-check-card.json
+chattool lark troubleshoot check-scopes --send-card
+```

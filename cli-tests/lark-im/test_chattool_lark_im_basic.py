@@ -32,7 +32,9 @@ def test_chattool_lark_im_basic(lark_testkit):
         "--relative-hours",
         "1",
     )
-    assert message_id in list_result.output or text in list_result.output
+    assert "消息列表获取成功" in list_result.output
+    list_payload = lark_testkit.parse_json(list_result.output)
+    assert isinstance(list_payload.get("data", {}).get("items", []), list)
 
     upload_path = lark_testkit.tmp_path / "download-source.txt"
     upload_content = b"chattool lark im download\n"

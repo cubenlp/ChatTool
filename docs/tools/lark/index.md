@@ -261,6 +261,7 @@ chattool lark chat --user debug_user
   - `task list` 受当前飞书凭证模式影响，若失败应优先判断为 token / scope 问题
 - `chattool lark troubleshoot ...`
   - 当前已支持 `doctor`、`check-scopes`、`check-events`、`check-card-action`
+  - `check-scopes` 可额外导出诊断卡片 JSON，或直接发送权限排障卡片
 
 后续扩展继续收敛在 `src/chattool/tools/lark/`，而不是重新拆成新的独立 skill 入口。
 
@@ -339,6 +340,14 @@ chattool lark notify-doc "日报" --append-file ./daily.md --batch-size 10
 - `.md` 文件在 `append-file` 这条命令里会先整理为飞书兼容的纯文本段落，再写入文档
 - 批量写入失败时，CLI 会自动回退到单段写入，降低 `field validation failed` 这类错误的影响
 - `--open` 会在发送成功后本地打开文档链接
+
+如果你要把 scopes 缺失情况整理给应用维护者，可直接导出或发送诊断卡片：
+
+```bash
+chattool lark troubleshoot check-scopes --card-file ./scope-card.json
+chattool lark troubleshoot check-scopes --send-card
+chattool lark troubleshoot check-scopes --send-card --receiver <user_id>
+```
 
 !!! note "当前范围"
     这一版先覆盖最常用的文档基础能力：创建、查询、取纯文本、查看块和追加文本。  
