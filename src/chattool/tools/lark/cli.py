@@ -347,6 +347,21 @@ def _scope_category_status(granted_scopes: list[str]) -> dict[str, list[str]]:
     }
 
 
+def _print_scope_category_summary(granted_scopes: list[str], *, title: str = "关键能力分类") -> list[str]:
+    categories = _scope_category_status(granted_scopes)
+    missing = [name for name, matches in categories.items() if not matches]
+    click.secho(f"\n{title}", fg="cyan", bold=True)
+    for name, matches in categories.items():
+        click.echo(f"  {name:10}: {'ok' if matches else 'missing'} ({len(matches)})")
+    if missing:
+        click.secho(
+            "  可能存在权限问题，缺失分类: " + ", ".join(missing),
+            fg="yellow",
+        )
+        click.echo("  建议先执行 `chattool lark troubleshoot check-scopes` 做进一步确认。")
+    return missing
+
+
 # ------------------------------------------------------------------
 # chattool lark info
 # ------------------------------------------------------------------
@@ -395,10 +410,13 @@ def scopes(env_ref, show_all, keyword, group):
         click.secho(f"请求失败: code={resp.code}  msg={resp.msg}", fg="red")
         return
 
-    scope_list = resp.data.scopes or []
-    if not scope_list:
+    all_scopes = resp.data.scopes or []
+    if not all_scopes:
         click.echo("未找到任何权限记录")
         return
+
+    granted_scopes = _granted_scope_names(resp)
+    scope_list = list(all_scopes)
 
     if not show_all:
         scope_list = [s for s in scope_list if s.grant_status == 1]
@@ -408,6 +426,20 @@ def scopes(env_ref, show_all, keyword, group):
         scope_list = [s for s in scope_list if kw in (s.scope_name or "").lower()]
 
     if not scope_list:
+        if keyword:
+            matching_all = [
+                s for s in all_scopes
+                if keyword.lower() in (s.scope_name or "").lower()
+            ]
+            if matching_all:
+                click.secho("没有匹配的已授权权限", fg="yellow")
+                click.echo("检测到同名权限记录，但当前 grant_status 不是已授权：")
+                status_label = {0: "未授权", 1: "已授权", 2: "已过期"}
+                for s in sorted(matching_all, key=lambda x: x.scope_name or ""):
+                    click.echo(f"  {s.scope_name}  [{status_label.get(s.grant_status, '?')}]")
+                click.echo("这通常意味着相关能力会因权限不足而失败。")
+                _print_scope_category_summary(granted_scopes, title="关键能力分类")
+                return
         click.echo("没有匹配的权限")
         return
 
@@ -444,6 +476,8 @@ def scopes(env_ref, show_all, keyword, group):
                 click.secho(f"  {s.scope_name}  [{label_s}]", fg=color)
             else:
                 click.echo(f"  {s.scope_name}")
+
+    _print_scope_category_summary(granted_scopes)
 
 
 # ------------------------------------------------------------------

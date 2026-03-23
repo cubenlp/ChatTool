@@ -1418,6 +1418,24 @@ class LarkBot:
             block_data = dict(block)
             for key in ["block_id", "parent_id", "children", "comment_ids"]:
                 block_data.pop(key, None)
+            code_payload = block_data.get("code")
+            if isinstance(code_payload, dict):
+                code_payload = dict(code_payload)
+                style_payload = code_payload.get("style")
+                if isinstance(style_payload, dict):
+                    style_payload = dict(style_payload)
+                    language = style_payload.get("language")
+                    if isinstance(language, str):
+                        normalized_language = language.strip()
+                        if normalized_language.isdigit():
+                            style_payload["language"] = int(normalized_language)
+                        else:
+                            style_payload.pop("language", None)
+                    if style_payload:
+                        code_payload["style"] = style_payload
+                    else:
+                        code_payload.pop("style", None)
+                block_data["code"] = code_payload
             normalized_blocks.append(Block(block_data))
 
         body_builder = (

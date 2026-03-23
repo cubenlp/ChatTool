@@ -244,6 +244,8 @@ chattool lark chat --user debug_user
 
 前者优先保证写入成功率，后者面向标题、列表、代码块、引用块等结构化能力。
 
+当前 `parse-md -> append-json` 主线会保留代码块本身，但若 fenced code language 还不是 Feishu docx 可直接消费的数值枚举，写入前会先做安全归一化，避免因为语言字段不合法导致整批 block 写入失败。
+
 ## 专题 CLI
 
 当前这些 topic 分组已经收口到 `chattool lark` 下：
