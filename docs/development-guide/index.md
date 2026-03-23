@@ -142,6 +142,7 @@ INFO: Start opencode setup
   - **原则**：当前以 CLI 真实测试为主，优先保证关键命令链路稳定。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
+- **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
 
 ### CLI 测试文档驱动机制（`cli-tests`）
 
