@@ -267,20 +267,42 @@ def _extract_json_path(payload: dict, *path: str):
     return current
 
 
+def _pick_calendar_id_from_payload(payload: dict) -> str | None:
+    direct = (
+        _extract_json_path(payload, "data", "calendar", "calendar_id")
+        or _extract_json_path(payload, "data", "primary_calendar", "calendar_id")
+        or _extract_json_path(payload, "data", "calendar_id")
+    )
+    if direct:
+        return direct
+
+    calendar_list = _extract_json_path(payload, "data", "calendar_list") or []
+    if isinstance(calendar_list, list):
+        for item in calendar_list:
+            if isinstance(item, dict) and item.get("type") == "primary" and item.get("calendar_id"):
+                return item["calendar_id"]
+        for item in calendar_list:
+            if isinstance(item, dict) and item.get("calendar_id"):
+                return item["calendar_id"]
+    return None
+
+
 def _resolve_calendar_id(bot, calendar_id: str | None, user_id_type: str) -> str:
     if calendar_id:
         return calendar_id
 
     resp = bot.get_primary_calendar(user_id_type=user_id_type)
-    if _print_lark_error("获取默认日历", resp):
+    payload = _response_json(resp)
+    resolved = _pick_calendar_id_from_payload(payload) if resp.success() else None
+    if resolved:
+        return resolved
+
+    fallback_resp = bot.list_calendars()
+    if _print_lark_error("列出可用日历", fallback_resp):
         raise click.Abort()
 
-    payload = _response_json(resp)
-    resolved = (
-        _extract_json_path(payload, "data", "calendar", "calendar_id")
-        or _extract_json_path(payload, "data", "primary_calendar", "calendar_id")
-        or _extract_json_path(payload, "data", "calendar_id")
-    )
+    fallback_payload = _response_json(fallback_resp)
+    resolved = _pick_calendar_id_from_payload(fallback_payload)
     if not resolved:
         raise click.ClickException("未能从返回结果中解析默认 calendar_id")
     return resolved
@@ -309,6 +331,20 @@ def _granted_scope_names(resp) -> list[str]:
         if getattr(scope, "grant_status", None) == 1 and getattr(scope, "scope_name", None):
             names.append(scope.scope_name)
     return names
+
+
+def _scope_category_status(granted_scopes: list[str]) -> dict[str, list[str]]:
+    rules = {
+        "im": ["im:"],
+        "docx/drive": ["docx:", "drive:"],
+        "bitable": ["bitable:"],
+        "calendar": ["calendar:"],
+        "task": ["task:"],
+    }
+    return {
+        name: [scope for scope in granted_scopes if any(pattern in scope for pattern in patterns)]
+        for name, patterns in rules.items()
+    }
 
 
 # ------------------------------------------------------------------
@@ -1170,10 +1206,12 @@ def calendar_primary(env_ref, user_id_type):
     """查看默认日历"""
     _load_runtime_env(env_ref)
     bot = _get_bot()
-    resp = bot.get_primary_calendar(user_id_type=user_id_type)
-    if _print_lark_error("获取默认日历", resp):
+    try:
+        resolved_calendar_id = _resolve_calendar_id(bot, None, user_id_type)
+    except click.Abort:
         return
-    payload = _response_json(resp)
+    payload = _response_json(bot.list_calendars())
+    payload["resolved_calendar_id"] = resolved_calendar_id
     _print_topic_result("默认日历获取成功", payload)
 
 
@@ -1757,22 +1795,20 @@ def troubleshoot_check_scopes(env_ref):
         return
 
     granted = _granted_scope_names(resp)
-    categories = {
-        "im": ["im:"],
-        "docx": ["docx:", "drive:"],
-        "bitable": ["bitable:"],
-        "calendar": ["calendar:"],
-        "task": ["task:"],
-    }
+    categories = _scope_category_status(granted)
+    missing = [name for name, matches in categories.items() if not matches]
 
     click.secho("✅ scopes 检查完成", fg="green")
-    for name, patterns in categories.items():
-        matches = [scope for scope in granted if any(pattern in scope for pattern in patterns)]
-        click.echo(f"{name:10}: {len(matches)}")
+    for name, matches in categories.items():
+        status = "ok" if matches else "missing"
+        click.echo(f"{name:10}: {status} ({len(matches)})")
         for scope in matches[:10]:
             click.echo(f"  - {scope}")
         if len(matches) > 10:
             click.echo(f"  ... (+{len(matches) - 10})")
+    if missing:
+        click.secho("可能存在权限问题，缺失分类: " + ", ".join(missing), fg="yellow")
+        click.echo("建议先在飞书开放平台补齐 scopes，再重新执行相关命令。")
 
 
 @troubleshoot.command("check-events")
@@ -1830,25 +1866,22 @@ def troubleshoot_doctor(env_ref):
         return
 
     granted = _granted_scope_names(scopes_resp)
-    categories = {
-        "im": any(scope.startswith("im:") for scope in granted),
-        "docx/drive": any(scope.startswith("docx:") or scope.startswith("drive:") for scope in granted),
-        "bitable": any(scope.startswith("bitable:") for scope in granted),
-        "calendar": any(scope.startswith("calendar:") for scope in granted),
-        "task": any(scope.startswith("task:") for scope in granted),
-    }
+    categories = _scope_category_status(granted)
+    missing = [name for name, matches in categories.items() if not matches]
 
     click.secho("✅ Feishu doctor", fg="green")
     click.echo(f"bot_name             : {bot_info.get('app_name', '—')}")
     click.echo(f"bot_open_id          : {bot_info.get('open_id', '—')}")
     click.echo(f"activate_status      : {status_map.get(activate_status, '未知')}")
     click.echo(f"granted_scopes       : {len(granted)}")
-    for name, ok in categories.items():
-        click.echo(f"{name:20}: {'ok' if ok else 'missing'}")
+    for name, matches in categories.items():
+        click.echo(f"{name:20}: {'ok' if matches else 'missing'}")
     click.echo(f"default_receiver     : {'set' if FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value else 'missing'}")
     click.echo(f"test_user            : {'set' if FeishuConfig.FEISHU_TEST_USER_ID.value else 'missing'}")
     click.echo(f"encrypt_key          : {'set' if FeishuConfig.FEISHU_ENCRYPT_KEY.value else 'missing'}")
     click.echo(f"verify_token         : {'set' if FeishuConfig.FEISHU_VERIFY_TOKEN.value else 'missing'}")
+    if missing:
+        click.secho("可能由缺失 scopes 导致的能力问题: " + ", ".join(missing), fg="yellow")
 
 
 # ------------------------------------------------------------------

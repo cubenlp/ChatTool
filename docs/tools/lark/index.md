@@ -16,12 +16,17 @@
 - 监听长连接事件做调试：`listen`
 - 在本地终端调试 AI 会话：`chat`
 - 创建云文档并通知目标用户：`notify-doc`
+- 多维表格基础操作：`bitable app/table/field/record ...`
+- 日历基础操作：`calendar primary/event/freebusy ...`
+- 任务基础操作：`task ...`、`task tasklist ...`
+- 消息读取与资源下载：`im list`、`im download`
+- 常见排障入口：`troubleshoot doctor/check-scopes/check-events/check-card-action`
 
 如果你的目标是继续扩展 Feishu 能力，而不是只执行现有命令，请先同时阅读：
 
 - `skills/feishu/SKILL.md`
-- `skills/feishu/docs/api-reference.md`
-- `docs/design/feishu/index.md`
+- `skills/feishu/api-reference.md`
+- `docs/design/feishu-cli.md`
 
 ## 前置准备
 
@@ -111,6 +116,8 @@ chattool lark scopes -a -g
 ```bash
 chattool lark scopes -f im
 ```
+
+如果 `troubleshoot check-scopes` 或 `doctor` 把某个分类标成 `missing`，应优先把它视为权限问题，而不是直接怀疑 CLI 参数或业务逻辑。
 
 ### 3. 发一条文本消息
 
@@ -236,6 +243,24 @@ chattool lark chat --user debug_user
 - 结构化 docx 轨：`doc parse-md`、`doc append-json`
 
 前者优先保证写入成功率，后者面向标题、列表、代码块、引用块等结构化能力。
+
+## 专题 CLI
+
+当前这些 topic 分组已经收口到 `chattool lark` 下：
+
+- `chattool lark bitable ...`
+  - 当前已支持 `app create`、`table list/create`、`field list/create`、`record list/create/batch-create`
+- `chattool lark calendar ...`
+  - 当前已支持 `primary`、`event create/list/get/patch/reply`、`freebusy list`
+- `chattool lark im ...`
+  - 当前已支持 `list --chat-id` 与 `download`
+- `chattool lark task ...`
+  - 当前稳定支持 `create/get/patch`、`tasklist create/list/get/tasks/add-members`
+  - `task list` 受当前飞书凭证模式影响，若失败应优先判断为 token / scope 问题
+- `chattool lark troubleshoot ...`
+  - 当前已支持 `doctor`、`check-scopes`、`check-events`、`check-card-action`
+
+后续扩展继续收敛在 `src/chattool/tools/lark/`，而不是重新拆成新的独立 skill 入口。
 
 如果你想“一步创建文档并通知到人”，可以直接用：
 
