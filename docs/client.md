@@ -114,7 +114,7 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 3. 创建 `Memory/`、`skills/`、`scratch/`
 4. 从 clone 出来的 `chattool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
 
-如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下还可以选择直接复用现有 clone 而不覆盖。只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
+如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下会默认提示“跳过克隆并保留本地版本”；只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
 
 在目标空目录里直接执行：
 

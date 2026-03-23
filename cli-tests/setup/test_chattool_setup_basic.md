@@ -101,7 +101,7 @@ chattool setup opencode -i
 预期过程和结果：
   1. 执行 `chattool setup playground --workspace-dir <workspace> --chattool-source <repo-or-url>`，预期在目标目录下 clone `chattool/`。
   2. 若目标目录非空且当前终端可交互，预期先提示是否继续；确认后继续初始化，并保留已有文件。
-  3. 若目标目录中已经存在 `chattool/`，预期继续提示是否复用现有 clone；确认后跳过覆盖并直接继续后续初始化。
+  3. 若目标目录中已经存在 `chattool/`，预期继续提示是否“跳过克隆并保留本地版本”，默认值为 `yes`；确认后直接继续后续初始化。
   4. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`。
   5. 预期创建 `Memory/`、`skills/`、`scratch/`。
   6. 预期从 `chattool/skills/` 复制 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。

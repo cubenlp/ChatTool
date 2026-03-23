@@ -143,6 +143,33 @@ def test_setup_playground_interactive_reuses_existing_chattool_repo(tmp_path, mo
     assert (workspace / "MEMORY.md").exists()
 
 
+def test_setup_playground_existing_chattool_decline_reuse_aborts_without_force(tmp_path, monkeypatch):
+    source_repo = _create_fake_chattool_repo(tmp_path)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    existing_repo = workspace / "chattool"
+    shutil.copytree(source_repo, existing_repo)
+    (workspace / "existing.txt").write_text("occupied\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        "chattool.setup.playground.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (None, True, False, False, False),
+    )
+    prompts = iter([True, False])
+    monkeypatch.setattr("chattool.setup.playground.ask_confirm", lambda message, default=True: next(prompts))
+
+    try:
+        setup_playground(
+            workspace_dir=workspace,
+            chattool_source=str(source_repo),
+            interactive=None,
+        )
+    except click.Abort:
+        pass
+    else:
+        raise AssertionError("setup_playground should abort when existing chattool clone is not reused without --force")
+
+
 def test_root_cli_registers_setup_playground():
     runner = CliRunner()
 

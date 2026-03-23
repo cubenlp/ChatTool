@@ -311,18 +311,25 @@ def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool,
             logger.info(f"Removing existing cloned repo: {repo_dir}")
             shutil.rmtree(repo_dir)
         elif interactive is not False and can_prompt:
-            reuse_existing = ask_confirm(
+            skip_clone = ask_confirm(
                 (
                     f"ChatTool repo already exists: {repo_dir}\n"
-                    "Reuse the existing clone and skip overwriting it?"
+                    "Skip cloning and keep the local ChatTool version?"
                 ),
                 default=True,
             )
-            if reuse_existing == BACK_VALUE:
+            if skip_clone == BACK_VALUE:
                 raise click.Abort()
-            if reuse_existing:
-                logger.info(f"Reusing existing ChatTool repo: {repo_dir}")
+            if skip_clone:
+                logger.info(f"Skipping clone and reusing existing ChatTool repo: {repo_dir}")
                 return repo_dir
+            logger.info(f"User declined reusing existing ChatTool repo without --force: {repo_dir}")
+            click.echo(
+                f"Skipped because ChatTool repo already exists: {repo_dir}\n"
+                "Use --force if you want to replace the existing clone.",
+                err=True,
+            )
+            raise click.Abort()
         else:
             logger.error(f"ChatTool clone target already exists: {repo_dir}")
             click.echo(f"ChatTool clone target already exists: {repo_dir}", err=True)
