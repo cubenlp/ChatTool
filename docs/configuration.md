@@ -4,12 +4,18 @@ ChatTool 从 v5.0.0 开始引入了全新的集中式配置管理系统，支持
 
 ## 配置机制
 
-ChatTool 使用 `dotenv` 加载环境变量，配置加载顺序如下（优先级从高到低）：
+对常规 CLI 与组件而言，配置读取顺序如下（优先级从高到低）：
 
-1. **运行时显式设置**：在代码中通过 `BaseEnvConfig.set()` 动态修改的值。
-2. **`.env` 文件**：项目根目录或配置目录下的 `.env` 文件。
+1. **CLI / 调用方显式指定**：命令行参数、函数参数或调用侧显式传入的值。
+2. **`.env` 文件**：项目配置目录下的 `.env` 文件。
 3. **系统环境变量**：操作系统层面的环境变量（如 `export OPENAI_API_KEY=...`）。
 4. **默认值**：代码中定义的默认值。
+
+说明：
+
+- 该优先级对应 `BaseEnvConfig.load_from_dict()` 的真实实现：已注册配置项会优先读取 `.env`，其次才回退到 `os.environ`。
+- `BaseEnvConfig.set()` 是运行时覆盖手段，只修改当前进程内的值；它不属于上面的“默认加载顺序”，也不会自动回写 `.env` 或同步系统环境变量。
+- 对于已经注册到 `src/chattool/config/` 的配置项，CLI 与业务代码应优先读取配置对象的 `.value`，不要只直接读取 `os.environ`，否则会绕过 `chatenv` 管理的默认值。
 
 ## 快速开始
 
@@ -139,7 +145,7 @@ BaseEnvConfig.print_config()
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
 - **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID` 等
-- **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录）
+- **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 
 ## SVG 转 GIF 服务配置
 

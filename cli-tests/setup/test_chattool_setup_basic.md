@@ -1,6 +1,6 @@
 # test_chattool_setup_basic
 
-测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/codex/claude/opencode 等子命令入口。
+测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/cc-connect/codex/claude/opencode/playground 等子命令入口。
 
 ## 元信息
 
@@ -53,7 +53,7 @@ chattool setup alias --dry-run
 预期过程和结果：
   1. 执行 `chattool setup chrome -i`，预期进入交互式安装流程。
   2. 执行 `chattool setup frp -i`，预期进入交互式安装流程。
-  3. 执行 `chattool setup nodejs -i`，预期进入交互式安装流程。
+  3. 执行 `chattool setup nodejs -i`，预期进入交互式安装流程，并在缺少 `~/.nvm/nvm.sh` 时直接写入内置的 `nvm.sh`。
 
 参考执行脚本（伪代码）：
 
@@ -63,7 +63,7 @@ chattool setup frp -i
 chattool setup nodejs -i
 ```
 
-## 用例 4：codex/claude/opencode
+## 用例 4：cc-connect/codex/claude/opencode
 
 - 初始环境准备：
   - 准备 API key 与 base_url。
@@ -71,16 +71,45 @@ chattool setup nodejs -i
   - 可能生成的配置文件。
 
 预期过程和结果：
-  1. 执行 `chattool setup codex -i`，预期进入交互式配置流程。
-  2. 执行 `chattool setup claude -i`，预期进入交互式配置流程。
-  3. 执行 `chattool setup opencode -i`，预期进入交互式配置流程。
+  1. 执行 `chattool setup cc-connect -i`，预期先检查 Node.js（>= 20），必要时提示执行 `chattool setup nodejs` 安装/升级，然后安装或确认 `cc-connect` CLI。
+  2. 执行 `chattool setup codex -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  3. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  4. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
 
 参考执行脚本（伪代码）：
 
 ```sh
+chattool setup cc-connect -i
 chattool setup codex -i
 chattool setup claude -i
 chattool setup opencode -i
+```
+
+## 用例 5：playground
+
+- 初始环境准备：
+  - 准备一个空目录作为工作区根目录。
+- 相关文件：
+  - `<workspace>/AGENTS.md`
+  - `<workspace>/CHATTOOL.md`
+  - `<workspace>/MEMORY.md`
+  - `<workspace>/Memory/`
+  - `<workspace>/skills/`
+  - `<workspace>/scratch/`
+  - `<workspace>/chattool/`
+
+预期过程和结果：
+  1. 执行 `chattool setup playground --workspace-dir <workspace> --chattool-source <repo-or-url>`，预期在目标目录下 clone `chattool/`。
+  2. 若目标目录非空且当前终端可交互，预期先提示是否继续；确认后继续初始化，并保留已有文件。
+  3. 若目标目录中已经存在 `chattool/`，预期继续提示是否“跳过克隆并保留本地版本”，默认值为 `yes`；确认后直接继续后续初始化。
+  4. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`。
+  5. 预期创建 `Memory/`、`skills/`、`scratch/`。
+  6. 预期从 `chattool/skills/` 复制 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool setup playground --workspace-dir /tmp/my-playground --chattool-source /path/to/ChatTool
 ```
 
 ## 清理 / 回滚

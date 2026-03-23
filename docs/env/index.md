@@ -14,6 +14,14 @@ chattool setup codex
 
 详细文档：[codex.md](codex.md)
 
+### Claude Code 配置
+
+使用 `setup claude` 快速安装 Claude Code 并写入配置。
+
+```bash
+chattool setup claude
+```
+
 ### OpenCode 配置
 
 使用 `setup opencode` 快速安装并写入配置。

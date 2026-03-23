@@ -40,7 +40,7 @@ ChatTool/
 │       ├── mcp/            # MCP 服务入口与注册
 │       ├── serve/          # 服务化能力
 │       ├── setup/          # 环境安装与初始化
-│       ├── skills/         # skills CLI 与安装逻辑
+│       ├── skill/          # skill CLI 与安装逻辑
 │       ├── docker/         # 容器模板与相关支持
 │       └── utils/          # 稳定且可复用的通用辅助模块
 ├── tests/                  # Python 单元/集成测试
@@ -86,7 +86,7 @@ ChatTool/
 ### `skills/`
 
 - 存放可分发、可安装的技能资产。
-- 不直接承担 Python 包代码职责，避免与 `src/chattool/skills/` 混淆。
+- 不直接承担 Python 包代码职责，避免与 `src/chattool/skill/` 混淆。
 - 可以理解为“随仓库发布的业务资源”，不是 import 包主体。
 
 ## `src/chattool/` 内部分层建议
@@ -96,7 +96,7 @@ ChatTool/
 - `config/`、`llm/`、`utils/` 属于底层通用能力。
 - `tools/` 是工具核心实现层。
 - `client/`、`mcp/`、`serve/` 属于接入与编排层。
-- `setup/`、`skills/`、`docker/` 属于交付与配套层。
+- `setup/`、`skill/`、`docker/` 属于交付与配套层。
 
 ### 依赖方向
 
@@ -106,7 +106,7 @@ ChatTool/
 config / utils
     -> llm / tools
     -> client / mcp / serve
-    -> setup / skills
+    -> setup / skill
 ```
 
 约束：
@@ -136,7 +136,7 @@ config / utils
 - `chattool = "chattool.client:main_cli"`
 - `chatenv = "chattool.config.cli:cli"`
 - `mcp-server-chattool = "chattool.mcp:main"`
-- `chatskill = "chattool.skills.cli:main"`
+- `chatskill = "chattool.skill.cli:main"`
 
 这意味着仓库不是单纯 library，而是“library + CLI distribution”。设计上应继续保证：
 

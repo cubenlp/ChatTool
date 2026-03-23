@@ -29,13 +29,14 @@ chattool serve svg2gif
 ## 客户端调用
 
 ```bash
-chattool client svg2gif --svg playground/termcap.svg --gif playground/termcap.gif
+mkdir -p /tmp/chattool-svg2gif
+chattool client svg2gif --svg /tmp/chattool-svg2gif/termcap.svg --gif /tmp/chattool-svg2gif/termcap.gif
 ```
 
 指定帧率（仅在 SVG 没有关键帧定义时生效）：
 
 ```bash
-chattool client svg2gif --svg playground/termcap.svg --fps 12
+chattool client svg2gif --svg /tmp/chattool-svg2gif/termcap.svg --fps 12
 ```
 
 ## 接口说明
@@ -44,8 +45,8 @@ chattool client svg2gif --svg playground/termcap.svg --fps 12
 
 ```json
 {
-  "svg_path": "playground/termcap.svg",
-  "gif_path": "playground/termcap.gif",
+  "svg_path": "/tmp/chattool-svg2gif/termcap.svg",
+  "gif_path": "/tmp/chattool-svg2gif/termcap.gif",
   "fps": 12
 }
 ```
@@ -55,7 +56,7 @@ chattool client svg2gif --svg playground/termcap.svg --fps 12
 ```json
 {
   "ok": true,
-  "gif_path": "/abs/path/playground/termcap.gif",
+  "gif_path": "/tmp/chattool-svg2gif/termcap.gif",
   "frames": 100,
   "duration_ms": 8347
 }
@@ -68,6 +69,8 @@ chattool client svg2gif --svg playground/termcap.svg --fps 12
 - 截图以 `#terminal` 的 `getBoundingClientRect()` 裁剪，确保输出尺寸与 SVG 画面一致。
 
 ## 常见问题
+
+- 临时转换产物建议写到仓库外目录，例如 `/tmp/chattool-svg2gif/`，避免把中间文件混进项目仓库。
 
 - `chromedriver_url is not configured`：未设置 chromedriver 地址，使用 `--chromedriver-url` 或 `CHATTOOL_CHROMEDRIVER_URL`。
 - `SVG does not contain #screen_view`：SVG 不含 termcap/termtosvg 的动画节点，无法逐帧冻结。

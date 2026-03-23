@@ -1,6 +1,10 @@
+import importlib
+
 from click.testing import CliRunner
 
 from chattool.client.main import cli
+
+cc_cli = importlib.import_module("chattool.tools.cc.cli")
 
 
 def test_cc_help():
@@ -89,3 +93,43 @@ def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
     assert "选择消息平台" in result.output
     assert "[telegram]" in result.output
     assert "项目名称 [demo-project]" in result.output
+
+
+def test_cc_init_feishu_uses_chatenv_candidates(tmp_path, monkeypatch):
+    runner = CliRunner()
+    import chattool.setup.interactive as interactive_policy
+
+    monkeypatch.setattr(interactive_policy, "is_interactive_available", lambda: True)
+    monkeypatch.setattr(
+        cc_cli,
+        "_get_feishu_candidate_options",
+        lambda: {
+            "app_id": "env-app-id",
+            "app_secret": "env-app-secret",
+        },
+    )
+
+    config_path = tmp_path / "config.toml"
+
+    result = runner.invoke(
+        cli,
+        [
+            "cc",
+            "init",
+            "-i",
+            "--agent",
+            "claudecode",
+            "--platform",
+            "feishu",
+            "--config",
+            str(config_path),
+        ],
+        input="\n\n\nY\n\nY\n",
+    )
+
+    assert result.exit_code == 0
+    assert "检测到 chatenv 飞书配置候选" in result.output
+    assert "app_id [env-app-id]" in result.output
+    content = config_path.read_text(encoding="utf-8")
+    assert 'app_id = "env-app-id"' in content
+    assert 'app_secret = "env-app-secret"' in content

@@ -1,6 +1,4 @@
 import json
-import shutil
-import subprocess
 from pathlib import Path
 import click
 
@@ -9,11 +7,12 @@ from chattool.setup.interactive import (
     abort_if_missing_without_tty,
     resolve_interactive_mode,
 )
+from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
-DEFAULT_MODEL = "gpt-5.3-codex"
-DEFAULT_BASE_URL = "https://api.openal.com/v1"
+DEFAULT_MODEL = "gpt-5.4"
+DEFAULT_BASE_URL = "https://api.openai.com/v1"
 logger = setup_logger("setup_codex")
 
 
@@ -122,6 +121,8 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
         logger.error("Missing required argument --preferred-auth-method and no TTY available")
         raise
 
+    ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
+
     if need_prompt:
         auth_for_prompt = auth_method
         auth_label = "preferred_auth_method / OPENAI_API_KEY"
@@ -148,14 +149,8 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, interacti
         click.echo("Missing auth method.", err=True)
         raise click.Abort()
 
-    if not shutil.which("npm"):
-        logger.error("npm not found")
-        click.echo("npm not found. Please run: chattool setup nodejs", err=True)
-        raise click.Abort()
-
-    install_cmd = ["npm", "install", "-g", "@openai/codex@latest"]
     logger.info("Installing codex cli with npm")
-    result = subprocess.run(install_cmd, capture_output=True, text=True)
+    result = run_npm_command(["install", "-g", "@openai/codex@latest"])
     if result.returncode != 0:
         logger.error("Failed to install codex cli")
         click.echo("Failed to install codex.", err=True)

@@ -15,7 +15,8 @@ CLI按功能分为几个命令组：
 - **`lark`**: 飞书机器人与云文档工具。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / OpenCode / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / Chrome / FRP）。
+- **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
 
@@ -30,6 +31,20 @@ CLI按功能分为几个命令组：
 
 ## 0. 环境初始化 (`setup`)
 
+### 0.0 CC-Connect (`setup cc-connect`)
+
+安装或检查 `cc-connect` CLI，并在需要时先补齐 `Node.js >= 20` 与 `npm`：
+
+```bash
+chattool setup cc-connect
+```
+
+如果你更习惯从 `cc` 分组进入，也可以继续使用别名：
+
+```bash
+chattool cc setup
+```
+
 ### 0.1 Codex (`setup codex`)
 
 默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
@@ -37,6 +52,8 @@ CLI按功能分为几个命令组：
 ```bash
 chattool setup codex
 ```
+
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
 
 直接传参：
 
@@ -47,7 +64,7 @@ chattool setup codex --pam "cr_xxx"
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 ### 0.2 Claude Code (`setup claude`)
@@ -58,6 +75,8 @@ chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --mo
 chattool setup claude
 ```
 
+命令同样会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续收集 Claude Code 配置。
+
 直接传参：
 
 ```bash
@@ -67,7 +86,7 @@ chattool setup claude --auth-token "sk-ant-xxx"
 可选覆盖 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_SMALL_FAST_MODEL`：
 
 ```bash
-chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-3-5-haiku-20241022"
+chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-opus-4-6"
 ```
 
 ### 0.3 OpenCode (`setup opencode`)
@@ -78,10 +97,56 @@ chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/
 chattool setup opencode
 ```
 
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 OpenCode 的配置流程。
+
 直接传参：
 
 ```bash
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
+```
+
+### 0.4 Playground (`setup playground`)
+
+把一个空目录快速初始化为工作区：
+
+1. clone `chattool/`
+2. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
+3. 创建 `Memory/`、`skills/`、`scratch/`
+4. 从 clone 出来的 `chattool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+
+如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下会默认提示“跳过克隆并保留本地版本”；只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
+
+在目标空目录里直接执行：
+
+```bash
+chattool setup playground
+```
+
+或显式指定工作区目录：
+
+```bash
+chattool setup playground --workspace-dir ~/workspace/my-playground
+```
+
+默认会优先 clone 当前本地 ChatTool 仓库；也可以指定远端或本地源：
+
+```bash
+chattool setup playground \
+  --workspace-dir ~/workspace/my-playground \
+  --chattool-source https://github.com/cubenlp/ChatTool.git
+```
+
+生成后的结构大致为：
+
+```text
+my-playground/
+├── AGENTS.md
+├── CHATTOOL.md
+├── MEMORY.md
+├── chattool/
+├── Memory/
+├── skills/
+└── scratch/
 ```
 
 ## 1. DNS 管理 (`dns`)
@@ -265,6 +330,9 @@ chattool gh pr-list --state open --limit 20
 # 查看 PR 详情
 chattool gh pr-view --number 123
 
+# 查看 PR 的 CI / checks 状态
+chattool gh pr-check --number 123
+
 # 创建 PR
 chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
 
@@ -277,6 +345,27 @@ chattool gh pr-merge --number 123 --method squash --confirm
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 ```
+
+`pr-check` 会按 PR 的 head commit 汇总三层信息，适合排查 CI：
+
+- combined status
+- check runs
+- workflow runs
+
+需要机器可读结果时可加 `--json-output`。
+
+### 4.3 API Reference
+
+后续扩展 `chattool gh` 时，优先查这些官方文档：
+
+- GitHub REST API 根文档: https://docs.github.com/en/rest
+- Pull requests API: https://docs.github.com/en/rest/pulls/pulls
+- Check runs API: https://docs.github.com/en/rest/checks/runs
+- Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
+- Commit statuses API: https://docs.github.com/en/rest/commits/statuses
+- PyGithub 文档: https://pygithub.readthedocs.io/
+- PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
+- PyGithub `Repository` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html
 
 ---
 

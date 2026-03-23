@@ -10,6 +10,10 @@ OpenCode CLI 通过 npm 安装，先确保已配置 Node.js：
 chattool setup nodejs
 ```
 
+该命令会直接写入 ChatTool 内置的 `nvm.sh`，不会再通过 `curl` 从 GitHub 拉取安装脚本。
+注意后续 `nvm install` 仍需要联网下载 Node.js 版本文件。
+执行 `chattool setup opencode` 时，也会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足且终端可交互时，会先提示是否安装/升级。
+
 ## 2. 交互式配置
 
 ```bash
