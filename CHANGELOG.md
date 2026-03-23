@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- `chattool setup playground` 现在会在 workspace bootstrap 完成后，优先复用 `chatenv` 当前生效的 `GITHUB_ACCESS_TOKEN` 为 Git 配置 `https://github.com` 的 credential store；交互模式下也会提示是否配置并允许覆写 token
+
 ## [6.3.0]
 
 ### Changed

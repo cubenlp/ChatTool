@@ -1,7 +1,9 @@
 import shutil
+import subprocess
 from pathlib import Path
 
 import click
+import pytest
 from click.testing import CliRunner
 
 from chattool.client.main import cli as root_cli
@@ -33,6 +35,18 @@ def _install_fake_clone(monkeypatch, source_repo: Path) -> None:
         return repo_dir
 
     monkeypatch.setattr("chattool.setup.playground._clone_chattool_repo", fake_clone)
+
+
+@pytest.fixture(autouse=True)
+def clear_github_token():
+    from chattool.config import GitHubConfig
+
+    original = GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    GitHubConfig.GITHUB_ACCESS_TOKEN.value = None
+    try:
+        yield
+    finally:
+        GitHubConfig.GITHUB_ACCESS_TOKEN.value = original
 
 
 def test_setup_playground_bootstraps_workspace(tmp_path, monkeypatch):
@@ -91,6 +105,7 @@ def test_setup_playground_interactive_allows_non_empty_workspace_after_confirm(t
         lambda interactive, auto_prompt_condition: (None, True, False, False, False),
     )
     monkeypatch.setattr("chattool.setup.playground.ask_confirm", lambda message, default=True: True)
+    monkeypatch.setattr("chattool.setup.playground.ask_text", lambda message, default="", password=False: "")
 
     setup_playground(
         workspace_dir=workspace,
@@ -131,6 +146,7 @@ def test_setup_playground_interactive_reuses_existing_chattool_repo(tmp_path, mo
     )
     prompts = iter([True, True])
     monkeypatch.setattr("chattool.setup.playground.ask_confirm", lambda message, default=True: next(prompts))
+    monkeypatch.setattr("chattool.setup.playground.ask_text", lambda message, default="", password=False: "")
 
     setup_playground(
         workspace_dir=workspace,
@@ -186,3 +202,60 @@ def test_root_cli_registers_setup_cc_connect():
 
     assert result.exit_code == 0
     assert "cc-connect" in result.output
+
+
+def test_setup_playground_configures_git_auth_from_chattool_env_value(tmp_path, monkeypatch):
+    source_repo = _create_fake_chattool_repo(tmp_path)
+    workspace = tmp_path / "workspace"
+    _install_fake_clone(monkeypatch, source_repo)
+
+    monkeypatch.setenv("GITHUB_ACCESS_TOKEN", "env-token-should-not-win")
+    from chattool.config import GitHubConfig
+
+    GitHubConfig.GITHUB_ACCESS_TOKEN.value = "config-token-wins"
+
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr("chattool.setup.playground.subprocess.run", fake_run)
+
+    setup_playground(workspace_dir=workspace, chattool_source=str(source_repo), interactive=False)
+
+    assert ["git", "config", "--global", "credential.helper", "store"] == calls[-2][0]
+    assert ["git", "credential", "approve"] == calls[-1][0]
+    assert "password=config-token-wins" in calls[-1][1]["input"]
+    assert "password=env-token-should-not-win" not in calls[-1][1]["input"]
+
+
+def test_setup_playground_interactive_allows_overriding_github_token(tmp_path, monkeypatch):
+    source_repo = _create_fake_chattool_repo(tmp_path)
+    workspace = tmp_path / "workspace"
+    _install_fake_clone(monkeypatch, source_repo)
+
+    from chattool.config import GitHubConfig
+
+    GitHubConfig.GITHUB_ACCESS_TOKEN.value = "config-token"
+
+    monkeypatch.setattr(
+        "chattool.setup.playground.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (None, True, False, False, False),
+    )
+
+    prompts = iter(["override-token"])
+    monkeypatch.setattr("chattool.setup.playground.ask_text", lambda message, default="", password=False: next(prompts))
+
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr("chattool.setup.playground.subprocess.run", fake_run)
+
+    setup_playground(workspace_dir=workspace, chattool_source=str(source_repo), interactive=None)
+
+    assert ["git", "credential", "approve"] == calls[-1][0]
+    assert "password=override-token" in calls[-1][1]["input"]
