@@ -1,6 +1,5 @@
 import pathlib
 from types import SimpleNamespace
-import subprocess
 
 import chattool.setup.claude as claude_module
 import chattool.setup.codex as codex_module
@@ -32,9 +31,9 @@ def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp
 
     monkeypatch.setattr(codex_module, "ask_text", fake_ask_text)
     monkeypatch.setattr(
-        codex_module.subprocess,
-        "run",
-        lambda cmd, capture_output=True, text=True: SimpleNamespace(returncode=0, stderr="", stdout=""),
+        codex_module,
+        "run_npm_command",
+        lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
     )
 
     codex_module.setup_codex(interactive=None)
@@ -69,9 +68,8 @@ def test_setup_claude_checks_nodejs_before_prompts_and_uses_new_default_model(tm
 
     monkeypatch.setattr("chattool.utils.tui.ask_text", fake_ask_text)
     monkeypatch.setattr(
-        subprocess,
-        "run",
-        lambda cmd, capture_output=True, text=True: SimpleNamespace(returncode=0, stderr="", stdout=""),
+        "chattool.setup.nodejs.run_npm_command",
+        lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
     )
 
     claude_module.setup_claude(interactive=None)
@@ -109,9 +107,9 @@ def test_setup_opencode_checks_nodejs_before_prompts(tmp_path, monkeypatch):
 
     monkeypatch.setattr(opencode_module, "ask_text", fake_ask_text)
     monkeypatch.setattr(
-        opencode_module.subprocess,
-        "run",
-        lambda cmd, capture_output=True, text=True: SimpleNamespace(returncode=0, stderr="", stdout=""),
+        opencode_module,
+        "run_npm_command",
+        lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
     )
 
     opencode_module.setup_opencode(interactive=None)

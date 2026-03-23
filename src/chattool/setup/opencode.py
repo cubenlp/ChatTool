@@ -1,5 +1,4 @@
 import json
-import subprocess
 from pathlib import Path
 import click
 
@@ -8,7 +7,7 @@ from chattool.setup.interactive import (
     abort_if_missing_without_tty,
     resolve_interactive_mode,
 )
-from chattool.setup.nodejs import ensure_nodejs_requirement
+from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -149,9 +148,8 @@ def setup_opencode(base_url=None, api_key=None, model=None, interactive=None):
         click.echo("Missing base_url, api_key, or model.", err=True)
         raise click.Abort()
 
-    install_cmd = ["npm", "install", "-g", "opencode-ai"]
     logger.info("Installing opencode cli with npm")
-    result = subprocess.run(install_cmd, capture_output=True, text=True)
+    result = run_npm_command(["install", "-g", "opencode-ai"])
     if result.returncode != 0:
         logger.error("Failed to install opencode cli")
         click.echo("Failed to install opencode.", err=True)

@@ -8,10 +8,12 @@ from chattool.setup.nodejs import (
     NVM_INIT_END,
     _install_bundled_nvm,
     _parse_node_major,
+    _detect_nodejs_runtime,
     _render_nvm_init_block,
     _replace_managed_block,
     ensure_nodejs_requirement,
     has_required_nodejs,
+    run_npm_command,
 )
 
 
@@ -142,3 +144,56 @@ def test_ensure_nodejs_requirement_aborts_without_prompt(monkeypatch):
 
     with pytest.raises(click.Abort):
         ensure_nodejs_requirement(interactive=False, can_prompt=False)
+
+
+def test_detect_nodejs_runtime_falls_back_to_nvm(monkeypatch, tmp_path):
+    nvm_sh = tmp_path / ".nvm" / "nvm.sh"
+    nvm_sh.parent.mkdir(parents=True, exist_ok=True)
+    nvm_sh.write_text("# nvm\n", encoding="utf-8")
+
+    monkeypatch.setattr("chattool.setup.nodejs.Path.home", lambda: tmp_path)
+    monkeypatch.setattr("chattool.setup.nodejs.shutil.which", lambda name: None)
+
+    def fake_bash_output(command):
+        mapping = {
+            'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && command -v node': "/fake/.nvm/node",
+            'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && command -v npm': "/fake/.nvm/npm",
+            'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && node -v': "v24.1.0",
+            'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && npm -v': "11.1.0",
+        }
+        return mapping.get(command, "")
+
+    monkeypatch.setattr("chattool.setup.nodejs._get_bash_output", fake_bash_output)
+
+    runtime = _detect_nodejs_runtime()
+
+    assert runtime["source"] == "nvm"
+    assert runtime["node_version"] == "v24.1.0"
+    assert runtime["npm_version"] == "11.1.0"
+    assert runtime["node_major"] == 24
+
+
+def test_run_npm_command_uses_nvm_when_runtime_comes_from_nvm(monkeypatch):
+    commands = []
+
+    monkeypatch.setattr(
+        "chattool.setup.nodejs._detect_nodejs_runtime",
+        lambda: {
+            "node_bin": "/fake/.nvm/node",
+            "npm_bin": "/fake/.nvm/npm",
+            "node_version": "v24.1.0",
+            "npm_version": "11.1.0",
+            "node_major": 24,
+            "source": "nvm",
+        },
+    )
+    monkeypatch.setattr(
+        "chattool.setup.nodejs._run_bash",
+        lambda command: commands.append(command) or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
+    )
+
+    result = run_npm_command(["install", "-g", "@openai/codex@latest"])
+
+    assert result.returncode == 0
+    assert len(commands) == 1
+    assert "npm install -g @openai/codex@latest" in commands[0]

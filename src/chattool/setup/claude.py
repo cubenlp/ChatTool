@@ -49,7 +49,6 @@ def _load_existing_claude_config(claude_dir):
 
 def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interactive=None):
     import json
-    import subprocess
     from pathlib import Path
 
     import click
@@ -58,7 +57,7 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         abort_if_force_without_tty,
         resolve_interactive_mode,
     )
-    from chattool.setup.nodejs import ensure_nodejs_requirement
+    from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
     from chattool.utils.custom_logger import setup_logger
     from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -121,9 +120,8 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         click.echo("Missing auth token.", err=True)
         raise click.Abort()
 
-    install_cmd = ["npm", "install", "-g", "@anthropic-ai/claude-code"]
     logger.info("Installing claude-code cli with npm")
-    result = subprocess.run(install_cmd, capture_output=True, text=True)
+    result = run_npm_command(["install", "-g", "@anthropic-ai/claude-code"])
     if result.returncode != 0:
         logger.error("Failed to install claude-code cli")
         click.echo("Failed to install claude-code.", err=True)

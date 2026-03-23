@@ -46,18 +46,56 @@ def _parse_node_major(version_text):
     return int(major)
 
 
-def _detect_nodejs_runtime():
-    node_bin = shutil.which("node")
-    npm_bin = shutil.which("npm")
-    node_version = _get_cmd_output(["node", "-v"]) if node_bin else ""
-    npm_version = _get_cmd_output(["npm", "-v"]) if npm_bin else ""
+def _build_runtime(node_bin, npm_bin, node_version, npm_version, source):
     return {
         "node_bin": node_bin,
         "npm_bin": npm_bin,
         "node_version": node_version,
         "npm_version": npm_version,
         "node_major": _parse_node_major(node_version),
+        "source": source,
     }
+
+
+def _detect_nodejs_runtime_from_path():
+    node_bin = shutil.which("node")
+    npm_bin = shutil.which("npm")
+    node_version = _get_cmd_output(["node", "-v"]) if node_bin else ""
+    npm_version = _get_cmd_output(["npm", "-v"]) if npm_bin else ""
+    return _build_runtime(node_bin, npm_bin, node_version, npm_version, "path")
+
+
+def _detect_nodejs_runtime_from_nvm():
+    nvm_sh = Path.home() / ".nvm" / "nvm.sh"
+    if not nvm_sh.exists():
+        return _build_runtime("", "", "", "", "nvm")
+
+    prefix = 'export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
+    node_bin = _get_bash_output(prefix + "command -v node")
+    npm_bin = _get_bash_output(prefix + "command -v npm")
+    node_version = _get_bash_output(prefix + "node -v") if node_bin else ""
+    npm_version = _get_bash_output(prefix + "npm -v") if npm_bin else ""
+    return _build_runtime(node_bin, npm_bin, node_version, npm_version, "nvm")
+
+
+def _runtime_score(runtime):
+    score = 0
+    if runtime.get("node_bin"):
+        score += 1
+    if runtime.get("npm_bin"):
+        score += 1
+    node_major = runtime.get("node_major")
+    if node_major is not None:
+        score += 2 + node_major
+    return score
+
+
+def _detect_nodejs_runtime():
+    path_runtime = _detect_nodejs_runtime_from_path()
+    nvm_runtime = _detect_nodejs_runtime_from_nvm()
+    if _runtime_score(nvm_runtime) > _runtime_score(path_runtime):
+        return nvm_runtime
+    return path_runtime
 
 
 def _nodejs_requirement_message(runtime, min_major):
@@ -113,6 +151,19 @@ def ensure_nodejs_requirement(min_major=MIN_NODEJS_MAJOR, interactive=None, can_
     click.echo(message, err=True)
     click.echo("Please run: chattool setup nodejs", err=True)
     raise click.Abort()
+
+
+def run_npm_command(args):
+    runtime = _detect_nodejs_runtime()
+    if runtime.get("source") == "nvm":
+        quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)
+        command = (
+            'export NVM_DIR="$HOME/.nvm" && '
+            '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
+            f"npm {quoted_args}"
+        )
+        return _run_bash(command)
+    return subprocess.run(["npm", *args], capture_output=True, text=True)
 
 
 def _read_bundled_nvm_script():
