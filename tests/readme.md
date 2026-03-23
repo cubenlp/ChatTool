@@ -1,5 +1,10 @@
 # test for chattool
 
+DeprecationWarning
+
+（这个文件强调一下，测试的迁移）
+注意，tests 文档不再更新维护，后续只测试 cli-tests 文档。所有代码更新，异步 `cli-tests`。
+
 ## Urls
 
 Referenced from https://gitee.com/lzhpo/chatgpt-spring-boot-starter.

@@ -290,7 +290,6 @@ chattool pypi publish --repository pypi --yes
 - 构建与上传相关 import 放到函数内部，保持 CLI 冷启动速度
 - 为 `cli-tests/` 新增 `test_chattool_pypi_basic.md`
 - 正式实现时补充：
-  - `tests/tools/pypi/` 单元测试
   - `cli-tests/pypi/` doc-first CLI 测试
   - `docs/tools/` 下的正式用户文档
 

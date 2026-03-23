@@ -1,27 +1,45 @@
-# CLI Tests 迁移计划
+# CLI Tests 规范
 
-本文档记录从 `tests/` 迁移到 `cli-tests/` 的执行顺序与阶段安排。
+本文档定义 ChatTool 仓库内 CLI 测试的长期维护规则。
 
 ## 关键要求
 
-- 迁移路径：`tests => cli-tests .md => cli-tests .py`，tests 仅作使用参考。
+- `cli-tests/*.md` 是唯一长期维护的测试设计面。
+- `cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现。
 - 文档先行：每个命令先落 `.md`，再决定是否补 `.py`。
-- 真实链路：以真实 CLI 链路为准；后续 `.py` 应标记 `@pytest.mark.e2e`。
+- 真实链路：以真实 CLI 链路为准；对应 `.py` 应标记 `@pytest.mark.e2e`。
 - 模板一致：以 `cli-tests/env/test_chattool_env_basic.md` 为模板。
-- 目录结构：当前为临时规划，后续会补充 `_xxx.py`（不止 basic）。
+- 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认维护面。
 
-## 阶段 1：规则与模板
+## 长期规则
 
-- 建立 `cli-tests/index.md` 与 `cli-tests/README.md`。
-- 完成 `chattool env` 文档作为模板。
+- 没有对应 `.md` 的 CLI 测试实现不应新增。
+- 新功能、重构和 Bugfix 如涉及 CLI 行为，必须先补对应 `cli-tests/<group>/test_<...>.md`。
+- 评审、验收与回归优先查看 `.md`，而不是先看 `.py`。
+- 旧的 `tests/` 文件：
+  - 不作为新规范样例。
+  - 不作为评审验收依据。
+  - 仅在迁移到 `cli-tests/` 时参考其历史行为。
 
-## 阶段 2：命令逐个迁移
+## 目录与模板
 
-- 按 `chattool` 命令列表逐一补齐 `.md`：
-  - browser / client / dns / docker / env / explore / gh / image / lark / mcp / network / serve / setup / skill / tplogin / zulip
+- 以 `cli-tests/env/test_chattool_env_basic.md` 为模板。
+- 每个用例至少包含：
+  - 初始环境准备
+  - 相关文件
+  - 预期过程和结果
+  - 参考执行脚本（伪代码）
+  - 回滚说明
 
-## 阶段 3：真实环境补齐与回归
+## 第三方集成要求
 
-- 汇总所有 TODO 用例，补齐缺失的环境变量/凭证。
-- 将可跑用例补成 `.py` 并以真实链路运行。
-- 对失败用例逐一完善，确保 CLI 关键链路稳定。
+- 真实 CLI 测试必须从默认 `chatenv` / 配置对象读取生效值。
+- 不允许通过 mock 伪装成真实链路。
+- 文档中必须写清需要的配置项、权限和回滚方式。
+
+## Feishu 约束
+
+- Feishu 测试设计优先放到 `cli-tests/lark/`，后续可按能力拆分到 `cli-tests/lark-im/`、`cli-tests/lark-task/`、`cli-tests/lark-calendar/`、`cli-tests/lark-bitable/`。
+- Feishu 真实执行测试只能以这些 `cli-tests/lark*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为规范依据。
+- Feishu 测试文档至少显式列出：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
+- Feishu 测试文档必须说明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。

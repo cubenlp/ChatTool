@@ -8,6 +8,12 @@
 - 目的：验证 Markdown 文件可先转换为飞书 docx block JSON，并继续用于文档写入。
 - 标签：`cli`
 - 前置条件：具备飞书凭证与文档写入权限。
+- 环境准备：
+  - `FEISHU_APP_ID`
+  - `FEISHU_APP_SECRET`
+  - `FEISHU_DEFAULT_RECEIVER_ID`
+  - `FEISHU_TEST_USER_ID`
+  - `FEISHU_TEST_USER_ID_TYPE`
 - 回滚：删除测试文档或测试块（如适用）。
 
 ## 用例 1：将 Markdown 文件转换为 block JSON

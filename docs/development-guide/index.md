@@ -138,12 +138,17 @@ INFO: Start opencode setup
 
 ## 测试与文档
 
-- **测试先行**：鼓励 TDD（测试驱动开发），或至少保证新功能有配套单元测试。
-- **测试分类与隔离**：
-  - **集成/真实测试（Real）**：功能开发完成后，必须包含与真实环境交互的测试以确保可用性。应标记为 `@pytest.mark.e2e`。
-  - **原则**：当前以 CLI 真实测试为主，优先保证关键命令链路稳定。
+- **CLI 测试文档先行**：ChatTool 仓库内的新功能、重构和 Bugfix 如涉及 CLI 行为，必须先补对应 `cli-tests/*.md`。
+- **唯一长期维护的测试设计面**：`cli-tests/*.md` 是唯一长期维护的测试设计文档；评审、验收和后续补测都以它为准。
+- **真实执行测试的落点**：`cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现，真实链路测试应标记为 `@pytest.mark.e2e`。
+- **`tests/` 的定位**：仓库根下 `tests/` 视为弃用区，只保留历史参考，不再作为新开发的默认测试落点，也不再作为交付要求。
+- **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
 - 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。
-- 如果测试依赖接收者、测试账号或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`，而不是在测试里硬编码。
+- 如果测试依赖接收者、测试账号或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`，并在对应 `.md` 中写清配置要求与回滚方式。
+- Feishu 相关测试设计应优先落在 `cli-tests/lark/`，后续按能力拆分到 `cli-tests/lark-im/`、`cli-tests/lark-task/`、`cli-tests/lark-calendar/`、`cli-tests/lark-bitable/`。
+- Feishu 的真实执行测试只能以这些 `cli-tests/lark*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为主规范依据。
+- Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
+- Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
@@ -153,6 +158,7 @@ INFO: Start opencode setup
 - `cli-tests` 作为 CLI 测试设计入口，采用 **doc-first**：
   - 先写 `.md`（测试目标、输入、执行顺序、预期）。
   - 文档评审通过后再实现对应 `.py`。
+- ChatTool 仓库的测试维护主线只看 `cli-tests/`；`tests/` 中的历史文件不再作为新样例、新要求或评审依据。
 - 命名规范（与 CLI 命令保持一致）：
   - 至少一个基础文件：`test_<cli>_<command>_basic.py`
   - 按主题扩展：`test_<cli>_<command>_<topic>.py`
@@ -173,6 +179,10 @@ INFO: Start opencode setup
   - 若测试过程中发现 `.md` 逻辑有疑点，可反向更新 `.md` 保持一致性。
   - **非必要不改文档**；仅在逻辑冲突、步骤错误、预期失效时更新。
   - 若确需更新 `.md`，必须在文档变更中明确写清修改原因。
+- 旧的 `tests/` 文件：
+  - 不作为新规范样例。
+  - 不作为评审验收依据。
+  - 仅在迁移到 `cli-tests/` 时参考其历史行为。
 - 仓库污染防护（特别是 rebuild/依赖变更测试）：
   - 涉及改写文件的用例必须包含对修改内容的还原。
   - 推荐使用 `try/finally` 做无条件回滚，避免异常中断导致脏工作区。
@@ -182,4 +192,4 @@ INFO: Start opencode setup
 - [目录职责说明](directory-responsibilities.md)：目录边界、依赖方向与归位规则。
 - [架构概览与设计特点](architecture-overview.md)：分层结构、设计目标、能力沉淀路径与架构优势。
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。
-- [飞书能力设计](../design/feishu/index.md)：`chattool lark`、`skills/feishu/` 与 Feishu 专题 skill 的目标形态。
+- [飞书能力设计](../design/feishu-cli.md)：`chattool lark` 与单目录 `skills/feishu/` 的目标形态。

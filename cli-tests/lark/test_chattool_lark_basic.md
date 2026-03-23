@@ -1,6 +1,6 @@
 # test_chattool_lark_basic
 
-测试 `chattool lark` 的基础链路，覆盖 info/send/upload/scopes 的 CLI 调用。
+测试 `chattool lark` 的基础链路，覆盖 info / scopes / send / upload / reply / listen / chat，并把它作为后续 `chattool lark <topic> ...` 扩展的公共基线。
 
 ## 元信息
 
@@ -8,7 +8,12 @@
 - 目的：验证飞书 CLI 的核心命令可用。
 - 标签：`cli`
 - 前置条件：具备飞书凭证与测试用户。
-- 环境准备：配置 `FEISHU_APP_ID` 与 `FEISHU_APP_SECRET`。
+- 环境准备：
+  - `FEISHU_APP_ID`
+  - `FEISHU_APP_SECRET`
+  - `FEISHU_DEFAULT_RECEIVER_ID`
+  - `FEISHU_TEST_USER_ID`
+  - `FEISHU_TEST_USER_ID_TYPE`
 - 回滚：删除测试消息与上传文件（如适用）。
 
 ## 用例 1：获取机器人信息
