@@ -25,6 +25,8 @@ chattool setup nodejs -i
 chattool setup codex
 ```
 
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
+
 如果你已经有变量，直接传参（可用 `--preferred-auth-method` 或 `--pam`）：
 
 ```bash
@@ -34,7 +36,7 @@ chattool setup codex --pam "cr_xxx"
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 ## 3) 写入内容

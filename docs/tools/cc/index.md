@@ -5,7 +5,7 @@
 ## 快速开始
 
 ```bash
-chattool cc setup
+chattool setup cc-connect
 chattool cc init -i
 chattool cc start
 ```
@@ -15,7 +15,8 @@ chattool cc start
 
 ## 命令
 
-- `chattool cc setup`：安装/检查 Node.js、npm 与 cc-connect
+- `chattool setup cc-connect`：安装/检查 Node.js、npm 与 cc-connect
+- `chattool cc setup`：`chattool setup cc-connect` 的别名
 - `chattool cc init`：生成最小可用配置（Agent + Platform + Project）
 - `chattool cc start`：启动 cc-connect（前台输出，同时写入日志）
 - `chattool cc status`：查看基础状态
