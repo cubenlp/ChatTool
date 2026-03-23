@@ -1,19 +1,24 @@
 ---
 name: chattool-gh
-description: 使用 `chattool gh` 完成 PR 创建、更新、查看与列表查询，并确保正文 Markdown 正确渲染。
-version: 0.1.0
+description: 使用 `chattool gh` 完成 PR 创建、更新、查看、CI 状态检查与维护，并确保正文 Markdown 正确渲染。
+version: 0.2.0
 ---
 
 # ChatTool GitHub 帮助（中文）
 
-目标：用 `chattool gh` 完成 PR 创建与更新，确保正文 Markdown 正确渲染。
+目标：用 `chattool gh` 完成 PR 创建、更新、CI 排查与后续维护，确保正文 Markdown 正确渲染。
 
 ## 前置
 
 先初始化 GitHub 凭证（`chattool gh` 会自动读取）：
 ```
-chattool env init -t gh
+chatenv init -t gh
+chatenv cat -t gh
 ```
+
+常用配置项：
+- `GITHUB_ACCESS_TOKEN`
+- `GITHUB_DEFAULT_REPO`
 
 ## 创建 PR（推荐）
 
@@ -24,8 +29,9 @@ cat > /tmp/pr_body.md <<'EOF'
 - point 1
 - point 2
 
-## Notes
-- note 1
+## Testing
+- command 1
+- command 2
 EOF
 
 chattool gh pr-create \
@@ -38,6 +44,7 @@ chattool gh pr-create \
 
 ## 更新 PR
 
+当范围变化时，及时同步 PR 正文：
 ```
 chattool gh pr-update \
   --repo owner/repo \
@@ -45,14 +52,45 @@ chattool gh pr-update \
   --body-file /tmp/pr_body.md
 ```
 
-## 查看 / 列表
+也可以顺手改标题、状态或基线分支：
+
+```
+chattool gh pr-update \
+  --repo owner/repo \
+  --number 123 \
+  --title "feat: refine xyz" \
+  --state open
+```
+
+## 查看 / 列表 / 检查
 
 ```
 chattool gh pr-list --repo owner/repo
 chattool gh pr-view --repo owner/repo --number 123
+chattool gh pr-check --repo owner/repo --number 123
+```
+
+`pr-check` 适合在 push 之后或 CI 异常时使用，会汇总：
+- combined status
+- check runs
+- workflow runs
+
+需要机器可读结果时：
+
+```
+chattool gh pr-check --repo owner/repo --number 123 --json-output
+```
+
+## 评论 / 合并
+
+```
+chattool gh pr-comment --repo owner/repo --number 123 --body "Looks good"
+chattool gh pr-merge --repo owner/repo --number 123 --method squash --confirm
 ```
 
 ## 规范
 
 - 始终用 `--body-file`，避免 `\n` 字符串导致的乱码。
-- 保持 PR 文本结构化（Summary、Notes）。
+- 保持 PR 文本结构化（`Summary`、`Testing`）。
+- 需要看 PR 的 CI 状态时，优先用 `pr-check`，不要手工来回翻 GitHub Actions 页面。
+- 扩展 `chattool gh` 时，优先参考 `docs/client.md` 里列出的 GitHub REST API 与 PyGithub 文档。
