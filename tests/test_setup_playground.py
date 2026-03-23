@@ -25,7 +25,7 @@ def _create_fake_chattool_repo(root: Path) -> Path:
 
 
 def _install_fake_clone(monkeypatch, source_repo: Path) -> None:
-    def fake_clone(_source, workspace_dir, force):
+    def fake_clone(_source, workspace_dir, force, interactive=None, can_prompt=False):
         repo_dir = Path(workspace_dir) / "chattool"
         if repo_dir.exists():
             shutil.rmtree(repo_dir)
@@ -80,6 +80,29 @@ def test_setup_playground_requires_empty_workspace_without_force(tmp_path):
         raise AssertionError("setup_playground should abort for non-empty workspace without --force")
 
 
+def test_setup_playground_interactive_allows_non_empty_workspace_after_confirm(tmp_path, monkeypatch):
+    source_repo = _create_fake_chattool_repo(tmp_path)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    (workspace / "existing.txt").write_text("occupied\n", encoding="utf-8")
+    _install_fake_clone(monkeypatch, source_repo)
+    monkeypatch.setattr(
+        "chattool.setup.playground.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (None, True, False, False, False),
+    )
+    monkeypatch.setattr("chattool.setup.playground.ask_confirm", lambda message, default=True: True)
+
+    setup_playground(
+        workspace_dir=workspace,
+        chattool_source=str(source_repo),
+        interactive=None,
+    )
+
+    assert (workspace / "existing.txt").read_text(encoding="utf-8") == "occupied\n"
+    assert (workspace / "chattool").exists()
+    assert (workspace / "MEMORY.md").exists()
+
+
 def test_setup_playground_force_allows_existing_workspace(tmp_path, monkeypatch):
     source_repo = _create_fake_chattool_repo(tmp_path)
     workspace = tmp_path / "workspace"
@@ -94,6 +117,32 @@ def test_setup_playground_force_allows_existing_workspace(tmp_path, monkeypatch)
     assert (workspace / "MEMORY.md").exists()
 
 
+def test_setup_playground_interactive_reuses_existing_chattool_repo(tmp_path, monkeypatch):
+    source_repo = _create_fake_chattool_repo(tmp_path)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    existing_repo = workspace / "chattool"
+    shutil.copytree(source_repo, existing_repo)
+    (workspace / "existing.txt").write_text("occupied\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        "chattool.setup.playground.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (None, True, False, False, False),
+    )
+    prompts = iter([True, True])
+    monkeypatch.setattr("chattool.setup.playground.ask_confirm", lambda message, default=True: next(prompts))
+
+    setup_playground(
+        workspace_dir=workspace,
+        chattool_source=str(source_repo),
+        interactive=None,
+    )
+
+    assert (workspace / "existing.txt").read_text(encoding="utf-8") == "occupied\n"
+    assert (workspace / "chattool" / "skills" / "demo-skill" / "SKILL.md").exists()
+    assert (workspace / "MEMORY.md").exists()
+
+
 def test_root_cli_registers_setup_playground():
     runner = CliRunner()
 
@@ -101,3 +150,12 @@ def test_root_cli_registers_setup_playground():
 
     assert result.exit_code == 0
     assert "playground" in result.output
+
+
+def test_root_cli_registers_setup_cc_connect():
+    runner = CliRunner()
+
+    result = runner.invoke(root_cli, ["setup", "--help"])
+
+    assert result.exit_code == 0
+    assert "cc-connect" in result.output

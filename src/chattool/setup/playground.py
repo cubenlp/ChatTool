@@ -6,7 +6,7 @@ import click
 
 from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_text
+from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text
 
 logger = setup_logger("setup_playground")
 
@@ -304,12 +304,25 @@ def _copy_skills(skills_source: Path, skills_target: Path, force: bool) -> list[
     return copied
 
 
-def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool) -> Path:
+def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool, interactive=None, can_prompt=False) -> Path:
     repo_dir = _workspace_repo_dir(workspace_dir)
     if repo_dir.exists():
         if force:
             logger.info(f"Removing existing cloned repo: {repo_dir}")
             shutil.rmtree(repo_dir)
+        elif interactive is not False and can_prompt:
+            reuse_existing = ask_confirm(
+                (
+                    f"ChatTool repo already exists: {repo_dir}\n"
+                    "Reuse the existing clone and skip overwriting it?"
+                ),
+                default=True,
+            )
+            if reuse_existing == BACK_VALUE:
+                raise click.Abort()
+            if reuse_existing:
+                logger.info(f"Reusing existing ChatTool repo: {repo_dir}")
+                return repo_dir
         else:
             logger.error(f"ChatTool clone target already exists: {repo_dir}")
             click.echo(f"ChatTool clone target already exists: {repo_dir}", err=True)
@@ -327,8 +340,19 @@ def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool)
     return repo_dir
 
 
-def _validate_workspace_dir(workspace_dir: Path, force: bool) -> None:
+def _validate_workspace_dir(workspace_dir: Path, force: bool, interactive=None, can_prompt=False) -> None:
     if workspace_dir.exists() and not _workspace_is_empty(workspace_dir) and not force:
+        message = (
+            f"Workspace dir is not empty: {workspace_dir}\n"
+            "Continue anyway and keep existing files? Existing generated files will be skipped unless --force is used."
+        )
+        if interactive is not False and can_prompt:
+            proceed = ask_confirm(message, default=True)
+            if proceed == BACK_VALUE:
+                raise click.Abort()
+            if proceed:
+                logger.info(f"Proceeding with non-empty workspace dir: {workspace_dir}")
+                return
         logger.error(f"Workspace dir must be empty: {workspace_dir}")
         click.echo(f"Workspace dir must be empty before bootstrap: {workspace_dir}", err=True)
         raise click.Abort()
@@ -375,13 +399,24 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
 
     workspace_path = _resolve_workspace_dir(workspace_dir=workspace_dir)
     chattool_source = chattool_source or source_default
-    _validate_workspace_dir(workspace_path, force=force)
+    _validate_workspace_dir(
+        workspace_path,
+        force=force,
+        interactive=interactive,
+        can_prompt=can_prompt,
+    )
 
     logger.info(f"Workspace root: {workspace_path}")
     logger.info(f"ChatTool source: {chattool_source}")
     workspace_path.mkdir(parents=True, exist_ok=True)
 
-    repo_path = _clone_chattool_repo(chattool_source, workspace_path, force=force)
+    repo_path = _clone_chattool_repo(
+        chattool_source,
+        workspace_path,
+        force=force,
+        interactive=interactive,
+        can_prompt=can_prompt,
+    )
     skills_source = _workspace_skills_source(workspace_path)
     _validate_cloned_repo(skills_source)
 

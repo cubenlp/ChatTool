@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [6.3.0]
 
 ### Changed
+- `chattool setup playground` 现在在交互模式下遇到非空目录时会先提示是否继续；确认后会保留已有文件并继续初始化，且若 `chattool/` 已存在，还可以选择直接复用现有 clone 而不覆盖
+- `chattool setup cc-connect` 现已提供 cc-connect 安装入口；`chattool cc setup` 改为该命令的别名，两者共用同一套安装逻辑
 - `chattool setup codex` 默认模型现改为 `gpt-5.4`，`chattool setup claude` 默认小模型现改为 `claude-opus-4-6`
 - `chattool setup codex` / `claude` / `opencode` 现在会在收集配置前先检查 `Node.js >= 20` 与 `npm`；若当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级
 - `skills/practice-make-perfact` 现在改为任务完成后的后处理工作流：回顾已有改动、提取可复用内容、串联 `chattool-dev-review`，再统一完成文档/测试/变更记录与 PR/MR 收尾

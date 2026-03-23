@@ -5,6 +5,7 @@ import click
 from chattool.setup.chrome import setup_chrome_driver
 from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
+from chattool.setup.cc_connect import setup_cc_connect
 from chattool.setup.frp import setup_frp
 from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
@@ -51,6 +52,10 @@ def codex_setup(preferred_auth_method, base_url, model, interactive):
     )
 
 
+def cc_connect_setup(interactive):
+    setup_cc_connect(interactive=interactive)
+
+
 def claude_setup(auth_token, base_url, small_fast_model, interactive):
     setup_claude(
         auth_token=auth_token,
@@ -91,6 +96,17 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--dry-run",),
                 kwargs={"is_flag": True, "help": "Preview alias changes without writing to shell rc file."},
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="cc-connect",
+        help="Setup cc-connect CLI and runtime dependencies.",
+        callback=cc_connect_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
             ),
         ),
     ),

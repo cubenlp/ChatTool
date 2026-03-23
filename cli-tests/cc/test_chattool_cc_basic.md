@@ -9,7 +9,7 @@
 ### 预期过程和结果
 
 - 执行 `chattool cc --help` 返回 0
-- 输出包含 `init` / `start` 等子命令提示
+- 输出包含 `setup` / `init` / `start` 等子命令提示
 
 ### 参考执行脚本（伪代码）
 

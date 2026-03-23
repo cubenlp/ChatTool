@@ -322,36 +322,10 @@ def _stream_process(cmd: Iterable[str], env: dict[str, str]) -> int:
     help="Auto prompt on missing args, -i forces interactive, -I disables it.",
 )
 def setup(interactive: bool | None) -> None:
-    """安装/检查 cc-connect 依赖（Node.js/npm + cc-connect）。"""
-    from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
-    from chattool.setup.nodejs import setup_nodejs
+    """安装/检查 cc-connect 依赖（`chattool setup cc-connect` 的别名）。"""
+    from chattool.setup.cc_connect import setup_cc_connect
 
-    usage = "Usage: chattool cc setup [-i|-I]"
-    interactive, can_prompt, force_interactive, _, _ = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=False,
-    )
-    abort_if_force_without_tty(force_interactive, can_prompt, usage)
-
-    setup_nodejs(interactive=interactive)
-
-    npm_path = _check_binary("npm")
-    if not npm_path:
-        click.echo("未找到 npm，请先完成 Node.js 安装。", err=True)
-        raise click.Abort()
-
-    if _check_binary("cc-connect"):
-        click.echo("cc-connect 已安装。")
-        return
-
-    click.echo("未检测到 cc-connect，正在安装 (npm install -g cc-connect)...")
-    result = subprocess.run(["npm", "install", "-g", "cc-connect"], capture_output=True, text=True)
-    if result.returncode != 0:
-        click.echo("cc-connect 安装失败。", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
-        raise click.Abort()
-    click.echo("cc-connect 安装完成。")
+    setup_cc_connect(interactive=interactive)
 
 
 @cli.command()

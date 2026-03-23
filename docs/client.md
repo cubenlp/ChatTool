@@ -15,7 +15,8 @@ CLI按功能分为几个命令组：
 - **`lark`**: 飞书机器人与云文档工具。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / Codex / Claude / OpenCode / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / Chrome / FRP）。
+- **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
 
@@ -29,6 +30,20 @@ CLI按功能分为几个命令组：
 ---
 
 ## 0. 环境初始化 (`setup`)
+
+### 0.0 CC-Connect (`setup cc-connect`)
+
+安装或检查 `cc-connect` CLI，并在需要时先补齐 `Node.js >= 20` 与 `npm`：
+
+```bash
+chattool setup cc-connect
+```
+
+如果你更习惯从 `cc` 分组进入，也可以继续使用别名：
+
+```bash
+chattool cc setup
+```
 
 ### 0.1 Codex (`setup codex`)
 
@@ -98,6 +113,8 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 2. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
 3. 创建 `Memory/`、`skills/`、`scratch/`
 4. 从 clone 出来的 `chattool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+
+如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下还可以选择直接复用现有 clone 而不覆盖。只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
 
 在目标空目录里直接执行：
 
