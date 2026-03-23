@@ -84,6 +84,48 @@ chattool setup opencode
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 ```
 
+### 0.4 Playground (`setup playground`)
+
+把一个空目录快速初始化为工作区：
+
+1. clone `chattool/`
+2. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
+3. 创建 `Memory/`、`skills/`、`scratch/`
+4. 从 clone 出来的 `chattool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+
+在目标空目录里直接执行：
+
+```bash
+chattool setup playground
+```
+
+或显式指定工作区目录：
+
+```bash
+chattool setup playground --workspace-dir ~/workspace/my-playground
+```
+
+默认会优先 clone 当前本地 ChatTool 仓库；也可以指定远端或本地源：
+
+```bash
+chattool setup playground \
+  --workspace-dir ~/workspace/my-playground \
+  --chattool-source https://github.com/cubenlp/ChatTool.git
+```
+
+生成后的结构大致为：
+
+```text
+my-playground/
+├── AGENTS.md
+├── CHATTOOL.md
+├── MEMORY.md
+├── chattool/
+├── Memory/
+├── skills/
+└── scratch/
+```
+
 ## 1. DNS 管理 (`dns`)
 
 管理 DNS 记录并自动更新动态 DNS。支持阿里云 (Aliyun) 和腾讯云 (Tencent) DNS 提供商。

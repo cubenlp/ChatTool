@@ -9,6 +9,7 @@ from chattool.setup.frp import setup_frp
 from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
+from chattool.setup.playground import setup_playground
 
 
 @dataclass(frozen=True)
@@ -65,6 +66,15 @@ def opencode_setup(base_url, api_key, model, interactive):
         api_key=api_key,
         model=model,
         interactive=interactive,
+    )
+
+
+def playground_setup(workspace_dir, chattool_source, interactive, force):
+    setup_playground(
+        workspace_dir=workspace_dir,
+        chattool_source=chattool_source,
+        interactive=interactive,
+        force=force,
     )
 
 
@@ -183,6 +193,29 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--model",),
                 kwargs={"default": None, "help": "Required default model name."},
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="playground",
+        help="Bootstrap an empty workspace with a ChatTool clone, memory files, and workspace skills.",
+        callback=playground_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+            SetupOptionElement(
+                param_decls=("--workspace-dir", "--dir"),
+                kwargs={"default": None, "help": "Empty directory to bootstrap as the workspace root. Defaults to current directory."},
+            ),
+            SetupOptionElement(
+                param_decls=("--chattool-source", "--source"),
+                kwargs={"default": None, "help": "Git URL or local ChatTool repo path used for cloning into workspace/chattool."},
+            ),
+            SetupOptionElement(
+                param_decls=("--force",),
+                kwargs={"is_flag": True, "help": "Allow rerunning in a non-empty workspace and overwrite generated files / reclone chattool."},
             ),
         ),
     ),

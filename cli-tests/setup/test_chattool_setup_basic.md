@@ -1,6 +1,6 @@
 # test_chattool_setup_basic
 
-测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/codex/claude/opencode 等子命令入口。
+测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/codex/claude/opencode/playground 等子命令入口。
 
 ## 元信息
 
@@ -81,6 +81,31 @@ chattool setup nodejs -i
 chattool setup codex -i
 chattool setup claude -i
 chattool setup opencode -i
+```
+
+## 用例 5：playground
+
+- 初始环境准备：
+  - 准备一个空目录作为工作区根目录。
+- 相关文件：
+  - `<workspace>/AGENTS.md`
+  - `<workspace>/CHATTOOL.md`
+  - `<workspace>/MEMORY.md`
+  - `<workspace>/Memory/`
+  - `<workspace>/skills/`
+  - `<workspace>/scratch/`
+  - `<workspace>/chattool/`
+
+预期过程和结果：
+  1. 执行 `chattool setup playground --workspace-dir <workspace> --chattool-source <repo-or-url>`，预期在空目录下 clone `chattool/`。
+  2. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`。
+  3. 预期创建 `Memory/`、`skills/`、`scratch/`。
+  4. 预期从 `chattool/skills/` 复制 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool setup playground --workspace-dir /tmp/my-playground --chattool-source /path/to/ChatTool
 ```
 
 ## 清理 / 回滚
