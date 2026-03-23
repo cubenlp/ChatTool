@@ -38,6 +38,8 @@ CLI按功能分为几个命令组：
 chattool setup codex
 ```
 
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
+
 直接传参：
 
 ```bash
@@ -47,7 +49,7 @@ chattool setup codex --pam "cr_xxx"
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.3-codex"
+chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 ### 0.2 Claude Code (`setup claude`)
@@ -58,6 +60,8 @@ chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --mo
 chattool setup claude
 ```
 
+命令同样会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续收集 Claude Code 配置。
+
 直接传参：
 
 ```bash
@@ -67,7 +71,7 @@ chattool setup claude --auth-token "sk-ant-xxx"
 可选覆盖 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_SMALL_FAST_MODEL`：
 
 ```bash
-chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-3-5-haiku-20241022"
+chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-opus-4-6"
 ```
 
 ### 0.3 OpenCode (`setup opencode`)
@@ -77,6 +81,8 @@ chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/
 ```bash
 chattool setup opencode
 ```
+
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 OpenCode 的配置流程。
 
 直接传参：
 

@@ -71,9 +71,9 @@ chattool setup nodejs -i
   - 可能生成的配置文件。
 
 预期过程和结果：
-  1. 执行 `chattool setup codex -i`，预期进入交互式配置流程。
-  2. 执行 `chattool setup claude -i`，预期进入交互式配置流程。
-  3. 执行 `chattool setup opencode -i`，预期进入交互式配置流程。
+  1. 执行 `chattool setup codex -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  2. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  3. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
 
 参考执行脚本（伪代码）：
 
