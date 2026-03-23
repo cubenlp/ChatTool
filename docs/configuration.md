@@ -144,8 +144,13 @@ BaseEnvConfig.print_config()
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
-- **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID` 等
+- **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID`, `FEISHU_TEST_USER_ID`, `FEISHU_TEST_USER_ID_TYPE` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
+
+其中飞书相关有两个额外约定：
+
+- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` / `notify-doc` 提供默认发送目标。
+- `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE`：给 `@pytest.mark.lark` 真实测试提供统一测试用户，推荐配合 `chatenv cat -t feishu` 一起查看。
 
 ## SVG 转 GIF 服务配置
 

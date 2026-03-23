@@ -23,6 +23,8 @@
 - 以模块化配置对象组织，支持按功能扩展。
 - 凡是已经注册到 `src/chattool/config/` 的配置项，业务代码与 CLI 默认值读取都应优先走配置对象（如 `OpenAIConfig.OPENAI_API_KEY.value`），不能只直接读取 `os.environ`。
 - 这样才能保证 `chattool ...` 与独立入口（如 `chatskill`）都能正确读取 `chatenv` 管理的 `.env` 默认值。
+- `chatenv cat -t <type>` 展示的也应是这套“生效值”，而不是只机械打印 `.env` 文件里已有的行；开发时不要把它理解成纯文件查看器。
+- 运行时通过 `BaseEnvConfig.set()` 做的是当前进程内覆盖，不会自动回写 `.env`，也不改变系统环境变量；开发时不要把它误当成配置持久化机制。
 
 ### 3) `tools/`（核心能力）
 
@@ -140,6 +142,8 @@ INFO: Start opencode setup
 - **测试分类与隔离**：
   - **集成/真实测试（Real）**：功能开发完成后，必须包含与真实环境交互的测试以确保可用性。应标记为 `@pytest.mark.e2e`。
   - **原则**：当前以 CLI 真实测试为主，优先保证关键命令链路稳定。
+- 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。
+- 如果测试依赖接收者、测试账号或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`，而不是在测试里硬编码。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
@@ -176,4 +180,6 @@ INFO: Start opencode setup
 ## 规范文档
 
 - [目录职责说明](directory-responsibilities.md)：目录边界、依赖方向与归位规则。
+- [架构概览与设计特点](architecture-overview.md)：分层结构、设计目标、能力沉淀路径与架构优势。
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。
+- [飞书能力设计](../design/feishu/index.md)：`chattool lark`、`skills/feishu/` 与 Feishu 专题 skill 的目标形态。

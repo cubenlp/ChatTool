@@ -155,7 +155,9 @@ nav:
   - 开发指南:
     - 开发指南: development-guide/index.md
     - 目录职责说明: development-guide/directory-responsibilities.md
+    - 架构概览与设计特点: development-guide/architecture-overview.md
     - 任务驱动沉淀: development-guide/task-driven-iteration.md
+    - 飞书能力设计: design/feishu/index.md
     - 创建 Python 包: development-guide/create-python-package.md
     - Python 库仓库构成设计: design/python-library-repo-structure.md
     - ChatTool PyPI CLI 设计: design/chattool-pypi-cli-design.md

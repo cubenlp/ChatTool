@@ -17,6 +17,12 @@
 - 在本地终端调试 AI 会话：`chat`
 - 创建云文档并通知目标用户：`notify-doc`
 
+如果你的目标是继续扩展 Feishu 能力，而不是只执行现有命令，请先同时阅读：
+
+- `skills/feishu/SKILL.md`
+- `skills/feishu/docs/api-reference.md`
+- `docs/design/feishu/index.md`
+
 ## 前置准备
 
 先安装工具依赖：
@@ -50,6 +56,13 @@ chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
 ```
 
 配置后，`chattool lark send` 可以省略接收者参数。
+
+如果你要跑真实的飞书测试，建议同时配置：
+
+```bash
+chattool env set FEISHU_TEST_USER_ID=f25gc16d
+chattool env set FEISHU_TEST_USER_ID_TYPE=user_id
+```
 
 ## `-e/--env`
 
@@ -215,7 +228,14 @@ chattool lark chat --user debug_user
 
 ## 云文档
 
-除了消息收发，`chattool lark` 现在也支持一组最小云文档命令，基于飞书开放平台的 `docx` 服务端接口。
+除了消息收发，`chattool lark` 现在也支持一组云文档命令，基于飞书开放平台的 `docx` 服务端接口。
+
+这组能力建议按双轨理解：
+
+- 稳定正文轨：`notify-doc`、`doc append-text`、`doc append-file`
+- 结构化 docx 轨：`doc parse-md`、`doc append-json`
+
+前者优先保证写入成功率，后者面向标题、列表、代码块、引用块等结构化能力。
 
 如果你想“一步创建文档并通知到人”，可以直接用：
 
@@ -262,6 +282,17 @@ chattool lark doc blocks doccnxxxxxxxxxxxx --descendants
 chattool lark doc append-text doccnxxxxxxxxxxxx "今天完成了接口整理"
 ```
 
+### 从本地文件追加正文
+
+```bash
+chattool lark doc parse-md ./daily.md
+chattool lark doc parse-md ./daily.md -o ./daily.blocks.json
+chattool lark doc append-json doccnxxxxxxxxxxxx ./daily.blocks.json
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.txt
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md --batch-size 10
+```
+
 ### 创建后直接通知
 
 ```bash
@@ -269,16 +300,35 @@ chattool lark notify-doc "会议纪要" "这里是会议摘要"
 chattool lark notify-doc "发布说明" "这里是更新内容" --receiver f25gc16d
 chattool lark notify-doc "日报" --append-file ./daily.md
 chattool lark notify-doc "日报" --append-file ./daily.md --open
+chattool lark notify-doc "日报" --append-file ./daily.md --batch-size 10
 ```
 
 说明：
 
-- `--append-file` 会读取本地 `txt/md` 文件，并按非空行追加到文档正文
+- `chattool lark doc append-file` 适合往已有文档追加本地 `txt/md` 文件
+- `chattool lark doc parse-md` 适合先检查 Markdown 将映射成哪些飞书 block
+- `chattool lark doc append-json` 适合直接消费结构化 block JSON 写入文档
+- `notify-doc --append-file` 适合创建文档、写入正文并把链接发给指定用户
+- `.md` 文件在 `append-file` 这条命令里会先整理为飞书兼容的纯文本段落，再写入文档
+- 批量写入失败时，CLI 会自动回退到单段写入，降低 `field validation failed` 这类错误的影响
 - `--open` 会在发送成功后本地打开文档链接
 
 !!! note "当前范围"
     这一版先覆盖最常用的文档基础能力：创建、查询、取纯文本、查看块和追加文本。  
     后续如果要继续扩，可以沿着 `chattool lark doc ...` 这条线补 `update`、`delete children`、`convert` 或 drive/wiki 相关命令。
+
+## API Reference
+
+扩 CLI 时，优先查 Feishu 官方文档，而不是先写脚本试错：
+
+- 发消息：`https://open.feishu.cn/document/server-docs/im-v1/message/create`
+- 回复消息：`https://open.feishu.cn/document/server-docs/im-v1/message/reply`
+- 上传图片：`https://open.feishu.cn/document/server-docs/im-v1/image/create`
+- 上传文件：`https://open.feishu.cn/document/server-docs/im-v1/file/create`
+- 创建文档：`https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/create`
+- 创建 docx block：`https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/create`
+
+如果当前能力缺口具有复用价值，优先把结果沉淀回 `src/chattool/tools/lark/` 和 `skills/feishu/`。
 
 ## 常见排查顺序
 
