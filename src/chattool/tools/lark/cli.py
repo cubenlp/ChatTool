@@ -11,7 +11,9 @@ import os
 import json
 import re
 import sys
+import time
 from pathlib import Path
+from datetime import datetime, timezone
 import click
 from collections import defaultdict
 
@@ -188,6 +190,125 @@ def _append_doc_paragraphs(bot, document_id, paragraphs, block_id=None, index=No
         index=index,
         batch_size=batch_size,
     )
+
+
+def _response_json(resp) -> dict:
+    raw = getattr(getattr(resp, "raw", None), "content", None)
+    if raw is None:
+        return {}
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8", errors="replace")
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
+
+def _print_json(payload: dict | list) -> None:
+    click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+def _load_json_file(path: str) -> object:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _require_dict_payload(path: str, label: str) -> dict:
+    payload = _load_json_file(path)
+    if not isinstance(payload, dict):
+        raise click.ClickException(f"{label} JSON 顶层必须是对象")
+    return payload
+
+
+def _require_list_payload(path: str, label: str) -> list:
+    payload = _load_json_file(path)
+    if not isinstance(payload, list):
+        raise click.ClickException(f"{label} JSON 顶层必须是数组")
+    return payload
+
+
+def _parse_iso_datetime(value: str, label: str) -> datetime:
+    normalized = value.strip()
+    if normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise click.ClickException(
+            f"{label} 时间格式无效: {value}。请使用 ISO8601，例如 2026-03-24T14:00:00+08:00"
+        ) from exc
+    if dt.tzinfo is None:
+        raise click.ClickException(
+            f"{label} 必须包含时区信息，例如 2026-03-24T14:00:00+08:00"
+        )
+    return dt
+
+
+def _iso_to_unix_seconds(value: str, label: str) -> int:
+    return int(_parse_iso_datetime(value, label).timestamp())
+
+
+def _iso_to_time_info(value: str, label: str) -> dict[str, str]:
+    dt = _parse_iso_datetime(value, label)
+    tz_name = dt.tzname() or "UTC"
+    return {
+        "timestamp": str(int(dt.timestamp())),
+        "timezone": tz_name,
+    }
+
+
+def _extract_json_path(payload: dict, *path: str):
+    current = payload
+    for key in path:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+        if current is None:
+            return None
+    return current
+
+
+def _resolve_calendar_id(bot, calendar_id: str | None, user_id_type: str) -> str:
+    if calendar_id:
+        return calendar_id
+
+    resp = bot.get_primary_calendar(user_id_type=user_id_type)
+    if _print_lark_error("获取默认日历", resp):
+        raise click.Abort()
+
+    payload = _response_json(resp)
+    resolved = (
+        _extract_json_path(payload, "data", "calendar", "calendar_id")
+        or _extract_json_path(payload, "data", "primary_calendar", "calendar_id")
+        or _extract_json_path(payload, "data", "calendar_id")
+    )
+    if not resolved:
+        raise click.ClickException("未能从返回结果中解析默认 calendar_id")
+    return resolved
+
+
+def _get_test_user_member() -> dict | None:
+    user_id = FeishuConfig.FEISHU_TEST_USER_ID.value or None
+    if not user_id:
+        return None
+    return {
+        "id": user_id,
+        "type": FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id",
+        "role": "assignee",
+    }
+
+
+def _print_topic_result(title: str, payload: dict) -> None:
+    click.secho(f"✅ {title}", fg="green")
+    _print_json(payload)
+
+
+def _granted_scope_names(resp) -> list[str]:
+    scopes = getattr(getattr(resp, "data", None), "scopes", None) or []
+    names = []
+    for scope in scopes:
+        if getattr(scope, "grant_status", None) == 1 and getattr(scope, "scope_name", None):
+            names.append(scope.scope_name)
+    return names
 
 
 # ------------------------------------------------------------------
@@ -782,6 +903,952 @@ def doc_append_json(document_id, path, env_ref, block_id, index, batch_size):
         click.echo(f"revision   : {revision_id}")
     children = getattr(resp.data, "children", None) or []
     click.echo(f"children   : {len(children)}")
+
+
+# ------------------------------------------------------------------
+# chattool lark bitable
+# ------------------------------------------------------------------
+
+@cli.group()
+def bitable():
+    """飞书多维表格工具"""
+    pass
+
+
+@bitable.group()
+def app():
+    """Bitable app 相关命令"""
+    pass
+
+
+@app.command("create")
+@click.argument("name")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--folder-token", default=None, help="可选：父文件夹 token")
+@click.option("--time-zone", default=None, help="可选：表格时区，例如 Asia/Shanghai")
+def bitable_app_create(name, env_ref, folder_token, time_zone):
+    """创建 Bitable app"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.create_bitable_app(name, folder_token=folder_token, time_zone=time_zone)
+    if _print_lark_error("创建 Bitable app", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("Bitable app 创建成功", payload)
+
+
+@bitable.group()
+def table():
+    """Bitable table 相关命令"""
+    pass
+
+
+@table.command("list")
+@click.argument("app_token")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--page-size", type=int, default=100, show_default=True)
+@click.option("--page-token", default=None)
+def bitable_table_list(app_token, env_ref, page_size, page_token):
+    """列出 Bitable app 下的数据表"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_bitable_tables(app_token, page_size=page_size, page_token=page_token)
+    if _print_lark_error("列出数据表", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("数据表列表获取成功", payload)
+
+
+@table.command("create")
+@click.argument("app_token")
+@click.argument("name")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--default-view-name", default=None, help="默认视图名称")
+@click.option("--fields-json", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="可选：初始字段数组 JSON")
+def bitable_table_create(app_token, name, env_ref, default_view_name, fields_json):
+    """创建数据表"""
+    _load_runtime_env(env_ref)
+    fields = None
+    if fields_json:
+        fields = _require_list_payload(fields_json, "fields")
+    bot = _get_bot()
+    resp = bot.create_bitable_table(
+        app_token,
+        name,
+        default_view_name=default_view_name,
+        fields=fields,
+    )
+    if _print_lark_error("创建数据表", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("数据表创建成功", payload)
+
+
+@bitable.group()
+def field():
+    """Bitable field 相关命令"""
+    pass
+
+
+@field.command("list")
+@click.argument("app_token")
+@click.argument("table_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--page-size", type=int, default=100, show_default=True)
+@click.option("--page-token", default=None)
+def bitable_field_list(app_token, table_id, env_ref, page_size, page_token):
+    """列出字段"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_bitable_fields(
+        app_token,
+        table_id,
+        page_size=page_size,
+        page_token=page_token,
+    )
+    if _print_lark_error("列出字段", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("字段列表获取成功", payload)
+
+
+@field.command("create")
+@click.argument("app_token")
+@click.argument("table_id")
+@click.argument("field_name")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--type", "field_type", type=int, required=True, help="飞书字段类型整数值")
+@click.option("--property-json", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="可选：字段 property JSON")
+@click.option("--description-json", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="可选：字段 description JSON")
+@click.option("--ui-type", default=None, help="可选：字段 UI 类型")
+@click.option("--primary", is_flag=True, help="设为主字段")
+@click.option("--hidden", is_flag=True, help="设为隐藏字段")
+def bitable_field_create(
+    app_token,
+    table_id,
+    field_name,
+    env_ref,
+    field_type,
+    property_json,
+    description_json,
+    ui_type,
+    primary,
+    hidden,
+):
+    """创建字段"""
+    _load_runtime_env(env_ref)
+    property_payload = _require_dict_payload(property_json, "property") if property_json else None
+    description_payload = _require_dict_payload(description_json, "description") if description_json else None
+    bot = _get_bot()
+    resp = bot.create_bitable_field(
+        app_token,
+        table_id,
+        field_name,
+        field_type,
+        property=property_payload,
+        description=description_payload,
+        ui_type=ui_type,
+        is_primary=True if primary else None,
+        is_hidden=True if hidden else None,
+    )
+    if _print_lark_error("创建字段", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("字段创建成功", payload)
+
+
+@bitable.group()
+def record():
+    """Bitable record 相关命令"""
+    pass
+
+
+@record.command("list")
+@click.argument("app_token")
+@click.argument("table_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+@click.option("--page-size", type=int, default=100, show_default=True)
+@click.option("--page-token", default=None)
+def bitable_record_list(app_token, table_id, env_ref, user_id_type, page_size, page_token):
+    """列出记录"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_bitable_records(
+        app_token,
+        table_id,
+        page_size=page_size,
+        page_token=page_token,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("列出记录", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("记录列表获取成功", payload)
+
+
+@record.command("create")
+@click.argument("app_token")
+@click.argument("table_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--json", "json_path", type=click.Path(exists=True, dir_okay=False), required=True,
+              help="记录字段 JSON")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def bitable_record_create(app_token, table_id, env_ref, json_path, user_id_type):
+    """创建一条记录"""
+    _load_runtime_env(env_ref)
+    fields = _require_dict_payload(json_path, "record")
+    bot = _get_bot()
+    resp = bot.create_bitable_record(
+        app_token,
+        table_id,
+        fields=fields,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("创建记录", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("记录创建成功", payload)
+
+
+@record.command("batch-create")
+@click.argument("app_token")
+@click.argument("table_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--json", "json_path", type=click.Path(exists=True, dir_okay=False), required=True,
+              help="记录数组 JSON，每一项是 fields 对象")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def bitable_record_batch_create(app_token, table_id, env_ref, json_path, user_id_type):
+    """批量创建记录"""
+    _load_runtime_env(env_ref)
+    records_payload = _require_list_payload(json_path, "records")
+    if not all(isinstance(item, dict) for item in records_payload):
+        raise click.ClickException("records JSON 必须是对象数组")
+    bot = _get_bot()
+    resp = bot.batch_create_bitable_records(
+        app_token,
+        table_id,
+        records=records_payload,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("批量创建记录", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("记录批量创建成功", payload)
+
+
+# ------------------------------------------------------------------
+# chattool lark calendar
+# ------------------------------------------------------------------
+
+@cli.group()
+def calendar():
+    """飞书日历工具"""
+    pass
+
+
+@calendar.command("primary")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_primary(env_ref, user_id_type):
+    """查看默认日历"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.get_primary_calendar(user_id_type=user_id_type)
+    if _print_lark_error("获取默认日历", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("默认日历获取成功", payload)
+
+
+@calendar.group()
+def event():
+    """Calendar event 相关命令"""
+    pass
+
+
+@event.command("create")
+@click.option("--summary", required=True, help="日程标题")
+@click.option("--start", "start_value", required=True,
+              help="开始时间，ISO8601，例如 2026-03-24T14:00:00+08:00")
+@click.option("--end", "end_value", required=True,
+              help="结束时间，ISO8601，例如 2026-03-24T15:00:00+08:00")
+@click.option("--description", default=None, help="可选：日程描述")
+@click.option("--calendar-id", default=None, help="可选：日历 ID，默认自动取 primary")
+@click.option("--need-notification/--no-need-notification", default=None,
+              help="可选：是否触发通知")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_event_create(
+    summary,
+    start_value,
+    end_value,
+    description,
+    calendar_id,
+    need_notification,
+    env_ref,
+    user_id_type,
+):
+    """创建日程"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resolved_calendar_id = _resolve_calendar_id(bot, calendar_id, user_id_type)
+    resp = bot.create_calendar_event(
+        resolved_calendar_id,
+        summary=summary,
+        start_time=_iso_to_time_info(start_value, "start"),
+        end_time=_iso_to_time_info(end_value, "end"),
+        description=description,
+        need_notification=need_notification,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("创建日程", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("日程创建成功", payload)
+
+
+@event.command("list")
+@click.option("--start", "start_value", required=True,
+              help="开始时间，ISO8601")
+@click.option("--end", "end_value", required=True,
+              help="结束时间，ISO8601")
+@click.option("--calendar-id", default=None, help="可选：日历 ID，默认自动取 primary")
+@click.option("--page-size", type=int, default=50, show_default=True)
+@click.option("--page-token", default=None)
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_event_list(start_value, end_value, calendar_id, page_size, page_token, env_ref, user_id_type):
+    """列出时间范围内的日程"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resolved_calendar_id = _resolve_calendar_id(bot, calendar_id, user_id_type)
+    resp = bot.list_calendar_events(
+        resolved_calendar_id,
+        start_time=str(_iso_to_unix_seconds(start_value, "start")),
+        end_time=str(_iso_to_unix_seconds(end_value, "end")),
+        page_size=page_size,
+        page_token=page_token,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("列出日程", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("日程列表获取成功", payload)
+
+
+@event.command("get")
+@click.argument("event_id")
+@click.option("--calendar-id", default=None, help="可选：日历 ID，默认自动取 primary")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_event_get(event_id, calendar_id, env_ref, user_id_type):
+    """获取单个日程"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resolved_calendar_id = _resolve_calendar_id(bot, calendar_id, user_id_type)
+    resp = bot.get_calendar_event(
+        resolved_calendar_id,
+        event_id=event_id,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("获取日程", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("日程获取成功", payload)
+
+
+@event.command("patch")
+@click.argument("event_id")
+@click.option("--summary", default=None, help="可选：新标题")
+@click.option("--start", "start_value", default=None, help="可选：新开始时间，ISO8601")
+@click.option("--end", "end_value", default=None, help="可选：新结束时间，ISO8601")
+@click.option("--description", default=None, help="可选：新描述")
+@click.option("--calendar-id", default=None, help="可选：日历 ID，默认自动取 primary")
+@click.option("--need-notification/--no-need-notification", default=None,
+              help="可选：是否触发通知")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_event_patch(
+    event_id,
+    summary,
+    start_value,
+    end_value,
+    description,
+    calendar_id,
+    need_notification,
+    env_ref,
+    user_id_type,
+):
+    """更新日程"""
+    if not any([summary, start_value, end_value, description, need_notification is not None]):
+        raise click.ClickException("请至少提供一个更新项，如 --summary / --start / --end / --description")
+
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resolved_calendar_id = _resolve_calendar_id(bot, calendar_id, user_id_type)
+    resp = bot.patch_calendar_event(
+        resolved_calendar_id,
+        event_id=event_id,
+        summary=summary,
+        start_time=_iso_to_time_info(start_value, "start") if start_value else None,
+        end_time=_iso_to_time_info(end_value, "end") if end_value else None,
+        description=description,
+        need_notification=need_notification,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("更新日程", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("日程更新成功", payload)
+
+
+@event.command("reply")
+@click.argument("event_id")
+@click.option("--status", required=True,
+              type=click.Choice(["accept", "decline", "tentative"], case_sensitive=False))
+@click.option("--calendar-id", default=None, help="可选：日历 ID，默认自动取 primary")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_event_reply(event_id, status, calendar_id, env_ref, user_id_type):
+    """回复日程邀请"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resolved_calendar_id = _resolve_calendar_id(bot, calendar_id, user_id_type)
+    resp = bot.reply_calendar_event(
+        resolved_calendar_id,
+        event_id=event_id,
+        rsvp_status=status.lower(),
+    )
+    if _print_lark_error("回复日程邀请", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("日程邀请回复成功", payload)
+
+
+@calendar.group()
+def freebusy():
+    """freebusy 相关命令"""
+    pass
+
+
+@freebusy.command("list")
+@click.option("--start", "start_value", required=True, help="开始时间，ISO8601")
+@click.option("--end", "end_value", required=True, help="结束时间，ISO8601")
+@click.option("--json", "json_path", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="用户/会议室 JSON。可传数组，或 {\"user_ids\": [...], \"room_ids\": [...]} 对象")
+@click.option("--include-external-calendar", is_flag=True, help="包含外部日历")
+@click.option("--only-busy", is_flag=True, help="仅返回 busy 段")
+@click.option("--need-rsvp-status", is_flag=True, help="返回 RSVP 状态")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def calendar_freebusy_list(
+    start_value,
+    end_value,
+    json_path,
+    include_external_calendar,
+    only_busy,
+    need_rsvp_status,
+    env_ref,
+    user_id_type,
+):
+    """查询忙闲"""
+    _load_runtime_env(env_ref)
+
+    user_ids = None
+    room_ids = None
+    if json_path:
+        payload = _load_json_file(json_path)
+        if isinstance(payload, list):
+            user_ids = payload
+        elif isinstance(payload, dict):
+            user_ids = payload.get("user_ids")
+            room_ids = payload.get("room_ids")
+        else:
+            raise click.ClickException("freebusy JSON 必须是数组或对象")
+    else:
+        test_user = FeishuConfig.FEISHU_TEST_USER_ID.value or None
+        if test_user:
+            user_ids = [test_user]
+        else:
+            raise click.ClickException("请通过 --json 提供用户列表，或先配置 FEISHU_TEST_USER_ID")
+
+    bot = _get_bot()
+    resp = bot.list_freebusy(
+        time_min=str(_iso_to_unix_seconds(start_value, "start")),
+        time_max=str(_iso_to_unix_seconds(end_value, "end")),
+        user_ids=user_ids,
+        room_ids=room_ids,
+        include_external_calendar=include_external_calendar,
+        only_busy=only_busy,
+        need_rsvp_status=need_rsvp_status,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("查询忙闲", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("忙闲信息获取成功", payload)
+
+
+# ------------------------------------------------------------------
+# chattool lark task
+# ------------------------------------------------------------------
+
+@cli.group()
+def task():
+    """飞书任务工具"""
+    pass
+
+
+@task.command("create")
+@click.option("--summary", required=True, help="任务标题")
+@click.option("--description", default=None, help="任务描述")
+@click.option("--due", default=None, help="截止时间，ISO8601")
+@click.option("--all-day", is_flag=True, help="截止时间按全天处理")
+@click.option("--members-json", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="成员数组 JSON")
+@click.option("--add-test-user", is_flag=True, help="将 FEISHU_TEST_USER_ID 作为 assignee 加入任务")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_create(summary, description, due, all_day, members_json, add_test_user, env_ref, user_id_type):
+    """创建任务"""
+    _load_runtime_env(env_ref)
+    members = _require_list_payload(members_json, "members") if members_json else []
+    if add_test_user:
+        test_member = _get_test_user_member()
+        if not test_member:
+            raise click.ClickException("未配置 FEISHU_TEST_USER_ID，无法使用 --add-test-user")
+        members.append(test_member)
+
+    bot = _get_bot()
+    resp = bot.create_task(
+        summary=summary,
+        description=description,
+        due_timestamp=_iso_to_unix_seconds(due, "due") if due else None,
+        due_is_all_day=all_day,
+        members=members or None,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("创建任务", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务创建成功", payload)
+
+
+@task.command("list")
+@click.option("--completed/--open", default=False, help="列出已完成任务或未完成任务")
+@click.option("--page-size", type=int, default=50, show_default=True)
+@click.option("--page-token", default=None)
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_list(completed, page_size, page_token, env_ref, user_id_type):
+    """列出任务"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_tasks(
+        completed=completed,
+        page_size=page_size,
+        page_token=page_token,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("列出任务", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务列表获取成功", payload)
+
+
+@task.command("get")
+@click.argument("task_guid")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_get(task_guid, env_ref, user_id_type):
+    """获取单个任务"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.get_task(task_guid, user_id_type=user_id_type)
+    if _print_lark_error("获取任务", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务获取成功", payload)
+
+
+@task.command("patch")
+@click.argument("task_guid")
+@click.option("--summary", default=None, help="可选：新标题")
+@click.option("--description", default=None, help="可选：新描述")
+@click.option("--completed-at", default=None, help="完成时间，ISO8601")
+@click.option("--due", default=None, help="新截止时间，ISO8601")
+@click.option("--all-day", is_flag=True, help="截止时间按全天处理")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_patch(task_guid, summary, description, completed_at, due, all_day, env_ref, user_id_type):
+    """更新任务"""
+    if not any([summary, description, completed_at, due]):
+        raise click.ClickException("请至少提供一个更新项，如 --summary / --description / --completed-at / --due")
+
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.patch_task(
+        task_guid=task_guid,
+        summary=summary,
+        description=description,
+        completed_at=_iso_to_unix_seconds(completed_at, "completed-at") if completed_at else None,
+        due_timestamp=_iso_to_unix_seconds(due, "due") if due else None,
+        due_is_all_day=all_day,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("更新任务", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务更新成功", payload)
+
+
+@task.group("tasklist")
+def task_tasklist():
+    """tasklist 相关命令"""
+    pass
+
+
+@task_tasklist.command("create")
+@click.argument("name")
+@click.option("--members-json", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="成员数组 JSON")
+@click.option("--add-test-user", is_flag=True, help="将 FEISHU_TEST_USER_ID 作为成员加入清单")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_tasklist_create(name, members_json, add_test_user, env_ref, user_id_type):
+    """创建任务清单"""
+    _load_runtime_env(env_ref)
+    members = _require_list_payload(members_json, "members") if members_json else []
+    if add_test_user:
+        test_member = _get_test_user_member()
+        if not test_member:
+            raise click.ClickException("未配置 FEISHU_TEST_USER_ID，无法使用 --add-test-user")
+        members.append(test_member)
+
+    bot = _get_bot()
+    resp = bot.create_tasklist(name, members=members or None, user_id_type=user_id_type)
+    if _print_lark_error("创建任务清单", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务清单创建成功", payload)
+
+
+@task_tasklist.command("list")
+@click.option("--page-size", type=int, default=50, show_default=True)
+@click.option("--page-token", default=None)
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_tasklist_list(page_size, page_token, env_ref, user_id_type):
+    """列出任务清单"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_tasklists(page_size=page_size, page_token=page_token, user_id_type=user_id_type)
+    if _print_lark_error("列出任务清单", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务清单列表获取成功", payload)
+
+
+@task_tasklist.command("get")
+@click.argument("tasklist_guid")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_tasklist_get(tasklist_guid, env_ref, user_id_type):
+    """获取单个任务清单"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.get_tasklist(tasklist_guid, user_id_type=user_id_type)
+    if _print_lark_error("获取任务清单", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务清单获取成功", payload)
+
+
+@task_tasklist.command("tasks")
+@click.argument("tasklist_guid")
+@click.option("--completed/--open", default=False, help="列出已完成任务或未完成任务")
+@click.option("--page-size", type=int, default=50, show_default=True)
+@click.option("--page-token", default=None)
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_tasklist_tasks(tasklist_guid, completed, page_size, page_token, env_ref, user_id_type):
+    """列出清单中的任务"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_tasklist_tasks(
+        tasklist_guid=tasklist_guid,
+        completed=completed,
+        page_size=page_size,
+        page_token=page_token,
+        user_id_type=user_id_type,
+    )
+    if _print_lark_error("列出清单任务", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("清单任务列表获取成功", payload)
+
+
+@task_tasklist.command("add-members")
+@click.argument("tasklist_guid")
+@click.option("--json", "json_path", type=click.Path(exists=True, dir_okay=False), default=None,
+              help="成员数组 JSON")
+@click.option("--add-test-user", is_flag=True, help="将 FEISHU_TEST_USER_ID 作为成员加入清单")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--user-id-type", default="user_id",
+              type=click.Choice(["open_id", "user_id", "union_id"], case_sensitive=False))
+def task_tasklist_add_members(tasklist_guid, json_path, add_test_user, env_ref, user_id_type):
+    """为任务清单添加成员"""
+    _load_runtime_env(env_ref)
+    members = _require_list_payload(json_path, "members") if json_path else []
+    if add_test_user:
+        test_member = _get_test_user_member()
+        if not test_member:
+            raise click.ClickException("未配置 FEISHU_TEST_USER_ID，无法使用 --add-test-user")
+        members.append(test_member)
+    if not members:
+        raise click.ClickException("请通过 --json 提供成员数组，或使用 --add-test-user")
+
+    bot = _get_bot()
+    resp = bot.add_tasklist_members(tasklist_guid, members=members, user_id_type=user_id_type)
+    if _print_lark_error("添加任务清单成员", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("任务清单成员添加成功", payload)
+
+
+# ------------------------------------------------------------------
+# chattool lark im
+# ------------------------------------------------------------------
+
+@cli.group()
+def im():
+    """飞书消息读取工具"""
+    pass
+
+
+@im.command("list")
+@click.option("--chat-id", required=True, help="会话 chat_id")
+@click.option("--start-time", default=None, help="开始时间，ISO8601")
+@click.option("--end-time", default=None, help="结束时间，ISO8601")
+@click.option("--relative-hours", type=int, default=None,
+              help="相对当前时间向前回溯 N 小时；未显式传 start/end 时生效")
+@click.option("--page-size", type=int, default=20, show_default=True)
+@click.option("--page-token", default=None)
+@click.option("--sort", "sort_type", default=None, help="透传飞书 sort_type")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def im_list(chat_id, start_time, end_time, relative_hours, page_size, page_token, sort_type, env_ref):
+    """按 chat_id 列消息"""
+    _load_runtime_env(env_ref)
+    if relative_hours is not None and not start_time and not end_time:
+        now = int(time.time())
+        end_time = datetime.fromtimestamp(now, tz=timezone.utc).isoformat()
+        start_time = datetime.fromtimestamp(
+            now - relative_hours * 3600,
+            tz=timezone.utc,
+        ).isoformat()
+
+    bot = _get_bot()
+    resp = bot.list_messages(
+        container_id=chat_id,
+        container_id_type="chat",
+        start_time=str(_iso_to_unix_seconds(start_time, "start-time")) if start_time else None,
+        end_time=str(_iso_to_unix_seconds(end_time, "end-time")) if end_time else None,
+        sort_type=sort_type,
+        page_size=page_size,
+        page_token=page_token,
+    )
+    if _print_lark_error("列出消息", resp):
+        return
+    payload = _response_json(resp)
+    _print_topic_result("消息列表获取成功", payload)
+
+
+@im.command("download")
+@click.argument("message_id")
+@click.argument("file_key")
+@click.option("--type", "resource_type", required=True,
+              type=click.Choice(["image", "file", "audio", "video"], case_sensitive=False))
+@click.option("--output", type=click.Path(dir_okay=False), default=None,
+              help="输出文件路径，默认写到当前目录")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def im_download(message_id, file_key, resource_type, output, env_ref):
+    """下载消息资源"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.get_message_resource(message_id, file_key, resource_type.lower())
+    if _print_lark_error("下载消息资源", resp):
+        return
+
+    output_path = Path(output) if output else Path.cwd() / file_key
+    output_path.write_bytes(resp.raw.content)
+    click.secho("✅ 资源下载成功", fg="green")
+    click.echo(f"path      : {output_path}")
+    click.echo(f"bytes     : {len(resp.raw.content)}")
+
+
+# ------------------------------------------------------------------
+# chattool lark troubleshoot
+# ------------------------------------------------------------------
+
+@cli.group()
+def troubleshoot():
+    """飞书排障工具"""
+    pass
+
+
+@troubleshoot.command("check-scopes")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def troubleshoot_check_scopes(env_ref):
+    """检查关键 scope 分类"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.get_scopes()
+    if not resp.success():
+        click.secho(f"❌ 检查 scopes 失败: code={resp.code}  msg={resp.msg}", fg="red")
+        return
+
+    granted = _granted_scope_names(resp)
+    categories = {
+        "im": ["im:"],
+        "docx": ["docx:", "drive:"],
+        "bitable": ["bitable:"],
+        "calendar": ["calendar:"],
+        "task": ["task:"],
+    }
+
+    click.secho("✅ scopes 检查完成", fg="green")
+    for name, patterns in categories.items():
+        matches = [scope for scope in granted if any(pattern in scope for pattern in patterns)]
+        click.echo(f"{name:10}: {len(matches)}")
+        for scope in matches[:10]:
+            click.echo(f"  - {scope}")
+        if len(matches) > 10:
+            click.echo(f"  ... (+{len(matches) - 10})")
+
+
+@troubleshoot.command("check-events")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def troubleshoot_check_events(env_ref):
+    """检查事件订阅相关配置"""
+    _load_runtime_env(env_ref)
+    click.secho("✅ 事件订阅检查", fg="green")
+    click.echo(f"FEISHU_APP_ID         : {'set' if FeishuConfig.FEISHU_APP_ID.value else 'missing'}")
+    click.echo(f"FEISHU_APP_SECRET     : {'set' if FeishuConfig.FEISHU_APP_SECRET.value else 'missing'}")
+    click.echo(f"FEISHU_ENCRYPT_KEY    : {'set' if FeishuConfig.FEISHU_ENCRYPT_KEY.value else 'missing'}")
+    click.echo(f"FEISHU_VERIFY_TOKEN   : {'set' if FeishuConfig.FEISHU_VERIFY_TOKEN.value else 'missing'}")
+    click.echo("建议：")
+    click.echo("- 长连接调试优先使用 `chattool lark listen`。")
+    click.echo("- 若使用 HTTP webhook，再补 FEISHU_ENCRYPT_KEY / FEISHU_VERIFY_TOKEN。")
+    click.echo("- 飞书后台需开启事件订阅并发布配置。")
+
+
+@troubleshoot.command("check-card-action")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def troubleshoot_check_card_action(env_ref):
+    """检查卡片交互链路准备情况"""
+    _load_runtime_env(env_ref)
+    click.secho("✅ 卡片交互检查", fg="green")
+    click.echo(f"FEISHU_APP_ID         : {'set' if FeishuConfig.FEISHU_APP_ID.value else 'missing'}")
+    click.echo(f"FEISHU_APP_SECRET     : {'set' if FeishuConfig.FEISHU_APP_SECRET.value else 'missing'}")
+    click.echo("建议：")
+    click.echo("- 确保应用已开通卡片回传能力。")
+    click.echo("- 交互卡片消息建议先用 `chattool lark send --card ...` 发送，再观察回调日志。")
+    click.echo("- 若回调走 HTTP 模式，需要同步检查事件订阅与 webhook 配置。")
+
+
+@troubleshoot.command("doctor")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def troubleshoot_doctor(env_ref):
+    """执行飞书总体诊断"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+
+    info_resp = bot.get_bot_info()
+    if _print_lark_error("获取机器人信息", info_resp):
+        return
+
+    info_payload = _response_json(info_resp)
+    bot_info = info_payload.get("bot", {})
+    activate_status = bot_info.get("activate_status")
+    status_map = {1: "未激活", 2: "已激活", 3: "已停用"}
+
+    scopes_resp = bot.get_scopes()
+    if not scopes_resp.success():
+        click.secho(f"❌ 获取 scopes 失败: code={scopes_resp.code}  msg={scopes_resp.msg}", fg="red")
+        return
+
+    granted = _granted_scope_names(scopes_resp)
+    categories = {
+        "im": any(scope.startswith("im:") for scope in granted),
+        "docx/drive": any(scope.startswith("docx:") or scope.startswith("drive:") for scope in granted),
+        "bitable": any(scope.startswith("bitable:") for scope in granted),
+        "calendar": any(scope.startswith("calendar:") for scope in granted),
+        "task": any(scope.startswith("task:") for scope in granted),
+    }
+
+    click.secho("✅ Feishu doctor", fg="green")
+    click.echo(f"bot_name             : {bot_info.get('app_name', '—')}")
+    click.echo(f"bot_open_id          : {bot_info.get('open_id', '—')}")
+    click.echo(f"activate_status      : {status_map.get(activate_status, '未知')}")
+    click.echo(f"granted_scopes       : {len(granted)}")
+    for name, ok in categories.items():
+        click.echo(f"{name:20}: {'ok' if ok else 'missing'}")
+    click.echo(f"default_receiver     : {'set' if FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value else 'missing'}")
+    click.echo(f"test_user            : {'set' if FeishuConfig.FEISHU_TEST_USER_ID.value else 'missing'}")
+    click.echo(f"encrypt_key          : {'set' if FeishuConfig.FEISHU_ENCRYPT_KEY.value else 'missing'}")
+    click.echo(f"verify_token         : {'set' if FeishuConfig.FEISHU_VERIFY_TOKEN.value else 'missing'}")
 
 
 # ------------------------------------------------------------------
