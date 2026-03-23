@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [6.3.0]
 
 ### Changed
-- `skills/practice-make-perfact` 现在明确作为 ChatTool 仓库任务的默认开发流程：先执行任务，再做 review 与文档同步，并默认推进到 `chattool gh` 的 PR/MR 阶段
+- `skills/practice-make-perfact` 现在改为任务完成后的后处理工作流：回顾已有改动、提取可复用内容、串联 `chattool-dev-review`，再统一完成文档/测试/变更记录与 PR/MR 收尾
 - 开发流程现在明确要求把 scratch、临时试验产物与一次性导出结果放到仓库外独立目录，而不是放在仓库内
 - `skills/chattool-gh` 现在覆盖 `pr-check`、PR 后续维护与 CI 排查流程，并同步更新为当前 GitHub CLI 用法
 - `chattool setup nodejs` 现在改为写入仓库内置的 `nvm.sh` 与 shell 初始化块，不再通过 `curl` 从 GitHub 拉取 nvm 安装脚本

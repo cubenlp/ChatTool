@@ -30,6 +30,8 @@
 
 6. **任务后复盘**  
    - 做一次代码 review，统一命名、结构与文档。  
+   - 若需要把已完成任务统一整理成仓库规范，显式调用 `skills/practice-make-perfact/` 作为后处理阶段，而不是在任务开始前套流程。
+   - 在这个后处理阶段，默认串联 `skills/chattool-dev-review/` 做开发规范检查。
    - 更新导航（如 `mkdocs.yml`）与文档索引。
    - 将任务推进到 PR/MR 阶段，而不是只停留在本地提交。
    - GitHub 流程优先使用 `chattool gh`，包括 `pr-create`、`pr-update`、`pr-view` 等。
