@@ -1,39 +1,36 @@
 ---
 name: practice-make-perfact
-description: Default workflow for ChatTool development tasks. Use at the start of any ChatTool repo task with a light-touch reminder to stay task-first, then apply strict review, docs/tests/changelog sync, and chattool gh PR handling once implementation direction is clear.
-version: 0.1.0
+description: Post-task normalization workflow for ChatTool development. Use after implementation to review the completed work, extract reusable pieces into the repo, run $chattool-dev-review, and then drive docs/tests/changelog/PR updates through the project standards.
+version: 0.2.0
 ---
 
 # Practice Make Perfact
 
 ## Overview
 
-This is the default development workflow for ChatTool repository tasks.
+This is the post-task normalization workflow for ChatTool repository tasks.
 
-Use it before working on a ChatTool feature, fix, refactor, CLI change, skill update, or documentation-backed behavior change.
+Use it after finishing a ChatTool feature, fix, refactor, CLI change, skill update, or documentation-backed behavior change.
 
-Core idea: keep early exploration light, then switch to a strict normalization flow once the task direction is clear.
+Core idea: finish the task first, then explicitly enter a cleanup and extraction phase that turns useful outcomes into durable repository assets.
 
 ## Workflow
 
-1. Start from the task, not from process polish
-   - Read this skill first for ChatTool repo work.
-   - Then switch attention to the concrete user task.
-   - Prefer direct execution over early process discussion.
-   - Favor existing `chattool` CLI commands for reproducible read or export steps.
-   - Do not over-constrain early exploration, repo reading, or solution shaping.
-   - At this stage, this skill should act as a gentle orientation only.
-   - Use `playground/` as the default scratch area for temporary exploration artifacts.
+1. Enter only after the task basically works
+   - Do not use this as a pre-task reminder or exploration guide.
+   - Start once the implementation direction is already settled and the main task is materially complete.
+   - Treat this as an explicit post-processing phase.
 
-2. Finish implementation before broad normalization
-   - Make the feature, fix, or content change work first.
-   - Keep general/reusable capability in `src/`.
-   - Keep task-specific guidance in `skills/<name>/`.
-   - Do not over-document unfinished work.
+2. Review what was actually produced
+   - Read the current diff, changed files, and any temporary outputs created during the task.
+   - Separate durable outcomes from scratch artifacts.
+   - Keep temporary exploration material outside the repository unless there is a clear reason to preserve it.
 
-3. Turn strict only after the path is clear
-   - Once implementation has started or the solution direction is settled, switch into the full normalization flow.
-   - Before that point, avoid interrupting exploration with heavyweight process steps.
+3. Extract reusable content into the right repository locations
+   - Move general or reusable capability into `src/`.
+   - Move task-specific guidance into `skills/<name>/`.
+   - Promote only durable outputs into `docs/`, tests, or source files.
+   - Normalize naming, placement, and file boundaries so the repository stays coherent.
 
 4. Run the mandatory post-task review
    - Review the actual diff, not the whole repo by default.
@@ -41,7 +38,7 @@ Core idea: keep early exploration light, then switch to a strict normalization f
    - Check missing-arg auto interactive behavior and `-i/-I`.
    - Check new prompts use `utils/tui.py` where appropriate.
    - Check tests, docs, `README.md`, `CHANGELOG.md`, and `cli-tests` moved with the change.
-   - If relevant, use `$chattool-dev-review` for this pass.
+   - Always call `$chattool-dev-review` for this pass unless the user explicitly asks not to.
 
 5. Normalize deliverables
    - Add or update docs under `docs/`.
@@ -50,7 +47,7 @@ Core idea: keep early exploration light, then switch to a strict normalization f
    - If a skill is added or updated, maintain both `SKILL.md` and `SKILL.zh.md`.
    - Keep skill frontmatter aligned, including `version`.
    - Keep directory structure flat and intentional.
-   - Move only durable outputs out of `playground/`; leave scratch exploration there.
+   - Only bring durable outputs back into the repository after they are normalized into the right docs, tests, or source locations.
 
 6. Carry the task through PR/MR stage
    - Ensure the branch is committed and pushed.
@@ -61,11 +58,12 @@ Core idea: keep early exploration light, then switch to a strict normalization f
 
 7. Only stop early when explicitly asked
    - If the user wants analysis only, brainstorming only, or a partial checkpoint, respect that.
-   - Otherwise, default to the full task-first -> review -> PR workflow.
+   - Otherwise, default to the full post-task cleanup -> review -> PR workflow.
 
 ## Output Expectations
 
 - Skills must include `SKILL.md` and `SKILL.zh.md`.
-- Treat this as a living workflow for every ChatTool development task.
-- Early exploration should feel minimally constrained.
+- Treat this as a post-processing workflow, not an exploration workflow.
+- It should help the model look back at completed work, extract the useful parts, and normalize them into the repository.
+- It should explicitly chain into `$chattool-dev-review` to enforce development standards.
 - The expected resting point is usually an updated PR/MR, not just local edits.

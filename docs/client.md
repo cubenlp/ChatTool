@@ -265,6 +265,9 @@ chattool gh pr-list --state open --limit 20
 # 查看 PR 详情
 chattool gh pr-view --number 123
 
+# 查看 PR 的 CI / checks 状态
+chattool gh pr-check --number 123
+
 # 创建 PR
 chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
 
@@ -277,6 +280,27 @@ chattool gh pr-merge --number 123 --method squash --confirm
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 ```
+
+`pr-check` 会按 PR 的 head commit 汇总三层信息，适合排查 CI：
+
+- combined status
+- check runs
+- workflow runs
+
+需要机器可读结果时可加 `--json-output`。
+
+### 4.3 API Reference
+
+后续扩展 `chattool gh` 时，优先查这些官方文档：
+
+- GitHub REST API 根文档: https://docs.github.com/en/rest
+- Pull requests API: https://docs.github.com/en/rest/pulls/pulls
+- Check runs API: https://docs.github.com/en/rest/checks/runs
+- Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
+- Commit statuses API: https://docs.github.com/en/rest/commits/statuses
+- PyGithub 文档: https://pygithub.readthedocs.io/
+- PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
+- PyGithub `Repository` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html
 
 ---
 

@@ -107,7 +107,7 @@ Repository = "https://github.com/cubenlp/chattool"
 chattool = "chattool.client:main_cli"
 chatenv = "chattool.config.cli:cli"
 mcp-server-chattool = "chattool.mcp:main"
-chatskill = "chattool.skills.cli:main"
+chatskill = "chattool.skill.cli:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "chattool.__version__"}
@@ -117,6 +117,9 @@ where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.package-data]
+"chattool.setup" = ["assets/*.sh"]
 
 [tool.pytest.ini_options]
 markers = [

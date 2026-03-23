@@ -53,7 +53,7 @@ chattool setup alias --dry-run
 预期过程和结果：
   1. 执行 `chattool setup chrome -i`，预期进入交互式安装流程。
   2. 执行 `chattool setup frp -i`，预期进入交互式安装流程。
-  3. 执行 `chattool setup nodejs -i`，预期进入交互式安装流程。
+  3. 执行 `chattool setup nodejs -i`，预期进入交互式安装流程，并在缺少 `~/.nvm/nvm.sh` 时直接写入内置的 `nvm.sh`。
 
 参考执行脚本（伪代码）：
 

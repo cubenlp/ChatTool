@@ -191,12 +191,36 @@ def _prompt_platform_options() -> dict[str, str]:
     return options
 
 
+def _get_feishu_candidate_options() -> dict[str, str]:
+    from chattool.config import FeishuConfig
+
+    candidates: dict[str, str] = {}
+    if FeishuConfig.FEISHU_APP_ID.value:
+        candidates["app_id"] = str(FeishuConfig.FEISHU_APP_ID.value)
+    if FeishuConfig.FEISHU_APP_SECRET.value:
+        candidates["app_secret"] = str(FeishuConfig.FEISHU_APP_SECRET.value)
+    return candidates
+
+
 def _prompt_platform_credentials(platform: str, existing: dict[str, str] | None) -> dict[str, str]:
     existing = existing or {}
     if platform == "feishu":
-        app_id_default = existing.get("app_id") or ""
+        prompt_defaults = dict(_get_feishu_candidate_options())
+        prompt_defaults.update(existing)
+        if prompt_defaults and prompt_defaults != existing:
+            masked = {
+                key: (_mask_value(value) if _is_sensitive_key(key) else value)
+                for key, value in prompt_defaults.items()
+            }
+            click.echo(f"检测到 chatenv 飞书配置候选: {masked}")
+
+        app_id_default = prompt_defaults.get("app_id") or ""
         app_id = click.prompt("app_id", default=app_id_default)
-        app_secret = click.prompt("app_secret", hide_input=True, confirmation_prompt=True)
+        app_secret_default = prompt_defaults.get("app_secret") or ""
+        if app_secret_default and click.confirm("是否沿用默认 app_secret?", default=True):
+            app_secret = app_secret_default
+        else:
+            app_secret = click.prompt("app_secret", hide_input=True, confirmation_prompt=True)
         return {"app_id": app_id, "app_secret": app_secret}
     if platform == "telegram":
         token_default = existing.get("token") or ""

@@ -31,7 +31,7 @@ class SkillsConfig(BaseEnvConfig):
 
     CHATTOOL_SKILLS_DIR = EnvField(
         "CHATTOOL_SKILLS_DIR",
-        desc="Path to ChatTool skills directory (used by `chattool skill install/list`).",
+        desc="Default ChatTool skills source directory.",
     )
 
 class AzureConfig(BaseEnvConfig):

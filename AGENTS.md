@@ -5,7 +5,7 @@
 - 主语言：Python
 - CLI 入口：`chattool`、`chatenv`、`chatskill`
 - 代码路径：`src/chattool/`
-- Skills 目录：`src/chattool/skills/`
+- Skills CLI 代码目录：`src/chattool/skill/`
 - 文档：`docs/`，用 mkdocs-material 构建
 
 ## 板块结构
@@ -19,7 +19,7 @@ src/chattool/
 ├── mcp/        # MCP 入口与编排（工具实现下放到 tools/*/mcp.py）
 ├── setup/      # 环境安装脚本
 ├── serve/      # 服务端（截图、证书分发等）
-└── skills/     # skills CLI 与相关能力
+└── skill/      # skill CLI 与相关能力
 ```
 
 ## 常用命令
@@ -72,6 +72,7 @@ mkdocs serve --no-livereload # 本地预览文档
   - **原则**：当前以 CLI 真实测试为主，优先保证关键命令链路稳定。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
+- **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录。
 
 ### CLI 测试文档驱动机制（`cli-tests`）
 

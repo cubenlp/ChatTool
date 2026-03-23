@@ -1,6 +1,6 @@
 # test_chattool_gh_basic
 
-测试 `chattool gh` 的基础链路，覆盖 PR 列表、查看与创建的命令流程。
+测试 `chattool gh` 的基础链路，覆盖 PR 列表、查看、检查与创建的命令流程。
 
 ## 元信息
 
@@ -59,7 +59,25 @@ chattool gh pr-view --number 1
 chattool gh pr-create --base main --head feature --title "test" --body "demo"
 ```
 
-## 用例 4：评论与合并
+## 用例 4：检查 PR 的 CI 状态
+
+- 初始环境准备：
+  - 准备有效 PR 编号，且该 PR 已触发 checks/workflows。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+  1. 执行 `chattool gh pr-check --number <id>`，预期输出 PR 的 combined status、check runs 和 workflow runs。
+  2. 执行 `chattool gh pr-check --number <id> --json-output`，预期返回机器可读 JSON。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool gh pr-check --number 1
+chattool gh pr-check --number 1 --json-output
+```
+
+## 用例 5：评论与合并
 
 - 初始环境准备：
   - 准备有效 PR 编号。
@@ -77,7 +95,7 @@ chattool gh pr-comment --number 1 --body "hello"
 chattool gh pr-merge --number 1 --method merge --confirm
 ```
 
-## 用例 5：更新 PR
+## 用例 6：更新 PR
 
 - 初始环境准备：
   - 准备有效 PR 编号。
