@@ -150,7 +150,7 @@ def test_env_init_type(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         result = runner.invoke(
             cli,
             ["env", "init", "-i", "-t", "MockConfig"],
-            input="new_mock_val\nnew_secret\n",
+            input="new_mock_val\nnew_secret\n\n",
         )
         assert result.exit_code == 0
         content = env_file.read_text()

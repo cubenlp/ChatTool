@@ -5,6 +5,8 @@ DeprecationWarning
 （这个文件强调一下，测试的迁移）
 注意，tests 文档不再更新维护，后续只测试 cli-tests 文档。所有代码更新，异步 `cli-tests`。
 
+另外，`tests/dns/test_cert_*_real.py` 这类真实证书生命周期测试默认不参与日常全量回归；如需显式开启，先设置 `CHATTOOL_RUN_DNS_CERT_REAL=1`。
+
 ## Urls
 
 Referenced from https://gitee.com/lzhpo/chatgpt-spring-boot-starter.

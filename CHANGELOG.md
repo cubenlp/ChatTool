@@ -39,6 +39,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chatenv init -t skill` 中 `CHATTOOL_SKILLS_DIR` 的交互提示已缩短，避免占用过多输入空间
 
 ### Fixed
+- `cli-tests/env/test_chattool_env_basic.py` 现已补齐 `env init -t ...` 交互输入，避免因新增默认字段 prompt 导致测试中断
+- 全量 `pytest` 现在可稳定完成：历史 `tests/tools/lark/test_cli_integration.py` 已改为唯一模块名，避免与 DNS 测试模块同名导致收集冲突
+- `tests/dns/test_cert_server_real.py` 与 `tests/dns/test_cert_update_real.py` 现改为显式 `CHATTOOL_RUN_DNS_CERT_REAL=1` 才启用，避免日常全量回归卡在真实证书生命周期测试
+- `tests/core/test_batch.py` 现已修正未 await 的协程调用，且 pytest 过滤规则补齐了常见第三方告警，降低全量回归噪音
 - `chattool setup nodejs` 首次通过内置 `nvm` 安装 Node.js 后，后续同一轮 `setup codex/claude/opencode/cc-connect` 现在会正确复用 `~/.nvm` 中的运行时，不再误报 “Node.js requirement still not satisfied after setup”
 - `chattool setup alias` 现在会把 `chatskills` 正确映射到 `chattool skill`
 
