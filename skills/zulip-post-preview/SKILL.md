@@ -1,6 +1,6 @@
 ---
 name: zulip-post-preview
-description: Create staged previews of Zulip topics using read-only CLI queries, including full-thread originals, a small zh-en translation slice, and a Chinese overview under playground/<channel>/<topic>. Use when asked to preview, summarize, or translate Zulip thread content.
+description: Create staged previews of Zulip topics using read-only CLI queries, including full-thread originals, a small zh-en translation slice, and a Chinese overview in an external work directory such as ~/tmp/chattool-zulip/<channel>/<topic>. Use when asked to preview, summarize, or translate Zulip thread content.
 version: 0.1.0
 ---
 
@@ -8,7 +8,7 @@ version: 0.1.0
 
 ## Overview
 
-Generate a staged readlist for a Zulip topic using only read-only CLI commands and write results to the playground directory.
+Generate a staged readlist for a Zulip topic using only read-only CLI commands and write results to an external work directory outside the repository.
 
 ## Workflow
 
@@ -18,7 +18,7 @@ Generate a staged readlist for a Zulip topic using only read-only CLI commands a
 2. Fetch full topic (read-only)  
    Use `chattool zulip topic --stream "<stream name>" --topic "<topic name>" --json-output`.
 
-3. Produce staged outputs under `playground/<channel>/<topic>/`  
+3. Produce staged outputs under `~/tmp/chattool-zulip/<channel>/<topic>/`  
    - `0_posts_full.md`: full thread, chronological, original markdown with timestamp, sender, and link.  
    - `0_posts_5.zh-en.md`: first post + latest 5 posts, original text with Chinese translation.  
    - `1_overview.md`: Chinese summary and reading guidance (1_ and later are processed content; stop at 1_ for now).
@@ -29,4 +29,4 @@ Use only read methods (`streams`, `topics`, `messages`, `topic`). Do not send me
 
 ## Review Notes
 
-Keep the directory structure flat (`<channel>/<topic>`), avoid extra `raw/` folders, and update navigation entries (for example `playground/index.md`) when file names change.
+Keep the directory structure flat (`<channel>/<topic>`), avoid extra `raw/` folders, and do not write temporary preview outputs back into the repository by default.

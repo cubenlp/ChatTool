@@ -23,7 +23,7 @@ Core idea: keep early exploration light, then switch to a strict normalization f
    - Favor existing `chattool` CLI commands for reproducible read or export steps.
    - Do not over-constrain early exploration, repo reading, or solution shaping.
    - At this stage, this skill should act as a gentle orientation only.
-   - Use `playground/` as the default scratch area for temporary exploration artifacts.
+   - Use a separate scratch directory outside the repository for temporary exploration artifacts, for example `~/tmp/chattool/<task>/`.
 
 2. Finish implementation before broad normalization
    - Make the feature, fix, or content change work first.
@@ -50,7 +50,7 @@ Core idea: keep early exploration light, then switch to a strict normalization f
    - If a skill is added or updated, maintain both `SKILL.md` and `SKILL.zh.md`.
    - Keep skill frontmatter aligned, including `version`.
    - Keep directory structure flat and intentional.
-   - Move only durable outputs out of `playground/`; leave scratch exploration there.
+   - Only bring durable outputs back into the repository after they are normalized into the right docs, tests, or source locations.
 
 6. Carry the task through PR/MR stage
    - Ensure the branch is committed and pushed.

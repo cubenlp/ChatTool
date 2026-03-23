@@ -29,7 +29,7 @@ version: 0.1.0
    - 优先直接执行，不要在任务没完成前过度讨论流程  
    - 用 CLI 完成读取、查询和导出，保持可复现
    - 在这个阶段，这份 skill 只做轻量提醒，不要过度干扰探索
-   - 临时脚本、试验输出、探索草稿优先放到 `playground/`
+   - 临时脚本、试验输出、探索草稿优先放到仓库外的独立目录，例如 `~/tmp/chattool/<task>/`
 
 2. **能力归类**  
    - 通用能力：补充到 `src/`（工具层、CLI、MCP）  
@@ -58,7 +58,7 @@ version: 0.1.0
    - 更新 `CHANGELOG.md`  
    - skill 变更时，维护 `SKILL.md` 与 `SKILL.zh.md`  
    - skill frontmatter 中的 `version` 要同步维护
-   - 只有需要长期保留的结果才从 `playground/` 迁出
+   - 只有需要长期保留的结果才整理后放回仓库里的正式位置
 
 7. **一直推进到 PR/MR 阶段**  
    - 确保分支已经 commit 并 push  
