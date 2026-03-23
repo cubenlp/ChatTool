@@ -19,7 +19,7 @@ def test_chattool_lark_basic(lark_testkit):
         pytest.skip("No Feishu receiver configured for send/reply coverage")
 
     text = lark_testkit.unique_name("cli-basic")
-    send = lark_testkit.invoke("lark", "send", text)
+    send = lark_testkit.invoke("lark", "send", lark_testkit.message_receiver_id, text)
     message_id = lark_testkit.message_id_from_output(send.output)
     assert message_id
 
