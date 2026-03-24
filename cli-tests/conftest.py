@@ -12,7 +12,7 @@ from dotenv import dotenv_values
 
 from chattool.client.main import cli
 from chattool.config import BaseEnvConfig, FeishuConfig
-from chattool.const import CHATTOOL_ENV_FILE
+from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE, CHATTOOL_REPO_DIR
 from chattool.tools.lark import LarkBot
 
 
@@ -74,6 +74,10 @@ def lark_testkit(tmp_path: Path):
         assert result.exit_code == 0, result.output
         return result
 
+    def invoke_raw(*args: str):
+        runner = CliRunner()
+        return runner.invoke(cli, list(args))
+
     def create_document(prefix: str = "cli-doc", *, title: str | None = None):
         document_title = title or f"{prefix}-{time.time_ns()}"
         create = invoke("lark", "doc", "create", document_title)
@@ -99,8 +103,12 @@ def lark_testkit(tmp_path: Path):
 
     return SimpleNamespace(
         tmp_path=tmp_path,
+        repo_root=CHATTOOL_REPO_DIR,
+        env_dir=CHATTOOL_ENV_DIR,
+        env_file=CHATTOOL_ENV_FILE,
         bot=LarkBot(),
         invoke=invoke,
+        invoke_raw=invoke_raw,
         create_document=create_document,
         wait_doc_raw_contains=wait_doc_raw_contains,
         parse_json=_extract_json_from_output,
@@ -121,4 +129,28 @@ def lark_testkit(tmp_path: Path):
             r"document_id[:=]\s*([A-Za-z0-9_]+)",
             "document_id",
         ),
+    )
+
+
+@pytest.fixture
+def lark_docaudit():
+    def read(rel_path: str) -> str:
+        return (CHATTOOL_REPO_DIR / rel_path).read_text(encoding="utf-8")
+
+    def exists(rel_path: str) -> bool:
+        return (CHATTOOL_REPO_DIR / rel_path).exists()
+
+    def invoke_help(*args: str):
+        runner = CliRunner()
+        result = runner.invoke(cli, [*args, "--help"])
+        assert result.exit_code == 0, result.output
+        return result.output
+
+    return SimpleNamespace(
+        repo_root=CHATTOOL_REPO_DIR,
+        env_dir=CHATTOOL_ENV_DIR,
+        env_file=CHATTOOL_ENV_FILE,
+        read=read,
+        exists=exists,
+        invoke_help=invoke_help,
     )
