@@ -16,7 +16,6 @@ ALIAS_MAP = {
     "chatcc": "chattool cc",
     "chatcli": "chattool client",
     "chatpypi": "chattool pypi",
-    "chatdns": "chattool dns",
     "chatup": "chattool setup",
     "chatlark": "chattool lark",
     "chatimg": "chattool image",

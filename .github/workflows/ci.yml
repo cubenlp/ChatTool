@@ -38,9 +38,6 @@ jobs:
       id: tests
       continue-on-error: true
       run: |
-        mkdir -p .logs
-        nohup chattool.capture-server --daemon --port 8000 &
-        sleep 1
         coverage run -m pytest -q cli-tests -m "not dns and not lark"
     - name: Upload coverage to Codecov
       if: always()

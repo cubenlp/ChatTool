@@ -53,7 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `tests/dns/test_cert_server_real.py` 与 `tests/dns/test_cert_update_real.py` 现改为显式 `CHATTOOL_RUN_DNS_CERT_REAL=1` 才启用，避免日常全量回归卡在真实证书生命周期测试
 - `tests/core/test_batch.py` 现已修正未 await 的协程调用，且 pytest 过滤规则补齐了常见第三方告警，降低全量回归噪音
 - `chattool setup nodejs` 首次通过内置 `nvm` 安装 Node.js 后，后续同一轮 `setup codex/claude/opencode/cc-connect` 现在会正确复用 `~/.nvm` 中的运行时，不再误报 “Node.js requirement still not satisfied after setup”
-- `chattool setup alias` 现在会把 `chatskills` 正确映射到 `chattool skill`
+- `chattool setup alias` 现在会把 `chatskill` 正确映射到 `chattool skill`
 
 ## [6.2.0]
 
