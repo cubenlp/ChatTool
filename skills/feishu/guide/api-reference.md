@@ -1,4 +1,4 @@
-# 飞书 Skill：API Reference
+# 飞书 API Reference
 
 这份文档只保留实用索引，用于继续扩 `chattool lark` 时查官方文档，不搬运整段官方原文。
 

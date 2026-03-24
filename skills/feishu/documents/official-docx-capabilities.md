@@ -1,4 +1,4 @@
-# 飞书 Skill：官方 docx 能力边界
+# 飞书官方 docx 能力边界
 
 这份文档服务于 `chattool lark doc ...` 开发，不是用户入口教程。
 

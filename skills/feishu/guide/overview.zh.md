@@ -1,9 +1,3 @@
----
-name: feishu
-description: 优先使用 `chattool lark` 完成飞书/飞书机器人验证、权限检查、消息发送、资源上传、引用回复和本地调试，避免为一次性业务输入新增临时环境变量。
-version: 0.1.0
----
-
 ## 对应 CLI 用法
 
 - 总入口就是 `chattool lark`
@@ -18,7 +12,7 @@ version: 0.1.0
   - `chattool lark doc ...`
 - 本文件作为飞书总览说明，与各子目录中的专题文档一起构成唯一资料面
 
-# 飞书 CLI Skill
+# 飞书 CLI 概览
 
 ## 目标
 

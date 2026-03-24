@@ -1,6 +1,6 @@
-# 飞书 Skill：消息与调试
+# 飞书消息与调试
 
-这份文档只从 CLI 出发说明消息能力，不再区分其它工具形态。
+这份文档只从 CLI 出发说明消息能力，作为 `skills/feishu/` 下的消息专题入口。
 
 ## 当前已支持的主线命令
 
@@ -72,7 +72,7 @@ chattool lark chat --user debug_user
 
 ## 目标扩展方向
 
-消息相关的后续 CLI 继续沿 `chattool lark` 主线扩展，不新开独立 skill 入口。第一阶段按这些 topic 分组规划：
+消息相关的后续 CLI 继续沿 `chattool lark` 主线扩展。第一阶段按这些 topic 分组规划：
 
 - `chattool lark im ...`
   - 读取历史消息

@@ -1,8 +1,4 @@
----
-name: feishu-create-doc
-description: |
-  创建飞书云文档。从 Lark-flavored Markdown 内容创建新的飞书云文档，支持指定创建位置（文件夹/知识库/知识空间）。
----
+# 飞书文档创建
 
 ## 对应 CLI 用法
 
@@ -11,8 +7,6 @@ description: |
   - `chattool lark notify-doc <title> <text>`
 - 这条主线优先覆盖稳定创建与追加能力
 - 本文件同时承载继续扩文档创建能力所需的细节说明
-
-# feishu_mcp_create_doc
 
 通过 MCP 调用 `create-doc`，从 Lark-flavored Markdown 内容创建一个新的飞书云文档。
 

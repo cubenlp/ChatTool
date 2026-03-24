@@ -1,15 +1,4 @@
----
-name: feishu-bitable
-description: |
-  飞书多维表格（Bitable）的创建、查询、编辑和管理工具。包含 27 种字段类型支持、高级筛选、批量操作和视图管理。
-
-  **当以下情况时使用此 Skill**：
-  (1) 需要创建或管理飞书多维表格 App
-  (2) 需要在多维表格中新增、查询、修改、删除记录（行数据）
-  (3) 需要管理字段（列）、视图、数据表
-  (4) 用户提到"多维表格"、"bitable"、"数据表"、"记录"、"字段"
-  (5) 需要批量导入数据或批量更新多维表格
----
+# 飞书多维表格
 
 ## 对应 CLI 用法
 
@@ -20,8 +9,6 @@ description: |
   - `chattool lark bitable record list|create|batch-create <app_token> <table_id> ...`
 - 字段 property、记录值格式、场景示例统一放在 `references/`
 - 本文件就是多维表格主文档，同时保留继续扩 CLI 所需的背景资料
-
-# Feishu Bitable (多维表格) SKILL
 
 ## 🚨 执行前必读
 

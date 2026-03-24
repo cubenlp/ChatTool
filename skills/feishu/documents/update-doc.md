@@ -1,8 +1,4 @@
----
-name: feishu-update-doc
-description: |
-  更新飞书云文档。支持 7 种更新模式：追加、覆盖、定位替换、全文替换、前/后插入、删除。
----
+# 飞书文档更新
 
 ## 对应 CLI 用法
 
@@ -13,8 +9,6 @@ description: |
   - `chattool lark doc append-json <document_id> <json_path>`
 - `overwrite` / `replace_range` / `delete_range` 等高级更新模式应继续直接收口到这套 CLI
 - 本文件同时承载继续扩文档更新能力所需的细节说明
-
-# feishu__update_doc
 
 更新飞书云文档内容，支持 7 种更新模式。优先使用局部更新（replace_range/append/insert_before/insert_after），慎用 overwrite（会清空文档重写，可能丢失图片、评论等）。
 

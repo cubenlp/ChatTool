@@ -1,9 +1,3 @@
----
-name: feishu
-description: Use `chattool lark` as the default entry for Feishu/Lark bot verification, scope checks, send/upload/reply flows, and local debugging. Prefer CLI arguments for business inputs and avoid extra env vars that may conflict with external gateways.
-version: 0.1.0
----
-
 ## 对应 CLI 用法
 
 - 总入口就是 `chattool lark`
@@ -18,7 +12,7 @@ version: 0.1.0
   - `chattool lark doc ...`
 - 本文件作为飞书总览说明，与各子目录中的专题文档一起构成唯一资料面
 
-# 飞书 CLI Skill
+# 飞书 CLI 概览
 
 ## 目标
 

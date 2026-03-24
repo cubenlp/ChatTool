@@ -1,4 +1,4 @@
-# 飞书 Skill：云文档
+# 飞书云文档
 
 飞书文档能力统一从 `chattool lark doc ...` 和 `chattool lark notify-doc` 出发说明。
 

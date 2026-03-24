@@ -1,12 +1,4 @@
----
-name: feishu-troubleshoot
-description: |
-  飞书插件问题排查工具。包含常见问题 FAQ 和深度诊断命令（/feishu_doctor）。
-
-  常见问题可随时查阅。诊断命令用于排查复杂问题（多次授权仍失败、自动授权无法解决等），
-  会检查账户配置、API 连通性、应用权限、用户授权状态，并生成详细的诊断报告和解决方案。
-
----
+# 飞书排障
 
 ## 对应 CLI 用法
 
@@ -17,8 +9,6 @@ description: |
   - `chattool lark troubleshoot check-card-action`
 - 如果 `chattool lark send ...` 因权限失败，CLI 也会复用这里的 scope 诊断逻辑
 - 本文件就是排障主文档，FAQ、诊断命令和后续扩展都在这里统一维护
-
-# 飞书插件问题排查
 
 ## ❓ 常见问题（FAQ）
 

@@ -1,8 +1,4 @@
----
-name: feishu-fetch-doc
-description: |
-  获取飞书云文档内容。返回文档的 Markdown 内容，支持处理文档中的图片、文件和画板（需配合 feishu_doc_media 工具）。
----
+# 飞书文档读取
 
 ## 对应 CLI 用法
 
@@ -12,8 +8,6 @@ description: |
   - `chattool lark doc blocks <document_id>`
 - 对于图片、文件、画板等更深层媒体读取，当前 CLI 仍有扩展空间
 - 本文件同时承载继续扩文档读取能力所需的细节说明
-
-# feishu_mcp_fetch_doc
 
 获取飞书云文档的 Markdown 内容（Lark-flavored 格式）。
 

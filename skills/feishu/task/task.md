@@ -1,15 +1,4 @@
----
-name: feishu-task
-description: |
-  飞书任务管理工具,用于创建、查询、更新任务和清单。
-
-  **当以下情况时使用此 Skill**:
-  (1) 需要创建、查询、更新、删除任务
-  (2) 需要创建、管理任务清单
-  (3) 需要查看任务列表或清单内的任务
-  (4) 用户提到"任务"、"待办"、"to-do"、"清单"、"task"
-  (5) 需要设置任务负责人、关注人、截止时间
----
+# 飞书任务
 
 ## 对应 CLI 用法
 
@@ -20,8 +9,6 @@ description: |
   - `chattool lark task tasklist list|create|get|tasks|add-members`
 - `task list` 目前仍要优先按 token / scope 模式理解
 - 本文件就是任务主文档，同时保留继续扩 CLI 所需的背景资料
-
-# 飞书任务管理
 
 ## 🚨 执行前必读
 

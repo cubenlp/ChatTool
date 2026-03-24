@@ -52,10 +52,12 @@ version: 0.4.0
 - `SKILL.md`
   - `cli-tests/lark/guide/test_chattool_lark_skill_index.md`
 - `guide/overview.md`
+  - `cli-tests/lark/guide/test_chattool_lark_basic.md`
   - `cli-tests/lark/guide/test_chattool_lark_overview.md`
 - `guide/overview.zh.md`
   - `cli-tests/lark/guide/test_chattool_lark_overview_zh.md`
 - `guide/setup-and-routing.md`
+  - `cli-tests/lark/guide/test_chattool_lark_env.md`
   - `cli-tests/lark/guide/test_chattool_lark_setup_and_routing.md`
 - `guide/api-reference.md`
   - `cli-tests/lark/guide/test_chattool_lark_api_reference.md`
@@ -63,6 +65,7 @@ version: 0.4.0
   - `cli-tests/lark/messaging/test_chattool_lark_send_text_task.md`
   - `cli-tests/lark/messaging/test_chattool_lark_send_file_task.md`
   - `cli-tests/lark/messaging/test_chattool_lark_send_card_task.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_send_permission_recovery_task.md`
   - `cli-tests/lark/messaging/test_chattool_lark_reply_task.md`
   - `cli-tests/lark/messaging/test_chattool_lark_listen_task.md`
 - `messaging/channel-rules.md`
@@ -78,6 +81,8 @@ version: 0.4.0
 - `documents/documents.md`
   - `cli-tests/lark/documents/test_chattool_lark_doc_basic.md`
   - `cli-tests/lark/documents/test_chattool_lark_doc_markdown.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_append_task.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_markdown_task.md`
 - `documents/create-doc.md`
   - `cli-tests/lark/documents/test_chattool_lark_doc_create_notify_task.md`
 - `documents/fetch-doc.md`
@@ -104,7 +109,7 @@ version: 0.4.0
 ## 路由规则
 
 - 现在只有一个飞书 skill 目录：`skills/feishu/`
-- 不再把任务路由到 `feishu-*` 同级 skill
+- 飞书资料统一收口在这个目录与它的主题子目录中
 - 先用 CLI，再按主题目录查资料
 - 各主题文件都应围绕这一套 CLI/API 组织
 - 默认用户优先使用 `FEISHU_DEFAULT_RECEIVER_ID`

@@ -1,4 +1,4 @@
-# 飞书 Skill：docx 采用说明
+# 飞书 docx 采用说明
 
 这份文档记录扩 `chattool lark doc ...` 时应遵守的采用策略。
 

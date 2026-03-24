@@ -1,8 +1,4 @@
----
-name: feishu-calendar
-description: |
-  飞书日历与日程管理工具集。包含日历管理、日程管理、参会人管理、忙闲查询。
----
+# 飞书日历
 
 ## 对应 CLI 用法
 
@@ -11,8 +7,6 @@ description: |
   - `chattool lark calendar event create|list|get|patch|reply`
   - `chattool lark calendar freebusy list`
 - `search`、`instances`、`attendee` 继续直接收口到这套 CLI
-
-# 飞书日历管理 (feishu-calendar)
 
 ## 🚨 执行前必读
 
