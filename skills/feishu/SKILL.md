@@ -49,22 +49,57 @@ version: 0.4.0
 
 ## Skill 与 CLI Tests 对应
 
-- `guide/`
-  - 对应 `cli-tests/lark/guide/`
+- `SKILL.md`
+  - `cli-tests/lark/guide/test_chattool_lark_skill_index.md`
+- `guide/overview.md`
+  - `cli-tests/lark/guide/test_chattool_lark_overview.md`
+- `guide/overview.zh.md`
+  - `cli-tests/lark/guide/test_chattool_lark_overview_zh.md`
+- `guide/setup-and-routing.md`
+  - `cli-tests/lark/guide/test_chattool_lark_setup_and_routing.md`
+- `guide/api-reference.md`
+  - `cli-tests/lark/guide/test_chattool_lark_api_reference.md`
 - `messaging/messaging.md`
-  - 对应 `cli-tests/lark/messaging/`
+  - `cli-tests/lark/messaging/test_chattool_lark_send_text_task.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_send_file_task.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_send_card_task.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_reply_task.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_listen_task.md`
+- `messaging/channel-rules.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_channel_rules.md`
+- `messaging/lark-markdown-syntax.md`
+  - `cli-tests/lark/messaging/test_chattool_lark_markdown_syntax.md`
 - `messaging/im-read.md`
-  - 对应 `cli-tests/lark/im/`
+  - `cli-tests/lark/im/test_chattool_lark_im_basic.md`
+  - `cli-tests/lark/im/test_chattool_lark_im_list_task.md`
 - `messaging/troubleshoot.md`
-  - 对应 `cli-tests/lark/troubleshoot/`
-- `documents/`
-  - 对应 `cli-tests/lark/documents/`
-- `calendar/`
-  - 对应 `cli-tests/lark/calendar/`
-- `task/`
-  - 对应 `cli-tests/lark/task/`
-- `bitable/`
-  - 对应 `cli-tests/lark/bitable/`
+  - `cli-tests/lark/troubleshoot/test_chattool_lark_troubleshoot_basic.md`
+  - `cli-tests/lark/troubleshoot/test_chattool_lark_troubleshoot_message_task.md`
+- `documents/documents.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_basic.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_markdown.md`
+- `documents/create-doc.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_create_notify_task.md`
+- `documents/fetch-doc.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_fetch_task.md`
+- `documents/update-doc.md`
+  - `cli-tests/lark/documents/test_chattool_lark_doc_update_task.md`
+- `documents/official-docx-capabilities.md`
+  - `cli-tests/lark/documents/test_chattool_lark_docx_capabilities.md`
+- `documents/feishu-docx-adoption-notes.md`
+  - `cli-tests/lark/documents/test_chattool_lark_docx_adoption.md`
+- `calendar/calendar.md`
+  - `cli-tests/lark/calendar/test_chattool_lark_calendar_basic.md`
+- `task/task.md`
+  - `cli-tests/lark/task/test_chattool_lark_task_basic.md`
+- `bitable/bitable.md`
+  - `cli-tests/lark/bitable/test_chattool_lark_bitable_basic.md`
+- `bitable/references/examples.md`
+  - `cli-tests/lark/bitable/test_chattool_lark_bitable_examples.md`
+- `bitable/references/field-properties.md`
+  - `cli-tests/lark/bitable/test_chattool_lark_bitable_field_properties.md`
+- `bitable/references/record-values.md`
+  - `cli-tests/lark/bitable/test_chattool_lark_bitable_record_values.md`
 
 ## 路由规则
 
