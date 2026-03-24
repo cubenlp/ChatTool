@@ -74,7 +74,6 @@ mkdocs serve --no-livereload # 本地预览文档
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录。
-- **开发复查**：每次 ChatTool 功能或 CLI 变更完成后，都应按 `chattool-dev-review` 的检查口径做一次收尾复查，重点看 lazy import、缺参交互、`utils/tui.py` 一致性，以及 docs / README / CHANGELOG / `cli-tests` 是否同步。
 
 ### CLI 测试文档驱动机制（`cli-tests`）
 

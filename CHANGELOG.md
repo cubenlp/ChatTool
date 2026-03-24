@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+- `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败
+- `chattool gh pr-merge` 新增可选的 `--check` 开关，用于在合并前显式检查 check runs 与 workflow runs，避免再次误把带红 CI 的 PR 当成可安全合并
+
 ## [6.4.0]
 
 ### Changed

@@ -202,8 +202,9 @@ def pr_comment(repo, number, body, token):
 @click.option("--title", default=None, help="Optional merge title.")
 @click.option("--message", default=None, help="Optional merge message.")
 @click.option("--confirm", is_flag=True, help="Confirm merge without prompt.")
+@click.option("--check", "check_before_merge", is_flag=True, help="Check CI status before merging and abort if checks are not green.")
 @click.option("--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN).")
-def pr_merge(repo, number, method, title, message, confirm, token):
+def pr_merge(repo, number, method, title, message, confirm, check_before_merge, token):
     """Merge a pull request."""
     from github import Github
     from github.GithubException import GithubException
@@ -217,6 +218,24 @@ def pr_merge(repo, number, method, title, message, confirm, token):
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
+        if check_before_merge:
+            commit = repo_obj.get_commit(pr.head.sha)
+            check_payload = _build_pr_check_payload(
+                pr,
+                commit,
+                repo_obj,
+                check_limit=20,
+                workflow_limit=10,
+            )
+            blockers = _collect_merge_blockers(check_payload)
+            if blockers:
+                details = "\n".join(f"- {item}" for item in blockers)
+                raise click.ClickException(
+                    "Refusing to merge because CI checks are not green:\n"
+                    f"{details}\n"
+                    f"Run `chattool gh pr-check --number {number}` for details, "
+                    "or rerun without `--check` if you intentionally want to merge anyway."
+                )
         payload = {"merge_method": method}
         if title is not None:
             payload["commit_title"] = title
@@ -409,6 +428,34 @@ def _echo_pr_check_payload(payload: dict) -> None:
                 click.echo(f"    {workflow_run['html_url']}")
     else:
         click.echo("Workflow runs: none")
+
+
+def _collect_merge_blockers(payload: dict) -> list[str]:
+    blockers: list[str] = []
+
+    for status in payload["combined_status"]["statuses"]:
+        if status["state"] != "success":
+            blockers.append(f"status {status['context']} is {status['state']}")
+
+    for check_run in payload["check_runs"]:
+        status = check_run["status"]
+        conclusion = check_run["conclusion"]
+        if status != "completed":
+            blockers.append(f"check run {check_run['name']} is {status}")
+            continue
+        if conclusion not in {"success", "neutral", "skipped"}:
+            blockers.append(f"check run {check_run['name']} concluded {conclusion or 'unknown'}")
+
+    for workflow_run in payload["workflow_runs"]:
+        status = workflow_run["status"]
+        conclusion = workflow_run["conclusion"]
+        if status != "completed":
+            blockers.append(f"workflow {workflow_run['name']} is {status}")
+            continue
+        if conclusion not in {"success", "neutral", "skipped"}:
+            blockers.append(f"workflow {workflow_run['name']} concluded {conclusion or 'unknown'}")
+
+    return blockers
 
 
 def _isoformat(value) -> Optional[str]:

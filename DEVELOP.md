@@ -35,7 +35,6 @@
 - 真实集成测试应标记为 `@pytest.mark.e2e`。
 - 功能变更同步更新 `docs/` 与 `README.md`。
 - 变更记录同步更新 `CHANGELOG.md`。
-- 功能完成后按 `chattool-dev-review` 的口径做一次复查，至少检查 lazy import、缺参自动交互、`utils/tui.py` 统一交互，以及 docs / CHANGELOG / `cli-tests` 是否同步。
 
 ## 常用命令
 

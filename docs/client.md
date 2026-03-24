@@ -348,6 +348,7 @@ chattool gh pr-comment --number 123 --body "Looks good"
 
 # 合并 PR
 chattool gh pr-merge --number 123 --method squash --confirm
+chattool gh pr-merge --number 123 --method squash --confirm --check
 
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
@@ -358,6 +359,8 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - combined status
 - check runs
 - workflow runs
+
+如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
 
 需要机器可读结果时可加 `--json-output`。
 

@@ -110,6 +110,60 @@ def _install_fake_client(monkeypatch):
     monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
 
 
+def _install_fake_merge_client(monkeypatch, *, check_status="completed", check_conclusion="success", workflow_status="completed", workflow_conclusion="success"):
+    merge_calls = []
+
+    pr = _fake_pr()
+
+    def merge(**payload):
+        merge_calls.append(payload)
+        return SimpleNamespace(merged=True, message="merged")
+
+    pr.merge = merge
+
+    commit = SimpleNamespace(
+        get_combined_status=lambda: SimpleNamespace(state="pending", sha="abc123def456", total_count=0, statuses=[]),
+        get_check_runs=lambda: iter([
+            SimpleNamespace(
+                name="build",
+                status=check_status,
+                conclusion=check_conclusion if check_status == "completed" else None,
+                details_url=None,
+                html_url=None,
+                app=SimpleNamespace(name="GitHub Actions"),
+                started_at=None,
+                completed_at=None,
+            )
+        ]),
+    )
+
+    repo_obj = SimpleNamespace(
+        get_pull=lambda number: pr,
+        get_commit=lambda sha: commit,
+        get_workflow_runs=lambda head_sha=None: iter([
+            SimpleNamespace(
+                name="Python Package",
+                display_title="Python Package",
+                event="pull_request",
+                status=workflow_status,
+                conclusion=workflow_conclusion if workflow_status == "completed" else None,
+                html_url="https://github.com/CubeNLP/ChatTool/actions/runs/1",
+                created_at=None,
+                updated_at=None,
+                run_started_at=None,
+                head_branch="rex/setup",
+                head_sha="abc123def456",
+                run_number=501,
+            )
+        ]),
+    )
+    client = SimpleNamespace(get_repo=lambda repo: repo_obj)
+
+    monkeypatch.setattr(gh_cli, "_get_client", lambda token, require_token=False: client)
+    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
+    return merge_calls
+
+
 def test_root_cli_registers_pr_check_command():
     runner = CliRunner()
 
@@ -149,3 +203,39 @@ def test_pr_check_command_supports_json_output(monkeypatch):
     assert '"context": "ci/test"' in result.output
     assert '"name": "tests"' in result.output
     assert '"run_number": 501' in result.output
+
+
+def test_pr_merge_check_blocks_failed_ci(monkeypatch):
+    runner = CliRunner()
+    merge_calls = _install_fake_merge_client(
+        monkeypatch,
+        check_status="completed",
+        check_conclusion="failure",
+        workflow_status="completed",
+        workflow_conclusion="failure",
+    )
+
+    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--confirm", "--check"])
+
+    assert result.exit_code != 0
+    assert "Refusing to merge because CI checks are not green" in result.output
+    assert "check run build concluded failure" in result.output
+    assert "workflow Python Package concluded failure" in result.output
+    assert not merge_calls
+
+
+def test_pr_merge_without_check_keeps_current_behavior(monkeypatch):
+    runner = CliRunner()
+    merge_calls = _install_fake_merge_client(
+        monkeypatch,
+        check_status="completed",
+        check_conclusion="failure",
+        workflow_status="completed",
+        workflow_conclusion="failure",
+    )
+
+    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--confirm"])
+
+    assert result.exit_code == 0
+    assert "PR merged:" in result.output
+    assert merge_calls
