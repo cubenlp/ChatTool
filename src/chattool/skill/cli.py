@@ -7,6 +7,10 @@ from pathlib import Path
 
 import click
 
+from chattool.cli_warnings import install_cli_warning_filters
+
+install_cli_warning_filters()
+
 
 @dataclass(frozen=True)
 class PlatformSpec:

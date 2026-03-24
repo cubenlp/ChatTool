@@ -28,7 +28,10 @@
 
 ## 测试与文档
 
-- CLI 测试采用文档先行：先写 `cli-tests/*.md` 再实现对应 `.py`。
+- ChatTool 仓库只长期维护 `cli-tests/` 这条测试主线。
+- CLI 测试采用文档先行：先写 `cli-tests/*.md`，再实现对应 `.py`。
+- `cli-tests/*.md` 是唯一长期维护的测试设计面；`cli-tests/*.py` 只作为真实 CLI 执行实现。
+- 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认测试落点。
 - 真实集成测试应标记为 `@pytest.mark.e2e`。
 - 功能变更同步更新 `docs/` 与 `README.md`。
 - 变更记录同步更新 `CHANGELOG.md`。

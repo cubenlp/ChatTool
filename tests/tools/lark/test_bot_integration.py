@@ -7,12 +7,14 @@ Set the following environment variables (or put them in .env):
 
     FEISHU_APP_ID=<your app id>
     FEISHU_APP_SECRET=<your app secret>
+    FEISHU_TEST_USER_ID=<your test user id>
+    FEISHU_TEST_USER_ID_TYPE=user_id
 
 Run only these tests:
 
     pytest tests/tools/lark/test_bot_integration.py -v -m lark
 
-The test user is ``rexwzh`` (user_id type).  Make sure the bot has been
+Make sure the bot has been
 granted the following permissions in the Feishu developer console:
   - im:message          (send / reply messages)
   - im:message:readonly (read message list)
@@ -27,6 +29,7 @@ import pytest
 import json
 from unittest.mock import MagicMock
 
+from chattool.config import FeishuConfig
 from chattool.tools import LarkBot, MessageContext, ChatSession
 
 logger = logging.getLogger(__name__)
@@ -35,8 +38,8 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-TEST_USER_ID = "f25gc16d"
-USER_ID_TYPE = "user_id"
+TEST_USER_ID = FeishuConfig.FEISHU_TEST_USER_ID.value or FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
+USER_ID_TYPE = FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id"
 
 # ---------------------------------------------------------------------------
 # Helper
@@ -54,6 +57,13 @@ def assert_ok(response, label: str = ""):
         pytest.fail(
             f"[{label}] API 调用失败: code={code}  msg={response.msg}{hint}"
         )
+
+
+def require_test_user() -> str:
+    """Return the configured test user ID or skip real-message tests."""
+    if not TEST_USER_ID:
+        pytest.skip("需要在 `.env` 或环境变量中设置 FEISHU_TEST_USER_ID，或至少配置 FEISHU_DEFAULT_RECEIVER_ID，才能执行真实飞书消息测试")
+    return TEST_USER_ID
 
 # ---------------------------------------------------------------------------
 # Bot info
@@ -78,8 +88,8 @@ def test_get_bot_info(lark_bot):
 
 @pytest.mark.lark
 def test_send_text_to_user(lark_bot):
-    """发送文本消息给 rexwzh。"""
-    resp = lark_bot.send_text(TEST_USER_ID, USER_ID_TYPE, "[test] 你好，这是文本消息 👋")
+    """发送文本消息给测试用户。"""
+    resp = lark_bot.send_text(require_test_user(), USER_ID_TYPE, "[test] 你好，这是文本消息 👋")
     assert_ok(resp, "send_text")
     msg_id = resp.data.message_id
     logger.info("发送成功，message_id=%s", msg_id)
@@ -88,7 +98,7 @@ def test_send_text_to_user(lark_bot):
 
 @pytest.mark.lark
 def test_send_post_to_user(lark_bot):
-    """发送富文本消息给 rexwzh。"""
+    """发送富文本消息给测试用户。"""
     content = {
         "zh_cn": {
             "title": "[test] 富文本消息",
@@ -101,14 +111,14 @@ def test_send_post_to_user(lark_bot):
             ],
         }
     }
-    resp = lark_bot.send_post(TEST_USER_ID, USER_ID_TYPE, content)
+    resp = lark_bot.send_post(require_test_user(), USER_ID_TYPE, content)
     assert_ok(resp, "send_post")
     logger.info("富文本消息 message_id=%s", resp.data.message_id)
 
 
 @pytest.mark.lark
 def test_send_card_to_user(lark_bot:LarkBot):
-    """发送交互卡片给 rexwzh。"""
+    """发送交互卡片给测试用户。"""
     card = {
         "config": {"wide_screen_mode": True},
         "header": {
@@ -125,7 +135,7 @@ def test_send_card_to_user(lark_bot:LarkBot):
             }
         ],
     }
-    resp = lark_bot.send_card(TEST_USER_ID, USER_ID_TYPE, card)
+    resp = lark_bot.send_card(require_test_user(), USER_ID_TYPE, card)
     assert_ok(resp, "send_card")
     logger.info("卡片消息 message_id=%s", resp.data.message_id)
 
@@ -137,8 +147,9 @@ def test_send_card_to_user(lark_bot:LarkBot):
 @pytest.mark.lark
 def test_reply_to_message(lark_bot:LarkBot):
     """先发一条消息，再对其进行引用回复。"""
+    test_user_id = require_test_user()
     # Step 1: send original
-    send_resp = lark_bot.send_text(TEST_USER_ID, USER_ID_TYPE, "[test] 原始消息（将被回复）")
+    send_resp = lark_bot.send_text(test_user_id, USER_ID_TYPE, "[test] 原始消息（将被回复）")
     assert_ok(send_resp, "send for reply")
     original_id = send_resp.data.message_id
     logger.info("原始消息 id=%s", original_id)
@@ -153,7 +164,7 @@ def test_reply_to_message(lark_bot:LarkBot):
 @pytest.mark.lark
 def test_reply_card_to_message(lark_bot:LarkBot):
     """发一条消息，然后用卡片回复它。"""
-    send_resp = lark_bot.send_text(TEST_USER_ID, USER_ID_TYPE, "[test] 等待卡片回复...")
+    send_resp = lark_bot.send_text(require_test_user(), USER_ID_TYPE, "[test] 等待卡片回复...")
     assert_ok(send_resp, "send for card reply")
     original_id = send_resp.data.message_id
 
@@ -185,7 +196,7 @@ def test_on_message_dispatch_and_reply(lark_bot:LarkBot):
         # ctx.reply 会调用 bot.reply(message_id, text)
         results.append((ctx.text, ctx.sender_id))
 
-    # Build a minimal fake event pointing at rexwzh
+    # Build a minimal fake event pointing at the configured test user (or a dummy id).
     msg = MagicMock()
     msg.message_type = "text"
     msg.content = json.dumps({"text": "你好机器人"})
@@ -194,7 +205,7 @@ def test_on_message_dispatch_and_reply(lark_bot:LarkBot):
     msg.chat_type = "p2p"
     msg.thread_id = None
 
-    sid = MagicMock(); sid.open_id = TEST_USER_ID
+    sid = MagicMock(); sid.open_id = TEST_USER_ID or "feishu_test_user"
     sender = MagicMock(); sender.sender_id = sid; sender.sender_type = "user"
     event = MagicMock(); event.message = msg; event.sender = sender
     data = MagicMock(); data.event = event
@@ -203,7 +214,7 @@ def test_on_message_dispatch_and_reply(lark_bot:LarkBot):
 
     assert len(results) == 1
     assert results[0][0] == "你好机器人"
-    assert results[0][1] == TEST_USER_ID
+    assert results[0][1] == (TEST_USER_ID or "feishu_test_user")
 
     # Clean up handler so it doesn't interfere with other tests
     lark_bot._message_handlers.clear()
@@ -216,21 +227,22 @@ def test_on_message_dispatch_and_reply(lark_bot:LarkBot):
 @pytest.mark.lark
 def test_chat_session_with_real_llm(lark_bot:LarkBot):
     """
-    用 ChatSession 做一轮真实 LLM 对话，然后验证回复非空并发送给 rexwzh。
+    用 ChatSession 做一轮真实 LLM 对话，然后验证回复非空并发送给测试用户。
     如果没有配置 OpenAI key，跳过此测试。
     """
     
 
     # ChatSession.chat() calls Chat.ask() internally
     session = ChatSession(system="你是一个飞书机器人测试助手，请用一句话简短回答。")
-    reply = session.chat(TEST_USER_ID, "用一句话介绍飞书机器人")
+    test_user_id = require_test_user()
+    reply = session.chat(test_user_id, "用一句话介绍飞书机器人")
 
     logger.info("LLM 回复: %s", reply)
     assert reply and len(reply) > 0
 
-    # Send the LLM reply to rexwzh
+    # Send the LLM reply to the configured test user
     resp = lark_bot.send_text(
-        TEST_USER_ID,
+        test_user_id,
         USER_ID_TYPE,
         f"[test/LLM] {reply}",
     )
@@ -258,7 +270,7 @@ def test_command_dispatch(lark_bot:LarkBot):
     msg.chat_type = "p2p"
     msg.thread_id = None
 
-    sid = MagicMock(); sid.open_id = TEST_USER_ID
+    sid = MagicMock(); sid.open_id = TEST_USER_ID or "feishu_test_user"
     sender = MagicMock(); sender.sender_id = sid; sender.sender_type = "user"
     event = MagicMock(); event.message = msg; event.sender = sender
     data = MagicMock(); data.event = event

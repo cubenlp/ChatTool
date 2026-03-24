@@ -3,6 +3,8 @@ from chattool.config.elements import BaseEnvConfig
 # Ensure all configs are registered
 import chattool.config.main
 
+__test__ = False
+
 def get_all_aliases():
     aliases = []
     for cls in BaseEnvConfig._registry:

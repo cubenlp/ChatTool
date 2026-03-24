@@ -2,12 +2,10 @@ import click
 import shutil
 import os
 import sys
-import warnings
-warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
-# Filter DeprecationWarning from lark_oapi (asyncio.get_event_loop)
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="lark_oapi.*")
+import dotenv
 
 from chattool.config import BaseEnvConfig
+from chattool.cli_warnings import install_cli_warning_filters
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
 from chattool.utils import mask_secret
@@ -17,6 +15,8 @@ from chattool.utils.tui import (
 )
 
 from .test_cmd import test_cmd
+
+install_cli_warning_filters()
 
 @click.group(name='chatenv')
 def cli():
@@ -206,6 +206,7 @@ def cat_env(name, no_mask, config_types):
             if field.is_sensitive:
                 sensitive_keys.add(field.env_key)
 
+    matched = None
     # If -t is specified, only show keys belonging to those configs
     filter_keys = None
     if config_types:
@@ -224,6 +225,20 @@ def cat_env(name, no_mask, config_types):
                 filter_keys.add(field.env_key)
 
     content = config_path.read_text()
+
+    if matched is not None:
+        env_values = dotenv.dotenv_values(config_path)
+        for cls in matched:
+            cls.load_from_dict(env_values)
+
+        for cls in matched:
+            for _, field in cls.get_fields().items():
+                value = "" if field.value is None else str(field.value)
+                if field.is_sensitive and not no_mask:
+                    value = mask_secret(value)
+                click.echo(f"{field.env_key}='{value}'")
+        return
+
     if no_mask and filter_keys is None:
         click.echo(content)
         return

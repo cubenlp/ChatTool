@@ -17,6 +17,7 @@ class MockConfig(BaseEnvConfig):
     sensitive_key = EnvField(
         "SENSITIVE_KEY", default="secret", desc="Sensitive key", is_sensitive=True
     )
+    default_only = EnvField("DEFAULT_ONLY", default="default_from_field", desc="Defaulted field")
 
 
 def _set_env_dirs(monkeypatch, tmp_path: Path) -> tuple[Path, Path]:
@@ -62,6 +63,29 @@ def test_env_cat_masks_sensitive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
         result = runner.invoke(cli, ["env", "cat", "--no-mask"])
         assert result.exit_code == 0
         assert "SENSITIVE_KEY='secret_value'" in result.output
+
+
+def test_env_cat_type_renders_effective_values_from_env_and_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    runner = CliRunner()
+    config_dir, cache_dir = _set_env_dirs(monkeypatch, tmp_path)
+    _patch_env_paths(monkeypatch, config_dir, cache_dir)
+    _, env_file = create_temp_env_layout(
+        config_dir,
+        "MOCK_KEY='value1'\n",
+    )
+    monkeypatch.setenv("SENSITIVE_KEY", "secret_from_os_env")
+    BaseEnvConfig.load_all(env_file)
+
+    with patch_chatenv_registry([MockConfig]):
+        result = runner.invoke(cli, ["env", "cat", "-t", "MockConfig"])
+        assert result.exit_code == 0
+        assert "MOCK_KEY='value1'" in result.output
+        assert "SENSITIVE_KEY='secr**********_env'" in result.output
+        assert "DEFAULT_ONLY='default_from_field'" in result.output
+
+        result = runner.invoke(cli, ["env", "cat", "-t", "MockConfig", "--no-mask"])
+        assert result.exit_code == 0
+        assert "SENSITIVE_KEY='secret_from_os_env'" in result.output
 
 
 def test_env_list_profiles(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -126,7 +150,7 @@ def test_env_init_type(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         result = runner.invoke(
             cli,
             ["env", "init", "-i", "-t", "MockConfig"],
-            input="new_mock_val\nnew_secret\n",
+            input="new_mock_val\nnew_secret\n\n",
         )
         assert result.exit_code == 0
         content = env_file.read_text()

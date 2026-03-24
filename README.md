@@ -70,6 +70,10 @@ async for chunk in Chat().user("写一首诗").async_get_response_stream():
 ```bash
 chattool lark send USER_ID "Hello"
 chattool lark send USER_ID --image photo.png
+chattool lark doc parse-md weekly.md -o weekly.blocks.json
+chattool lark doc append-json DOC_ID weekly.blocks.json
+chattool lark doc append-file DOC_ID weekly.md
+chattool lark notify-doc "周报草稿" --append-file weekly.md
 chattool serve lark echo                        # 回显机器人
 chattool serve lark ai --system "你是工作助手"  # AI 对话机器人
 ```

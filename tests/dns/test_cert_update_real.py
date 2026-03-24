@@ -8,6 +8,10 @@ from chattool.tools import SSLCertUpdater
 from chattool.utils import setup_logger
 
 @pytest.mark.dns
+@pytest.mark.skipif(
+    os.getenv("CHATTOOL_RUN_DNS_CERT_REAL") != "1",
+    reason="Set CHATTOOL_RUN_DNS_CERT_REAL=1 to enable real DNS certificate update tests",
+)
 @pytest.mark.asyncio
 async def test_cert_update():
     # Setup paths

@@ -6,8 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [6.4.0]
+
 ### Changed
 - `chattool setup playground` 现在会在 workspace bootstrap 完成后，优先复用 `chatenv` 当前生效的 `GITHUB_ACCESS_TOKEN` 为 Git 配置 `https://github.com` 的 credential store；交互模式下也会提示是否配置并允许覆写 token
+- 飞书主 skill 现在重组为索引式技能包：根目录只保留 `skills/feishu/SKILL.md` 作为入口，专题说明、API 参考与 docx 边界统一收口到主题子目录
+- `skills/feishu/guide/api-reference.md` 现在集中维护 Feishu 官方 API 文档 URL 与 `chattool lark` 到 API 的映射，便于扩展时继续学习与沉淀
+- `chattool lark` 相关文档现在统一使用“双轨文档模型”描述云文档能力：稳定正文轨用于可靠写入，结构化 docx 轨用于 block 级增强
+- `chattool lark scopes` 现在会在列出权限后补充关键能力分类摘要，并在匹配到未授权 scope 时直接标记为权限问题
+- `chattool lark doc append-json` 现在会在写入前归一化 code block 的 `style.language` 字段，避免 `parse-md -> append-json` 因非法语言值整批失败
+- `chattool lark troubleshoot check-scopes` 现在支持导出权限诊断卡片 JSON，并可直接把诊断卡片发给默认接收者或显式指定的目标
+- CLI 入口现在统一过滤 `lark-oapi` 带来的 `pkg_resources` / event loop 噪音警告，且 `chattool lark` 改为按命令懒加载飞书实现，减少无关 import
+
+### Added
+- `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE` 配置项，用于 `chatenv cat -t feishu` 和 `@pytest.mark.lark` 真实测试共享测试用户配置
+- `cli-tests/lark/guide/test_chattool_lark_basic.py`、`cli-tests/lark/documents/test_chattool_lark_doc_basic.py`、`cli-tests/lark/documents/test_chattool_lark_doc_markdown.py`，补齐 Feishu 基础链路与文档链路的真实 CLI 执行覆盖
+
+### Removed
+- 旧的文档读写型 Feishu skill `feishu-create-doc`、`feishu-fetch-doc`、`feishu-update-doc` 已并回主 `feishu` skill，不再单独维护
 
 ## [6.3.0]
 
@@ -27,6 +43,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chatenv init -t skill` 中 `CHATTOOL_SKILLS_DIR` 的交互提示已缩短，避免占用过多输入空间
 
 ### Fixed
+- `cli-tests/env/test_chattool_env_basic.py` 现已补齐 `env init -t ...` 交互输入，避免因新增默认字段 prompt 导致测试中断
+- 全量 `pytest` 现在可稳定完成：历史 `tests/tools/lark/test_cli_integration.py` 已改为唯一模块名，避免与 DNS 测试模块同名导致收集冲突
+- `tests/dns/test_cert_server_real.py` 与 `tests/dns/test_cert_update_real.py` 现改为显式 `CHATTOOL_RUN_DNS_CERT_REAL=1` 才启用，避免日常全量回归卡在真实证书生命周期测试
+- `tests/core/test_batch.py` 现已修正未 await 的协程调用，且 pytest 过滤规则补齐了常见第三方告警，降低全量回归噪音
 - `chattool setup nodejs` 首次通过内置 `nvm` 安装 Node.js 后，后续同一轮 `setup codex/claude/opencode/cc-connect` 现在会正确复用 `~/.nvm` 中的运行时，不再误报 “Node.js requirement still not satisfied after setup”
 - `chattool setup alias` 现在会把 `chatskills` 正确映射到 `chattool skill`
 
@@ -45,6 +65,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool cc init --full-options` — 提示填写代理等高级选项
 - `chattool lark -e/--env` — 支持从指定 `.env` 文件或保存的 profile 读取飞书鉴权
 - `chattool lark doc` — 支持飞书云文档创建、查询、纯文本读取、块查看与追加文本
+- `chattool lark doc parse-md` — 支持将 Markdown 解析为飞书 docx block JSON，便于检查结构映射
+- `chattool lark doc append-json` — 支持将结构化 block JSON 直接写入飞书云文档
+- `chattool lark doc append-file` — 支持将本地 txt/md 文件整理后追加到飞书云文档
 - `FEISHU_DEFAULT_RECEIVER_ID` — `chattool lark send` 可省略接收者并默认发给配置用户
 - `chattool lark notify-doc` — 创建云文档、追加正文并把文档链接发送给默认用户
 - `chattool lark notify-doc --append-file/--open` — 支持从文件追加正文并在成功后打开文档
@@ -56,6 +79,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool explore arxiv` — arXiv 论文搜索、daily 抓取与 preset 检索
 - `chattool explore arxiv` 新增 `math-formalization-weekly` preset，并补充数学形式化近一周追踪 workflow
 - `skills/arxiv-explore` 新增数学形式化近一周子模块，包含分类索引、真实样例和多查询收集脚本
+- `chattool lark notify-doc --batch-size` — 批量写入失败时回退到单段追加，提升飞书文档写入稳定性
+- 开发文档 `development-guide/architecture-overview.md`，系统说明 ChatTool 架构分层、设计特点与任务沉淀路径
 
 ### Fixed
 - `chattool skill install` 现在会在安装前校验 `SKILL.md` 的 YAML frontmatter，并在缺少 `name`/`description` 时直接报错，避免把无效 skills 复制到 Codex / Claude Code

@@ -1,6 +1,7 @@
 import re
 import json
 import threading
+from types import SimpleNamespace
 from uuid import uuid4
 from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
@@ -630,6 +631,673 @@ class LarkBot:
         return self.client.application.v6.scope.list(request)
 
     # ------------------------------------------------------------------
+    # Bitable helpers
+    # ------------------------------------------------------------------
+
+    def create_bitable_app(
+        self,
+        name: str,
+        folder_token: str = None,
+        time_zone: str = None,
+    ) -> Any:
+        """Create a Bitable app."""
+        from lark_oapi.api.bitable.v1 import CreateAppRequest, ReqApp
+
+        payload = {"name": name}
+        if folder_token:
+            payload["folder_token"] = folder_token
+        if time_zone:
+            payload["time_zone"] = time_zone
+
+        request = CreateAppRequest.builder().request_body(ReqApp(payload)).build()
+        return self.client.bitable.v1.app.create(request)
+
+    def list_bitable_tables(
+        self,
+        app_token: str,
+        page_size: int = 100,
+        page_token: str = None,
+    ) -> Any:
+        """List tables in a Bitable app."""
+        from lark_oapi.api.bitable.v1 import ListAppTableRequest
+
+        builder = ListAppTableRequest.builder().app_token(app_token).page_size(page_size)
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.bitable.v1.app_table.list(builder.build())
+
+    def create_bitable_table(
+        self,
+        app_token: str,
+        name: str,
+        default_view_name: str = None,
+        fields: List[dict] = None,
+    ) -> Any:
+        """Create a table in a Bitable app."""
+        from lark_oapi.api.bitable.v1 import (
+            CreateAppTableRequest,
+            CreateAppTableRequestBody,
+            ReqTable,
+        )
+
+        table_payload = {"name": name}
+        if default_view_name:
+            table_payload["default_view_name"] = default_view_name
+        if fields:
+            table_payload["fields"] = fields
+
+        request = (
+            CreateAppTableRequest.builder()
+            .app_token(app_token)
+            .request_body(
+                CreateAppTableRequestBody.builder()
+                .table(ReqTable(table_payload))
+                .build()
+            )
+            .build()
+        )
+        return self.client.bitable.v1.app_table.create(request)
+
+    def list_bitable_fields(
+        self,
+        app_token: str,
+        table_id: str,
+        page_size: int = 100,
+        page_token: str = None,
+    ) -> Any:
+        """List fields in a Bitable table."""
+        from lark_oapi.api.bitable.v1 import ListAppTableFieldRequest
+
+        builder = (
+            ListAppTableFieldRequest.builder()
+            .app_token(app_token)
+            .table_id(table_id)
+            .page_size(page_size)
+        )
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.bitable.v1.app_table_field.list(builder.build())
+
+    def create_bitable_field(
+        self,
+        app_token: str,
+        table_id: str,
+        field_name: str,
+        field_type: int,
+        property: dict = None,
+        description: dict = None,
+        ui_type: str = None,
+        is_primary: bool = None,
+        is_hidden: bool = None,
+    ) -> Any:
+        """Create a field in a Bitable table."""
+        from lark_oapi.api.bitable.v1 import CreateAppTableFieldRequest, AppTableField
+
+        payload = {
+            "field_name": field_name,
+            "type": field_type,
+        }
+        if property is not None:
+            payload["property"] = property
+        if description is not None:
+            payload["description"] = description
+        if ui_type is not None:
+            payload["ui_type"] = ui_type
+        if is_primary is not None:
+            payload["is_primary"] = is_primary
+        if is_hidden is not None:
+            payload["is_hidden"] = is_hidden
+
+        request = (
+            CreateAppTableFieldRequest.builder()
+            .app_token(app_token)
+            .table_id(table_id)
+            .client_token(str(uuid4()))
+            .request_body(AppTableField(payload))
+            .build()
+        )
+        return self.client.bitable.v1.app_table_field.create(request)
+
+    def list_bitable_records(
+        self,
+        app_token: str,
+        table_id: str,
+        page_size: int = 100,
+        page_token: str = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """List records in a Bitable table."""
+        from lark_oapi.api.bitable.v1 import ListAppTableRecordRequest
+
+        builder = (
+            ListAppTableRecordRequest.builder()
+            .app_token(app_token)
+            .table_id(table_id)
+            .page_size(page_size)
+            .user_id_type(user_id_type)
+        )
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.bitable.v1.app_table_record.list(builder.build())
+
+    def create_bitable_record(
+        self,
+        app_token: str,
+        table_id: str,
+        fields: Dict[str, Any],
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Create a record in a Bitable table."""
+        from lark_oapi.api.bitable.v1 import CreateAppTableRecordRequest, AppTableRecord
+
+        request = (
+            CreateAppTableRecordRequest.builder()
+            .app_token(app_token)
+            .table_id(table_id)
+            .user_id_type(user_id_type)
+            .client_token(str(uuid4()))
+            .request_body(AppTableRecord({"fields": fields}))
+            .build()
+        )
+        return self.client.bitable.v1.app_table_record.create(request)
+
+    def batch_create_bitable_records(
+        self,
+        app_token: str,
+        table_id: str,
+        records: List[Dict[str, Any]],
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Batch-create records in a Bitable table."""
+        from lark_oapi.api.bitable.v1 import (
+            AppTableRecord,
+            BatchCreateAppTableRecordRequest,
+            BatchCreateAppTableRecordRequestBody,
+        )
+
+        request_records = [AppTableRecord({"fields": item}) for item in records]
+        request = (
+            BatchCreateAppTableRecordRequest.builder()
+            .app_token(app_token)
+            .table_id(table_id)
+            .user_id_type(user_id_type)
+            .client_token(str(uuid4()))
+            .request_body(
+                BatchCreateAppTableRecordRequestBody.builder()
+                .records(request_records)
+                .build()
+            )
+            .build()
+        )
+        return self.client.bitable.v1.app_table_record.batch_create(request)
+
+    # ------------------------------------------------------------------
+    # Calendar helpers
+    # ------------------------------------------------------------------
+
+    def list_calendars(
+        self,
+        page_size: int = 50,
+        page_token: str = None,
+    ) -> Any:
+        """List accessible calendars."""
+        from lark_oapi.api.calendar.v4 import ListCalendarRequest
+
+        builder = ListCalendarRequest.builder().page_size(page_size)
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.calendar.v4.calendar.list(builder.build())
+
+    def get_primary_calendar(self, user_id_type: str = "user_id") -> Any:
+        """Fetch the primary calendar for the current user/bot context."""
+        from lark_oapi.api.calendar.v4 import PrimaryCalendarRequest
+
+        request = PrimaryCalendarRequest.builder().user_id_type(user_id_type).build()
+        return self.client.calendar.v4.calendar.primary(request)
+
+    def create_calendar_event(
+        self,
+        calendar_id: str,
+        summary: str,
+        start_time: Dict[str, str],
+        end_time: Dict[str, str],
+        description: str = None,
+        need_notification: bool = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Create a calendar event."""
+        from lark_oapi.api.calendar.v4 import CreateCalendarEventRequest, CalendarEvent
+
+        payload = {
+            "summary": summary,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+        if description:
+            payload["description"] = description
+        if need_notification is not None:
+            payload["need_notification"] = need_notification
+
+        request = (
+            CreateCalendarEventRequest.builder()
+            .calendar_id(calendar_id)
+            .user_id_type(user_id_type)
+            .idempotency_key(str(uuid4()))
+            .request_body(CalendarEvent(payload))
+            .build()
+        )
+        return self.client.calendar.v4.calendar_event.create(request)
+
+    def list_calendar_events(
+        self,
+        calendar_id: str,
+        start_time: str,
+        end_time: str,
+        page_size: int = 50,
+        page_token: str = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """List events in a time range."""
+        from lark_oapi.api.calendar.v4 import ListCalendarEventRequest
+
+        builder = (
+            ListCalendarEventRequest.builder()
+            .calendar_id(calendar_id)
+            .start_time(start_time)
+            .end_time(end_time)
+            .page_size(page_size)
+            .user_id_type(user_id_type)
+        )
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.calendar.v4.calendar_event.list(builder.build())
+
+    def get_calendar_event(
+        self,
+        calendar_id: str,
+        event_id: str,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Get a calendar event."""
+        from lark_oapi.api.calendar.v4 import GetCalendarEventRequest
+
+        request = (
+            GetCalendarEventRequest.builder()
+            .calendar_id(calendar_id)
+            .event_id(event_id)
+            .user_id_type(user_id_type)
+            .build()
+        )
+        return self.client.calendar.v4.calendar_event.get(request)
+
+    def patch_calendar_event(
+        self,
+        calendar_id: str,
+        event_id: str,
+        summary: str = None,
+        start_time: Dict[str, str] = None,
+        end_time: Dict[str, str] = None,
+        description: str = None,
+        need_notification: bool = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Patch a calendar event."""
+        from lark_oapi.api.calendar.v4 import PatchCalendarEventRequest, CalendarEvent
+
+        payload: Dict[str, Any] = {}
+        if summary is not None:
+            payload["summary"] = summary
+        if start_time is not None:
+            payload["start_time"] = start_time
+        if end_time is not None:
+            payload["end_time"] = end_time
+        if description is not None:
+            payload["description"] = description
+        if need_notification is not None:
+            payload["need_notification"] = need_notification
+
+        request = (
+            PatchCalendarEventRequest.builder()
+            .calendar_id(calendar_id)
+            .event_id(event_id)
+            .user_id_type(user_id_type)
+            .request_body(CalendarEvent(payload))
+            .build()
+        )
+        return self.client.calendar.v4.calendar_event.patch(request)
+
+    def reply_calendar_event(
+        self,
+        calendar_id: str,
+        event_id: str,
+        rsvp_status: str,
+    ) -> Any:
+        """Reply to a calendar invite."""
+        from lark_oapi.api.calendar.v4 import (
+            ReplyCalendarEventRequest,
+            ReplyCalendarEventRequestBody,
+        )
+
+        request = (
+            ReplyCalendarEventRequest.builder()
+            .calendar_id(calendar_id)
+            .event_id(event_id)
+            .request_body(
+                ReplyCalendarEventRequestBody.builder()
+                .rsvp_status(rsvp_status)
+                .build()
+            )
+            .build()
+        )
+        return self.client.calendar.v4.calendar_event.reply(request)
+
+    def list_freebusy(
+        self,
+        time_min: str,
+        time_max: str,
+        user_ids: List[str] = None,
+        room_ids: List[str] = None,
+        include_external_calendar: bool = False,
+        only_busy: bool = False,
+        need_rsvp_status: bool = False,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """List freebusy information."""
+        from lark_oapi.api.calendar.v4 import ListFreebusyRequest, ListFreebusyRequestBody
+
+        body_builder = (
+            ListFreebusyRequestBody.builder()
+            .time_min(time_min)
+            .time_max(time_max)
+            .include_external_calendar(include_external_calendar)
+            .only_busy(only_busy)
+            .need_rsvp_status(need_rsvp_status)
+        )
+        if user_ids:
+            body_builder.user_id(user_ids)
+        if room_ids:
+            body_builder.room_id(room_ids)
+
+        request = (
+            ListFreebusyRequest.builder()
+            .user_id_type(user_id_type)
+            .request_body(body_builder.build())
+            .build()
+        )
+        return self.client.calendar.v4.freebusy.list(request)
+
+    # ------------------------------------------------------------------
+    # Task helpers
+    # ------------------------------------------------------------------
+
+    def create_task(
+        self,
+        summary: str,
+        description: str = None,
+        due_timestamp: int = None,
+        due_is_all_day: bool = False,
+        members: List[Dict[str, Any]] = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Create a task."""
+        from lark_oapi.api.task.v2 import CreateTaskRequest, InputTask
+
+        payload: Dict[str, Any] = {"summary": summary}
+        if description:
+            payload["description"] = description
+        if due_timestamp is not None:
+            payload["due"] = {
+                "timestamp": due_timestamp,
+                "is_all_day": due_is_all_day,
+            }
+        if members:
+            payload["members"] = members
+
+        request = (
+            CreateTaskRequest.builder()
+            .user_id_type(user_id_type)
+            .request_body(InputTask(payload))
+            .build()
+        )
+        return self.client.task.v2.task.create(request)
+
+    def list_tasks(
+        self,
+        completed: bool = None,
+        page_size: int = 50,
+        page_token: str = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """List tasks."""
+        from lark_oapi.api.task.v2 import ListTaskRequest
+
+        builder = (
+            ListTaskRequest.builder()
+            .page_size(page_size)
+            .user_id_type(user_id_type)
+        )
+        if completed is not None:
+            builder.completed(completed)
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.task.v2.task.list(builder.build())
+
+    def get_task(self, task_guid: str, user_id_type: str = "user_id") -> Any:
+        """Get a task."""
+        from lark_oapi.api.task.v2 import GetTaskRequest
+
+        request = (
+            GetTaskRequest.builder()
+            .task_guid(task_guid)
+            .user_id_type(user_id_type)
+            .build()
+        )
+        return self.client.task.v2.task.get(request)
+
+    def patch_task(
+        self,
+        task_guid: str,
+        summary: str = None,
+        description: str = None,
+        completed_at: int = None,
+        due_timestamp: int = None,
+        due_is_all_day: bool = False,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Patch a task."""
+        from lark_oapi.api.task.v2 import PatchTaskRequest, PatchTaskRequestBody, InputTask
+
+        payload: Dict[str, Any] = {}
+        update_fields: List[str] = []
+
+        if summary is not None:
+            payload["summary"] = summary
+            update_fields.append("summary")
+        if description is not None:
+            payload["description"] = description
+            update_fields.append("description")
+        if completed_at is not None:
+            payload["completed_at"] = completed_at
+            update_fields.append("completed_at")
+        if due_timestamp is not None:
+            payload["due"] = {
+                "timestamp": due_timestamp,
+                "is_all_day": due_is_all_day,
+            }
+            update_fields.append("due")
+
+        request = (
+            PatchTaskRequest.builder()
+            .task_guid(task_guid)
+            .user_id_type(user_id_type)
+            .request_body(
+                PatchTaskRequestBody.builder()
+                .task(InputTask(payload))
+                .update_fields(update_fields)
+                .build()
+            )
+            .build()
+        )
+        return self.client.task.v2.task.patch(request)
+
+    def create_tasklist(
+        self,
+        name: str,
+        members: List[Dict[str, Any]] = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Create a tasklist."""
+        from lark_oapi.api.task.v2 import CreateTasklistRequest, InputTasklist
+
+        payload: Dict[str, Any] = {"name": name}
+        if members:
+            payload["members"] = members
+
+        request = (
+            CreateTasklistRequest.builder()
+            .user_id_type(user_id_type)
+            .request_body(InputTasklist(payload))
+            .build()
+        )
+        return self.client.task.v2.tasklist.create(request)
+
+    def list_tasklists(
+        self,
+        page_size: int = 50,
+        page_token: str = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """List tasklists."""
+        from lark_oapi.api.task.v2 import ListTasklistRequest
+
+        builder = (
+            ListTasklistRequest.builder()
+            .page_size(page_size)
+            .user_id_type(user_id_type)
+        )
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.task.v2.tasklist.list(builder.build())
+
+    def get_tasklist(self, tasklist_guid: str, user_id_type: str = "user_id") -> Any:
+        """Get a tasklist."""
+        from lark_oapi.api.task.v2 import GetTasklistRequest
+
+        request = (
+            GetTasklistRequest.builder()
+            .tasklist_guid(tasklist_guid)
+            .user_id_type(user_id_type)
+            .build()
+        )
+        return self.client.task.v2.tasklist.get(request)
+
+    def list_tasklist_tasks(
+        self,
+        tasklist_guid: str,
+        completed: bool = None,
+        page_size: int = 50,
+        page_token: str = None,
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """List tasks under a tasklist."""
+        from lark_oapi.api.task.v2 import TasksTasklistRequest
+
+        builder = (
+            TasksTasklistRequest.builder()
+            .tasklist_guid(tasklist_guid)
+            .page_size(page_size)
+            .user_id_type(user_id_type)
+        )
+        if completed is not None:
+            builder.completed(completed)
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.task.v2.tasklist.tasks(builder.build())
+
+    def add_tasklist_members(
+        self,
+        tasklist_guid: str,
+        members: List[Dict[str, Any]],
+        user_id_type: str = "user_id",
+    ) -> Any:
+        """Add members to a tasklist."""
+        from lark_oapi.api.task.v2 import (
+            AddMembersTasklistRequest,
+            AddMembersTasklistRequestBody,
+        )
+
+        request = (
+            AddMembersTasklistRequest.builder()
+            .tasklist_guid(tasklist_guid)
+            .user_id_type(user_id_type)
+            .request_body(
+                AddMembersTasklistRequestBody.builder()
+                .members(members)
+                .build()
+            )
+            .build()
+        )
+        return self.client.task.v2.tasklist.add_members(request)
+
+    # ------------------------------------------------------------------
+    # IM read helpers
+    # ------------------------------------------------------------------
+
+    def list_messages(
+        self,
+        container_id: str,
+        container_id_type: str = "chat",
+        start_time: str = None,
+        end_time: str = None,
+        sort_type: str = None,
+        page_size: int = 20,
+        page_token: str = None,
+    ) -> Any:
+        """List IM messages in a chat container."""
+        from lark_oapi.api.im.v1 import ListMessageRequest
+
+        builder = (
+            ListMessageRequest.builder()
+            .container_id_type(container_id_type)
+            .container_id(container_id)
+            .page_size(page_size)
+        )
+        if start_time:
+            builder.start_time(start_time)
+        if end_time:
+            builder.end_time(end_time)
+        if sort_type:
+            builder.sort_type(sort_type)
+        if page_token:
+            builder.page_token(page_token)
+        return self.client.im.v1.message.list(builder.build())
+
+    def get_message(self, message_id: str) -> Any:
+        """Get a single IM message."""
+        from lark_oapi.api.im.v1 import GetMessageRequest
+
+        request = GetMessageRequest.builder().message_id(message_id).build()
+        return self.client.im.v1.message.get(request)
+
+    def get_message_resource(
+        self,
+        message_id: str,
+        file_key: str,
+        resource_type: str,
+    ) -> Any:
+        """Fetch a binary resource from a message."""
+        from lark_oapi.api.im.v1 import GetMessageResourceRequest
+
+        request = (
+            GetMessageResourceRequest.builder()
+            .message_id(message_id)
+            .file_key(file_key)
+            .type(resource_type)
+            .build()
+        )
+        return self.client.im.v1.message_resource.get(request)
+
+    # ------------------------------------------------------------------
     # Docs / Docx helpers
     # ------------------------------------------------------------------
 
@@ -730,6 +1398,161 @@ class LarkBot:
             .build()
         )
         return self.client.docx.v1.document_block_children.create(request)
+
+    def append_doc_blocks(
+        self,
+        document_id: str,
+        blocks: List[dict],
+        block_id: str = None,
+        index: int = None,
+    ) -> Any:
+        """Append structured docx blocks to a Feishu docx document."""
+        from lark_oapi.api.docx.v1 import (
+            Block,
+            CreateDocumentBlockChildrenRequest,
+            CreateDocumentBlockChildrenRequestBody,
+        )
+
+        normalized_blocks = []
+        for block in blocks:
+            block_data = dict(block)
+            for key in ["block_id", "parent_id", "children", "comment_ids"]:
+                block_data.pop(key, None)
+            code_payload = block_data.get("code")
+            if isinstance(code_payload, dict):
+                code_payload = dict(code_payload)
+                style_payload = code_payload.get("style")
+                if isinstance(style_payload, dict):
+                    style_payload = dict(style_payload)
+                    language = style_payload.get("language")
+                    if isinstance(language, str):
+                        normalized_language = language.strip()
+                        if normalized_language.isdigit():
+                            style_payload["language"] = int(normalized_language)
+                        else:
+                            style_payload.pop("language", None)
+                    if style_payload:
+                        code_payload["style"] = style_payload
+                    else:
+                        code_payload.pop("style", None)
+                block_data["code"] = code_payload
+            normalized_blocks.append(Block(block_data))
+
+        body_builder = (
+            CreateDocumentBlockChildrenRequestBody.builder()
+            .children(normalized_blocks)
+        )
+        if index is not None:
+            body_builder.index(index)
+
+        request = (
+            CreateDocumentBlockChildrenRequest.builder()
+            .document_id(document_id)
+            .block_id(block_id or document_id)
+            .client_token(str(uuid4()))
+            .request_body(body_builder.build())
+            .build()
+        )
+        return self.client.docx.v1.document_block_children.create(request)
+
+    def append_doc_blocks_safe(
+        self,
+        document_id: str,
+        blocks: List[dict],
+        block_id: str = None,
+        index: int = None,
+        batch_size: int = 20,
+    ) -> Any:
+        """Append structured blocks in small batches."""
+        normalized = [block for block in blocks if isinstance(block, dict)]
+        if not normalized:
+            return SimpleNamespace(
+                code=0,
+                msg="ok",
+                data=SimpleNamespace(document_revision_id=None, children=[]),
+                success=lambda: True,
+            )
+
+        if batch_size <= 0:
+            batch_size = 1
+
+        all_children = []
+        revision_id = None
+        for offset in range(0, len(normalized), batch_size):
+            chunk = normalized[offset: offset + batch_size]
+            resp = self.append_doc_blocks(
+                document_id=document_id,
+                blocks=chunk,
+                block_id=block_id,
+                index=index,
+            )
+            if getattr(resp, "code", 0) != 0:
+                return resp
+            revision_id = getattr(resp.data, "document_revision_id", revision_id)
+            all_children.extend(getattr(resp.data, "children", None) or [])
+
+        return SimpleNamespace(
+            code=0,
+            msg="ok",
+            data=SimpleNamespace(document_revision_id=revision_id, children=all_children),
+            success=lambda: True,
+        )
+
+    def append_doc_texts_safe(
+        self,
+        document_id: str,
+        texts: List[str],
+        block_id: str = None,
+        index: int = None,
+        batch_size: int = 20,
+    ) -> Any:
+        """Append text paragraphs in small batches, with single-paragraph fallback."""
+        normalized = [text for text in texts if text and text.strip()]
+        if not normalized:
+            return SimpleNamespace(
+                code=0,
+                msg="ok",
+                data=SimpleNamespace(document_revision_id=None, children=[]),
+                success=lambda: True,
+            )
+
+        if batch_size <= 0:
+            batch_size = 1
+
+        all_children = []
+        revision_id = None
+
+        for offset in range(0, len(normalized), batch_size):
+            chunk = normalized[offset: offset + batch_size]
+            resp = self.append_doc_texts(
+                document_id=document_id,
+                texts=chunk,
+                block_id=block_id,
+                index=index,
+            )
+            if getattr(resp, "code", 0) == 0:
+                revision_id = getattr(resp.data, "document_revision_id", revision_id)
+                all_children.extend(getattr(resp.data, "children", None) or [])
+                continue
+
+            for text in chunk:
+                single_resp = self.append_doc_text(
+                    document_id=document_id,
+                    text=text,
+                    block_id=block_id,
+                    index=index,
+                )
+                if getattr(single_resp, "code", 0) != 0:
+                    return single_resp
+                revision_id = getattr(single_resp.data, "document_revision_id", revision_id)
+                all_children.extend(getattr(single_resp.data, "children", None) or [])
+
+        return SimpleNamespace(
+            code=0,
+            msg="ok",
+            data=SimpleNamespace(document_revision_id=revision_id, children=all_children),
+            success=lambda: True,
+        )
 
     def append_doc_text(
         self,

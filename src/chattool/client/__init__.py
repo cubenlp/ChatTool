@@ -1,6 +1,6 @@
-import warnings
+from chattool.cli_warnings import install_cli_warning_filters
 
-warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*")
+install_cli_warning_filters()
 
 
 def main_cli():
