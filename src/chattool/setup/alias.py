@@ -10,7 +10,7 @@ logger = setup_logger("setup_alias")
 
 ALIAS_MAP = {
     "chatenv": "chattool env",
-    "chatskills": "chattool skill",
+    "chatskill": "chattool skill",
     "chatdns": "chattool dns",
     "chatgh": "chattool gh",
     "chatcc": "chattool cc",
