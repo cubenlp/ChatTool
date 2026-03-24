@@ -7,6 +7,7 @@
 
 ## Recent Commits
 
+- `6fa4b12` `docs: add feishu document task playbooks`
 - `04a4413` `feat: refine feishu cli guidance and skill layout`
 - `f2b26ae` `docs: add feishu messaging task playbooks`
 - `65c268f` `feat: harden lark doc and scope flows`
@@ -41,6 +42,11 @@
   - append text / file
   - parse markdown / append json
   - targeted update planning
+- Real CLI implementations now cover the supported document task flows:
+  - `test_chattool_lark_doc_create_notify_task.py`
+  - `test_chattool_lark_doc_fetch_task.py`
+  - `test_chattool_lark_doc_append_task.py`
+  - `test_chattool_lark_doc_markdown_task.py`
 
 ## Verified
 
@@ -51,6 +57,10 @@ python -m pytest -q \
   cli-tests/lark/test_chattool_lark_basic.py \
   cli-tests/lark/test_chattool_lark_doc_basic.py \
   cli-tests/lark/test_chattool_lark_doc_markdown.py \
+  cli-tests/lark/test_chattool_lark_doc_create_notify_task.py \
+  cli-tests/lark/test_chattool_lark_doc_fetch_task.py \
+  cli-tests/lark/test_chattool_lark_doc_append_task.py \
+  cli-tests/lark/test_chattool_lark_doc_markdown_task.py \
   cli-tests/lark-troubleshoot/test_chattool_lark_troubleshoot_basic.py \
   cli-tests/lark-bitable/test_chattool_lark_bitable_basic.py \
   cli-tests/lark-calendar/test_chattool_lark_calendar_basic.py \
@@ -60,8 +70,8 @@ python -m pytest -q \
 
 ## Remaining Follow-Up
 
-1. Review and commit the current document task practice docs plus the related skill/doc index cleanup.
-2. Continue from messaging into documents implementation details, then move to other topic areas.
+1. Decide the first implementation scope for `chattool lark doc update ...`, based on the task doc already written.
+2. Continue from documents into the remaining topic task docs and CLI gaps where needed.
 3. Keep extending `chattool lark <topic> ...` from the topic task docs where needed.
 4. Re-run the real Feishu CLI coverage after the next code-side changes.
 

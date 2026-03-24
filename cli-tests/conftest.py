@@ -48,6 +48,13 @@ def _find_value(payload, key: str):
     return None
 
 
+def _extract_match(output: str, pattern: str, label: str) -> str:
+    match = re.search(pattern, output)
+    if not match:
+        raise AssertionError(f"{label} not found in output:\n{output}")
+    return match.group(1)
+
+
 @pytest.fixture
 def lark_testkit(tmp_path: Path):
     _reload_chattool_env()
@@ -55,11 +62,11 @@ def lark_testkit(tmp_path: Path):
     if not FeishuConfig.FEISHU_APP_ID.value or not FeishuConfig.FEISHU_APP_SECRET.value:
         pytest.skip("Feishu config is not available")
 
-    message_receiver_id = (
-        FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value
-        or FeishuConfig.FEISHU_TEST_USER_ID.value
-    )
-    message_receiver_type = FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id"
+    default_receiver_id = FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
+    test_user_id = FeishuConfig.FEISHU_TEST_USER_ID.value or None
+    test_user_id_type = FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id"
+    message_receiver_id = default_receiver_id or test_user_id
+    message_receiver_type = "user_id" if default_receiver_id else test_user_id_type
 
     def invoke(*args: str):
         runner = CliRunner()
@@ -67,16 +74,51 @@ def lark_testkit(tmp_path: Path):
         assert result.exit_code == 0, result.output
         return result
 
+    def create_document(prefix: str = "cli-doc", *, title: str | None = None):
+        document_title = title or f"{prefix}-{time.time_ns()}"
+        create = invoke("lark", "doc", "create", document_title)
+        return SimpleNamespace(
+            title=document_title,
+            document_id=_extract_match(
+                create.output,
+                r"document_id[:=]\s*([A-Za-z0-9_]+)",
+                "document_id",
+            ),
+            output=create.output,
+        )
+
+    def wait_doc_raw_contains(document_id: str, text: str, *, attempts: int = 5, delay: float = 1.0):
+        last_output = ""
+        for _ in range(attempts):
+            raw = invoke("lark", "doc", "raw", document_id)
+            last_output = raw.output
+            if text in last_output:
+                return raw
+            time.sleep(delay)
+        raise AssertionError(f"{text!r} not found in document raw output:\n{last_output}")
+
     return SimpleNamespace(
         tmp_path=tmp_path,
         bot=LarkBot(),
         invoke=invoke,
+        create_document=create_document,
+        wait_doc_raw_contains=wait_doc_raw_contains,
         parse_json=_extract_json_from_output,
         find_value=_find_value,
-        unique_name=lambda prefix: f"{prefix}-{int(time.time())}",
+        unique_name=lambda prefix: f"{prefix}-{time.time_ns()}",
         message_receiver_id=message_receiver_id,
         message_receiver_type=message_receiver_type,
-        test_user_id=FeishuConfig.FEISHU_TEST_USER_ID.value or None,
-        test_user_id_type=FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id",
-        message_id_from_output=lambda output: re.search(r"message_id=([A-Za-z0-9_]+)", output).group(1),
+        default_receiver_id=default_receiver_id,
+        test_user_id=test_user_id,
+        test_user_id_type=test_user_id_type,
+        message_id_from_output=lambda output: _extract_match(
+            output,
+            r"message_id=([A-Za-z0-9_]+)",
+            "message_id",
+        ),
+        document_id_from_output=lambda output: _extract_match(
+            output,
+            r"document_id[:=]\s*([A-Za-z0-9_]+)",
+            "document_id",
+        ),
     )
