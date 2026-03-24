@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 
 from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
+from chattool.utils import mask_secret
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text
 
@@ -372,6 +373,76 @@ def _validate_cloned_repo(skills_source: Path) -> None:
         raise click.Abort()
 
 
+def _get_default_github_token() -> str | None:
+    from chattool.config.github import GitHubConfig
+
+    token = GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    if token:
+        return str(token).strip() or None
+    return None
+
+
+def _configure_github_https_auth(token: str) -> None:
+    logger.info("Configuring Git credential store for github.com")
+    subprocess.run(
+        ["git", "config", "--global", "credential.helper", "store"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    credential_input = (
+        "protocol=https\n"
+        "host=github.com\n"
+        "username=x-access-token\n"
+        f"password={token}\n\n"
+    )
+    subprocess.run(
+        ["git", "credential", "approve"],
+        input=credential_input,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _maybe_setup_github_auth(interactive, can_prompt) -> bool:
+    default_token = _get_default_github_token()
+    token = default_token
+
+    if interactive is not False and can_prompt:
+        token_prompt = "github_token"
+        if default_token:
+            token_prompt += f" [current: {mask_secret(default_token)}] (leave blank to keep current)"
+        else:
+            token_prompt += " (leave blank to skip Git HTTPS auth setup)"
+        token_input = ask_text(token_prompt, password=True)
+        if token_input == BACK_VALUE:
+            return False
+        if token_input:
+            token = token_input.strip()
+    elif not token:
+        logger.info("Skipping GitHub auth setup because no GITHUB_ACCESS_TOKEN is available")
+        return False
+
+    if not token:
+        logger.info("Skipping GitHub auth setup because token is empty")
+        return False
+
+    try:
+        _configure_github_https_auth(token)
+    except subprocess.CalledProcessError as exc:
+        logger.error("Failed to configure GitHub HTTPS auth")
+        click.echo("Failed to configure GitHub HTTPS auth.", err=True)
+        stderr = (exc.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort() from exc
+
+    logger.info("Configured GitHub HTTPS auth for github.com")
+    click.echo("Configured Git HTTPS auth for github.com.")
+    return True
+
+
 def setup_playground(workspace_dir=None, chattool_source=None, interactive=None, force=False):
     logger.info("Start playground setup")
 
@@ -464,3 +535,4 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
     click.echo(f"Skills: {skills_dir}")
     click.echo(f"Scratch: {scratch_dir}")
     click.echo(f"Copied skills: {len(copied_skills)}")
+    _maybe_setup_github_auth(interactive=interactive, can_prompt=can_prompt)

@@ -116,6 +116,13 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 
 如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下会默认提示“跳过克隆并保留本地版本”；只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
 
+完成 workspace bootstrap 后，命令还会尝试配置 GitHub 的 HTTPS Git 鉴权：
+
+- 优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，也就是 `chatenv cat -t gh` 对应的当前配置值
+- 交互模式下会提示是否配置，并允许输入新的 token；直接回车则保留当前配置值
+- 非交互模式下如果当前 `chatenv` 里已有 `GITHUB_ACCESS_TOKEN`，会自动写入 `git credential store`
+- 该步骤会执行 `git config --global credential.helper store`，并为 `https://github.com` 写入一份 PAT 凭据，方便后续 `git push` / `git fetch`
+
 在目标空目录里直接执行：
 
 ```bash

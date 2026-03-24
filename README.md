@@ -124,6 +124,7 @@ chattool explore arxiv get 1706.03762 -v
 | PyPI 工具 | `chattool pypi` | 创建、检查、构建、校验与发布 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup codex/claude` | 安装 Codex / Claude Code 并写入配置 |
+| Playground | `chattool setup playground` | 初始化工作区，并可在完成后复用 `chatenv` 中的 GitHub token 配置 Git HTTPS 鉴权 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude Code |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
 

@@ -16,6 +16,7 @@ ChatTool 从 v5.0.0 开始引入了全新的集中式配置管理系统，支持
 - 该优先级对应 `BaseEnvConfig.load_from_dict()` 的真实实现：已注册配置项会优先读取 `.env`，其次才回退到 `os.environ`。
 - `BaseEnvConfig.set()` 是运行时覆盖手段，只修改当前进程内的值；它不属于上面的“默认加载顺序”，也不会自动回写 `.env` 或同步系统环境变量。
 - 对于已经注册到 `src/chattool/config/` 的配置项，CLI 与业务代码应优先读取配置对象的 `.value`，不要只直接读取 `os.environ`，否则会绕过 `chatenv` 管理的默认值。
+- 例如 `chattool setup playground` 在补 GitHub 鉴权时，会优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，从而复用 `chatenv` 当前生效的 GitHub 配置。
 
 ## 快速开始
 
@@ -146,6 +147,7 @@ BaseEnvConfig.print_config()
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
 - **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID`, `FEISHU_TEST_USER_ID`, `FEISHU_TEST_USER_ID_TYPE` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
+- **GitHub**: `GITHUB_ACCESS_TOKEN`, `GITHUB_DEFAULT_REPO`
 
 其中飞书相关有两个额外约定：
 
