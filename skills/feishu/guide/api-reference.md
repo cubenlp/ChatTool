@@ -46,4 +46,4 @@
 
 - 先定 CLI 目标命令，再查对应 API。
 - 不把 API 资源名直接搬成用户命令名。
-- 继续扩结构化文档能力前，先看 `official-docx-capabilities.md`。
+- 继续扩结构化文档能力前，先看 `../documents/official-docx-capabilities.md`。

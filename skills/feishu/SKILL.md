@@ -1,88 +1,62 @@
 ---
 name: feishu
-description: Use `chattool lark` as the single Feishu CLI entry. This skill is the Feishu index: route work to CLI first, then the topic markdown files in this directory, then back into reusable CLI development.
-version: 0.3.0
+description: Use `chattool lark` as the single Feishu entry. This root index routes work into topic folders, keeps archive coverage, and points to the right CLI surface first.
+version: 0.4.0
 ---
 
-# Feishu Skill
+# Feishu Skill Index
 
-This skill is the single Feishu entry index. `SKILL.md` only routes work; the whole `skills/feishu/` directory is installed together, so treat the markdown files in this directory as one working package.
+这里只保留一个入口文件：`SKILL.md`。安装时会整目录拷贝，因此其它资料全部按主题放到子目录里。
 
-## Default Rule
+## 默认规则
 
-- Start with `chattool lark`.
-- Put business inputs in CLI arguments, not temporary env vars.
-- If the capability is reusable and missing, extend `src/chattool/tools/lark/` first.
-- Keep this skill package focused on CLI routing, test-first design, and execution guidance.
+- 先从 `chattool lark` 开始。
+- 业务输入优先走 CLI 参数，不新增临时环境变量。
+- 若能力缺口具有复用价值，先补 `src/chattool/tools/lark/`。
+- 测试与接口设计优先落到 `cli-tests/*.md`。
 
-## Capability Map
+## 目录索引
 
-- Verification and permission checks
-  - `chattool lark info`
-  - `chattool lark scopes`
-- Messaging and resource delivery
-  - `chattool lark send`
-  - `chattool lark upload`
-  - `chattool lark reply`
-- Document workflows
-  - Stable text track: `chattool lark notify-doc`, `doc append-text`, `doc append-file`
-  - Structured docx track: `chattool lark doc parse-md`, `doc append-json`
-- Planned topic groups
-  - `chattool lark bitable ...`
-  - `chattool lark calendar ...`
-  - `chattool lark im ...`
-  - `chattool lark task ...`
-  - `chattool lark troubleshoot ...`
-- Local debugging
-  - `chattool lark listen`
-  - `chattool lark chat`
+- `guide/`
+  - `overview.md` / `overview.zh.md`
+    - 旧主 skill 内容归档版，对照当前 CLI 使用
+  - `setup-and-routing.md`
+    - 凭证、`-e/--env`、默认接收者、测试用户、路由规则
+  - `api-reference.md`
+    - 官方 API 文档 URL 与 CLI 对应
+- `messaging/`
+  - `messaging.md`
+  - `channel-rules.md`
+  - `lark-markdown-syntax.md`
+  - `im-read.md`
+  - `troubleshoot.md`
+- `documents/`
+  - `documents.md`
+  - `create-doc.md`
+  - `fetch-doc.md`
+  - `update-doc.md`
+  - `official-docx-capabilities.md`
+  - `feishu-docx-adoption-notes.md`
+- `calendar/`
+  - `calendar.md`
+- `task/`
+  - `task.md`
+- `bitable/`
+  - `bitable.md`
+  - `references/examples.md`
+  - `references/field-properties.md`
+  - `references/record-values.md`
 
-## Topic Docs
+## 路由规则
 
-- `setup-and-routing.md`
-  - credentials, `-e/--env`, default receiver, test-user config, routing rules
-- `messaging.md`
-  - send/upload/reply/listen/chat workflows
-- `documents.md`
-  - document commands, stable text track, structured docx track
-- `bitable.md`
-  - target `chattool lark bitable ...` command surface and test-first scenarios
-- `calendar.md`
-  - target `chattool lark calendar ...` command surface and test-first scenarios
-- `im-read.md`
-  - target `chattool lark im ...` command surface and real-message reading workflows
-- `task.md`
-  - target `chattool lark task ...` command surface and task/tasklist flows
-- `troubleshoot.md`
-  - target `chattool lark troubleshoot ...` command surface and diagnostics workflow
-- `channel-rules.md`
-  - Feishu output constraints for `send`, `reply`, cards, posts, and docs
-- `api-reference.md`
-  - official API doc URLs and CLI-to-API mapping
-- `official-docx-capabilities.md`
-  - docx block boundaries and current implementation scope
-- `feishu-docx-adoption-notes.md`
-  - what to borrow from external references and what not to import directly
-- `bitable-field-properties.md`
-  - reference for field property structures during CLI extension
-- `bitable-record-values.md`
-  - reference for record payload formats during CLI extension
-- `bitable-examples.md`
-  - scenario examples for future `chattool lark bitable ...` work
-- `lark-markdown-syntax.md`
-  - Feishu markdown and card syntax constraints
+- 现在只有一个飞书 skill 目录：`skills/feishu/`
+- 不再把任务路由到 `feishu-*` 同级 skill
+- 先用 CLI，再按主题目录查资料
+- 各主题文件都保留了 archive 基础内容，并补了当前 CLI 用法说明
 
-## Routing Rule
+## 优先顺序
 
-There is only one Feishu skill directory now: `skills/feishu/`.
-
-- Do not route to `feishu-*` sibling skill directories.
-- Use the topic markdown files in this directory instead.
-- If a topic is not implemented in CLI yet, write the target command surface and `cli-tests/*.md` first.
-
-## Implementation Priority
-
-1. Reuse an existing `chattool lark` command when it already covers the task.
-2. If the CLI is missing a reusable Feishu action, define the target command and `cli-tests/*.md` first.
-3. Only after the command shape is clear, add or refine the CLI/tooling implementation.
-4. When extending beyond current coverage, start from `api-reference.md` and official Feishu docs, then codify the result back into ChatTool.
+1. 先确认是否已有 `chattool lark` 命令可直接完成目标。
+2. 如果已有，按对应主题目录查 CLI 用法和边界。
+3. 如果 CLI 不足，先补目标命令面和 `cli-tests/*.md`。
+4. 如果需要更深背景，再看保留的 archive 基础内容和参考资料。

@@ -77,7 +77,8 @@ chattool lark troubleshoot check-card-action
 预期过程和结果：
   1. 执行 `chattool lark troubleshoot check-scopes --card-file <path>`。
   2. 预期输出 scopes 诊断结果，并把可发送的飞书卡片 JSON 写到指定文件。
-  3. 若继续执行 `chattool lark troubleshoot check-scopes --send-card`，预期把该诊断卡片发给目标接收者。
+  3. 卡片应包含可点击按钮，至少可跳转到飞书开放平台应用页和官方权限文档页。
+  4. 若继续执行 `chattool lark troubleshoot check-scopes --send-card`，预期把该诊断卡片发给目标接收者。
 
 参考执行脚本（伪代码）：
 

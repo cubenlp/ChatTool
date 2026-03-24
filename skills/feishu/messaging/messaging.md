@@ -34,6 +34,12 @@ chattool lark send <receiver_id> --card ./card.json
 chattool lark send <receiver_id> --post ./post.json
 ```
 
+如果 `chattool lark send ...` 因权限错误失败：
+
+- 先把它视为“权限疑似缺失”，而不是立刻怀疑参数错误
+- CLI 会复用 scope 诊断，并尽量自动发送权限引导卡
+- 自动发卡失败时，再查看导出的权限引导卡 JSON 和终端诊断输出
+
 ### 上传资源
 
 ```bash
@@ -95,4 +101,4 @@ chattool lark chat --user debug_user
 
 - 业务输入直接走 CLI 参数，不新增临时环境变量。
 - 先写 `cli-tests/*.md`，再实现 CLI。
-- 继续扩消息链路前，先查 `api-reference.md` 和 `channel-rules.md`。
+- 继续扩消息链路前，先查 `../guide/api-reference.md` 和 `channel-rules.md`。

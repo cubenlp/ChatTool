@@ -31,6 +31,9 @@ def test_chattool_lark_troubleshoot_basic(lark_testkit):
     assert card_path.exists()
     card_payload = json.loads(card_path.read_text(encoding="utf-8"))
     assert card_payload["header"]["title"]["content"] == "ChatTool Feishu Scope Check"
+    assert card_payload["elements"][-1]["tag"] == "action"
+    assert card_payload["elements"][-1]["actions"][0]["text"]["content"] == "打开开放平台"
+    assert card_payload["elements"][-1]["actions"][1]["text"]["content"] == "查看权限文档"
     assert "card_file" in scope_card.output
 
     if lark_testkit.message_receiver_id:

@@ -140,6 +140,13 @@ chattool lark send ou_xxxxx "你好" -t open_id
 chattool lark send someone@example.com "你好" -t email
 ```
 
+如果 `send` 返回权限错误码，CLI 会继续做两件事：
+
+- 自动复用 scopes 诊断逻辑，判断是否真的是权限缺失
+- 若已配置 `FEISHU_TEST_USER_ID` 或 `FEISHU_DEFAULT_RECEIVER_ID`，尽量自动发送权限引导卡
+
+如果连自动发卡也失败，CLI 仍会把权限引导卡 JSON 导出到 `/tmp/chattool-lark-permission-card.json`，方便继续排障。
+
 ## 发送不同类型的消息
 
 ### 文本
@@ -262,6 +269,7 @@ chattool lark chat --user debug_user
 - `chattool lark troubleshoot ...`
   - 当前已支持 `doctor`、`check-scopes`、`check-events`、`check-card-action`
   - `check-scopes` 可额外导出诊断卡片 JSON，或直接发送权限排障卡片
+  - 当前权限诊断卡片是“跳转按钮卡片”；若要验证 `card.action.trigger` 这类回调交互，还需要单独检查卡片回传链路
 
 后续扩展继续收敛在 `src/chattool/tools/lark/`，而不是重新拆成新的独立 skill 入口。
 
@@ -348,6 +356,13 @@ chattool lark troubleshoot check-scopes --card-file ./scope-card.json
 chattool lark troubleshoot check-scopes --send-card
 chattool lark troubleshoot check-scopes --send-card --receiver <user_id>
 ```
+
+这张卡片现在带有可点击按钮：
+
+- `打开开放平台`：跳到飞书开放平台应用页，继续处理权限配置
+- `查看权限文档`：打开官方权限文档，核对 scope 与能力映射
+
+注意：卡片按钮只能把人带到授权/配置页面，不能在消息里直接为应用授予 scope。真正授权仍需在飞书开放平台完成。
 
 !!! note "当前范围"
     这一版先覆盖最常用的文档基础能力：创建、查询、取纯文本、查看块和追加文本。  

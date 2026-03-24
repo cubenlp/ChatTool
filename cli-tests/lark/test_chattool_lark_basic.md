@@ -64,6 +64,12 @@ chattool lark scopes
 chattool lark send <user_id> "hello"
 ```
 
+补充说明：
+
+- 如果 `send` 因权限问题失败，CLI 应优先做一次 scopes 诊断。
+- 若已配置 `FEISHU_TEST_USER_ID` 或 `FEISHU_DEFAULT_RECEIVER_ID`，CLI 应尽量自动发送权限引导卡。
+- 若自动发卡也失败，CLI 至少应导出一份权限引导卡 JSON，供继续排障。
+
 ## 用例 4：上传文件
 
 - 初始环境准备：

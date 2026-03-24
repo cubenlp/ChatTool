@@ -78,4 +78,4 @@ chattool lark doc append-json <document_id> ./daily.blocks.json
   - 删除测试文档
   - 或明确说明保留测试痕迹
 
-继续扩文档能力前，先看 `official-docx-capabilities.md`、`feishu-docx-adoption-notes.md` 和 `api-reference.md`。
+继续扩文档能力前，先看 `official-docx-capabilities.md`、`feishu-docx-adoption-notes.md` 和 `../guide/api-reference.md`。

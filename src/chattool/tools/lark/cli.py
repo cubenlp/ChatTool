@@ -324,6 +324,18 @@ def _print_topic_result(title: str, payload: dict) -> None:
     _print_json(payload)
 
 
+def _get_permission_notice_target() -> tuple[str | None, str]:
+    test_user_id = FeishuConfig.FEISHU_TEST_USER_ID.value or None
+    if test_user_id:
+        return test_user_id, FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id"
+
+    default_receiver = FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
+    if default_receiver:
+        return default_receiver, "user_id"
+
+    return None, "user_id"
+
+
 def _granted_scope_names(resp) -> list[str]:
     scopes = getattr(getattr(resp, "data", None), "scopes", None) or []
     names = []
@@ -362,27 +374,79 @@ def _print_scope_category_summary(granted_scopes: list[str], *, title: str = "�
     return missing
 
 
-def _build_scope_check_card(categories: dict[str, list[str]], missing: list[str]) -> dict:
+def _build_scope_check_card(
+    categories: dict[str, list[str]],
+    missing: list[str],
+    *,
+    failed_command: str | None = None,
+    failed_code: int | None = None,
+    failed_msg: str | None = None,
+) -> dict:
     lines = []
     for name, matches in categories.items():
         status = "missing" if not matches else f"ok ({len(matches)})"
         lines.append(f"- `{name}`: {status}")
 
+    app_id = FeishuConfig.FEISHU_APP_ID.value or ""
+    app_line = f"当前 App ID: `{app_id}`" if app_id else "当前 App ID 未配置，请先检查 `FEISHU_APP_ID`。"
+    platform_url = "https://open.feishu.cn/app"
+    permission_doc_url = "https://open.feishu.cn/document/server-docs/application-v6/app-permission/list"
+
     if missing:
         summary = "检测到关键权限分类缺失，相关 CLI 能力可能会因 scope 不足失败。"
         template = "orange"
         advice = [
-            "1. 打开飞书开放平台，进入应用的权限管理页面。",
-            "2. 申请并开通缺失分类对应的 scopes。",
+            "1. 点击下方按钮打开飞书开放平台应用页。",
+            "2. 在权限管理中申请并开通缺失分类对应的 scopes。",
             "3. 发布配置后重新执行 `chattool lark troubleshoot check-scopes`。",
         ]
     else:
         summary = "关键权限分类均已命中，若仍失败，优先继续排查接收者范围、事件配置或业务参数。"
         template = "green"
         advice = [
-            "1. 如消息仍失败，继续执行 `chattool lark troubleshoot doctor`。",
-            "2. 检查接收者可见范围、事件订阅和卡片回传配置。",
+            "1. 如消息仍失败，可点击按钮进入开放平台继续核对应用配置。",
+            "2. 然后执行 `chattool lark troubleshoot doctor` 检查接收者范围、事件订阅和卡片回传配置。",
         ]
+
+    context_lines = []
+    if failed_command:
+        context_lines.append(f"失败命令: `{failed_command}`")
+    if failed_code is not None:
+        context_lines.append(f"错误码: `{failed_code}`")
+    if failed_msg:
+        context_lines.append(f"错误信息: `{failed_msg}`")
+
+    elements = []
+    if context_lines:
+        elements.append({"tag": "markdown", "content": "\n".join(context_lines)})
+        elements.append({"tag": "hr"})
+
+    elements.extend(
+        [
+            {"tag": "markdown", "content": summary},
+            {"tag": "markdown", "content": "\n".join(lines)},
+            {"tag": "markdown", "content": app_line},
+            {"tag": "hr"},
+            {"tag": "markdown", "content": "\n".join(advice)},
+            {
+                "tag": "action",
+                "actions": [
+                    {
+                        "tag": "button",
+                        "text": {"tag": "plain_text", "content": "打开开放平台"},
+                        "type": "primary",
+                        "url": platform_url,
+                    },
+                    {
+                        "tag": "button",
+                        "text": {"tag": "plain_text", "content": "查看权限文档"},
+                        "type": "default",
+                        "url": permission_doc_url,
+                    },
+                ],
+            },
+        ]
+    )
 
     return {
         "config": {"wide_screen_mode": True},
@@ -390,13 +454,54 @@ def _build_scope_check_card(categories: dict[str, list[str]], missing: list[str]
             "title": {"tag": "plain_text", "content": "ChatTool Feishu Scope Check"},
             "template": template,
         },
-        "elements": [
-            {"tag": "markdown", "content": summary},
-            {"tag": "markdown", "content": "\n".join(lines)},
-            {"tag": "hr"},
-            {"tag": "markdown", "content": "\n".join(advice)},
-        ],
+        "elements": elements,
     }
+
+
+def _handle_permission_denied(bot, resp, *, failed_command: str) -> None:
+    click.echo("  → 提示: 权限不足，开始执行 scope 诊断")
+
+    scopes_resp = bot.get_scopes()
+    if not scopes_resp.success():
+        click.echo(
+            "  → scopes 诊断失败，"
+            f"code={scopes_resp.code} msg={scopes_resp.msg}"
+        )
+        return
+
+    granted = _granted_scope_names(scopes_resp)
+    categories = _scope_category_status(granted)
+    missing = [name for name, matches in categories.items() if not matches]
+    _print_scope_category_summary(granted, title="权限诊断")
+
+    card = _build_scope_check_card(
+        categories,
+        missing,
+        failed_command=failed_command,
+        failed_code=getattr(resp, "code", None),
+        failed_msg=getattr(resp, "msg", None),
+    )
+    card_path = Path("/tmp/chattool-lark-permission-card.json")
+    card_path.write_text(json.dumps(card, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    click.echo(f"  → 权限引导卡已导出: {card_path}")
+
+    target, target_type = _get_permission_notice_target()
+    if not target:
+        click.echo("  → 未配置 FEISHU_TEST_USER_ID 或 FEISHU_DEFAULT_RECEIVER_ID，跳过自动发卡")
+        return
+
+    send_resp = bot.send_card(target, target_type, card)
+    if send_resp.success():
+        click.echo(
+            "  → 权限引导卡已发送: "
+            f"{target_type}={target}  message_id={send_resp.data.message_id}"
+        )
+        return
+
+    click.echo(
+        "  → 自动发送权限引导卡失败: "
+        f"code={send_resp.code} msg={send_resp.msg}"
+    )
 
 
 # ------------------------------------------------------------------
@@ -610,7 +715,11 @@ def send(receiver, text, env_ref, id_type, image_path, file_path, card_file, pos
     else:
         click.secho(f"❌ 发送失败: code={resp.code}  msg={resp.msg}", fg="red")
         if resp.code in (99991672, 230013):
-            click.echo("  → 提示: 权限不足，请在飞书开放平台申请对应 Scope")
+            _handle_permission_denied(
+                bot,
+                resp,
+                failed_command=f"chattool lark send ({msg_type})",
+            )
         elif resp.code == 99991663:
             click.echo("  → 提示: 用户不在应用可见范围内")
 
