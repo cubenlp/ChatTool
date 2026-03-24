@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [6.4.0]
+
 ### Changed
 - 飞书主 skill 现在重组为索引式技能包：根目录只保留 `skills/feishu/SKILL.md` 作为入口，专题说明、API 参考与 docx 边界统一收口到主题子目录
 - `skills/feishu/guide/api-reference.md` 现在集中维护 Feishu 官方 API 文档 URL 与 `chattool lark` 到 API 的映射，便于扩展时继续学习与沉淀
@@ -13,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool lark scopes` 现在会在列出权限后补充关键能力分类摘要，并在匹配到未授权 scope 时直接标记为权限问题
 - `chattool lark doc append-json` 现在会在写入前归一化 code block 的 `style.language` 字段，避免 `parse-md -> append-json` 因非法语言值整批失败
 - `chattool lark troubleshoot check-scopes` 现在支持导出权限诊断卡片 JSON，并可直接把诊断卡片发给默认接收者或显式指定的目标
+- CLI 入口现在统一过滤 `lark-oapi` 带来的 `pkg_resources` / event loop 噪音警告，且 `chattool lark` 改为按命令懒加载飞书实现，减少无关 import
 
 ### Added
 - `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE` 配置项，用于 `chatenv cat -t feishu` 和 `@pytest.mark.lark` 真实测试共享测试用户配置

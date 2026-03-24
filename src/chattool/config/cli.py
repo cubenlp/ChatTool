@@ -2,13 +2,10 @@ import click
 import shutil
 import os
 import sys
-import warnings
 import dotenv
-warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
-# Filter DeprecationWarning from lark_oapi (asyncio.get_event_loop)
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="lark_oapi.*")
 
 from chattool.config import BaseEnvConfig
+from chattool.cli_warnings import install_cli_warning_filters
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
 from chattool.utils import mask_secret
@@ -18,6 +15,8 @@ from chattool.utils.tui import (
 )
 
 from .test_cmd import test_cmd
+
+install_cli_warning_filters()
 
 @click.group(name='chatenv')
 def cli():

@@ -17,10 +17,11 @@ from datetime import datetime, timezone
 import click
 from collections import defaultdict
 
+from chattool.cli_warnings import install_cli_warning_filters
 from chattool.config import BaseEnvConfig, FeishuConfig
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
-from chattool.tools import LarkBot, ChatSession
-from chattool.tools.lark.markdown_blocks import parse_markdown_blocks
+
+install_cli_warning_filters()
 
 @click.group()
 def cli():
@@ -60,6 +61,8 @@ def _load_runtime_env(env_ref: str | None) -> Path | None:
 
 def _get_bot():
     """Lazy-init a LarkBot from loaded config or environment variables."""
+    from chattool.tools.lark.bot import LarkBot
+
     try:
         return LarkBot()
     except Exception as e:
@@ -210,6 +213,18 @@ def _print_json(payload: dict | list) -> None:
 
 def _load_json_file(path: str) -> object:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _parse_markdown_blocks(content: str):
+    from chattool.tools.lark.markdown_blocks import parse_markdown_blocks
+
+    return parse_markdown_blocks(content)
+
+
+def _create_chat_session(*, system: str = "", max_history: int | None = None):
+    from chattool.tools.lark.session import ChatSession
+
+    return ChatSession(system=system, max_history=max_history)
 
 
 def _require_dict_payload(path: str, label: str) -> dict:
@@ -1066,7 +1081,7 @@ def doc_parse_md(path, output, compact):
     """将 Markdown 转换为飞书 docx block JSON"""
     file_path = Path(path)
     content = file_path.read_text(encoding="utf-8")
-    blocks = parse_markdown_blocks(content)
+    blocks = _parse_markdown_blocks(content)
     payload = json.dumps(
         blocks,
         ensure_ascii=False,
@@ -2185,7 +2200,7 @@ def chat(env_ref, system, max_history, user):
     """
     _load_runtime_env(env_ref)
 
-    session = ChatSession(system=system, max_history=max_history)
+    session = _create_chat_session(system=system, max_history=max_history)
     click.secho(f"💬 AI 对话  (system: {system[:40]}...)", fg="green")
     click.echo("输入 /clear 清除历史，/quit 退出\n")
 
