@@ -47,6 +47,25 @@ version: 0.4.0
   - `references/field-properties.md`
   - `references/record-values.md`
 
+## Skill 与 CLI Tests 对应
+
+- `guide/`
+  - 对应 `cli-tests/lark/guide/`
+- `messaging/messaging.md`
+  - 对应 `cli-tests/lark/messaging/`
+- `messaging/im-read.md`
+  - 对应 `cli-tests/lark/im/`
+- `messaging/troubleshoot.md`
+  - 对应 `cli-tests/lark/troubleshoot/`
+- `documents/`
+  - 对应 `cli-tests/lark/documents/`
+- `calendar/`
+  - 对应 `cli-tests/lark/calendar/`
+- `task/`
+  - 对应 `cli-tests/lark/task/`
+- `bitable/`
+  - 对应 `cli-tests/lark/bitable/`
+
 ## 路由规则
 
 - 现在只有一个飞书 skill 目录：`skills/feishu/`

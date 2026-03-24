@@ -86,14 +86,14 @@ chattool lark chat --user debug_user
 
 消息能力的任务实践先落在这些 `cli-tests/*.md`：
 
-- `cli-tests/lark/test_chattool_lark_send_text_task.md`
-- `cli-tests/lark/test_chattool_lark_send_file_task.md`
-- `cli-tests/lark/test_chattool_lark_send_card_task.md`
-- `cli-tests/lark/test_chattool_lark_send_permission_recovery_task.md`
-- `cli-tests/lark/test_chattool_lark_reply_task.md`
-- `cli-tests/lark/test_chattool_lark_listen_task.md`
-- `cli-tests/lark-im/test_chattool_lark_im_list_task.md`
-- `cli-tests/lark-troubleshoot/test_chattool_lark_troubleshoot_message_task.md`
+- `cli-tests/lark/messaging/test_chattool_lark_send_text_task.md`
+- `cli-tests/lark/messaging/test_chattool_lark_send_file_task.md`
+- `cli-tests/lark/messaging/test_chattool_lark_send_card_task.md`
+- `cli-tests/lark/messaging/test_chattool_lark_send_permission_recovery_task.md`
+- `cli-tests/lark/messaging/test_chattool_lark_reply_task.md`
+- `cli-tests/lark/messaging/test_chattool_lark_listen_task.md`
+- `cli-tests/lark/im/test_chattool_lark_im_list_task.md`
+- `cli-tests/lark/troubleshoot/test_chattool_lark_troubleshoot_message_task.md`
 
 ## 真实测试要求
 

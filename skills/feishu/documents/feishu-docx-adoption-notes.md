@@ -5,7 +5,7 @@
 ## 默认策略
 
 - 优先把高频、稳定、可复用的文档操作做成 CLI
-- 先写 `cli-tests/lark/*.md`，再补实现
+- 先写 `cli-tests/lark/documents/*.md`，再补实现
 - 结构化能力只在 block API 明确可行时进入主线
 
 ## 可以吸收进 CLI 的内容

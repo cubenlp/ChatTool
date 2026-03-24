@@ -7,12 +7,11 @@
 
 ## Recent Commits
 
+- `676a2a8` `test: add real feishu document task coverage`
 - `6fa4b12` `docs: add feishu document task playbooks`
 - `04a4413` `feat: refine feishu cli guidance and skill layout`
 - `f2b26ae` `docs: add feishu messaging task playbooks`
 - `65c268f` `feat: harden lark doc and scope flows`
-- `c51a4b4` `docs: finalize feishu design migration`
-- `02973c5` `docs: clarify cli test policy`
 
 ## Current State
 
@@ -23,25 +22,15 @@
   - `im`
   - `troubleshoot`
 - Feishu skill content is consolidated under a single `skills/feishu/` directory.
-- Root `skills/feishu/` now only keeps `SKILL.md`.
-- Topic material is organized into subdirectories:
+- Root `skills/feishu/` only keeps `SKILL.md`.
+- Skill topics are organized into:
   - `guide/`
   - `messaging/`
   - `documents/`
   - `calendar/`
   - `task/`
   - `bitable/`
-- Feishu design and user docs were aligned to `docs/design/feishu-cli.md` and `docs/tools/lark/index.md`.
-- ChatTool development docs now state that `cli-tests/*.md` is the only long-term maintained test design surface.
-- `chattool lark scopes` now prints a key capability summary and marks likely permission gaps.
-- `chattool lark doc append-json` now normalizes unsupported code language style fields before writing blocks.
-- Real CLI coverage now also includes the base `lark` command set and the `doc` command set.
-- New document task practice docs now define task-first flows for:
-  - create and notify
-  - fetch
-  - append text / file
-  - parse markdown / append json
-  - targeted update planning
+- Feishu CLI tests are being reorganized to mirror skill topics under `cli-tests/lark/<topic>/`.
 - Real CLI implementations now cover the supported document task flows:
   - `test_chattool_lark_doc_create_notify_task.py`
   - `test_chattool_lark_doc_fetch_task.py`
@@ -50,30 +39,30 @@
 
 ## Verified
 
-- Real Feishu CLI tests passed:
+- Real Feishu CLI tests passed before the directory move:
 
 ```bash
 python -m pytest -q \
-  cli-tests/lark/test_chattool_lark_basic.py \
-  cli-tests/lark/test_chattool_lark_doc_basic.py \
-  cli-tests/lark/test_chattool_lark_doc_markdown.py \
-  cli-tests/lark/test_chattool_lark_doc_create_notify_task.py \
-  cli-tests/lark/test_chattool_lark_doc_fetch_task.py \
-  cli-tests/lark/test_chattool_lark_doc_append_task.py \
-  cli-tests/lark/test_chattool_lark_doc_markdown_task.py \
-  cli-tests/lark-troubleshoot/test_chattool_lark_troubleshoot_basic.py \
-  cli-tests/lark-bitable/test_chattool_lark_bitable_basic.py \
-  cli-tests/lark-calendar/test_chattool_lark_calendar_basic.py \
-  cli-tests/lark-task/test_chattool_lark_task_basic.py \
-  cli-tests/lark-im/test_chattool_lark_im_basic.py
+  cli-tests/lark/guide/test_chattool_lark_basic.py \
+  cli-tests/lark/documents/test_chattool_lark_doc_basic.py \
+  cli-tests/lark/documents/test_chattool_lark_doc_markdown.py \
+  cli-tests/lark/documents/test_chattool_lark_doc_create_notify_task.py \
+  cli-tests/lark/documents/test_chattool_lark_doc_fetch_task.py \
+  cli-tests/lark/documents/test_chattool_lark_doc_append_task.py \
+  cli-tests/lark/documents/test_chattool_lark_doc_markdown_task.py \
+  cli-tests/lark/troubleshoot/test_chattool_lark_troubleshoot_basic.py \
+  cli-tests/lark/bitable/test_chattool_lark_bitable_basic.py \
+  cli-tests/lark/calendar/test_chattool_lark_calendar_basic.py \
+  cli-tests/lark/task/test_chattool_lark_task_basic.py \
+  cli-tests/lark/im/test_chattool_lark_im_basic.py
 ```
 
 ## Remaining Follow-Up
 
-1. Decide the first implementation scope for `chattool lark doc update ...`, based on the task doc already written.
-2. Continue from documents into the remaining topic task docs and CLI gaps where needed.
-3. Keep extending `chattool lark <topic> ...` from the topic task docs where needed.
-4. Re-run the real Feishu CLI coverage after the next code-side changes.
+1. Finish updating all Feishu skill/doc references to the new `cli-tests/lark/<topic>/` layout.
+2. Re-run the Feishu real CLI coverage using the new test paths.
+3. Decide the first implementation scope for `chattool lark doc update ...`, based on the task doc already written.
+4. Continue from documents into the remaining topic task docs and CLI gaps where needed.
 
 ## Known Notes
 

@@ -145,8 +145,8 @@ INFO: Start opencode setup
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
 - 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。
 - 如果测试依赖接收者、测试账号或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`，并在对应 `.md` 中写清配置要求与回滚方式。
-- Feishu 相关测试设计应优先落在 `cli-tests/lark/`，后续按能力拆分到 `cli-tests/lark-im/`、`cli-tests/lark-task/`、`cli-tests/lark-calendar/`、`cli-tests/lark-bitable/`。
-- Feishu 的真实执行测试只能以这些 `cli-tests/lark*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为主规范依据。
+- Feishu 相关测试设计应统一落在 `cli-tests/lark/<topic>/`，目录划分优先与 `skills/feishu/<topic>/` 对齐。
+- Feishu 的真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为主规范依据。
 - Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
 - Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
@@ -164,9 +164,9 @@ INFO: Start opencode setup
   - 按主题扩展：`test_<cli>_<command>_<topic>.py`
   - 对应文档文件同名后缀 `.md`。
 - 目录建议：
-  - 命令目录下优先平铺（通过文件名区分 `basic/topic`），避免无必要的层级嵌套。
-  - 例如：`cli-tests/chattool/dns/test_chattool_dns_basic.md`
-  - 例如：`cli-tests/chattool/dns/test_chattool_dns_timeout.md`
+  - 默认在命令目录下平铺；当某个 CLI 下面已经形成稳定专题时，可引入一层 topic 目录保持与 skill / CLI 结构一致。
+  - 例如：`cli-tests/dns/test_chattool_dns_basic.md`
+  - 例如：`cli-tests/lark/documents/test_chattool_lark_doc_basic.md`
 - 文档结构建议：
   - 每个 case 优先保留“初始环境准备 / 相关文件 / 预期过程和结果 / 参考执行脚本（伪代码）”结构。
   - 根据需要，可在 case 开头写必要的文字说明。

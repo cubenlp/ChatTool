@@ -7,8 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Changed
-- 飞书主 skill 现在重组为索引式技能包：`skills/feishu/SKILL.md` / `SKILL.zh.md` 只负责入口和路由，专题说明、API 参考与 docx 边界统一平铺到 `skills/feishu/*.md`
-- `skills/feishu` 现在补充 `api-reference.md`，集中维护 Feishu 官方 API 文档 URL 与 `chattool lark` 到 API 的映射，便于扩展时继续学习与沉淀
+- 飞书主 skill 现在重组为索引式技能包：根目录只保留 `skills/feishu/SKILL.md` 作为入口，专题说明、API 参考与 docx 边界统一收口到主题子目录
+- `skills/feishu/guide/api-reference.md` 现在集中维护 Feishu 官方 API 文档 URL 与 `chattool lark` 到 API 的映射，便于扩展时继续学习与沉淀
 - `chattool lark` 相关文档现在统一使用“双轨文档模型”描述云文档能力：稳定正文轨用于可靠写入，结构化 docx 轨用于 block 级增强
 - `chattool lark scopes` 现在会在列出权限后补充关键能力分类摘要，并在匹配到未授权 scope 时直接标记为权限问题
 - `chattool lark doc append-json` 现在会在写入前归一化 code block 的 `style.language` 字段，避免 `parse-md -> append-json` 因非法语言值整批失败
@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 - `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE` 配置项，用于 `chatenv cat -t feishu` 和 `@pytest.mark.lark` 真实测试共享测试用户配置
-- `cli-tests/lark/test_chattool_lark_basic.py`、`test_chattool_lark_doc_basic.py`、`test_chattool_lark_doc_markdown.py`，补齐 Feishu 基础链路与文档链路的真实 CLI 执行覆盖
+- `cli-tests/lark/guide/test_chattool_lark_basic.py`、`cli-tests/lark/documents/test_chattool_lark_doc_basic.py`、`cli-tests/lark/documents/test_chattool_lark_doc_markdown.py`，补齐 Feishu 基础链路与文档链路的真实 CLI 执行覆盖
 
 ### Removed
 - 旧的文档读写型 Feishu skill `feishu-create-doc`、`feishu-fetch-doc`、`feishu-update-doc` 已并回主 `feishu` skill，不再单独维护

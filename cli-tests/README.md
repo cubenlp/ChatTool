@@ -39,8 +39,8 @@
 
 ## Feishu 约束
 
-- Feishu 测试设计优先放到 `cli-tests/lark/`，后续可按能力拆分到 `cli-tests/lark-im/`、`cli-tests/lark-task/`、`cli-tests/lark-calendar/`、`cli-tests/lark-bitable/`。
-- Feishu 真实执行测试只能以这些 `cli-tests/lark*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为规范依据。
+- Feishu 测试设计统一放到 `cli-tests/lark/<topic>/`，目录应尽量和 `skills/feishu/<topic>/` 的主题划分对应，例如 `guide/`、`messaging/`、`documents/`、`im/`、`troubleshoot/`、`task/`、`calendar/`、`bitable/`。
+- Feishu 真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为规范依据。
 - Feishu 测试文档至少显式列出：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
 - Feishu 测试文档必须说明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - 对消息相关任务，优先把 `FEISHU_DEFAULT_RECEIVER_ID` 当作默认测试目标；`FEISHU_TEST_USER_ID` 只在需要隔离真实测试用户时再单独指定。

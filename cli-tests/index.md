@@ -27,7 +27,14 @@ cli-tests/
 ├── image/
 │   └── test_chattool_image_basic.md
 ├── lark/
-│   └── test_chattool_lark_basic.md
+│   ├── guide/
+│   ├── messaging/
+│   ├── documents/
+│   ├── im/
+│   ├── troubleshoot/
+│   ├── bitable/
+│   ├── calendar/
+│   └── task/
 ├── mcp/
 │   └── test_chattool_mcp_basic.md
 ├── network/
@@ -74,4 +81,4 @@ cli-tests/
 - `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认测试落点。
 - 新 CLI 行为必须先补 `.md`，没有对应 `.md` 的 `.py` 不应新增。
 - 缺少真实环境/变量的用例先保留 `.md`，待环境满足后再补 `.py`。
-- Feishu 的任务实践文档优先按能力落到 `cli-tests/lark/`、`cli-tests/lark-im/`、`cli-tests/lark-troubleshoot/`，先描述真实任务，再补自动化实现。
+- Feishu 的任务实践文档统一按能力落到 `cli-tests/lark/<topic>/`，先描述真实任务，再补自动化实现。

@@ -35,4 +35,4 @@
 
 - 当前 block 类型是否被官方接口支持
 - 新块是否适合进入稳定正文轨
-- 新块是否需要单独的 `cli-tests/lark/*.md` 场景覆盖
+- 新块是否需要单独的 `cli-tests/lark/documents/*.md` 场景覆盖

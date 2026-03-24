@@ -84,10 +84,10 @@ chattool lark doc append-json <document_id> ./daily.blocks.json
 
 文档能力的任务实践先落在这些 `cli-tests/*.md`：
 
-- `cli-tests/lark/test_chattool_lark_doc_create_notify_task.md`
-- `cli-tests/lark/test_chattool_lark_doc_fetch_task.md`
-- `cli-tests/lark/test_chattool_lark_doc_append_task.md`
-- `cli-tests/lark/test_chattool_lark_doc_markdown_task.md`
-- `cli-tests/lark/test_chattool_lark_doc_update_task.md`
+- `cli-tests/lark/documents/test_chattool_lark_doc_create_notify_task.md`
+- `cli-tests/lark/documents/test_chattool_lark_doc_fetch_task.md`
+- `cli-tests/lark/documents/test_chattool_lark_doc_append_task.md`
+- `cli-tests/lark/documents/test_chattool_lark_doc_markdown_task.md`
+- `cli-tests/lark/documents/test_chattool_lark_doc_update_task.md`
 
 继续扩文档能力前，先看 `official-docx-capabilities.md`、`feishu-docx-adoption-notes.md` 和 `../guide/api-reference.md`。
