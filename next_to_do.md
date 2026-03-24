@@ -7,11 +7,11 @@
 
 ## Recent Commits
 
+- `04a4413` `feat: refine feishu cli guidance and skill layout`
+- `f2b26ae` `docs: add feishu messaging task playbooks`
 - `65c268f` `feat: harden lark doc and scope flows`
 - `c51a4b4` `docs: finalize feishu design migration`
 - `02973c5` `docs: clarify cli test policy`
-- `1e7bb9f` `docs: reorganize feishu skill topics`
-- `b36fe28` `test: add real lark cli coverage`
 
 ## Current State
 
@@ -22,12 +22,25 @@
   - `im`
   - `troubleshoot`
 - Feishu skill content is consolidated under a single `skills/feishu/` directory.
-- Topic material is flattened into `skills/feishu/*.md` and rewritten around CLI usage.
+- Root `skills/feishu/` now only keeps `SKILL.md`.
+- Topic material is organized into subdirectories:
+  - `guide/`
+  - `messaging/`
+  - `documents/`
+  - `calendar/`
+  - `task/`
+  - `bitable/`
 - Feishu design and user docs were aligned to `docs/design/feishu-cli.md` and `docs/tools/lark/index.md`.
 - ChatTool development docs now state that `cli-tests/*.md` is the only long-term maintained test design surface.
 - `chattool lark scopes` now prints a key capability summary and marks likely permission gaps.
 - `chattool lark doc append-json` now normalizes unsupported code language style fields before writing blocks.
 - Real CLI coverage now also includes the base `lark` command set and the `doc` command set.
+- New document task practice docs now define task-first flows for:
+  - create and notify
+  - fetch
+  - append text / file
+  - parse markdown / append json
+  - targeted update planning
 
 ## Verified
 
@@ -47,9 +60,10 @@ python -m pytest -q \
 
 ## Remaining Follow-Up
 
-1. Finish the branch review and update the PR with the current scope.
-2. Decide whether `scopes` should stop at terminal diagnostics or also generate/send a permission guidance card.
-3. Keep extending `chattool lark <topic> ...` from the topic test docs where needed.
+1. Review and commit the current document task practice docs plus the related skill/doc index cleanup.
+2. Continue from messaging into documents implementation details, then move to other topic areas.
+3. Keep extending `chattool lark <topic> ...` from the topic task docs where needed.
+4. Re-run the real Feishu CLI coverage after the next code-side changes.
 
 ## Known Notes
 

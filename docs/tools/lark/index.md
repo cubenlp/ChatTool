@@ -25,7 +25,8 @@
 如果你的目标是继续扩展 Feishu 能力，而不是只执行现有命令，请先同时阅读：
 
 - `skills/feishu/SKILL.md`
-- `skills/feishu/api-reference.md`
+- `skills/feishu/guide/setup-and-routing.md`
+- `skills/feishu/guide/api-reference.md`
 - `docs/design/feishu-cli.md`
 
 ## 前置准备
@@ -54,7 +55,7 @@ export FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     如果当前运行环境同时被 OpenClaw、消息网关或其他入口复用，不要再用新的环境变量传接收者、消息内容、文件路径这类业务参数。  
     这些输入应直接放在 CLI 参数里，避免变量冲突和语义歧义。
 
-如果你经常发消息给同一个测试用户，可以额外配置：
+如果你经常发消息给同一个默认接收者，可以直接配置：
 
 ```bash
 chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
@@ -62,7 +63,7 @@ chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
 
 配置后，`chattool lark send` 可以省略接收者参数。
 
-如果你要跑真实的飞书测试，建议同时配置：
+如果你要跑 CLI 真实测试，且需要和默认接收者分开，才额外配置：
 
 ```bash
 chattool env set FEISHU_TEST_USER_ID=f25gc16d
@@ -143,7 +144,8 @@ chattool lark send someone@example.com "你好" -t email
 如果 `send` 返回权限错误码，CLI 会继续做两件事：
 
 - 自动复用 scopes 诊断逻辑，判断是否真的是权限缺失
-- 若已配置 `FEISHU_TEST_USER_ID` 或 `FEISHU_DEFAULT_RECEIVER_ID`，尽量自动发送权限引导卡
+- 若已配置 `FEISHU_DEFAULT_RECEIVER_ID`，尽量自动发送权限引导卡
+- 若 CLI 真实测试显式配置了 `FEISHU_TEST_USER_ID`，也可用它做隔离排障
 
 如果连自动发卡也失败，CLI 仍会把权限引导卡 JSON 导出到 `/tmp/chattool-lark-permission-card.json`，方便继续排障。
 

@@ -61,7 +61,7 @@ chattool lark doc append-json <document_id> ./daily.blocks.json
 - `chattool lark doc convert ...`
 - drive/wiki 相关命令
 
-这些后续能力仍应挂在 `chattool lark doc ...` 下，不再拆成独立 doc skill。
+这些后续能力继续统一挂在 `chattool lark doc ...` 下。
 
 ## 真实测试要求
 
@@ -73,11 +73,21 @@ chattool lark doc append-json <document_id> ./daily.blocks.json
   - `FEISHU_APP_SECRET`
   - `FEISHU_DEFAULT_RECEIVER_ID`
 - 默认优先复用 `FEISHU_DEFAULT_RECEIVER_ID` 作为通知目标
-- 只有在需要隔离测试用户时，才额外引入：
+- 只有在 CLI 真实测试需要隔离目标时，才额外引入：
   - `FEISHU_TEST_USER_ID`
   - `FEISHU_TEST_USER_ID_TYPE`
 - 回滚方式：
   - 删除测试文档
   - 或明确说明保留测试痕迹
+
+## 任务实践入口
+
+文档能力的任务实践先落在这些 `cli-tests/*.md`：
+
+- `cli-tests/lark/test_chattool_lark_doc_create_notify_task.md`
+- `cli-tests/lark/test_chattool_lark_doc_fetch_task.md`
+- `cli-tests/lark/test_chattool_lark_doc_append_task.md`
+- `cli-tests/lark/test_chattool_lark_doc_markdown_task.md`
+- `cli-tests/lark/test_chattool_lark_doc_update_task.md`
 
 继续扩文档能力前，先看 `official-docx-capabilities.md`、`feishu-docx-adoption-notes.md` 和 `../guide/api-reference.md`。
