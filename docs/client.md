@@ -564,8 +564,8 @@ chattool skill install cert-manager -p codex --prefix
 
 安装前会校验源 skill 的 `SKILL.md`。当前要求：
 - 文件开头必须包含 `---` 包裹的 YAML frontmatter
-- frontmatter 至少包含 `name`、`description` 和 `version`
-- `version` 采用 Semantic Versioning，例如 `0.1.0`
+- frontmatter 至少包含 `name`、`description`
+- `version` 可以保留为可选元信息，但安装时不会强制校验
 - `openai.yaml`/`openai.yml` 不是必需文件
 
 ---

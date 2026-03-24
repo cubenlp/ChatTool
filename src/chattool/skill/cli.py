@@ -42,8 +42,7 @@ def _build_platforms() -> dict[str, PlatformSpec]:
 
 
 PLATFORMS = _build_platforms()
-REQUIRED_FRONTMATTER_KEYS = ("name", "description", "version")
-SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
+REQUIRED_FRONTMATTER_KEYS = ("name", "description")
 
 
 def _find_repo_skills_dir() -> Path | None:
@@ -165,10 +164,6 @@ def _validate_skill_dir(skill_dir: Path) -> list[str]:
     missing = [key for key in REQUIRED_FRONTMATTER_KEYS if key not in values]
     if missing:
         return [f"missing required frontmatter keys: {', '.join(missing)}"]
-
-    version = values.get("version", "")
-    if not SEMVER_PATTERN.match(version):
-        return [f"invalid version '{version}', expected semantic version like 0.1.0"]
 
     return []
 
