@@ -152,6 +152,7 @@ INFO: Start opencode setup
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
+- **开发复查**：每次 ChatTool 功能或 CLI 变更完成后，默认按 `chattool-dev-review` 的口径做一次复查，重点检查 lazy import、缺参自动交互、`utils/tui.py` 统一交互，以及 docs / README / CHANGELOG / `cli-tests` 是否同步。
 
 ### CLI 测试文档驱动机制（`cli-tests`）
 
