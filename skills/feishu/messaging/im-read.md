@@ -14,11 +14,11 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark im list --chat-id <chat_id>`
   - `chattool lark im download <message_id> <file_key> --type <image|file>`
 - `thread` / `search` 仍属于后续 CLI 扩展项
-- 下方保留 archive 中原始 IM 读取资料，作为当前 CLI 扩展和排障参考
+- 本文件既说明当前 CLI，也承载后续 IM 能力扩展所需的背景资料
 
 # 飞书 IM 消息读取
 

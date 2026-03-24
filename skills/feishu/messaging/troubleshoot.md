@@ -16,7 +16,7 @@ description: |
   - `chattool lark troubleshoot check-events`
   - `chattool lark troubleshoot check-card-action`
 - 如果 `chattool lark send ...` 因权限失败，CLI 也会复用这里的 scope 诊断逻辑
-- 下方保留 archive 中原始排障资料，便于对照 FAQ 和历史诊断思路
+- 本文件就是排障主文档，FAQ、诊断命令和后续扩展都在这里统一维护
 
 # 飞书插件问题排查
 

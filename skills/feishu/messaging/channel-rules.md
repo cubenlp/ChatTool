@@ -13,7 +13,7 @@ alwaysActive: true
   - `chattool lark notify-doc`
   - `chattool lark doc ...`
 - 若要写卡片或富文本，先结合 `messaging.md` 与 `lark-markdown-syntax.md` 一起看
-- 下方保留 archive 中原始 `feishu-channel-rules` 内容
+- 这份文档本身就是当前唯一的输出规则说明
 
 # Lark Output Rules
 

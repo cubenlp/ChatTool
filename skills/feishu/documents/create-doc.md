@@ -6,11 +6,11 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark doc create <title>`
   - `chattool lark notify-doc <title> <text>`
-- 当前 CLI 主线更偏向稳定创建与追加，不直接暴露旧 MCP 名称
-- 下方保留 archive 中原始 create-doc 说明，供继续扩 CLI 时参考
+- 这条主线优先覆盖稳定创建与追加能力
+- 本文件同时承载继续扩文档创建能力所需的细节说明
 
 # feishu_mcp_create_doc
 

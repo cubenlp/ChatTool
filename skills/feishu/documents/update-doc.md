@@ -6,13 +6,13 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark doc append-text <document_id> <text>`
   - `chattool lark doc append-file <document_id> <path>`
   - `chattool lark doc parse-md <path>`
   - `chattool lark doc append-json <document_id> <json_path>`
-- archive 里提到的 overwrite / replace_range / delete_range 等高级模式，当前 CLI 还未全部收口
-- 下方保留 archive 中原始 update-doc 说明，供继续扩 CLI 时参考
+- `overwrite` / `replace_range` / `delete_range` 等高级更新模式应继续直接收口到这套 CLI
+- 本文件同时承载继续扩文档更新能力所需的细节说明
 
 # feishu__update_doc
 

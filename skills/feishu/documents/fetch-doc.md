@@ -6,12 +6,12 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark doc get <document_id>`
   - `chattool lark doc raw <document_id>`
   - `chattool lark doc blocks <document_id>`
 - 对于图片、文件、画板等更深层媒体读取，当前 CLI 仍有扩展空间
-- 下方保留 archive 中原始 fetch-doc 说明，供继续扩 CLI 时参考
+- 本文件同时承载继续扩文档读取能力所需的细节说明
 
 # feishu_mcp_fetch_doc
 

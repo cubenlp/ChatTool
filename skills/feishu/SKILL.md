@@ -1,6 +1,6 @@
 ---
 name: feishu
-description: Use `chattool lark` as the single Feishu entry. This root index routes work into topic folders, keeps archive coverage, and points to the right CLI surface first.
+description: Use `chattool lark` as the single Feishu entry. This root index routes work into topic folders and points to the one supported CLI/API surface.
 version: 0.4.0
 ---
 
@@ -19,9 +19,9 @@ version: 0.4.0
 
 - `guide/`
   - `overview.md` / `overview.zh.md`
-    - 旧主 skill 内容归档版，对照当前 CLI 使用
+    - 飞书总览与入口说明
   - `setup-and-routing.md`
-    - 凭证、`-e/--env`、默认接收者、测试用户、路由规则
+    - 凭证、`-e/--env`、默认接收者、路由规则
   - `api-reference.md`
     - 官方 API 文档 URL 与 CLI 对应
 - `messaging/`
@@ -52,11 +52,11 @@ version: 0.4.0
 - 现在只有一个飞书 skill 目录：`skills/feishu/`
 - 不再把任务路由到 `feishu-*` 同级 skill
 - 先用 CLI，再按主题目录查资料
-- 各主题文件都保留了 archive 基础内容，并补了当前 CLI 用法说明
+- 各主题文件都应围绕这一套 CLI/API 组织，不再区分新旧资料面
 
 ## 优先顺序
 
 1. 先确认是否已有 `chattool lark` 命令可直接完成目标。
 2. 如果已有，按对应主题目录查 CLI 用法和边界。
 3. 如果 CLI 不足，先补目标命令面和 `cli-tests/*.md`。
-4. 如果需要更深背景，再看保留的 archive 基础内容和参考资料。
+4. 如果需要更深背景，继续在同一套主题文档和参考资料里补充，不再额外维护兼容层。

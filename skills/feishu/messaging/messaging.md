@@ -1,6 +1,6 @@
 # 飞书 Skill：消息与调试
 
-这份文档只从 CLI 出发说明消息能力，不再按旧的工具或 skill 名称组织。
+这份文档只从 CLI 出发说明消息能力，不再区分其它工具形态。
 
 ## 当前已支持的主线命令
 
@@ -82,6 +82,19 @@ chattool lark chat --user debug_user
 - `chattool lark troubleshoot ...`
   - 做消息、权限、事件回调、卡片交互的诊断
 
+## 任务实践入口
+
+消息能力的任务实践先落在这些 `cli-tests/*.md`：
+
+- `cli-tests/lark/test_chattool_lark_send_text_task.md`
+- `cli-tests/lark/test_chattool_lark_send_file_task.md`
+- `cli-tests/lark/test_chattool_lark_send_card_task.md`
+- `cli-tests/lark/test_chattool_lark_send_permission_recovery_task.md`
+- `cli-tests/lark/test_chattool_lark_reply_task.md`
+- `cli-tests/lark/test_chattool_lark_listen_task.md`
+- `cli-tests/lark-im/test_chattool_lark_im_list_task.md`
+- `cli-tests/lark-troubleshoot/test_chattool_lark_troubleshoot_message_task.md`
+
 ## 真实测试要求
 
 消息相关 CLI 测试文档必须写清：
@@ -91,6 +104,8 @@ chattool lark chat --user debug_user
   - `FEISHU_APP_ID`
   - `FEISHU_APP_SECRET`
   - `FEISHU_DEFAULT_RECEIVER_ID`
+- 默认优先把 `FEISHU_DEFAULT_RECEIVER_ID` 当作真实测试目标
+- 只有在需要隔离测试用户时，才额外引入：
   - `FEISHU_TEST_USER_ID`
   - `FEISHU_TEST_USER_ID_TYPE`
 - 回滚方式：

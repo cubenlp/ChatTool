@@ -6,7 +6,7 @@ version: 0.1.0
 
 ## 对应 CLI 用法
 
-- 当前总入口仍然是 `chattool lark`
+- 总入口就是 `chattool lark`
 - 常用起点：
   - `chattool lark info`
   - `chattool lark scopes`
@@ -16,7 +16,7 @@ version: 0.1.0
   - `chattool lark listen`
   - `chattool lark chat`
   - `chattool lark doc ...`
-- 下方保留 archive 中旧中文主 skill 的原始说明，方便和当前 CLI 用法对照
+- 本文件作为飞书总览说明，与各子目录中的专题文档一起构成唯一资料面
 
 # 飞书 CLI Skill
 

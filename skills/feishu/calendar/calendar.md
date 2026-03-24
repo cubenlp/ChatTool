@@ -6,11 +6,11 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark calendar primary`
   - `chattool lark calendar event create|list|get|patch|reply`
   - `chattool lark calendar freebusy list`
-- `search`、`instances`、`attendee` 仍可继续从下方原始资料中提炼到后续 CLI
+- `search`、`instances`、`attendee` 继续直接收口到这套 CLI
 
 # 飞书日历管理 (feishu-calendar)
 

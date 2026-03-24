@@ -13,13 +13,13 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark task get <task_guid>`
   - `chattool lark task create --summary <text>`
   - `chattool lark task patch <task_guid> ...`
   - `chattool lark task tasklist list|create|get|tasks|add-members`
 - `task list` 目前仍要优先按 token / scope 模式理解
-- 下方保留 archive 中原始任务资料，供继续扩 CLI 时参考
+- 本文件就是任务主文档，同时保留继续扩 CLI 所需的背景资料
 
 # 飞书任务管理
 

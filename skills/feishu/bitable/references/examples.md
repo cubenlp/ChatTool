@@ -1,7 +1,7 @@
 # 对应 CLI 用法
 
 - 这份示例服务于 `chattool lark bitable ...` 的后续扩展和真实测试设计
-- 当前优先把场景映射到：
+- 当前先把场景映射到：
   - `app create`
   - `table list/create`
   - `field list/create`

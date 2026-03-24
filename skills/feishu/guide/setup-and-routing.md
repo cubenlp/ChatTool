@@ -21,11 +21,12 @@ chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
 chatenv cat -t feishu
 ```
 
-真实 CLI 测试统一从默认 `chatenv` / 配置对象读取这些值：
+默认消息接收者统一使用：
 
-- `FEISHU_APP_ID`
-- `FEISHU_APP_SECRET`
 - `FEISHU_DEFAULT_RECEIVER_ID`
+
+CLI 测试若需要隔离测试用户，再额外使用：
+
 - `FEISHU_TEST_USER_ID`
 - `FEISHU_TEST_USER_ID_TYPE`
 
@@ -46,7 +47,7 @@ chattool lark info -e work
 
 ## 路由规则
 
-1. 能用 `chattool lark` 完成，就不要退回脚本或旧工具名。
+1. 能用 `chattool lark` 完成，就不要退回脚本或其它工具名。
 2. 高复用动作优先进入 `chattool lark <topic> ...`。
 3. 主线命令先看：
    - `info`

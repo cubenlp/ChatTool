@@ -72,6 +72,8 @@ chattool lark doc append-json <document_id> ./daily.blocks.json
   - `FEISHU_APP_ID`
   - `FEISHU_APP_SECRET`
   - `FEISHU_DEFAULT_RECEIVER_ID`
+- 默认优先复用 `FEISHU_DEFAULT_RECEIVER_ID` 作为通知目标
+- 只有在需要隔离测试用户时，才额外引入：
   - `FEISHU_TEST_USER_ID`
   - `FEISHU_TEST_USER_ID_TYPE`
 - 回滚方式：

@@ -13,13 +13,13 @@ description: |
 
 ## 对应 CLI 用法
 
-- 当前优先使用：
+- 统一使用：
   - `chattool lark bitable app create <name>`
   - `chattool lark bitable table list|create <app_token> ...`
   - `chattool lark bitable field list|create <app_token> <table_id> ...`
   - `chattool lark bitable record list|create|batch-create <app_token> <table_id> ...`
 - 字段 property、记录值格式、场景示例统一放在 `references/`
-- 下方保留 archive 中原始多维表格资料，供继续扩 CLI 时参考
+- 本文件就是多维表格主文档，同时保留继续扩 CLI 所需的背景资料
 
 # Feishu Bitable (多维表格) SKILL
 
