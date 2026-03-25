@@ -35,7 +35,7 @@ CLI 测试若需要隔离测试用户，再额外使用：
 飞书子命令支持从指定 `.env` 或已保存 profile 读取配置：
 
 ```bash
-chattool lark info -e ~/.config/chattool/.env
+chattool lark info -e ~/.config/chattool/envs/Feishu/.env
 chattool lark info -e work
 ```
 
@@ -44,6 +44,14 @@ chattool lark info -e work
 - 多个飞书应用切换使用
 - 当前 shell 环境较脏，需要显式固定配置来源
 - 真实测试要锁定一份稳定环境
+
+运行时优先级固定为：
+
+1. 命令参数本身
+2. `-e/--env` 指定的 `.env` 文件或 `Feishu` profile
+3. 当前进程环境变量
+4. `envs/Feishu/.env`
+5. 默认值
 
 ## 路由规则
 
