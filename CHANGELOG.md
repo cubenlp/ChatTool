@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- `chattool setup playground` 现在默认使用工作区仓库目录名 `ChatTool/`；再次执行时会进入更新模式，优先更新现有仓库，并在交互模式下提示是否同步工作区 `skills/`
+- `chattool setup playground` 同步 `skills/` 时现在只覆盖常规文件，继续保留各 skill 下的 `experience/` 目录和历史记录；历史工作区里的 `chattool/` 目录也会自动迁移到 `ChatTool/`
+- 仓库开发规范现在把“绝对禁止 mock”明确写入 `AGENTS.md`、`DEVELOP.md`、`docs/development-guide/` 与 `cli-tests/README.md`：宁可做更窄的真实测试，也不接受用 mock 伪造行为
+
 ## [6.4.0]
 
 ### Changed
