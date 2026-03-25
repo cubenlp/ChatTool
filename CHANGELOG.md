@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool gh pr-merge` 新增可选的 `--check` 开关，用于在合并前显式检查 check runs 与 workflow runs，避免再次误把带红 CI 的 PR 当成可安全合并
 - `chattool skill install` 不再强制要求 skill frontmatter 包含 `version`，只校验 `name` 与 `description`
 
+### Added
+- `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
+
 ## [6.4.0]
 
 ### Changed

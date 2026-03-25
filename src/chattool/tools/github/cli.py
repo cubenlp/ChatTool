@@ -173,6 +173,82 @@ def pr_check(repo, number, check_limit, workflow_limit, json_output, token):
     _echo_pr_check_payload(payload)
 
 
+@cli.command(name="run-view")
+@click.option("--repo", required=False, help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).")
+@click.option("--run-id", required=True, type=int, help="Workflow run id.")
+@click.option("--job-limit", default=50, type=int, show_default=True, help="Max jobs to show.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN).")
+def run_view(repo, run_id, job_limit, json_output, token):
+    """Show a workflow run and its jobs."""
+    repo = _resolve_repo(repo)
+    token = _resolve_token(token)
+
+    run_payload = _github_api_get_json(repo, f"/actions/runs/{run_id}", token)
+    jobs_payload = _github_api_get_json(
+        repo,
+        f"/actions/runs/{run_id}/jobs",
+        token,
+        params={"per_page": min(max(job_limit, 1), 100)},
+    )
+    payload = _build_workflow_run_payload(run_payload, jobs_payload, job_limit=job_limit)
+
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    _echo_workflow_run_payload(payload)
+
+
+@cli.command(name="job-logs")
+@click.option("--repo", required=False, help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).")
+@click.option("--job-id", required=True, type=int, help="Workflow job id.")
+@click.option(
+    "--tail",
+    default=200,
+    type=click.IntRange(min=0),
+    show_default=True,
+    help="Show only the last N lines. Use 0 to print the full log.",
+)
+@click.option(
+    "--output",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Write the full log to a local file.",
+)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN).")
+def job_logs(repo, job_id, tail, output, json_output, token):
+    """Show logs for a workflow job."""
+    repo = _resolve_repo(repo)
+    token = _resolve_token(token)
+
+    job_payload = _github_api_get_json(repo, f"/actions/jobs/{job_id}", token)
+    logs_text = _github_api_get_text(repo, f"/actions/jobs/{job_id}/logs", token)
+    rendered_log = _tail_text(logs_text, tail)
+
+    if output:
+        with open(output, "w", encoding="utf-8") as handle:
+            handle.write(logs_text)
+
+    payload = {
+        "job": _build_workflow_job_payload(job_payload),
+        "tail": tail,
+        "output_path": output,
+        "log": logs_text if json_output else rendered_log,
+    }
+
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    _echo_workflow_job_payload(payload["job"])
+    if output:
+        click.echo(f"Saved full log to: {output}")
+    click.echo("Log:")
+    click.echo(rendered_log)
+
+
 @cli.command(name="pr-comment")
 @click.option("--repo", required=False, help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).")
 @click.option("--number", required=True, type=int, help="Pull request number.")
@@ -300,7 +376,7 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 def _get_client(token: Optional[str], require_token: bool = False):
     from github import Github, Auth
 
-    token = token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    token = _resolve_token(token)
     if require_token and not token:
         raise click.ClickException("Missing token. Set GITHUB_ACCESS_TOKEN or pass --token.")
     if not token:
@@ -314,6 +390,10 @@ def _resolve_repo(repo: Optional[str]) -> str:
     if not repo:
         raise click.ClickException("Missing repo. Provide --repo or set GITHUB_DEFAULT_REPO.")
     return repo
+
+
+def _resolve_token(token: Optional[str]) -> Optional[str]:
+    return token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
 
 
 def _build_pr_check_payload(pr, commit, repo_obj, check_limit: int, workflow_limit: int) -> dict:
@@ -382,6 +462,54 @@ def _build_pr_check_payload(pr, commit, repo_obj, check_limit: int, workflow_lim
     }
 
 
+def _build_workflow_run_payload(run_payload: dict, jobs_payload: dict, job_limit: int) -> dict:
+    jobs = [
+        _build_workflow_job_payload(job_payload)
+        for job_payload in jobs_payload.get("jobs", [])[:job_limit]
+    ]
+    return {
+        "id": run_payload["id"],
+        "name": run_payload.get("name"),
+        "display_title": run_payload.get("display_title"),
+        "event": run_payload.get("event"),
+        "status": run_payload.get("status"),
+        "conclusion": run_payload.get("conclusion"),
+        "html_url": run_payload.get("html_url"),
+        "created_at": run_payload.get("created_at"),
+        "updated_at": run_payload.get("updated_at"),
+        "run_started_at": run_payload.get("run_started_at"),
+        "head_branch": run_payload.get("head_branch"),
+        "head_sha": run_payload.get("head_sha"),
+        "run_number": run_payload.get("run_number"),
+        "jobs": jobs,
+        "jobs_total_count": jobs_payload.get("total_count", len(jobs)),
+    }
+
+
+def _build_workflow_job_payload(job_payload: dict) -> dict:
+    return {
+        "id": job_payload["id"],
+        "name": job_payload.get("name"),
+        "status": job_payload.get("status"),
+        "conclusion": job_payload.get("conclusion"),
+        "html_url": job_payload.get("html_url"),
+        "runner_name": job_payload.get("runner_name"),
+        "runner_group_name": job_payload.get("runner_group_name"),
+        "labels": job_payload.get("labels") or [],
+        "started_at": job_payload.get("started_at"),
+        "completed_at": job_payload.get("completed_at"),
+        "steps": [
+            {
+                "number": step.get("number"),
+                "name": step.get("name"),
+                "status": step.get("status"),
+                "conclusion": step.get("conclusion"),
+            }
+            for step in job_payload.get("steps", [])
+        ],
+    }
+
+
 def _echo_pr_check_payload(payload: dict) -> None:
     click.echo(f"#{payload['number']} [{payload['state']}] {payload['title']}")
     click.echo(f"Author: {payload['author']}")
@@ -430,6 +558,44 @@ def _echo_pr_check_payload(payload: dict) -> None:
         click.echo("Workflow runs: none")
 
 
+def _echo_workflow_run_payload(payload: dict) -> None:
+    conclusion = payload["conclusion"] or "-"
+    click.echo(
+        f"Run #{payload['run_number']} (id={payload['id']}): "
+        f"{payload['status']}/{conclusion}"
+    )
+    click.echo(f"Name: {payload['name']}")
+    click.echo(f"Title: {payload['display_title']}")
+    click.echo(f"Event: {payload['event']}")
+    click.echo(f"URL: {payload['html_url']}")
+    click.echo(f"Branch: {payload['head_branch']}")
+    click.echo(f"Head SHA: {payload['head_sha']}")
+
+    if payload["jobs"]:
+        click.echo(f"Jobs ({len(payload['jobs'])}/{payload['jobs_total_count']} shown):")
+        for job in payload["jobs"]:
+            _echo_workflow_job_payload(job, prefix="  - ")
+    else:
+        click.echo("Jobs: none")
+
+
+def _echo_workflow_job_payload(payload: dict, prefix: str = "") -> None:
+    conclusion = payload["conclusion"] or "-"
+    click.echo(f"{prefix}{payload['name']} (id={payload['id']}): {payload['status']}/{conclusion}")
+    if payload["html_url"]:
+        click.echo(f"{prefix}  {payload['html_url']}")
+    runner_bits = [bit for bit in [payload["runner_name"], payload["runner_group_name"]] if bit]
+    if runner_bits:
+        click.echo(f"{prefix}  runner: {' / '.join(runner_bits)}")
+    if payload["labels"]:
+        click.echo(f"{prefix}  labels: {', '.join(payload['labels'])}")
+    if payload["steps"]:
+        click.echo(f"{prefix}  steps:")
+        for step in payload["steps"]:
+            step_conclusion = step["conclusion"] or "-"
+            click.echo(f"{prefix}    - [{step['number']}] {step['name']}: {step['status']}/{step_conclusion}")
+
+
 def _collect_merge_blockers(payload: dict) -> list[str]:
     blockers: list[str] = []
 
@@ -460,3 +626,71 @@ def _collect_merge_blockers(payload: dict) -> list[str]:
 
 def _isoformat(value) -> Optional[str]:
     return value.isoformat() if value else None
+
+
+def _github_api_get_json(repo: str, path: str, token: Optional[str], params: Optional[dict] = None) -> dict:
+    response = _github_api_request(repo, path, token, params=params)
+    try:
+        return response.json()
+    except ValueError as exc:
+        raise click.ClickException(f"GitHub API returned non-JSON response for {path}") from exc
+
+
+def _github_api_get_text(repo: str, path: str, token: Optional[str], params: Optional[dict] = None) -> str:
+    response = _github_api_request(repo, path, token, params=params)
+    return response.text
+
+
+def _github_api_request(repo: str, path: str, token: Optional[str], params: Optional[dict] = None):
+    import requests
+
+    owner, name = _split_repo(repo)
+    url = f"https://api.github.com/repos/{owner}/{name}{path}"
+    try:
+        response = requests.get(
+            url,
+            headers=_github_api_headers(token),
+            params=params,
+            timeout=30,
+            allow_redirects=True,
+        )
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for {path}: {exc}") from exc
+    if response.ok:
+        return response
+
+    detail = response.text.strip()
+    try:
+        payload = response.json()
+        if isinstance(payload, dict) and payload.get("message"):
+            detail = payload["message"]
+    except ValueError:
+        pass
+    raise click.ClickException(f"GitHub API error ({response.status_code}) for {path}: {detail}")
+
+
+def _github_api_headers(token: Optional[str]) -> dict:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "chattool-gh",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def _split_repo(repo: str) -> tuple[str, str]:
+    parts = repo.split("/", 1)
+    if len(parts) != 2 or not all(parts):
+        raise click.ClickException("Repo must be in owner/name form.")
+    return parts[0], parts[1]
+
+
+def _tail_text(text: str, tail: int) -> str:
+    if tail == 0:
+        return text
+    lines = text.splitlines()
+    if len(lines) <= tail:
+        return text
+    return "\n".join(lines[-tail:])

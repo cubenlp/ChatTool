@@ -23,7 +23,8 @@ cli-tests/
 ├── explore/
 │   └── test_chattool_explore_basic.md
 ├── gh/
-│   └── test_chattool_gh_basic.md
+│   ├── test_chattool_gh_basic.md
+│   └── test_chattool_gh_actions_diagnostics.md
 ├── image/
 │   └── test_chattool_image_basic.md
 ├── lark/
