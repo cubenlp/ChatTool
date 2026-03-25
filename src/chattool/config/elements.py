@@ -85,45 +85,85 @@ class BaseEnvConfig:
     @classmethod
     def load_from_dict(cls, env_values: Dict[str, str]):
         """从字典加载配置值"""
+        cls.load_from_sources(env_values=env_values)
+
+    @classmethod
+    def load_from_sources(
+        cls,
+        env_values: Dict[str, str] | None = None,
+        override_values: Dict[str, str] | None = None,
+    ):
+        """从基础 env 与更高优先级覆盖值加载配置。"""
+        env_values = env_values or {}
+        override_values = override_values or {}
         for field in cls.get_fields().values():
-            # 优先级: 系统环境变量 > 传入字典 > 默认值
-            val = os.getenv(field.env_key)
+            # 优先级: 覆盖值 > 系统环境变量 > 传入字典 > 默认值
+            val = override_values.get(field.env_key)
+            if val is None:
+                val = os.getenv(field.env_key)
             if val is None:
                 val = env_values.get(field.env_key)
-            
+
             if val is not None:
                 field.value = val
             else:
                 field.value = field.default
 
     @classmethod
-    def load_all(cls, env_path: str | Path | None, legacy_env_file: str | Path | None = None):
-        """加载所有已注册服务的配置"""
+    def _read_env_values(cls, env_file: str | Path | None) -> Dict[str, str]:
+        if env_file is None:
+            return {}
+        path = Path(env_file)
+        if not path.exists() or not path.is_file():
+            return {}
+        return dotenv.dotenv_values(path)
+
+    @classmethod
+    def _load_base_values(
+        cls,
+        env_path: str | Path | None,
+        legacy_env_file: str | Path | None = None,
+    ) -> Dict[Type['BaseEnvConfig'], Dict[str, str]]:
         if env_path is None:
-            env_values = {}
-            for config_cls in cls._registry:
-                config_cls.load_from_dict(env_values)
-            return
+            return {config_cls: {} for config_cls in cls._registry}
 
         source_path = Path(env_path)
         if source_path.is_file():
-            env_values = dotenv.dotenv_values(source_path)
-            for config_cls in cls._registry:
-                config_cls.load_from_dict(env_values)
-            return
+            env_values = cls._read_env_values(source_path)
+            return {config_cls: env_values for config_cls in cls._registry}
 
-        legacy_values = {}
-        if legacy_env_file is not None:
-            legacy_path = Path(legacy_env_file)
-            if legacy_path.exists():
-                legacy_values = dotenv.dotenv_values(legacy_path)
-
+        legacy_values = cls._read_env_values(legacy_env_file)
+        base_values: Dict[Type['BaseEnvConfig'], Dict[str, str]] = {}
         for config_cls in cls._registry:
             config_path = config_cls.get_active_env_file(source_path)
             env_values = legacy_values
             if config_path.exists():
-                env_values = dotenv.dotenv_values(config_path)
-            config_cls.load_from_dict(env_values)
+                env_values = cls._read_env_values(config_path)
+            base_values[config_cls] = env_values
+        return base_values
+
+    @classmethod
+    def load_all(cls, env_path: str | Path | None, legacy_env_file: str | Path | None = None):
+        """加载所有已注册服务的配置"""
+        base_values = cls._load_base_values(env_path, legacy_env_file=legacy_env_file)
+        for config_cls in cls._registry:
+            config_cls.load_from_sources(env_values=base_values.get(config_cls, {}))
+
+    @classmethod
+    def load_all_with_override(
+        cls,
+        env_path: str | Path | None,
+        override_env_file: str | Path,
+        legacy_env_file: str | Path | None = None,
+    ):
+        """加载默认 env，并让显式传入的 env 文件优先于系统环境变量。"""
+        base_values = cls._load_base_values(env_path, legacy_env_file=legacy_env_file)
+        override_values = cls._read_env_values(override_env_file)
+        for config_cls in cls._registry:
+            config_cls.load_from_sources(
+                env_values=base_values.get(config_cls, {}),
+                override_values=override_values,
+            )
 
     @classmethod
     def get_all_values(cls) -> Dict[str, Any]:

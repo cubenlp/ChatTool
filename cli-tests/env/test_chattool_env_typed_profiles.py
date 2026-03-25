@@ -19,6 +19,22 @@ def _run_chattool_env(args: list[str], *, config_dir: Path, extra_env: dict[str,
     )
 
 
+def _run_python(code: str, *, config_dir: Path, extra_env: dict[str, str] | None = None):
+    env = os.environ.copy()
+    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env.pop("FEISHU_APP_ID", None)
+    env.pop("FEISHU_APP_SECRET", None)
+    if extra_env:
+        env.update(extra_env)
+    return subprocess.run(
+        [sys.executable, "-c", code],
+        text=True,
+        capture_output=True,
+        env=env,
+        check=False,
+    )
+
+
 def test_env_typed_profile_roundtrip(tmp_path: Path):
     config_dir = tmp_path / "config"
 
@@ -69,3 +85,46 @@ def test_env_list_profiles_by_type(tmp_path: Path):
     assert "[OpenAI]" in result.stdout
     assert "profile1.env" in result.stdout
     assert "profile2.env" in result.stdout
+
+
+def test_lark_explicit_env_ref_overrides_os_environment(tmp_path: Path):
+    config_dir = tmp_path / "config"
+    feishu_dir = config_dir / "envs" / "Feishu"
+    feishu_dir.mkdir(parents=True, exist_ok=True)
+    (feishu_dir / ".env").write_text(
+        "FEISHU_APP_ID='from_builtin'\nFEISHU_APP_SECRET='builtin_secret'\n",
+        encoding="utf-8",
+    )
+    (feishu_dir / "work.env").write_text(
+        "FEISHU_APP_ID='from_explicit'\nFEISHU_APP_SECRET='explicit_secret'\n",
+        encoding="utf-8",
+    )
+
+    with_env_ref = _run_python(
+        "\n".join(
+            [
+                "from chattool.tools.lark.cli import _load_runtime_env",
+                "from chattool.config import FeishuConfig",
+                "_load_runtime_env('work')",
+                "print(FeishuConfig.FEISHU_APP_ID.value)",
+            ]
+        ),
+        config_dir=config_dir,
+        extra_env={
+            "FEISHU_APP_ID": "from_os",
+            "FEISHU_APP_SECRET": "os_secret",
+        },
+    )
+    assert with_env_ref.returncode == 0, with_env_ref.stderr
+    assert with_env_ref.stdout.strip() == "from_explicit"
+
+    without_env_ref = _run_python(
+        "from chattool.config import FeishuConfig; print(FeishuConfig.FEISHU_APP_ID.value)",
+        config_dir=config_dir,
+        extra_env={
+            "FEISHU_APP_ID": "from_os",
+            "FEISHU_APP_SECRET": "os_secret",
+        },
+    )
+    assert without_env_ref.returncode == 0, without_env_ref.stderr
+    assert without_env_ref.stdout.strip() == "from_os"

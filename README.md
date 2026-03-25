@@ -41,6 +41,7 @@ chatenv cat                      # 查看配置（敏感值打码）
 chatenv cat -t feishu           # 查看飞书配置，供 chattool cc init 默认候选值参考
 chatenv set OPENAI_API_KEY=sk-xxx
 chatenv save work -t openai && chatenv use work -t openai   # 按类型管理 profile
+chattool lark info -e work       # 显式使用 Feishu profile，优先级高于当前 shell 环境变量
 ```
 
 ### LLM 对话 (`chattool.Chat`)
