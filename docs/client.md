@@ -107,14 +107,21 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 
 ### 0.4 Playground (`setup playground`)
 
-把一个空目录快速初始化为工作区：
+把一个目录快速初始化或更新为工作区：
 
-1. clone `chattool/`
+1. clone `ChatTool/`
 2. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
 3. 创建 `Memory/`、`skills/`、`scratch/`
-4. 从 clone 出来的 `chattool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+4. 从 clone 出来的 `ChatTool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
 
-如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下会默认提示“跳过克隆并保留本地版本”；只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
+如果目标目录已经是已有工作区，再次执行时会进入更新模式：
+
+- 优先更新 `ChatTool/` 仓库；如果仓库里有本地改动，则默认跳过仓库更新，避免覆盖工作区中的开发状态
+- 交互模式下会提示是否同步工作区 `skills/`
+- 同步 `skills/` 时只覆盖常规文件，不会改动各 skill 下的 `experience/`
+- 已存在的工作区说明文件默认仍然保留；只有显式传 `--force` 时才会覆盖这些生成文件
+
+如果目标目录只是普通非空目录而不是现有工作区，交互模式下仍会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。
 
 完成 workspace bootstrap 后，命令还会尝试配置 GitHub 的 HTTPS Git 鉴权：
 
@@ -150,7 +157,7 @@ my-playground/
 ├── AGENTS.md
 ├── CHATTOOL.md
 ├── MEMORY.md
-├── chattool/
+├── ChatTool/
 ├── Memory/
 ├── skills/
 └── scratch/

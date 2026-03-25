@@ -34,6 +34,11 @@ version: 0.1.0
    - 更新 [CHANGELOG.md](CHANGELOG.md)
    - CLI 变更同步更新 [cli-tests](cli-tests) 下对应 `.md` 与需要的 `.py`
 
+5. MR / PR 前是否已同步最新主分支
+   - 最终提 MR / PR 前，必须先同步最新 `master`。
+   - 提交前优先把 `origin/master` merge 或 rebase 到当前分支，并在本地先解决冲突。
+   - “分支未同步主分支”应视为 review 问题，因为这会把集成冲突拖到评审或合并阶段才暴露。
+
 ## Review 流程
 
 1. 先确定范围
@@ -54,11 +59,18 @@ version: 0.1.0
    - 运行最相关、最小的一条测试或 CLI 命令
    - 如果无法验证，要在结论里明确说明
 
+5. 最终 MR / PR 前同步主线并复查
+   - 运行 `git fetch origin`，把 `origin/master` 合入当前分支
+   - 若有冲突，先在本地解决，再给最终 review 结论或更新 PR
+   - 如果合主线影响到了相关区域，冲突解决后重新跑最小必要验证
+
 ## 常用命令
 
 ```bash
 git diff --stat
 git diff --name-only
+git fetch origin
+git merge origin/master
 rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
 rg -n "lazy import|utils/tui.py|interactive" docs/development-guide docs README.md
 ```
