@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
 from typing import Dict, Any, List, Type
 import chattool
+import dotenv
 
 class EnvField:
     """环境变量字段描述符"""
@@ -29,6 +31,7 @@ class BaseEnvConfig:
     
     _registry: List[Type['BaseEnvConfig']] = []
     _title: str = "Configuration"
+    _storage_dir: str | None = None
 
     def __init_subclass__(cls, **kwargs):
         """自动注册子类"""
@@ -45,13 +48,48 @@ class BaseEnvConfig:
         return fields
 
     @classmethod
+    def get_storage_name(cls) -> str:
+        return cls._storage_dir or cls.__name__.removesuffix("Config") or cls.__name__
+
+    @classmethod
+    def get_storage_dir(cls, env_root: str | Path) -> Path:
+        return Path(env_root) / cls.get_storage_name()
+
+    @classmethod
+    def get_active_env_file(cls, env_root: str | Path) -> Path:
+        return cls.get_storage_dir(env_root) / ".env"
+
+    @classmethod
+    def get_profile_env_file(cls, env_root: str | Path, name: str) -> Path:
+        profile_name = str(name).strip()
+        if not profile_name:
+            raise ValueError("Profile name cannot be empty.")
+        if not profile_name.endswith(".env"):
+            profile_name += ".env"
+        return cls.get_storage_dir(env_root) / profile_name
+
+    @classmethod
+    def render_env_file(cls) -> str:
+        lines = [
+            f"# Description: Env file for {cls._title}.",
+            ""
+        ]
+        for _, field in cls.get_fields().items():
+            if field.desc:
+                lines.append(f"# {field.desc}")
+            val_str = str(field.value) if field.value is not None else ""
+            lines.append(f"{field.env_key}='{val_str}'")
+            lines.append("")
+        return "\n".join(lines)
+
+    @classmethod
     def load_from_dict(cls, env_values: Dict[str, str]):
         """从字典加载配置值"""
         for field in cls.get_fields().values():
-            # 优先级: 传入的字典 > 系统环境变量 > 默认值
-            val = env_values.get(field.env_key)
+            # 优先级: 系统环境变量 > 传入字典 > 默认值
+            val = os.getenv(field.env_key)
             if val is None:
-                val = os.getenv(field.env_key)
+                val = env_values.get(field.env_key)
             
             if val is not None:
                 field.value = val
@@ -59,11 +97,32 @@ class BaseEnvConfig:
                 field.value = field.default
 
     @classmethod
-    def load_all(cls, env_path: str):
+    def load_all(cls, env_path: str | Path | None, legacy_env_file: str | Path | None = None):
         """加载所有已注册服务的配置"""
-        import dotenv
-        env_values = dotenv.dotenv_values(env_path)
+        if env_path is None:
+            env_values = {}
+            for config_cls in cls._registry:
+                config_cls.load_from_dict(env_values)
+            return
+
+        source_path = Path(env_path)
+        if source_path.is_file():
+            env_values = dotenv.dotenv_values(source_path)
+            for config_cls in cls._registry:
+                config_cls.load_from_dict(env_values)
+            return
+
+        legacy_values = {}
+        if legacy_env_file is not None:
+            legacy_path = Path(legacy_env_file)
+            if legacy_path.exists():
+                legacy_values = dotenv.dotenv_values(legacy_path)
+
         for config_cls in cls._registry:
+            config_path = config_cls.get_active_env_file(source_path)
+            env_values = legacy_values
+            if config_path.exists():
+                env_values = dotenv.dotenv_values(config_path)
             config_cls.load_from_dict(env_values)
 
     @classmethod
@@ -78,13 +137,22 @@ class BaseEnvConfig:
     @classmethod
     def set(cls, key: str, value: Any):
         """设置配置值"""
-        for config_cls in cls._registry:
-            fields = config_cls.get_fields()
-            if key in fields:
-                fields[key].value = value
-                return
+        match = cls.find_field(key)
+        if match is not None:
+            _, field = match
+            field.value = value
+            return
         # Optional: raise error or warn if key not found
         # print(f"Warning: Configuration key '{key}' not found.")
+
+    @classmethod
+    def find_field(cls, key: str):
+        normalized = key.strip().lower()
+        for config_cls in cls._registry:
+            for name, field in config_cls.get_fields().items():
+                if name.lower() == normalized or field.env_key.lower() == normalized:
+                    return config_cls, field
+        return None
     
     @classmethod
     def generate_env_template(cls, current_version: str) -> str:
@@ -126,9 +194,19 @@ class BaseEnvConfig:
     @classmethod
     def save_env_file(cls, env_path: str, version: str = "0.0.0"):
         """保存当前配置到 .env 文件"""
-        content = cls.generate_env_template(version)
-        with open(env_path, 'w', encoding='utf-8') as f:
-            f.write(content)
+        path = Path(env_path)
+        if path.suffix == ".env":
+            content = cls.generate_env_template(version)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return
+
+        path.mkdir(parents=True, exist_ok=True)
+        for config_cls in cls._registry:
+            config_dir = config_cls.get_storage_dir(path)
+            config_dir.mkdir(parents=True, exist_ok=True)
+            config_file = config_cls.get_active_env_file(path)
+            config_file.write_text(config_cls.render_env_file(), encoding="utf-8")
 
     @classmethod
     def print_config(cls):

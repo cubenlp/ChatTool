@@ -40,7 +40,7 @@ chatenv init -i -t openai        # 仅初始化指定服务
 chatenv cat                      # 查看配置（敏感值打码）
 chatenv cat -t feishu           # 查看飞书配置，供 chattool cc init 默认候选值参考
 chatenv set OPENAI_API_KEY=sk-xxx
-chatenv save work && chatenv use work   # 多 profile 管理
+chatenv save work -t openai && chatenv use work -t openai   # 按类型管理 profile
 ```
 
 ### LLM 对话 (`chattool.Chat`)

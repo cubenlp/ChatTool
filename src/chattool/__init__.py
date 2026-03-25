@@ -12,15 +12,14 @@ from .utils import (
     create_env_file, setup_logger, setup_jupyter_async,
     HTTPClient, HTTPConfig
 )
-from .const import CHATTOOL_REPO_DIR, CHATTOOL_ENV_FILE
+from .const import CHATTOOL_REPO_DIR, CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 from .config import OpenAIConfig, AzureConfig, AliyunConfig, TencentConfig, ZulipConfig, BaseEnvConfig
 from .tools import LarkBot, AliyunDNSClient, TencentDNSClient, DynamicIPUpdater, SSLCertUpdater
 
 setup_jupyter_async()
 load_dotenv(CHATTOOL_REPO_DIR / '.env')
 
-if CHATTOOL_ENV_FILE.exists():
-    BaseEnvConfig.load_all(CHATTOOL_ENV_FILE)
+BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
 
 
 __all__ = [
