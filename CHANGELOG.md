@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+- `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败
+- `chattool gh pr-merge` 新增可选的 `--check` 开关，用于在合并前显式检查 check runs 与 workflow runs，避免再次误把带红 CI 的 PR 当成可安全合并
+- `chattool skill install` 不再强制要求 skill frontmatter 包含 `version`，只校验 `name` 与 `description`
+
+### Added
+- `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
+
 ## [6.4.0]
 
 ### Changed
@@ -48,7 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `tests/dns/test_cert_server_real.py` 与 `tests/dns/test_cert_update_real.py` 现改为显式 `CHATTOOL_RUN_DNS_CERT_REAL=1` 才启用，避免日常全量回归卡在真实证书生命周期测试
 - `tests/core/test_batch.py` 现已修正未 await 的协程调用，且 pytest 过滤规则补齐了常见第三方告警，降低全量回归噪音
 - `chattool setup nodejs` 首次通过内置 `nvm` 安装 Node.js 后，后续同一轮 `setup codex/claude/opencode/cc-connect` 现在会正确复用 `~/.nvm` 中的运行时，不再误报 “Node.js requirement still not satisfied after setup”
-- `chattool setup alias` 现在会把 `chatskills` 正确映射到 `chattool skill`
+- `chattool setup alias` 现在会把 `chatskill` 正确映射到 `chattool skill`
 
 ## [6.2.0]
 

@@ -90,7 +90,7 @@ version: 0.1.0
     assert not (dest / "incomplete").exists()
 
 
-def test_skill_install_rejects_missing_version(runner, tmp_path):
+def test_skill_install_allows_missing_version(runner, tmp_path):
     source = tmp_path / "source"
     dest = tmp_path / "dest"
     _write_skill(
@@ -109,9 +109,8 @@ description: Missing version.
         ["skill", "install", "noversion", "--source", str(source), "--dest", str(dest)],
     )
 
-    assert result.exit_code != 0
-    assert "missing required frontmatter keys: version" in result.output
-    assert not (dest / "noversion").exists()
+    assert result.exit_code == 0
+    assert (dest / "noversion" / "SKILL.md").exists()
 
 
 def test_skill_install_all_aborts_when_any_target_is_invalid(runner, tmp_path):
