@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 - `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
+- `chattool setup codex -e ...` 现可显式复用 OpenAI 配置来源：支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 oai 配置 > 当前 oai 配置 > 现有 codex 配置 > 默认值` 回退
 
 ## [6.4.0]
 
