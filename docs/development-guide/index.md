@@ -40,8 +40,7 @@
 - 面向 Agent 的能力出口。
 - 将工具能力按场景组织为可复用技能，不重复实现底层逻辑。
 - 每个 skill 至少维护 `SKILL.md`，仓库内如提供中文版本则同步维护 `SKILL.zh.md`。
-- ChatTool 仓库内的 skill frontmatter 统一维护 `name`、`description`、`version`。
-- 新 skill 的初始 `version` 为 `0.1.0`，后续 skill 内容更新时同步递增版本。
+- ChatTool 仓库内的 skill frontmatter 至少维护 `name`、`description`；`version` 如有需要可作为可选元信息维护。
 
 ### 5) `setup/`
 

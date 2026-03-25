@@ -51,6 +51,8 @@ version: 0.4.0
 
 - `SKILL.md`
   - `cli-tests/lark/guide/test_chattool_lark_skill_index.md`
+- `SKILL.zh.md`
+  - `cli-tests/lark/guide/test_chattool_lark_skill_index.md`
 - `guide/overview.md`
   - `cli-tests/lark/guide/test_chattool_lark_basic.md`
   - `cli-tests/lark/guide/test_chattool_lark_overview.md`

@@ -347,6 +347,12 @@ chattool gh pr-view --number 123
 # 查看 PR 的 CI / checks 状态
 chattool gh pr-check --number 123
 
+# 查看某次 workflow run 与 jobs
+chattool gh run-view --run-id 23494900414
+
+# 查看某个 job 的日志
+chattool gh job-logs --job-id 68373094563
+
 # 创建 PR
 chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
 
@@ -355,6 +361,7 @@ chattool gh pr-comment --number 123 --body "Looks good"
 
 # 合并 PR
 chattool gh pr-merge --number 123 --method squash --confirm
+chattool gh pr-merge --number 123 --method squash --confirm --check
 
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
@@ -366,6 +373,13 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - check runs
 - workflow runs
 
+如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
+
+如果 `pr-check` 已经定位到具体 workflow run / job，可以继续使用：
+
+- `run-view --run-id <id>`：查看某次 workflow run 的元信息、jobs 与 step 状态
+- `job-logs --job-id <id>`：直接抓取 job 日志；默认输出尾部，可用 `--tail 0` 查看完整日志，或用 `--output` 落盘
+
 需要机器可读结果时可加 `--json-output`。
 
 ### 4.3 API Reference
@@ -376,6 +390,7 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls
 - Check runs API: https://docs.github.com/en/rest/checks/runs
 - Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
+- Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs
 - Commit statuses API: https://docs.github.com/en/rest/commits/statuses
 - PyGithub 文档: https://pygithub.readthedocs.io/
 - PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
@@ -568,8 +583,8 @@ chattool skill install cert-manager -p codex --prefix
 
 安装前会校验源 skill 的 `SKILL.md`。当前要求：
 - 文件开头必须包含 `---` 包裹的 YAML frontmatter
-- frontmatter 至少包含 `name`、`description` 和 `version`
-- `version` 采用 Semantic Versioning，例如 `0.1.0`
+- frontmatter 至少包含 `name`、`description`
+- `version` 可以保留为可选元信息，但安装时不会强制校验
 - `openai.yaml`/`openai.yml` 不是必需文件
 
 ---

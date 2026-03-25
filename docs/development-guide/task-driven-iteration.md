@@ -27,7 +27,7 @@
 
 5. **技能落地要求**  
    - 必须包含 `SKILL.md` 与 `SKILL.zh.md`。  
-   - `SKILL.md` 与 `SKILL.zh.md` 的 frontmatter 都维护同一个 `version`，新 skill 初始值为 `0.1.0`。  
+   - `SKILL.md` 与 `SKILL.zh.md` 的 frontmatter 至少维护 `name`、`description`；`version` 仅在确有需要时作为可选元信息维护。  
    - 分阶段输出约定：`0_` 表示原始或起点；`1_` 起为加工内容。  
    - 若任务需要阶段化产物，目录层级保持简洁，优先使用仓库外目录下的 `<频道>/<主题>/` 或 `<任务>/<阶段>/`。
 
