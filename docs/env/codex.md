@@ -33,6 +33,26 @@ chattool setup codex
 chattool setup codex --pam "cr_xxx"
 ```
 
+如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
+
+```bash
+chattool setup codex -e work
+chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
+```
+
+这里的 `-e/--env` 支持两种形式：
+
+- `.env` 文件路径
+- `OpenAI` 类型下保存过的 profile 名称，例如 `work`
+
+解析顺序为：
+
+1. 显式参数：`--pam`、`--base-url`、`--model`
+2. `-e/--env` 指定的 OpenAI 配置
+3. 当前 `oai/openai` 生效配置
+4. 现有 `~/.codex/` 配置
+5. 内置默认值
+
 可选覆盖 `base_url` 和默认模型：
 
 ```bash

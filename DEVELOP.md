@@ -26,6 +26,13 @@
 - 开发规范：更新 `docs/development-guide/`
 - 导航变更：同步更新 `mkdocs.yml`
 
+## 配置机制
+
+- 默认优先级统一为：`显式参数 > environment variable > envs/<Config>/.env > default`
+- 对支持 `-e/--env` 的命令，统一为：`显式参数 > -e/显式 env > environment variable > envs/<Config>/.env > default`
+- profile 固定保存在 `envs/<Config>/<profile>.env`
+- 新命令需要临时切换配置时，优先复用 `-e/--env`，不要再新增一套临时环境变量语义
+
 ## 测试与文档
 
 - ChatTool 仓库只长期维护 `cli-tests/` 这条测试主线。

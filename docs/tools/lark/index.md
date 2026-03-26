@@ -75,16 +75,24 @@ chattool env set FEISHU_TEST_USER_ID_TYPE=user_id
 如果你不想依赖当前 shell 里的环境变量，可以给子命令显式传一个配置来源：
 
 ```bash
-chattool lark info -e ~/.config/chattool/.env
+chattool lark info -e ~/.config/chattool/envs/Feishu/.env
 chattool lark info -e work
 ```
 
 `-e/--env` 支持两种形式：
 
 - `.env` 文件路径
-- `chatenv save` 保存过的 profile 名称，例如 `work`
+- `Feishu` 类型下通过 `chatenv save -t feishu` 保存过的 profile 名称，例如 `work`
 
 这适合多套飞书应用来回切换，或者在当前 shell 环境比较脏的时候，明确指定一份配置来执行。
+
+`chattool lark` 的运行时优先级固定为：
+
+1. 命令参数本身
+2. `-e/--env` 显式指定的 `.env` 文件或 `Feishu` profile
+3. 当前进程环境变量
+4. `envs/Feishu/.env`
+5. 代码默认值
 
 ## 最短工作流
 

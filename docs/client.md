@@ -61,6 +61,26 @@ chattool setup codex
 chattool setup codex --pam "cr_xxx"
 ```
 
+如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
+
+```bash
+chattool setup codex -e work
+chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
+```
+
+这里的 `-e/--env` 支持两种形式：
+
+- `.env` 文件路径
+- `OpenAI` 类型下保存过的 profile 名称，例如 `work`
+
+解析顺序为：
+
+1. 显式参数：`--pam`、`--base-url`、`--model`
+2. `-e/--env` 指定的 OpenAI 配置
+3. 当前 `oai/openai` 生效配置
+4. 现有 `~/.codex/` 配置
+5. 内置默认值
+
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
@@ -346,6 +366,8 @@ chattool gh pr-view --number 123
 
 # 查看 PR 的 CI / checks 状态
 chattool gh pr-check --number 123
+chattool gh pr-check --number 123 --wait
+chattool gh pr-check --number 123 --wait --interval 10 --timeout 600
 
 # 查看某次 workflow run 与 jobs
 chattool gh run-view --run-id 23494900414
@@ -372,6 +394,12 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - combined status
 - check runs
 - workflow runs
+
+如果追加 `--wait`，CLI 会持续轮询直到 checks 和 workflow runs 都结束：
+
+- 默认不设超时，会一直等到全部结束
+- 可用 `--interval <seconds>` 控制轮询间隔
+- 只有显式传 `--timeout <seconds>` 时，才会在超时后报错退出
 
 如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
 

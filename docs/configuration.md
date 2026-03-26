@@ -7,13 +7,22 @@ ChatTool 从 v5.0.0 开始引入了全新的集中式配置管理系统，支持
 对常规 CLI 与组件而言，配置读取顺序如下（优先级从高到低）：
 
 1. **CLI / 调用方显式指定**：命令行参数、函数参数或调用侧显式传入的值。
-2. **`.env` 文件**：项目配置目录下的 `.env` 文件。
-3. **系统环境变量**：操作系统层面的环境变量（如 `export OPENAI_API_KEY=...`）。
+2. **系统环境变量**：操作系统层面的环境变量（如 `export OPENAI_API_KEY=...`）。
+3. **env 文件**：项目配置目录下按类型拆分的 env 文件。
 4. **默认值**：代码中定义的默认值。
+
+对于支持 `-e/--env` 一类显式 env 覆盖源的命令，优先级进一步细化为：
+
+1. **CLI / 调用方显式指定**
+2. **显式 env 引用**：例如 `chattool lark -e work` 或 `chattool lark -e /path/to/file.env`
+3. **系统环境变量**
+4. **按类型拆分的内置 env 文件**：例如 `envs/Feishu/.env`
+5. **默认值**
 
 说明：
 
-- 该优先级对应 `BaseEnvConfig.load_from_dict()` 的真实实现：已注册配置项会优先读取 `.env`，其次才回退到 `os.environ`。
+- 该优先级对应 `BaseEnvConfig.load_from_dict()` 的真实实现：已注册配置项会优先读取 `os.environ`，其次才回退到 env 文件。
+- 当命令显式传入 `-e/--env` 时，会走 `BaseEnvConfig.load_all_with_override()`：先读取类型内置 `.env`，再叠加系统环境变量，最后让显式 env 覆盖前两者。
 - `BaseEnvConfig.set()` 是运行时覆盖手段，只修改当前进程内的值；它不属于上面的“默认加载顺序”，也不会自动回写 `.env` 或同步系统环境变量。
 - 对于已经注册到 `src/chattool/config/` 的配置项，CLI 与业务代码应优先读取配置对象的 `.value`，不要只直接读取 `os.environ`，否则会绕过 `chatenv` 管理的默认值。
 - 例如 `chattool setup playground` 在补 GitHub 鉴权时，会优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，从而复用 `chatenv` 当前生效的 GitHub 配置。
@@ -32,7 +41,7 @@ chatenv init -i
 chatenv init -i -t "OpenAI"
 ```
 
-该命令会引导你逐步设置所需的 API Key 和其他参数，并自动保存到 `.env` 文件中。
+该命令会引导你逐步设置所需的 API Key 和其他参数，并自动保存到按类型拆分的 env 文件中，例如 `envs/OpenAI/.env`。
 
 ### 2. 手动生成配置模板 (可选)
 
@@ -74,24 +83,45 @@ chat = Chat()
 
 ## 配置集管理 (Profiles)
 
-你可以保存多个配置环境（Profile）并在其间快速切换：
+你可以按配置类型保存多个 profile 并单独切换：
 
 ```bash
-# 保存当前配置为 'dev' 环境
-chatenv save dev
+# 保存当前 OpenAI 配置为 'dev' 环境
+chatenv save dev -t openai
 
-# 列出所有已保存的环境
+# 列出所有已保存的 profile
 chatenv list
 
-# 切换到 'prod' 环境
-chatenv use prod
+# 只切换 OpenAI 到 'prod' profile
+chatenv use prod -t openai
 
-# 查看 'prod' 环境的内容
-chatenv cat prod
+# 查看 OpenAI 的 'prod' profile 内容
+chatenv cat prod -t openai
 
-# 删除 'test' 环境
-chatenv delete test
+# 删除 OpenAI 的 'test' profile
+chatenv delete test -t openai
 ```
+
+当前目录结构形如：
+
+```text
+~/.config/chattool/envs/
+├── OpenAI/
+│   ├── .env
+│   └── prod.env
+├── Feishu/
+│   ├── .env
+│   └── work.env
+└── GitHub/
+    └── .env
+```
+
+约定：
+
+- `envs/<Config>/.env` 表示该类型当前激活的默认配置。
+- `envs/<Config>/<profile>.env` 表示该类型下保存的 profile。
+- `chatenv use <profile> -t <type>` 的语义是把对应 profile 激活到该类型的 `.env`。
+- 命令如果支持 `-e/--env`，优先接受真实 `.env` 文件路径；如命令做了类型约束，也可以接受该类型下保存过的 profile 名称。
 
 ## 高级用法
 

@@ -69,12 +69,16 @@ chattool gh pr-create --base main --head feature --title "test" --body "demo"
 预期过程和结果：
   1. 执行 `chattool gh pr-check --number <id>`，预期输出 PR 的 combined status、check runs 和 workflow runs。
   2. 执行 `chattool gh pr-check --number <id> --json-output`，预期返回机器可读 JSON。
+  3. 执行 `chattool gh pr-check --number <id> --wait`，预期在 checks / workflow runs 未完成时持续轮询，直到全部结束后再输出最终结果；默认不设超时。
+  4. 执行 `chattool gh pr-check --number <id> --wait --timeout <seconds>`，预期在超时后报错退出。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool gh pr-check --number 1
 chattool gh pr-check --number 1 --json-output
+chattool gh pr-check --number 1 --wait
+chattool gh pr-check --number 1 --wait --timeout 600
 ```
 
 ## 用例 5：评论与合并

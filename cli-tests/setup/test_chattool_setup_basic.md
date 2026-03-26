@@ -73,14 +73,16 @@ chattool setup nodejs -i
 预期过程和结果：
   1. 执行 `chattool setup cc-connect -i`，预期先检查 Node.js（>= 20），必要时提示执行 `chattool setup nodejs` 安装/升级，然后安装或确认 `cc-connect` CLI。
   2. 执行 `chattool setup codex -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
-  3. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
-  4. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  3. 执行 `chattool setup codex -e work` 时，预期可显式从 `OpenAI` profile 读取 `OPENAI_API_KEY`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`。
+  4. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  5. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool setup cc-connect -i
 chattool setup codex -i
+chattool setup codex -e work
 chattool setup claude -i
 chattool setup opencode -i
 ```

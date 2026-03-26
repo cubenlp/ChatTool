@@ -43,11 +43,12 @@ def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(preferred_auth_method, base_url, model, interactive):
+def codex_setup(preferred_auth_method, base_url, model, env_ref, interactive):
     setup_codex(
         preferred_auth_method=preferred_auth_method,
         base_url=base_url,
         model=model,
+        env_ref=env_ref,
         interactive=interactive,
     )
 
@@ -186,6 +187,10 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--model",),
                 kwargs={"default": None, "help": "Optional default model name."},
+            ),
+            SetupOptionElement(
+                param_decls=("-e", "--env"),
+                kwargs={"default": None, "help": "Load OpenAI config from a .env file path or saved OpenAI profile name."},
             ),
         ),
     ),

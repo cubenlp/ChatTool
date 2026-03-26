@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Optional
 import click
 
@@ -144,9 +145,23 @@ def pr_view(repo, number, json_output, token):
 @click.option("--number", required=True, type=int, help="Pull request number.")
 @click.option("--check-limit", default=20, type=int, show_default=True, help="Max check runs to show.")
 @click.option("--workflow-limit", default=10, type=int, show_default=True, help="Max workflow runs to show.")
+@click.option("--wait", "wait_for_completion", is_flag=True, help="Wait until checks and workflow runs finish.")
+@click.option(
+    "--interval",
+    default=15,
+    type=click.FloatRange(min=1e-9),
+    show_default=True,
+    help="Polling interval in seconds when --wait is used.",
+)
+@click.option(
+    "--timeout",
+    default=None,
+    type=click.FloatRange(min=1e-9),
+    help="Optional max wait time in seconds. By default, wait forever.",
+)
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN).")
-def pr_check(repo, number, check_limit, workflow_limit, json_output, token):
+def pr_check(repo, number, check_limit, workflow_limit, wait_for_completion, interval, timeout, json_output, token):
     """Show CI/check status for a pull request."""
     from github.GithubException import GithubException
 
@@ -154,15 +169,28 @@ def pr_check(repo, number, check_limit, workflow_limit, json_output, token):
     repo = _resolve_repo(repo)
     try:
         repo_obj = client.get_repo(repo)
-        pr = repo_obj.get_pull(number)
-        commit = repo_obj.get_commit(pr.head.sha)
-        payload = _build_pr_check_payload(
-            pr,
-            commit,
-            repo_obj,
-            check_limit=check_limit,
-            workflow_limit=workflow_limit,
-        )
+        started_at = time.monotonic()
+        while True:
+            pr = repo_obj.get_pull(number)
+            commit = repo_obj.get_commit(pr.head.sha)
+            payload = _build_pr_check_payload(
+                pr,
+                commit,
+                repo_obj,
+                check_limit=check_limit,
+                workflow_limit=workflow_limit,
+            )
+            if not wait_for_completion or not _has_incomplete_pr_checks(payload):
+                break
+            if timeout is not None and (time.monotonic() - started_at) >= timeout:
+                raise click.ClickException(
+                    f"Timed out after {timeout:g}s waiting for PR #{number} checks to finish."
+                )
+            click.echo(
+                f"Waiting for PR #{number} checks to finish; polling again in {interval:g}s...",
+                err=True,
+            )
+            time.sleep(interval)
     except GithubException as exc:
         raise click.ClickException(f"GitHub API error: {exc}") from exc
 
@@ -622,6 +650,22 @@ def _collect_merge_blockers(payload: dict) -> list[str]:
             blockers.append(f"workflow {workflow_run['name']} concluded {conclusion or 'unknown'}")
 
     return blockers
+
+
+def _has_incomplete_pr_checks(payload: dict) -> bool:
+    for status in payload["combined_status"]["statuses"]:
+        if status["state"] in {"pending"}:
+            return True
+
+    for check_run in payload["check_runs"]:
+        if check_run["status"] != "completed":
+            return True
+
+    for workflow_run in payload["workflow_runs"]:
+        if workflow_run["status"] != "completed":
+            return True
+
+    return False
 
 
 def _isoformat(value) -> Optional[str]:

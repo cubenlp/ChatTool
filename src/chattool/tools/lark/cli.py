@@ -30,22 +30,17 @@ def cli():
 
 
 def _resolve_env_path(env_ref: str) -> Path:
-    """Resolve an env file path or saved profile name."""
+    """Resolve an env file path or saved Feishu profile name."""
     candidate = Path(env_ref).expanduser()
-    if candidate.exists():
+    if candidate.is_file():
         return candidate
 
-    profile_path = CHATTOOL_ENV_DIR / env_ref
+    profile_path = FeishuConfig.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
     if profile_path.exists():
         return profile_path
 
-    if not profile_path.suffix:
-        profile_path = profile_path.with_suffix(".env")
-        if profile_path.exists():
-            return profile_path
-
     raise click.ClickException(
-        f"未找到配置文件: {env_ref}。可传入 .env 文件路径，或 chatenv 保存的 profile 名称。"
+        f"未找到配置文件: {env_ref}。可传入 .env 文件路径，或 Feishu 类型下保存的 profile 名称。"
     )
 
 
@@ -55,7 +50,11 @@ def _load_runtime_env(env_ref: str | None) -> Path | None:
         return None
 
     env_path = _resolve_env_path(env_ref)
-    BaseEnvConfig.load_all(str(env_path))
+    BaseEnvConfig.load_all_with_override(
+        CHATTOOL_ENV_DIR,
+        override_env_file=env_path,
+        legacy_env_file=CHATTOOL_ENV_FILE,
+    )
     return env_path
 
 
@@ -69,7 +68,7 @@ def _get_bot():
         click.secho(f"初始化失败: {e}", fg="red", err=True)
         click.echo(
             "请确认已设置 FEISHU_APP_ID 和 FEISHU_APP_SECRET，"
-            f"或通过 -e/--env 指定配置文件（默认读取 {CHATTOOL_ENV_FILE}）。",
+            f"或通过 -e/--env 指定配置文件（默认读取 {CHATTOOL_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}）。",
             err=True,
         )
         sys.exit(1)
