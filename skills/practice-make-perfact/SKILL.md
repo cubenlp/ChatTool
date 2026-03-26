@@ -1,7 +1,7 @@
 ---
 name: practice-make-perfact
-description: Post-task normalization workflow for ChatTool development. Use after implementation to review the completed work, extract reusable pieces into the repo, run $chattool-dev-review, and then drive docs/tests/changelog/PR updates through the project standards.
-version: 0.2.0
+description: Post-task normalization workflow for ChatTool development. Use after implementation to review the completed work, extract reusable pieces into the repo, check existing CLI surfaces before adding scripts, run $chattool-dev-review, and then drive docs/tests/changelog/PR updates through the project standards.
+version: 0.3.0
 ---
 
 # Practice Make Perfact
@@ -31,6 +31,8 @@ Core idea: finish the task first, then explicitly enter a cleanup and extraction
    - Move task-specific guidance into `skills/<name>/`.
    - Promote only durable outputs into `docs/`, tests, or source files.
    - Normalize naming, placement, and file boundaries so the repository stays coherent.
+   - Before keeping an ad hoc script, check whether an existing CLI already covers the action.
+   - Use `references/cli-reference.md` as the first lookup index for this pass.
 
 4. Run the mandatory post-task review
    - Review the actual diff, not the whole repo by default.
@@ -67,3 +69,4 @@ Core idea: finish the task first, then explicitly enter a cleanup and extraction
 - It should help the model look back at completed work, extract the useful parts, and normalize them into the repository.
 - It should explicitly chain into `$chattool-dev-review` to enforce development standards.
 - The expected resting point is usually an updated PR/MR, not just local edits.
+- It should keep a small CLI reference surface so the model can quickly audit “what command already exists” before adding another temporary script.

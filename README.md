@@ -71,6 +71,8 @@ async for chunk in Chat().user("写一首诗").async_get_response_stream():
 ```bash
 chattool lark send USER_ID "Hello"
 chattool lark send USER_ID --image photo.png
+chattool lark doc perm-public-set DOC_ID --share-entity same_tenant --link-share-entity tenant_editable
+chattool lark doc perm-member-add DOC_ID USER_ID --member-type userid --perm edit
 chattool lark doc parse-md weekly.md -o weekly.blocks.json
 chattool lark doc append-json DOC_ID weekly.blocks.json
 chattool lark doc append-file DOC_ID weekly.md

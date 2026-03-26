@@ -22,7 +22,8 @@
 预期过程和结果：
   1. 检查 `info`、`scopes`、`send`、`reply`、`upload` 是否都有官方 API 链接。
   2. 检查 `notify-doc` 与 `doc create|get|raw|blocks|append-text|append-file|parse-md|append-json` 是否都有对应的 docx API 索引。
-  3. 检查 `bitable`、`calendar`、`im`、`task` 是否仍被列为后续专题 CLI。
+  3. 检查 `doc perm-public-get|perm-public-set|perm-member-list|perm-member-add` 是否已有对应的 drive 权限 API 链接。
+  4. 检查 `bitable`、`calendar`、`im`、`task` 是否仍被列为后续专题 CLI。
 
 参考执行脚本（伪代码）：
 
@@ -30,4 +31,3 @@
 sed -n '1,220p' skills/feishu/guide/api-reference.md
 python -m chattool.client.main lark --help
 ```
-

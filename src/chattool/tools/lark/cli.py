@@ -1135,6 +1135,165 @@ def doc_append_json(document_id, path, env_ref, block_id, index, batch_size):
     click.echo(f"children   : {len(children)}")
 
 
+@doc.command("perm-public-get")
+@click.argument("document_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+def doc_perm_public_get(document_id, env_ref):
+    """获取文档公开分享权限"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.get_doc_public_permission(document_id)
+    if _print_lark_error("获取文档公开权限", resp):
+        return
+
+    payload = _response_json(resp)
+    permission = payload.get("data", {}).get("permission_public", {})
+    click.secho("✅ 获取成功", fg="green")
+    if permission:
+        for key in [
+            "external_access",
+            "security_entity",
+            "comment_entity",
+            "share_entity",
+            "link_share_entity",
+            "invite_external",
+            "lock_switch",
+        ]:
+            if key in permission:
+                click.echo(f"{key:16}: {permission[key]}")
+    _print_json(payload)
+
+
+@doc.command("perm-public-set")
+@click.argument("document_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--external-access/--no-external-access", default=None,
+              help="是否允许外部访问")
+@click.option("--invite-external/--no-invite-external", default=None,
+              help="是否允许邀请外部协作者")
+@click.option("--share-entity", type=click.Choice(["anyone", "same_tenant", "only_full_access"]),
+              default=None, help="谁可以继续分享文档")
+@click.option("--link-share-entity", type=click.Choice([
+    "tenant_readable", "tenant_editable", "anyone_readable", "anyone_editable", "closed"
+]), default=None, help="链接分享权限")
+@click.option("--comment-entity", type=click.Choice(["anyone_can_view", "anyone_can_edit"]),
+              default=None, help="评论权限")
+@click.option("--security-entity", type=click.Choice(["anyone_can_view", "anyone_can_edit", "only_full_access"]),
+              default=None, help="内容安全权限")
+def doc_perm_public_set(
+    document_id,
+    env_ref,
+    external_access,
+    invite_external,
+    share_entity,
+    link_share_entity,
+    comment_entity,
+    security_entity,
+):
+    """更新文档公开分享权限"""
+    if not any([
+        external_access is not None,
+        invite_external is not None,
+        share_entity is not None,
+        link_share_entity is not None,
+        comment_entity is not None,
+        security_entity is not None,
+    ]):
+        raise click.ClickException("至少需要提供一个权限选项")
+
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.patch_doc_public_permission(
+        document_id,
+        external_access=external_access,
+        invite_external=invite_external,
+        share_entity=share_entity,
+        link_share_entity=link_share_entity,
+        comment_entity=comment_entity,
+        security_entity=security_entity,
+    )
+    if _print_lark_error("更新文档公开权限", resp):
+        return
+
+    payload = _response_json(resp)
+    permission = payload.get("data", {}).get("permission_public", {})
+    click.secho("✅ 更新成功", fg="green")
+    for key, value in permission.items():
+        click.echo(f"{key:16}: {value}")
+    _print_json(payload)
+
+
+@doc.command("perm-member-list")
+@click.argument("document_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--perm-type", type=click.Choice(["container", "single_page"]), default=None,
+              help="按权限类型过滤")
+def doc_perm_member_list(document_id, env_ref, perm_type):
+    """列出文档显式协作者"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.list_doc_permission_members(
+        document_id,
+        perm_type=perm_type,
+    )
+    if _print_lark_error("列出文档协作者", resp):
+        return
+
+    payload = _response_json(resp)
+    data = payload.get("data", {})
+    items = data.get("items", [])
+    click.secho(f"✅ 获取成功  items={len(items)}", fg="green")
+    for item in items:
+        click.echo(
+            f"- member_id={item.get('member_id')}  "
+            f"member_type={item.get('member_type')}  "
+            f"perm={item.get('perm')}  "
+            f"perm_type={item.get('perm_type')}"
+        )
+    _print_json(payload)
+
+
+@doc.command("perm-member-add")
+@click.argument("document_id")
+@click.argument("member_id")
+@click.option("--env", "-e", "env_ref", default=None,
+              help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option("--member-type", type=click.Choice([
+    "email", "openid", "unionid", "openchat", "opendepartmentid", "userid", "groupid", "wikispaceid"
+]), default="userid", show_default=True, help="成员 ID 类型")
+@click.option("--perm", type=click.Choice(["view", "edit", "full_access"]),
+              default="edit", show_default=True, help="授予权限")
+@click.option("--perm-type", type=click.Choice(["container", "single_page"]),
+              default=None, help="权限类型，默认由服务端处理")
+@click.option("--notify/--no-notify", "need_notification", default=None,
+              help="是否给协作者发送通知")
+def doc_perm_member_add(document_id, member_id, env_ref, member_type, perm, perm_type, need_notification):
+    """给文档添加显式协作者权限"""
+    _load_runtime_env(env_ref)
+    bot = _get_bot()
+    resp = bot.create_doc_permission_member(
+        document_id,
+        member_id,
+        member_type=member_type,
+        perm=perm,
+        perm_type=perm_type,
+        need_notification=need_notification,
+    )
+    if _print_lark_error("添加文档协作者", resp):
+        return
+
+    payload = _response_json(resp)
+    member = payload.get("data", {}).get("member", {})
+    click.secho("✅ 添加成功", fg="green")
+    for key in ["member_id", "member_type", "perm", "perm_type"]:
+        if key in member:
+            click.echo(f"{key:12}: {member[key]}")
+    _print_json(payload)
+
+
 # ------------------------------------------------------------------
 # chattool lark bitable
 # ------------------------------------------------------------------

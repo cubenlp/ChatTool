@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Added
 - `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
 - `chattool setup codex -e ...` 现可显式复用 OpenAI 配置来源：支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 oai 配置 > 当前 oai 配置 > 现有 codex 配置 > 默认值` 回退
+- `chattool lark doc perm-public-get|perm-public-set` 与 `perm-member-list|perm-member-add`，补齐飞书文档权限读取、公开分享更新和显式协作者管理 CLI，避免再为“发出可编辑文档”临时写 SDK 脚本
+- `skills/practice-make-perfact/references/cli-reference.md`，新增后处理阶段的 CLI 参考索引，方便在“手写脚本还是该补 CLI”之间快速做归位判断
 
 ## [6.4.0]
 

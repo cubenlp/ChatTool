@@ -25,11 +25,17 @@
 
 - `chattool lark notify-doc`
 - `chattool lark doc create|get|raw|blocks|append-text|append-file|parse-md|append-json`
+- `chattool lark doc perm-public-get|perm-public-set`
+- `chattool lark doc perm-member-list|perm-member-add`
   - Docx document: <https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/create>
   - Docx raw content: <https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/raw_content>
   - Docx block children: <https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block-children/list>
   - Append block children: <https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block-children/create>
   - Drive meta batch query: <https://open.feishu.cn/document/server-docs/docs/drive-v1/meta/batch_query>
+  - Public permission get: <https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-public/get>
+  - Public permission patch: <https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-public/patch>
+  - Permission member list: <https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-member/list>
+  - Permission member create: <https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-member/create>
 
 ### 后续专题 CLI
 

@@ -7,4 +7,5 @@ def test_chattool_lark_api_reference(lark_docaudit):
     assert "Send message" in text
     assert "Reply message" in text
     assert "Docx document" in text
-
+    assert "Public permission patch" in text
+    assert "Permission member create" in text

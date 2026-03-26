@@ -16,6 +16,7 @@
 - 监听长连接事件做调试：`listen`
 - 在本地终端调试 AI 会话：`chat`
 - 创建云文档并通知目标用户：`notify-doc`
+- 读取和修改云文档分享权限：`doc perm-public-get/set`、`doc perm-member-list/add`
 - 多维表格基础操作：`bitable app/table/field/record ...`
 - 日历基础操作：`calendar primary/event/freebusy ...`
 - 任务基础操作：`task ...`、`task tasklist ...`
@@ -258,6 +259,7 @@ chattool lark chat --user debug_user
 
 - 稳定正文轨：`notify-doc`、`doc append-text`、`doc append-file`
 - 结构化 docx 轨：`doc parse-md`、`doc append-json`
+- 协作权限轨：`doc perm-public-get/set`、`doc perm-member-list/add`
 
 前者优先保证写入成功率，后者面向标题、列表、代码块、引用块等结构化能力。
 
@@ -339,6 +341,31 @@ chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md
 chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md --batch-size 10
 ```
 
+### 读取和设置文档权限
+
+```bash
+chattool lark doc perm-public-get doccnxxxxxxxxxxxx
+chattool lark doc perm-public-set doccnxxxxxxxxxxxx \
+  --share-entity same_tenant \
+  --link-share-entity tenant_editable
+chattool lark doc perm-member-add doccnxxxxxxxxxxxx f25gc16d --member-type userid --perm edit
+chattool lark doc perm-member-list doccnxxxxxxxxxxxx
+```
+
+这组命令适合补齐这条最小工作流：
+
+- 创建文档
+- 追加正文
+- 设置“企业内可编辑”或“指定成员可编辑”
+- 再把文档链接发出去
+
+常用枚举：
+
+- `--link-share-entity`: `tenant_readable`、`tenant_editable`、`anyone_readable`、`anyone_editable`、`closed`
+- `--share-entity`: `anyone`、`same_tenant`、`only_full_access`
+- `--member-type`: `userid`、`openid`、`unionid`、`email` 等
+- `--perm`: `view`、`edit`、`full_access`
+
 ### 创建后直接通知
 
 ```bash
@@ -358,6 +385,7 @@ chattool lark notify-doc "日报" --append-file ./daily.md --batch-size 10
 - `.md` 文件在 `append-file` 这条命令里会先整理为飞书兼容的纯文本段落，再写入文档
 - 批量写入失败时，CLI 会自动回退到单段写入，降低 `field validation failed` 这类错误的影响
 - `--open` 会在发送成功后本地打开文档链接
+- 若需要让接收方直接修改文档，先执行 `doc perm-public-set` 或 `doc perm-member-add`，再执行 `notify-doc` / `send`
 
 如果你要把 scopes 缺失情况整理给应用维护者，可直接导出或发送诊断卡片：
 
@@ -375,8 +403,41 @@ chattool lark troubleshoot check-scopes --send-card --receiver <user_id>
 注意：卡片按钮只能把人带到授权/配置页面，不能在消息里直接为应用授予 scope。真正授权仍需在飞书开放平台完成。
 
 !!! note "当前范围"
-    这一版先覆盖最常用的文档基础能力：创建、查询、取纯文本、查看块和追加文本。  
-    后续如果要继续扩，可以沿着 `chattool lark doc ...` 这条线补 `update`、`delete children`、`convert` 或 drive/wiki 相关命令。
+    这一版覆盖常用的文档基础能力、结构化追加和权限管理。  
+    后续如果要继续扩，可以沿着 `chattool lark doc ...` 这条线补 `update`、`delete children`、`convert`、成员删除/更新，或继续往 drive/wiki 相关命令延伸。
+
+## Command Reference
+
+这部分只做命令索引，不展开教程，方便做编排或补能力时快速查可用 CLI。
+
+### 基础与排障
+
+- `chattool lark info`
+- `chattool lark scopes`
+- `chattool lark troubleshoot doctor|check-scopes|check-events|check-card-action`
+
+### 消息
+
+- `chattool lark send`
+- `chattool lark reply`
+- `chattool lark upload`
+- `chattool lark listen`
+- `chattool lark chat`
+
+### 文档
+
+- `chattool lark notify-doc`
+- `chattool lark doc create|get|raw|blocks`
+- `chattool lark doc append-text|append-file|parse-md|append-json`
+- `chattool lark doc perm-public-get|perm-public-set`
+- `chattool lark doc perm-member-list|perm-member-add`
+
+### 其他专题
+
+- `chattool lark bitable ...`
+- `chattool lark calendar ...`
+- `chattool lark im ...`
+- `chattool lark task ...`
 
 ## API Reference
 
@@ -388,6 +449,10 @@ chattool lark troubleshoot check-scopes --send-card --receiver <user_id>
 - 上传文件：`https://open.feishu.cn/document/server-docs/im-v1/file/create`
 - 创建文档：`https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/create`
 - 创建 docx block：`https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/create`
+- 获取公开权限：`https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-public/get`
+- 更新公开权限：`https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-public/patch`
+- 列出协作者：`https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-member/list`
+- 添加协作者：`https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-member/create`
 
 如果当前能力缺口具有复用价值，优先把结果沉淀回 `src/chattool/tools/lark/` 和 `skills/feishu/`。
 
