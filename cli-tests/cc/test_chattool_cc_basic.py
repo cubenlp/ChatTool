@@ -136,6 +136,54 @@ def test_cc_init_existing_config_cancelled_before_other_prompts(tmp_path, monkey
     assert "选择 Agent 类型" not in result.output
 
 
+def test_cc_init_preserves_existing_platform_config_without_reprompt(tmp_path, monkeypatch):
+    runner = CliRunner()
+    import chattool.setup.interactive as interactive_policy
+
+    monkeypatch.setattr(interactive_policy, "is_interactive_available", lambda: True)
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "[[projects]]",
+                "name = \"demo-project\"",
+                "",
+                "[projects.agent]",
+                "type = \"opencode\"",
+                "",
+                "[projects.agent.options]",
+                f"work_dir = \"{tmp_path}\"",
+                "",
+                "[[projects.platforms]]",
+                "type = \"telegram\"",
+                "",
+                "[projects.platforms.options]",
+                "token = \"test-token\"",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "cc",
+            "init",
+            "-i",
+            "--config",
+            str(config_path),
+        ],
+        input="y\n\n\n\n\n\nn\n",
+    )
+
+    assert result.exit_code == 0
+    content = config_path.read_text(encoding="utf-8")
+    assert 'token = "test-token"' in content
+    assert "检测到已有平台配置" in result.output
+    assert "是否填写平台鉴权信息?" in result.output
+
+
 def test_cc_init_feishu_uses_chatenv_candidates(tmp_path, monkeypatch):
     runner = CliRunner()
     import chattool.setup.interactive as interactive_policy

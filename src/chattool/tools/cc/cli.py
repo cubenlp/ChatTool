@@ -442,6 +442,7 @@ def init(
         if existing_options:
             masked = {k: (_mask_value(v) if _is_sensitive_key(k) else v) for k, v in existing_options.items()}
             click.echo(f"检测到已有平台配置: {masked}")
+            platform_options = dict(existing_options)
             if click.confirm("是否填写平台鉴权信息?", default=True):
                 platform_options = _prompt_platform_credentials(platform or "feishu", existing_options)
         elif click.confirm("是否填写平台鉴权信息?", default=True):
