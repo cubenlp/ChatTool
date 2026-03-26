@@ -398,6 +398,25 @@ def test_pr_merge_check_blocks_failed_ci(monkeypatch):
     assert not merge_calls
 
 
+def test_pr_merge_check_blocks_unmergeable_pr(monkeypatch):
+    runner = CliRunner()
+    merge_calls = _install_fake_merge_client(
+        monkeypatch,
+        check_status="completed",
+        check_conclusion="success",
+        workflow_status="completed",
+        workflow_conclusion="success",
+    )
+
+    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--confirm", "--check"])
+
+    assert result.exit_code != 0
+    assert "Refusing to merge because CI checks are not green" in result.output
+    assert "pull request is not mergeable against the current base branch" in result.output
+    assert "pull request merge state is dirty" in result.output
+    assert not merge_calls
+
+
 def test_pr_merge_without_check_keeps_current_behavior(monkeypatch):
     runner = CliRunner()
     merge_calls = _install_fake_merge_client(

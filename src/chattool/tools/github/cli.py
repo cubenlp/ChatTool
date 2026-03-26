@@ -639,6 +639,13 @@ def _echo_workflow_job_payload(payload: dict, prefix: str = "") -> None:
 def _collect_merge_blockers(payload: dict) -> list[str]:
     blockers: list[str] = []
 
+    if payload["mergeable"] is False:
+        blockers.append("pull request is not mergeable against the current base branch")
+
+    merge_state = payload["mergeable_state"]
+    if merge_state in {"dirty", "blocked", "behind", "draft", "unknown"}:
+        blockers.append(f"pull request merge state is {merge_state}")
+
     for status in payload["combined_status"]["statuses"]:
         if status["state"] != "success":
             blockers.append(f"status {status['context']} is {status['state']}")

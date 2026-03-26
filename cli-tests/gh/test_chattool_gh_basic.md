@@ -91,7 +91,7 @@ chattool gh pr-check --number 1 --wait --timeout 600
 预期过程和结果：
   1. 执行 `chattool gh pr-comment --number <id> --body "hello"`，预期返回评论链接。
   2. 如果希望在合并前做一次显式 CI 校验，执行 `chattool gh pr-merge --number <id> --method merge --confirm --check`。
-  3. 若该 PR 仍有失败或未完成 checks / workflow runs，CLI 应拒绝合并并提示先执行 `pr-check`。
+  3. 若该 PR 仍有失败或未完成 checks / workflow runs，或当前相对 base 不可合并（如 `mergeable=False`、`mergeable_state=dirty`），CLI 应拒绝合并并提示先执行 `pr-check`。
   4. 不带 `--check` 时保持当前直连 GitHub merge 的行为，由调用者自行承担风险。
 
 参考执行脚本（伪代码）：

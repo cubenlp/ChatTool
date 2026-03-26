@@ -406,7 +406,7 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - 可用 `--interval <seconds>` 控制轮询间隔
 - 只有显式传 `--timeout <seconds>` 时，才会在超时后报错退出
 
-如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
+如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项，或者 PR 当前 `mergeable=False` / `mergeable_state` 处于 `dirty`、`blocked`、`behind`、`draft`、`unknown` 时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
 
 如果 `pr-check` 已经定位到具体 workflow run / job，可以继续使用：
 
