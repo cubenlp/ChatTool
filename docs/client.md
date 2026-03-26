@@ -334,10 +334,10 @@ export GITHUB_DEFAULT_REPO="CubeNLP/ChatTool"
 # 列出 PR
 chattool gh pr-list --state open --limit 20
 
-# 查看 PR 详情
+# 查看 PR 详情（含 mergeable / merge state）
 chattool gh pr-view --number 123
 
-# 查看 PR 的 CI / checks 状态
+# 查看 PR 的可合并状态与 CI / checks 状态
 chattool gh pr-check --number 123
 
 # 创建 PR
@@ -353,13 +353,23 @@ chattool gh pr-merge --number 123 --method squash --confirm
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 ```
 
-`pr-check` 会按 PR 的 head commit 汇总三层信息，适合排查 CI：
+`pr-view` 和 `pr-check` 现在都会直接展示 PR 相对 base 分支的可合并状态：
+
+- `mergeable`
+- `mergeable_state`
+
+`pr-check` 还会按 PR 的 head commit 汇总三层信息，适合排查 CI：
 
 - combined status
 - check runs
 - workflow runs
 
 需要机器可读结果时可加 `--json-output`。
+
+在执行 `pr-create`、汇报“CI 是否通过”或准备 merge 前，先 `git fetch origin <base>`，再确认两件事：
+
+- `pr-view` / `pr-check` 显示 `mergeable` 不是 `False`，`mergeable_state` 不是 `dirty`
+- 本地基于最新 base 做一次 merge 或 rebase 演练，并在该结果上跑最相关测试
 
 ### 4.3 API Reference
 

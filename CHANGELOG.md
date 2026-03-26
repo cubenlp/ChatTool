@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Changed
 - `chattool setup playground` 现在会在 workspace bootstrap 完成后，优先复用 `chatenv` 当前生效的 `GITHUB_ACCESS_TOKEN` 为 Git 配置 `https://github.com` 的 credential store；交互模式下也会提示是否配置并允许覆写 token
 - `chattool cc init -i` 现在会在一开始先确认是否覆盖已有配置文件；已有平台配置和飞书凭证候选值会直接作为默认值展示，回车即可复用，不再追加“是否沿用默认”确认
+- `chattool gh pr-view` 与 `chattool gh pr-check` 现在会直接显示 PR 的 `mergeable` / `mergeable_state`，避免只看到 head checks 却漏掉相对最新 base 的冲突态
 
 ## [6.3.0]
 

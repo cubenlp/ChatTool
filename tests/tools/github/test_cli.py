@@ -20,6 +20,11 @@ def _fake_pr():
         user=SimpleNamespace(login="rex"),
         base=SimpleNamespace(ref="vibe/master"),
         head=SimpleNamespace(ref="rex/setup", sha="abc123def456"),
+        mergeable=False,
+        mergeable_state="dirty",
+        created_at=_dt("2026-03-23T09:40:00Z"),
+        updated_at=_dt("2026-03-23T10:05:00Z"),
+        merged_at=None,
     )
 
 
@@ -127,6 +132,7 @@ def test_pr_check_command_renders_summary(monkeypatch):
 
     assert result.exit_code == 0
     assert "#138 [open] Improve setup and CI visibility" in result.output
+    assert "Mergeable: False  Merge State: dirty" in result.output
     assert "Combined status: pending (2 statuses)" in result.output
     assert "Statuses:" in result.output
     assert "ci/test: success - pytest passed" in result.output
@@ -144,8 +150,33 @@ def test_pr_check_command_supports_json_output(monkeypatch):
 
     assert result.exit_code == 0
     assert '"number": 138' in result.output
+    assert '"mergeable": false' in result.output
+    assert '"mergeable_state": "dirty"' in result.output
     assert '"head_sha": "abc123def456"' in result.output
     assert '"state": "pending"' in result.output
     assert '"context": "ci/test"' in result.output
     assert '"name": "tests"' in result.output
     assert '"run_number": 501' in result.output
+
+
+def test_pr_view_command_renders_mergeability(monkeypatch):
+    runner = CliRunner()
+    _install_fake_client(monkeypatch)
+
+    result = runner.invoke(gh_cli.cli, ["pr-view", "--number", "138"])
+
+    assert result.exit_code == 0
+    assert "#138 [open] Improve setup and CI visibility" in result.output
+    assert "Mergeable: False  Merge State: dirty" in result.output
+
+
+def test_pr_view_command_supports_json_output(monkeypatch):
+    runner = CliRunner()
+    _install_fake_client(monkeypatch)
+
+    result = runner.invoke(gh_cli.cli, ["pr-view", "--number", "138", "--json-output"])
+
+    assert result.exit_code == 0
+    assert '"number": 138' in result.output
+    assert '"mergeable": false' in result.output
+    assert '"mergeable_state": "dirty"' in result.output
