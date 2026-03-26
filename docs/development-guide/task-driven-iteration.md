@@ -38,6 +38,7 @@
    - 更新导航（如 `mkdocs.yml`）与文档索引。
    - 将任务推进到 PR/MR 阶段，而不是只停留在本地提交。
    - GitHub 流程优先使用 `chattool gh`，包括 `pr-create`、`pr-update`、`pr-view` 等。
+   - 在声称“PR 可合并”或“CI 已通过”之前，必须先同步最新 base 分支，并验证一次真实合并态：`git fetch origin <base>` 后，查看 `chattool gh pr-view` / `pr-check` 的 `mergeable`、`mergeable_state`，必要时在最新 base 上做临时 merge/rebase 演练并在该结果上跑最相关测试。
 
 ## 结果目标
 

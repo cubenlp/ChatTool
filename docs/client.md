@@ -361,10 +361,10 @@ export GITHUB_DEFAULT_REPO="CubeNLP/ChatTool"
 # 列出 PR
 chattool gh pr-list --state open --limit 20
 
-# 查看 PR 详情
+# 查看 PR 详情（含 mergeable / merge state）
 chattool gh pr-view --number 123
 
-# 查看 PR 的 CI / checks 状态
+# 查看 PR 的可合并状态与 CI / checks 状态
 chattool gh pr-check --number 123
 chattool gh pr-check --number 123 --wait
 chattool gh pr-check --number 123 --wait --interval 10 --timeout 600
@@ -389,7 +389,12 @@ chattool gh pr-merge --number 123 --method squash --confirm --check
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 ```
 
-`pr-check` 会按 PR 的 head commit 汇总三层信息，适合排查 CI：
+`pr-view` 和 `pr-check` 现在都会直接展示 PR 相对 base 分支的可合并状态：
+
+- `mergeable`
+- `mergeable_state`
+
+`pr-check` 还会按 PR 的 head commit 汇总三层信息，适合排查 CI：
 
 - combined status
 - check runs
@@ -401,7 +406,7 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - 可用 `--interval <seconds>` 控制轮询间隔
 - 只有显式传 `--timeout <seconds>` 时，才会在超时后报错退出
 
-如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
+如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项，或者 PR 当前 `mergeable=False` / `mergeable_state` 处于 `dirty`、`blocked`、`behind`、`draft`、`unknown` 时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
 
 如果 `pr-check` 已经定位到具体 workflow run / job，可以继续使用：
 
@@ -409,6 +414,11 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - `job-logs --job-id <id>`：直接抓取 job 日志；默认输出尾部，可用 `--tail 0` 查看完整日志，或用 `--output` 落盘
 
 需要机器可读结果时可加 `--json-output`。
+
+在执行 `pr-create`、汇报“CI 是否通过”或准备 merge 前，先 `git fetch origin <base>`，再确认两件事：
+
+- `pr-view` / `pr-check` 显示 `mergeable` 不是 `False`，`mergeable_state` 不是 `dirty`
+- 本地基于最新 base 做一次 merge 或 rebase 演练，并在该结果上跑最相关测试
 
 ### 4.3 API Reference
 

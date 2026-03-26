@@ -126,6 +126,8 @@ def pr_view(repo, number, json_output, token):
         "merged_at": pr.merged_at.isoformat() if pr.merged_at else None,
         "base": pr.base.ref if pr.base else None,
         "head": pr.head.ref if pr.head else None,
+        "mergeable": getattr(pr, "mergeable", None),
+        "mergeable_state": getattr(pr, "mergeable_state", None),
     }
 
     if json_output:
@@ -136,6 +138,10 @@ def pr_view(repo, number, json_output, token):
     click.echo(f"Author: {payload['author']}")
     click.echo(f"URL: {payload['url']}")
     click.echo(f"Base: {payload['base']}  Head: {payload['head']}")
+    click.echo(
+        f"Mergeable: {_format_optional(payload['mergeable'])}  "
+        f"Merge State: {_format_optional(payload['mergeable_state'])}"
+    )
     click.echo(f"Created: {payload['created_at']}  Updated: {payload['updated_at']}")
     click.echo(f"Merged: {payload['merged_at']}")
 
@@ -479,6 +485,8 @@ def _build_pr_check_payload(pr, commit, repo_obj, check_limit: int, workflow_lim
         "base": pr.base.ref if pr.base else None,
         "head": pr.head.ref if pr.head else None,
         "head_sha": pr.head.sha if pr.head else None,
+        "mergeable": getattr(pr, "mergeable", None),
+        "mergeable_state": getattr(pr, "mergeable_state", None),
         "combined_status": {
             "state": combined_status.state,
             "sha": combined_status.sha,
@@ -544,6 +552,10 @@ def _echo_pr_check_payload(payload: dict) -> None:
     click.echo(f"URL: {payload['url']}")
     click.echo(f"Base: {payload['base']}  Head: {payload['head']}")
     click.echo(f"Head SHA: {payload['head_sha']}")
+    click.echo(
+        f"Mergeable: {_format_optional(payload['mergeable'])}  "
+        f"Merge State: {_format_optional(payload['mergeable_state'])}"
+    )
 
     combined = payload["combined_status"]
     click.echo(
@@ -627,6 +639,13 @@ def _echo_workflow_job_payload(payload: dict, prefix: str = "") -> None:
 def _collect_merge_blockers(payload: dict) -> list[str]:
     blockers: list[str] = []
 
+    if payload["mergeable"] is False:
+        blockers.append("pull request is not mergeable against the current base branch")
+
+    merge_state = payload["mergeable_state"]
+    if merge_state in {"dirty", "blocked", "behind", "draft", "unknown"}:
+        blockers.append(f"pull request merge state is {merge_state}")
+
     for status in payload["combined_status"]["statuses"]:
         if status["state"] != "success":
             blockers.append(f"status {status['context']} is {status['state']}")
@@ -670,6 +689,10 @@ def _has_incomplete_pr_checks(payload: dict) -> bool:
 
 def _isoformat(value) -> Optional[str]:
     return value.isoformat() if value else None
+
+
+def _format_optional(value) -> str:
+    return "-" if value is None else str(value)
 
 
 def _github_api_get_json(repo: str, path: str, token: Optional[str], params: Optional[dict] = None) -> dict:
