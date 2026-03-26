@@ -11,7 +11,13 @@ from chattool.tools.cert.cert_server import app, config
 # Use TestClient for API testing
 client = TestClient(app)
 
+RUN_CERT_REAL = os.getenv("CHATTOOL_RUN_DNS_CERT_REAL") == "1"
+
 @pytest.mark.dns
+@pytest.mark.skipif(
+    not RUN_CERT_REAL,
+    reason="Set CHATTOOL_RUN_DNS_CERT_REAL=1 to enable real DNS certificate lifecycle tests",
+)
 # @pytest.mark.asyncio # TestClient is synchronous, no need for asyncio mark unless we use async features in test
 class TestCertServerReal:
     """

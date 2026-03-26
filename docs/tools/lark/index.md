@@ -16,6 +16,18 @@
 - 监听长连接事件做调试：`listen`
 - 在本地终端调试 AI 会话：`chat`
 - 创建云文档并通知目标用户：`notify-doc`
+- 多维表格基础操作：`bitable app/table/field/record ...`
+- 日历基础操作：`calendar primary/event/freebusy ...`
+- 任务基础操作：`task ...`、`task tasklist ...`
+- 消息读取与资源下载：`im list`、`im download`
+- 常见排障入口：`troubleshoot doctor/check-scopes/check-events/check-card-action`
+
+如果你的目标是继续扩展 Feishu 能力，而不是只执行现有命令，请先同时阅读：
+
+- `skills/feishu/SKILL.md`
+- `skills/feishu/guide/setup-and-routing.md`
+- `skills/feishu/guide/api-reference.md`
+- `docs/design/feishu-cli.md`
 
 ## 前置准备
 
@@ -43,7 +55,7 @@ export FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     如果当前运行环境同时被 OpenClaw、消息网关或其他入口复用，不要再用新的环境变量传接收者、消息内容、文件路径这类业务参数。  
     这些输入应直接放在 CLI 参数里，避免变量冲突和语义歧义。
 
-如果你经常发消息给同一个测试用户，可以额外配置：
+如果你经常发消息给同一个默认接收者，可以直接配置：
 
 ```bash
 chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
@@ -51,21 +63,36 @@ chattool env set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
 
 配置后，`chattool lark send` 可以省略接收者参数。
 
+如果你要跑 CLI 真实测试，且需要和默认接收者分开，才额外配置：
+
+```bash
+chattool env set FEISHU_TEST_USER_ID=f25gc16d
+chattool env set FEISHU_TEST_USER_ID_TYPE=user_id
+```
+
 ## `-e/--env`
 
 如果你不想依赖当前 shell 里的环境变量，可以给子命令显式传一个配置来源：
 
 ```bash
-chattool lark info -e ~/.config/chattool/.env
+chattool lark info -e ~/.config/chattool/envs/Feishu/.env
 chattool lark info -e work
 ```
 
 `-e/--env` 支持两种形式：
 
 - `.env` 文件路径
-- `chatenv save` 保存过的 profile 名称，例如 `work`
+- `Feishu` 类型下通过 `chatenv save -t feishu` 保存过的 profile 名称，例如 `work`
 
 这适合多套飞书应用来回切换，或者在当前 shell 环境比较脏的时候，明确指定一份配置来执行。
+
+`chattool lark` 的运行时优先级固定为：
+
+1. 命令参数本身
+2. `-e/--env` 显式指定的 `.env` 文件或 `Feishu` profile
+3. 当前进程环境变量
+4. `envs/Feishu/.env`
+5. 代码默认值
 
 ## 最短工作流
 
@@ -99,6 +126,8 @@ chattool lark scopes -a -g
 chattool lark scopes -f im
 ```
 
+如果 `troubleshoot check-scopes` 或 `doctor` 把某个分类标成 `missing`，应优先把它视为权限问题，而不是直接怀疑 CLI 参数或业务逻辑。
+
 ### 3. 发一条文本消息
 
 ```bash
@@ -119,6 +148,14 @@ chattool lark send oc_xxxxx "群通知" -t chat_id
 chattool lark send ou_xxxxx "你好" -t open_id
 chattool lark send someone@example.com "你好" -t email
 ```
+
+如果 `send` 返回权限错误码，CLI 会继续做两件事：
+
+- 自动复用 scopes 诊断逻辑，判断是否真的是权限缺失
+- 若已配置 `FEISHU_DEFAULT_RECEIVER_ID`，尽量自动发送权限引导卡
+- 若 CLI 真实测试显式配置了 `FEISHU_TEST_USER_ID`，也可用它做隔离排障
+
+如果连自动发卡也失败，CLI 仍会把权限引导卡 JSON 导出到 `/tmp/chattool-lark-permission-card.json`，方便继续排障。
 
 ## 发送不同类型的消息
 
@@ -215,7 +252,36 @@ chattool lark chat --user debug_user
 
 ## 云文档
 
-除了消息收发，`chattool lark` 现在也支持一组最小云文档命令，基于飞书开放平台的 `docx` 服务端接口。
+除了消息收发，`chattool lark` 现在也支持一组云文档命令，基于飞书开放平台的 `docx` 服务端接口。
+
+这组能力建议按双轨理解：
+
+- 稳定正文轨：`notify-doc`、`doc append-text`、`doc append-file`
+- 结构化 docx 轨：`doc parse-md`、`doc append-json`
+
+前者优先保证写入成功率，后者面向标题、列表、代码块、引用块等结构化能力。
+
+当前 `parse-md -> append-json` 主线会保留代码块本身，但若 fenced code language 还不是 Feishu docx 可直接消费的数值枚举，写入前会先做安全归一化，避免因为语言字段不合法导致整批 block 写入失败。
+
+## 专题 CLI
+
+当前这些 topic 分组已经收口到 `chattool lark` 下：
+
+- `chattool lark bitable ...`
+  - 当前已支持 `app create`、`table list/create`、`field list/create`、`record list/create/batch-create`
+- `chattool lark calendar ...`
+  - 当前已支持 `primary`、`event create/list/get/patch/reply`、`freebusy list`
+- `chattool lark im ...`
+  - 当前已支持 `list --chat-id` 与 `download`
+- `chattool lark task ...`
+  - 当前稳定支持 `create/get/patch`、`tasklist create/list/get/tasks/add-members`
+  - `task list` 受当前飞书凭证模式影响，若失败应优先判断为 token / scope 问题
+- `chattool lark troubleshoot ...`
+  - 当前已支持 `doctor`、`check-scopes`、`check-events`、`check-card-action`
+  - `check-scopes` 可额外导出诊断卡片 JSON，或直接发送权限排障卡片
+  - 当前权限诊断卡片是“跳转按钮卡片”；若要验证 `card.action.trigger` 这类回调交互，还需要单独检查卡片回传链路
+
+后续扩展继续收敛在 `src/chattool/tools/lark/`，而不是重新拆成新的独立 skill 入口。
 
 如果你想“一步创建文档并通知到人”，可以直接用：
 
@@ -262,6 +328,17 @@ chattool lark doc blocks doccnxxxxxxxxxxxx --descendants
 chattool lark doc append-text doccnxxxxxxxxxxxx "今天完成了接口整理"
 ```
 
+### 从本地文件追加正文
+
+```bash
+chattool lark doc parse-md ./daily.md
+chattool lark doc parse-md ./daily.md -o ./daily.blocks.json
+chattool lark doc append-json doccnxxxxxxxxxxxx ./daily.blocks.json
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.txt
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md
+chattool lark doc append-file doccnxxxxxxxxxxxx ./daily.md --batch-size 10
+```
+
 ### 创建后直接通知
 
 ```bash
@@ -269,16 +346,50 @@ chattool lark notify-doc "会议纪要" "这里是会议摘要"
 chattool lark notify-doc "发布说明" "这里是更新内容" --receiver f25gc16d
 chattool lark notify-doc "日报" --append-file ./daily.md
 chattool lark notify-doc "日报" --append-file ./daily.md --open
+chattool lark notify-doc "日报" --append-file ./daily.md --batch-size 10
 ```
 
 说明：
 
-- `--append-file` 会读取本地 `txt/md` 文件，并按非空行追加到文档正文
+- `chattool lark doc append-file` 适合往已有文档追加本地 `txt/md` 文件
+- `chattool lark doc parse-md` 适合先检查 Markdown 将映射成哪些飞书 block
+- `chattool lark doc append-json` 适合直接消费结构化 block JSON 写入文档
+- `notify-doc --append-file` 适合创建文档、写入正文并把链接发给指定用户
+- `.md` 文件在 `append-file` 这条命令里会先整理为飞书兼容的纯文本段落，再写入文档
+- 批量写入失败时，CLI 会自动回退到单段写入，降低 `field validation failed` 这类错误的影响
 - `--open` 会在发送成功后本地打开文档链接
+
+如果你要把 scopes 缺失情况整理给应用维护者，可直接导出或发送诊断卡片：
+
+```bash
+chattool lark troubleshoot check-scopes --card-file ./scope-card.json
+chattool lark troubleshoot check-scopes --send-card
+chattool lark troubleshoot check-scopes --send-card --receiver <user_id>
+```
+
+这张卡片现在带有可点击按钮：
+
+- `打开开放平台`：跳到飞书开放平台应用页，继续处理权限配置
+- `查看权限文档`：打开官方权限文档，核对 scope 与能力映射
+
+注意：卡片按钮只能把人带到授权/配置页面，不能在消息里直接为应用授予 scope。真正授权仍需在飞书开放平台完成。
 
 !!! note "当前范围"
     这一版先覆盖最常用的文档基础能力：创建、查询、取纯文本、查看块和追加文本。  
     后续如果要继续扩，可以沿着 `chattool lark doc ...` 这条线补 `update`、`delete children`、`convert` 或 drive/wiki 相关命令。
+
+## API Reference
+
+扩 CLI 时，优先查 Feishu 官方文档，而不是先写脚本试错：
+
+- 发消息：`https://open.feishu.cn/document/server-docs/im-v1/message/create`
+- 回复消息：`https://open.feishu.cn/document/server-docs/im-v1/message/reply`
+- 上传图片：`https://open.feishu.cn/document/server-docs/im-v1/image/create`
+- 上传文件：`https://open.feishu.cn/document/server-docs/im-v1/file/create`
+- 创建文档：`https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/create`
+- 创建 docx block：`https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/create`
+
+如果当前能力缺口具有复用价值，优先把结果沉淀回 `src/chattool/tools/lark/` 和 `skills/feishu/`。
 
 ## 常见排查顺序
 

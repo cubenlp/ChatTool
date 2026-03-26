@@ -42,11 +42,11 @@ def test_apply_alias_block_replace(tmp_path):
     content = rc.read_text(encoding="utf-8")
     assert "alias chatgh='chattool gh'" in content
 
-    second = render_alias_block(["chatskills"])
+    second = render_alias_block(["chatskill"])
     apply_alias_block(rc, second)
     content = rc.read_text(encoding="utf-8")
     assert "alias chatgh='chattool gh'" not in content
-    assert "alias chatskills='chattool skill'" in content
+    assert "alias chatskill='chattool skill'" in content
 
 
 def test_apply_alias_block_remove(tmp_path):

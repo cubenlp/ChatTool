@@ -4,6 +4,7 @@ from .elements import BaseEnvConfig, EnvField
 class BrowserConfig(BaseEnvConfig):
     _title = "Browser Configuration"
     _aliases = ["browser"]
+    _storage_dir = "Browser"
 
     BROWSER_DEFAULT_BACKEND = EnvField(
         "BROWSER_DEFAULT_BACKEND",

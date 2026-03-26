@@ -13,7 +13,8 @@ logger = setup_logger("setup_playground")
 
 EXPERIENCE_LOG_FORMAT = "date_h_min_标题.log"
 DEFAULT_CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
-DEFAULT_CHATTOOL_REPO_DIRNAME = "chattool"
+DEFAULT_CHATTOOL_REPO_DIRNAME = "ChatTool"
+LEGACY_CHATTOOL_REPO_DIRNAME = "chattool"
 
 
 def _default_chattool_repo_dir() -> Path:
@@ -42,12 +43,30 @@ def _resolve_workspace_dir(workspace_dir=None) -> Path:
     return _normalize_path(workspace_dir) or Path.cwd().resolve()
 
 
-def _workspace_repo_dir(workspace_dir: Path) -> Path:
+def _preferred_workspace_repo_dir(workspace_dir: Path) -> Path:
     return workspace_dir / DEFAULT_CHATTOOL_REPO_DIRNAME
 
 
-def _workspace_skills_source(workspace_dir: Path) -> Path:
-    return _workspace_repo_dir(workspace_dir) / "skills"
+def _legacy_workspace_repo_dir(workspace_dir: Path) -> Path:
+    return workspace_dir / LEGACY_CHATTOOL_REPO_DIRNAME
+
+
+def _find_existing_workspace_repo_dir(workspace_dir: Path) -> Path | None:
+    preferred = _preferred_workspace_repo_dir(workspace_dir)
+    if preferred.exists():
+        return preferred
+    legacy = _legacy_workspace_repo_dir(workspace_dir)
+    if legacy.exists():
+        return legacy
+    return None
+
+
+def _workspace_repo_dir(workspace_dir: Path) -> Path:
+    return _find_existing_workspace_repo_dir(workspace_dir) or _preferred_workspace_repo_dir(workspace_dir)
+
+
+def _workspace_skills_source(chattool_repo_dir: Path) -> Path:
+    return chattool_repo_dir / "skills"
 
 
 def _workspace_is_empty(workspace_dir: Path) -> bool:
@@ -60,7 +79,8 @@ def _workspace_has_existing_files(workspace_dir: Path) -> bool:
         workspace_dir / "CHATTOOL.md",
         workspace_dir / "Memory",
         workspace_dir / "skills",
-        _workspace_repo_dir(workspace_dir),
+        _preferred_workspace_repo_dir(workspace_dir),
+        _legacy_workspace_repo_dir(workspace_dir),
     ]
     return any(target.exists() for target in targets)
 
@@ -90,13 +110,13 @@ def _render_agents_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         "- Models can explore freely in the workspace, but durable conclusions should be written back into memory or skills experience logs.\n"
         "\n"
         "## Workspace Contents\n\n"
-        "- `chattool/`: cloned ChatTool repository used as the main upgrade target.\n"
+        "- `ChatTool/`: cloned ChatTool repository used as the main upgrade target.\n"
         "- `Memory/`: durable notes, decisions, logs, and retrospectives for the workspace.\n"
         "- `skills/`: workspace-local skill copies used during exploration and execution.\n"
         "- `scratch/`: disposable outputs and temporary exploration material.\n\n"
         "## Development Guidance\n\n"
-        "- Put reusable implementation into `chattool/src/`.\n"
-        "- Put durable task-specific guidance into `chattool/skills/` or workspace `skills/`.\n"
+        "- Put reusable implementation into `ChatTool/src/`.\n"
+        "- Put durable task-specific guidance into `ChatTool/skills/` or workspace `skills/`.\n"
         "- Keep scratch outputs out of the repository unless they are intentionally promoted.\n"
         "- After implementation, use `practice-make-perfact` as the post-task normalization phase.\n"
         "- In that post-task phase, explicitly chain `chattool-dev-review` to check development standards.\n"
@@ -134,7 +154,7 @@ def _render_chattool_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         "5. Periodically review those logs and use `practice-make-perfact` plus `chattool-dev-review` to fold durable improvements back into ChatTool.\n\n"
         "## Development Suggestions\n\n"
         "- Keep scratch experiments and temporary exports outside repositories when possible.\n"
-        "- Put reusable implementation in `src/chattool/`.\n"
+        "- Put reusable implementation in `ChatTool/src/chattool/`.\n"
         "- Keep task-specific guidance in skills, not in random scratch files.\n"
         "- Prefer `chattool gh` for PR and CI workflows once changes are ready.\n"
     )
@@ -233,7 +253,7 @@ def _render_scratch_readme() -> str:
         "Use this directory for temporary exploration artifacts, drafts, and disposable exports.\n\n"
         "Guidelines:\n\n"
         "- do not treat this as durable memory\n"
-        "- move only intentionally preserved outcomes back into `Memory/`, `skills/`, or `chattool/`\n"
+        "- move only intentionally preserved outcomes back into `Memory/`, `skills/`, or `ChatTool/`\n"
         "- clean up stale files during periodic retrospectives\n"
     )
 
@@ -300,42 +320,13 @@ def _copy_skills(skills_source: Path, skills_target: Path, force: bool) -> list[
         _copy_skill_tree(skill_dir, target_dir, force=force)
         experience_dir = target_dir / "experience"
         experience_dir.mkdir(parents=True, exist_ok=True)
-        _write_text_file(experience_dir / "README.md", _render_experience_readme(skill_dir.name), force=force)
+        _write_text_file(experience_dir / "README.md", _render_experience_readme(skill_dir.name), force=False)
         copied.append(skill_dir.name)
     return copied
 
 
-def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool, interactive=None, can_prompt=False) -> Path:
-    repo_dir = _workspace_repo_dir(workspace_dir)
-    if repo_dir.exists():
-        if force:
-            logger.info(f"Removing existing cloned repo: {repo_dir}")
-            shutil.rmtree(repo_dir)
-        elif interactive is not False and can_prompt:
-            skip_clone = ask_confirm(
-                (
-                    f"ChatTool repo already exists: {repo_dir}\n"
-                    "Skip cloning and keep the local ChatTool version?"
-                ),
-                default=True,
-            )
-            if skip_clone == BACK_VALUE:
-                raise click.Abort()
-            if skip_clone:
-                logger.info(f"Skipping clone and reusing existing ChatTool repo: {repo_dir}")
-                return repo_dir
-            logger.info(f"User declined reusing existing ChatTool repo without --force: {repo_dir}")
-            click.echo(
-                f"Skipped because ChatTool repo already exists: {repo_dir}\n"
-                "Use --force if you want to replace the existing clone.",
-                err=True,
-            )
-            raise click.Abort()
-        else:
-            logger.error(f"ChatTool clone target already exists: {repo_dir}")
-            click.echo(f"ChatTool clone target already exists: {repo_dir}", err=True)
-            raise click.Abort()
-
+def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool) -> Path:
+    repo_dir = _preferred_workspace_repo_dir(workspace_dir)
     clone_cmd = ["git", "clone", chattool_source, str(repo_dir)]
     logger.info(f"Cloning ChatTool into workspace: {' '.join(clone_cmd)}")
     result = subprocess.run(clone_cmd, capture_output=True, text=True)
@@ -348,8 +339,123 @@ def _clone_chattool_repo(chattool_source: str, workspace_dir: Path, force: bool,
     return repo_dir
 
 
+def _run_git(repo_dir: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", "-C", str(repo_dir), *args],
+        capture_output=True,
+        text=True,
+    )
+
+
+def _is_git_repo(repo_dir: Path) -> bool:
+    return (repo_dir / ".git").exists()
+
+
+def _repo_has_local_changes(repo_dir: Path) -> bool:
+    result = _run_git(repo_dir, ["status", "--porcelain"])
+    if result.returncode != 0:
+        return False
+    return bool(result.stdout.strip())
+
+
+def _maybe_migrate_legacy_repo_dir(workspace_dir: Path) -> Path | None:
+    preferred = _preferred_workspace_repo_dir(workspace_dir)
+    legacy = _legacy_workspace_repo_dir(workspace_dir)
+    if preferred.exists() or not legacy.exists():
+        return _find_existing_workspace_repo_dir(workspace_dir)
+    logger.info(f"Migrating legacy workspace repo dir from {legacy} to {preferred}")
+    legacy.rename(preferred)
+    click.echo(f"Renamed legacy repo dir: {legacy.name} -> {preferred.name}")
+    return preferred
+
+
+def _update_chattool_repo(
+    repo_dir: Path,
+    chattool_source: str,
+    interactive=None,
+    can_prompt=False,
+) -> str:
+    if not _is_git_repo(repo_dir):
+        logger.error(f"Existing ChatTool dir is not a git repo: {repo_dir}")
+        click.echo(f"Existing ChatTool dir is not a git repo: {repo_dir}", err=True)
+        raise click.Abort()
+
+    if _repo_has_local_changes(repo_dir):
+        message = (
+            f"ChatTool repo has local changes: {repo_dir}\n"
+            "Skip repository update and keep the current working tree?"
+        )
+        if interactive is not False and can_prompt:
+            skip_update = ask_confirm(message, default=True)
+            if skip_update == BACK_VALUE:
+                raise click.Abort()
+            if not skip_update:
+                click.echo("Please commit or stash local changes before rerunning the update.", err=True)
+                raise click.Abort()
+        else:
+            logger.info(f"Skipping ChatTool repo update because working tree is dirty: {repo_dir}")
+            click.echo(f"Skipped ChatTool repo update because local changes were detected: {repo_dir}")
+        return "skipped"
+
+    fetch_result = _run_git(repo_dir, ["fetch", "--prune", chattool_source])
+    if fetch_result.returncode != 0:
+        logger.error(f"Failed to fetch ChatTool updates from {chattool_source}")
+        click.echo("Failed to fetch ChatTool updates.", err=True)
+        stderr = (fetch_result.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort()
+
+    merge_result = _run_git(repo_dir, ["merge", "--ff-only", "FETCH_HEAD"])
+    if merge_result.returncode != 0:
+        logger.error(f"Failed to fast-forward ChatTool repo: {repo_dir}")
+        click.echo("Failed to fast-forward ChatTool repo.", err=True)
+        stderr = (merge_result.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort()
+
+    logger.info(f"Updated existing ChatTool repo: {repo_dir}")
+    return "updated"
+
+
+def _ensure_chattool_repo(
+    chattool_source: str,
+    workspace_dir: Path,
+    force: bool,
+    interactive=None,
+    can_prompt=False,
+) -> tuple[Path, bool, str]:
+    migrated_repo = _maybe_migrate_legacy_repo_dir(workspace_dir)
+    repo_dir = migrated_repo or _preferred_workspace_repo_dir(workspace_dir)
+    repo_preexisted = repo_dir.exists()
+
+    if not repo_preexisted:
+        return _clone_chattool_repo(chattool_source, workspace_dir, force=force), False, "cloned"
+
+    if force and not _is_git_repo(repo_dir):
+        logger.info(f"Removing non-git ChatTool dir before reclone: {repo_dir}")
+        shutil.rmtree(repo_dir)
+        return _clone_chattool_repo(chattool_source, workspace_dir, force=force), False, "cloned"
+
+    repo_action = _update_chattool_repo(
+        repo_dir,
+        chattool_source=chattool_source,
+        interactive=interactive,
+        can_prompt=can_prompt,
+    )
+    return repo_dir, True, repo_action
+
+
+def _is_managed_workspace(workspace_dir: Path) -> bool:
+    return _workspace_has_existing_files(workspace_dir)
+
+
 def _validate_workspace_dir(workspace_dir: Path, force: bool, interactive=None, can_prompt=False) -> None:
     if workspace_dir.exists() and not _workspace_is_empty(workspace_dir) and not force:
+        if _is_managed_workspace(workspace_dir):
+            logger.info(f"Detected existing managed workspace, entering update mode: {workspace_dir}")
+            return
         message = (
             f"Workspace dir is not empty: {workspace_dir}\n"
             "Continue anyway and keep existing files? Existing generated files will be skipped unless --force is used."
@@ -443,6 +549,20 @@ def _maybe_setup_github_auth(interactive, can_prompt) -> bool:
     return True
 
 
+def _should_sync_skills(existing_repo: bool, interactive, can_prompt) -> bool:
+    if not existing_repo:
+        return True
+    if interactive is not False and can_prompt:
+        sync_skills = ask_confirm(
+            "Update workspace skills from the ChatTool repo? This only replaces regular skill files and keeps experience/ untouched.",
+            default=True,
+        )
+        if sync_skills == BACK_VALUE:
+            raise click.Abort()
+        return bool(sync_skills)
+    return True
+
+
 def setup_playground(workspace_dir=None, chattool_source=None, interactive=None, force=False):
     logger.info("Start playground setup")
 
@@ -488,14 +608,14 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
     logger.info(f"ChatTool source: {chattool_source}")
     workspace_path.mkdir(parents=True, exist_ok=True)
 
-    repo_path = _clone_chattool_repo(
+    repo_path, existing_repo, repo_action = _ensure_chattool_repo(
         chattool_source,
         workspace_path,
         force=force,
         interactive=interactive,
         can_prompt=can_prompt,
     )
-    skills_source = _workspace_skills_source(workspace_path)
+    skills_source = _workspace_skills_source(repo_path)
     _validate_cloned_repo(skills_source)
 
     logger.info(f"Cloned ChatTool repo dir: {repo_path}")
@@ -523,13 +643,18 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
     _write_text_file(retros_dir / "README.md", _render_memory_retros_readme(), force=force)
     _write_text_file(scratch_dir / "README.md", _render_scratch_readme(), force=force)
 
-    logger.info("Copying workspace skills and creating experience directories")
-    copied_skills = _copy_skills(skills_source, skills_dir, force=force)
+    copied_skills = []
+    if _should_sync_skills(existing_repo=existing_repo, interactive=interactive, can_prompt=can_prompt):
+        logger.info("Copying workspace skills and creating experience directories")
+        copied_skills = _copy_skills(skills_source, skills_dir, force=existing_repo or force)
+    else:
+        logger.info("Skipping workspace skills update by user choice")
 
     logger.info(f"Playground setup completed with {len(copied_skills)} skills")
     click.echo("Playground setup completed.")
     click.echo(f"Workspace: {workspace_path}")
     click.echo(f"ChatTool repo: {repo_path}")
+    click.echo(f"Repo action: {repo_action}")
     click.echo(f"Memory summary: {workspace_path / 'MEMORY.md'}")
     click.echo(f"Memory: {memory_dir}")
     click.echo(f"Skills: {skills_dir}")

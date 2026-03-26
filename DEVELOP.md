@@ -26,9 +26,20 @@
 - 开发规范：更新 `docs/development-guide/`
 - 导航变更：同步更新 `mkdocs.yml`
 
+## 配置机制
+
+- 默认优先级统一为：`显式参数 > environment variable > envs/<Config>/.env > default`
+- 对支持 `-e/--env` 的命令，统一为：`显式参数 > -e/显式 env > environment variable > envs/<Config>/.env > default`
+- profile 固定保存在 `envs/<Config>/<profile>.env`
+- 新命令需要临时切换配置时，优先复用 `-e/--env`，不要再新增一套临时环境变量语义
+
 ## 测试与文档
 
-- CLI 测试采用文档先行：先写 `cli-tests/*.md` 再实现对应 `.py`。
+- ChatTool 仓库只长期维护 `cli-tests/` 这条测试主线。
+- CLI 测试采用文档先行：先写 `cli-tests/*.md`，再实现对应 `.py`。
+- `cli-tests/*.md` 是唯一长期维护的测试设计面；`cli-tests/*.py` 只作为真实 CLI 执行实现。
+- 宁可做更窄的真实测试，也绝不允许使用 mock 伪造行为；mock 对真实表现没有验收价值，且容易误导开发判断。
+- 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认测试落点。
 - 真实集成测试应标记为 `@pytest.mark.e2e`。
 - 功能变更同步更新 `docs/` 与 `README.md`。
 - 变更记录同步更新 `CHANGELOG.md`。

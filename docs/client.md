@@ -61,6 +61,26 @@ chattool setup codex
 chattool setup codex --pam "cr_xxx"
 ```
 
+如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
+
+```bash
+chattool setup codex -e work
+chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
+```
+
+这里的 `-e/--env` 支持两种形式：
+
+- `.env` 文件路径
+- `OpenAI` 类型下保存过的 profile 名称，例如 `work`
+
+解析顺序为：
+
+1. 显式参数：`--pam`、`--base-url`、`--model`
+2. `-e/--env` 指定的 OpenAI 配置
+3. 当前 `oai/openai` 生效配置
+4. 现有 `~/.codex/` 配置
+5. 内置默认值
+
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
@@ -107,14 +127,21 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 
 ### 0.4 Playground (`setup playground`)
 
-把一个空目录快速初始化为工作区：
+把一个目录快速初始化或更新为工作区：
 
-1. clone `chattool/`
+1. clone `ChatTool/`
 2. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
 3. 创建 `Memory/`、`skills/`、`scratch/`
-4. 从 clone 出来的 `chattool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+4. 从 clone 出来的 `ChatTool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
 
-如果目标目录已经有其他文件，交互模式下会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。如果目录里已经存在 `chattool/`，交互模式下会默认提示“跳过克隆并保留本地版本”；只有显式传 `--force` 时才会覆盖生成文件并重建 `chattool/` clone。
+如果目标目录已经是已有工作区，再次执行时会进入更新模式：
+
+- 优先更新 `ChatTool/` 仓库；如果仓库里有本地改动，则默认跳过仓库更新，避免覆盖工作区中的开发状态
+- 交互模式下会提示是否同步工作区 `skills/`
+- 同步 `skills/` 时只覆盖常规文件，不会改动各 skill 下的 `experience/`
+- 已存在的工作区说明文件默认仍然保留；只有显式传 `--force` 时才会覆盖这些生成文件
+
+如果目标目录只是普通非空目录而不是现有工作区，交互模式下仍会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。
 
 完成 workspace bootstrap 后，命令还会尝试配置 GitHub 的 HTTPS Git 鉴权：
 
@@ -150,7 +177,7 @@ my-playground/
 ├── AGENTS.md
 ├── CHATTOOL.md
 ├── MEMORY.md
-├── chattool/
+├── ChatTool/
 ├── Memory/
 ├── skills/
 └── scratch/
@@ -339,6 +366,14 @@ chattool gh pr-view --number 123
 
 # 查看 PR 的可合并状态与 CI / checks 状态
 chattool gh pr-check --number 123
+chattool gh pr-check --number 123 --wait
+chattool gh pr-check --number 123 --wait --interval 10 --timeout 600
+
+# 查看某次 workflow run 与 jobs
+chattool gh run-view --run-id 23494900414
+
+# 查看某个 job 的日志
+chattool gh job-logs --job-id 68373094563
 
 # 创建 PR
 chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
@@ -348,6 +383,7 @@ chattool gh pr-comment --number 123 --body "Looks good"
 
 # 合并 PR
 chattool gh pr-merge --number 123 --method squash --confirm
+chattool gh pr-merge --number 123 --method squash --confirm --check
 
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
@@ -364,6 +400,19 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - check runs
 - workflow runs
 
+如果追加 `--wait`，CLI 会持续轮询直到 checks 和 workflow runs 都结束：
+
+- 默认不设超时，会一直等到全部结束
+- 可用 `--interval <seconds>` 控制轮询间隔
+- 只有显式传 `--timeout <seconds>` 时，才会在超时后报错退出
+
+如果希望在执行 `pr-merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项时，CLI 会拒绝合并并提示先运行 `pr-check`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
+
+如果 `pr-check` 已经定位到具体 workflow run / job，可以继续使用：
+
+- `run-view --run-id <id>`：查看某次 workflow run 的元信息、jobs 与 step 状态
+- `job-logs --job-id <id>`：直接抓取 job 日志；默认输出尾部，可用 `--tail 0` 查看完整日志，或用 `--output` 落盘
+
 需要机器可读结果时可加 `--json-output`。
 
 在执行 `pr-create`、汇报“CI 是否通过”或准备 merge 前，先 `git fetch origin <base>`，再确认两件事：
@@ -379,6 +428,7 @@ chattool gh pr-update --number 123 --title "New title" --body "Updated body"
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls
 - Check runs API: https://docs.github.com/en/rest/checks/runs
 - Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
+- Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs
 - Commit statuses API: https://docs.github.com/en/rest/commits/statuses
 - PyGithub 文档: https://pygithub.readthedocs.io/
 - PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
@@ -571,8 +621,8 @@ chattool skill install cert-manager -p codex --prefix
 
 安装前会校验源 skill 的 `SKILL.md`。当前要求：
 - 文件开头必须包含 `---` 包裹的 YAML frontmatter
-- frontmatter 至少包含 `name`、`description` 和 `version`
-- `version` 采用 Semantic Versioning，例如 `0.1.0`
+- frontmatter 至少包含 `name`、`description`
+- `version` 可以保留为可选元信息，但安装时不会强制校验
 - `openai.yaml`/`openai.yml` 不是必需文件
 
 ---

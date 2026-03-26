@@ -131,6 +131,10 @@ filterwarnings = [
     "ignore::DeprecationWarning:alibabacloud_tea_openapi.*",
     "ignore::DeprecationWarning:tencentcloud.*",
     "ignore::UserWarning:tencentcloud.*",
+    "ignore:pkg_resources is deprecated as an API.*:UserWarning",
+    "ignore:Deprecated call to `pkg_resources\\.declare_namespace.*:DeprecationWarning",
+    "ignore:datetime\\.datetime\\.utcfromtimestamp\\(\\) is deprecated.*:DeprecationWarning",
     "ignore:websockets.legacy is deprecated:DeprecationWarning",
-    "ignore:websockets.server.WebSocketServerProtocol is deprecated:DeprecationWarning"
+    "ignore:websockets.server.WebSocketServerProtocol is deprecated:DeprecationWarning",
+    "ignore:websockets.InvalidStatusCode is deprecated:DeprecationWarning"
 ]

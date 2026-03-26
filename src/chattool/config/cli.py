@@ -1,13 +1,10 @@
 import click
 import shutil
 import os
-import sys
-import warnings
-warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
-# Filter DeprecationWarning from lark_oapi (asyncio.get_event_loop)
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="lark_oapi.*")
+import dotenv
 
 from chattool.config import BaseEnvConfig
+from chattool.cli_warnings import install_cli_warning_filters
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
 from chattool import __version__
 from chattool.utils import mask_secret
@@ -18,22 +15,80 @@ from chattool.utils.tui import (
 
 from .test_cmd import test_cmd
 
+install_cli_warning_filters()
+
 @click.group(name='chatenv')
 def cli():
     """Manage configuration environment variables and profiles."""
     if not CHATTOOL_ENV_DIR.exists():
         CHATTOOL_ENV_DIR.mkdir(parents=True)
 
+
+def _reload_runtime_config() -> None:
+    BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+
+
+def _require_single_config(config_types, action: str):
+    if not config_types:
+        raise click.ClickException(f"{action} requires --type/-t to select exactly one config type.")
+    matched = _resolve_config_types(config_types)
+    if not matched:
+        click.echo(f"No configuration types matched: {', '.join(config_types)}")
+        click.echo("Available types (and aliases):")
+        for cls in BaseEnvConfig._registry:
+            aliases = getattr(cls, '_aliases', [])
+            alias_str = f" ({', '.join(aliases)})" if aliases else ""
+            click.echo(f"  - {cls._title}{alias_str}")
+        raise click.Abort()
+    if len(matched) != 1:
+        names = ", ".join(config_cls.get_storage_name() for config_cls in matched)
+        raise click.ClickException(f"{action} requires exactly one config type. Matched: {names}")
+    return matched[0]
+
+
+def _write_config_files(configs):
+    CHATTOOL_ENV_DIR.mkdir(parents=True, exist_ok=True)
+    for config_cls in configs:
+        config_dir = config_cls.get_storage_dir(CHATTOOL_ENV_DIR)
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_cls.get_active_env_file(CHATTOOL_ENV_DIR).write_text(
+            config_cls.render_env_file(),
+            encoding="utf-8",
+        )
+
+
+def _render_field_line(field, no_mask: bool) -> str:
+    value = "" if field.value is None else str(field.value)
+    if field.is_sensitive and not no_mask:
+        value = mask_secret(value)
+    return f"{field.env_key}='{value}'"
+
+
 @cli.command(name='list')
-def profiles():
-    """List all available environment profiles."""
-    configs = list(CHATTOOL_ENV_DIR.glob('*.env'))
-    if configs:
-        click.echo("Available profiles:")
-        for config in configs:
-            click.echo(f"- {config.stem}")
-    else:
-        click.echo(f"No profiles found in {CHATTOOL_ENV_DIR}")
+@click.option('--type', '-t', 'config_types', multiple=True,
+              help='Filter configuration types (e.g. openai, feishu, aliyun).')
+def profiles(config_types):
+    """List available environment profiles grouped by config type."""
+    matched = _resolve_config_types(config_types) if config_types else BaseEnvConfig._registry
+    if config_types and not matched:
+        click.echo(f"No configuration types matched: {', '.join(config_types)}")
+        return
+    found = False
+    for config_cls in matched:
+        config_dir = config_cls.get_storage_dir(CHATTOOL_ENV_DIR)
+        profiles = sorted(
+            path.name
+            for path in config_dir.glob("*.env")
+            if path.name != ".env"
+        ) if config_dir.exists() else []
+        if not profiles:
+            continue
+        found = True
+        click.echo(f"[{config_cls.get_storage_name()}]")
+        for profile in profiles:
+            click.echo(f"- {profile}")
+    if not found:
+        click.echo(f"No profiles found under {CHATTOOL_ENV_DIR}")
 
 def _resolve_config_types(config_types):
     """Resolve -t filter to matching config classes. Returns None if no filter."""
@@ -139,8 +194,8 @@ def _interactive_config_loop(grouped_configs):
         )
         
         if selected_section == "Save & Exit":
-            BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
-            click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
+            _write_config_files(BaseEnvConfig._registry)
+            click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
             break
         elif selected_section == "Exit without Saving":
             if ask_confirm("Are you sure you want to exit without saving changes?", default=False):
@@ -182,7 +237,7 @@ def _interactive_config_loop(grouped_configs):
 @click.option('--type', '-t', 'config_types', multiple=True,
               help='Filter configuration types (e.g. openai, feishu, aliyun).')
 def cat_env(name, no_mask, config_types):
-    """Print the content of an environment profile or current .env.
+    """Print effective config values or a typed env profile.
 
     \b
     Examples:
@@ -190,115 +245,84 @@ def cat_env(name, no_mask, config_types):
       chatenv cat -t feishu      # only show Feishu config
       chatenv cat -t openai -t feishu
     """
+    matched = _resolve_config_types(config_types) if config_types else BaseEnvConfig._registry
+    if config_types and not matched:
+        click.echo(f"No configuration types matched: {', '.join(config_types)}")
+        click.echo("Available types (and aliases):")
+        for cls in BaseEnvConfig._registry:
+            aliases = getattr(cls, '_aliases', [])
+            alias_str = f" ({', '.join(aliases)})" if aliases else ""
+            click.echo(f"  - {cls._title}{alias_str}")
+        return
+
     if name:
-        config_path = CHATTOOL_ENV_DIR / f'{name}.env'
-    else:
-        config_path = CHATTOOL_ENV_FILE
-
-    if not config_path.exists():
-        click.echo(f"Error: Environment file '{config_path}' not found.", err=True)
-        return
-
-    # Build lookup sets
-    sensitive_keys = set()
-    for config_cls in BaseEnvConfig._registry:
-        for _, field in config_cls.get_fields().items():
-            if field.is_sensitive:
-                sensitive_keys.add(field.env_key)
-
-    # If -t is specified, only show keys belonging to those configs
-    filter_keys = None
-    if config_types:
-        matched = _resolve_config_types(config_types)
-        if not matched:
-            click.echo(f"No configuration types matched: {', '.join(config_types)}")
-            click.echo("Available types (and aliases):")
-            for cls in BaseEnvConfig._registry:
-                aliases = getattr(cls, '_aliases', [])
-                alias_str = f" ({', '.join(aliases)})" if aliases else ""
-                click.echo(f"  - {cls._title}{alias_str}")
+        config_cls = _require_single_config(config_types, "cat")
+        profile_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+        if not profile_path.exists():
+            click.echo(f"Error: Environment file '{profile_path}' not found.", err=True)
             return
-        filter_keys = set()
-        for cls in matched:
-            for _, field in cls.get_fields().items():
-                filter_keys.add(field.env_key)
-
-    content = config_path.read_text()
-    if no_mask and filter_keys is None:
-        click.echo(content)
+        config_cls.load_from_dict(dotenv.dotenv_values(profile_path))
+        for _, field in config_cls.get_fields().items():
+            click.echo(_render_field_line(field, no_mask))
         return
 
-    for line in content.splitlines():
-        line_strip = line.strip()
-
-        if not line_strip or line_strip.startswith('#'):
-            if filter_keys is None:
-                click.echo(line)
-            continue
-
-        if '=' not in line:
-            if filter_keys is None:
-                click.echo(line)
-            continue
-
-        key, value = line.split('=', 1)
-        key = key.strip()
-
-        if filter_keys is not None and key not in filter_keys:
-            continue
-
-        if no_mask or key not in sensitive_keys:
-            click.echo(line)
-        else:
-            val_part = value.strip()
-            quote = ''
-            raw_val = val_part
-            if len(val_part) >= 2:
-                if (val_part.startswith("'") and val_part.endswith("'")) or \
-                   (val_part.startswith('"') and val_part.endswith('"')):
-                    quote = val_part[0]
-                    raw_val = val_part[1:-1]
-            masked = mask_secret(raw_val)
-            click.echo(f"{key}={quote}{masked}{quote}")
+    _reload_runtime_config()
+    for index, config_cls in enumerate(matched):
+        if len(matched) > 1:
+            if index:
+                click.echo("")
+            click.echo(f"# {config_cls.get_storage_name()}")
+        for _, field in config_cls.get_fields().items():
+            click.echo(_render_field_line(field, no_mask))
 
 @cli.command(name='save')
 @click.argument('name')
-def save_env(name):
-    """Save the current .env configuration as a profile."""
-    if not CHATTOOL_ENV_FILE.exists():
-        click.echo("Error: No active .env file to save.", err=True)
-        return
-
-    target_path = CHATTOOL_ENV_DIR / f'{name}.env'
+@click.option('--type', '-t', 'config_types', multiple=True,
+              help='Target exactly one configuration type.')
+def save_env(name, config_types):
+    """Save the current active config for one type as a profile."""
+    config_cls = _require_single_config(config_types, "save")
+    target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if target_path.exists():
         click.confirm(f"Profile '{name}' already exists. Overwrite?", abort=True)
-    
-    shutil.copy(CHATTOOL_ENV_FILE, target_path)
-    click.echo(f"Saved current configuration to profile '{name}'")
+
+    _reload_runtime_config()
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
+    click.echo(f"Saved current {config_cls.get_storage_name()} configuration to profile '{target_path.name}'")
 
 @cli.command(name='use')
 @click.argument('name')
-def use_env(name):
-    """Activate an environment profile."""
-    source_path = CHATTOOL_ENV_DIR / f'{name}.env'
+@click.option('--type', '-t', 'config_types', multiple=True,
+              help='Target exactly one configuration type.')
+def use_env(name, config_types):
+    """Activate a profile for one config type."""
+    config_cls = _require_single_config(config_types, "use")
+    source_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if not source_path.exists():
         click.echo(f"Error: Profile '{name}' not found.", err=True)
         return
-    
-    shutil.copy(source_path, CHATTOOL_ENV_FILE)
-    click.echo(f"Activated profile '{name}'")
+
+    target_path = config_cls.get_active_env_file(CHATTOOL_ENV_DIR)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(source_path, target_path)
+    _reload_runtime_config()
+    click.echo(f"Activated {config_cls.get_storage_name()} profile '{source_path.name}'")
 
 @cli.command(name='delete')
 @click.argument('name')
-def delete_env(name):
-    """Delete an environment profile."""
-    target_path = CHATTOOL_ENV_DIR / f'{name}.env'
+@click.option('--type', '-t', 'config_types', multiple=True,
+              help='Target exactly one configuration type.')
+def delete_env(name, config_types):
+    """Delete a profile for one config type."""
+    config_cls = _require_single_config(config_types, "delete")
+    target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if not target_path.exists():
         click.echo(f"Error: Profile '{name}' not found.", err=True)
         return
     
     os.remove(target_path)
-    click.echo(f"Deleted profile '{name}'")
+    click.echo(f"Deleted {config_cls.get_storage_name()} profile '{target_path.name}'")
 
 @cli.command(name='init')
 @click.option(
@@ -309,7 +333,7 @@ def delete_env(name):
 )
 @click.option('--type', '-t', 'config_types', multiple=True, help='Filter configuration types (case-insensitive title or alias match).')
 def init(interactive, config_types):
-    """Initialize or update the .env configuration file.
+    """Initialize or update config env files.
     
     You can filter the configuration types using the -t/--type option.
 
@@ -357,8 +381,8 @@ def init(interactive, config_types):
                 for config_cls in target_configs:
                     _configure_provider(config_cls)
                 
-                BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
-                click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
+                _write_config_files(target_configs)
+                click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
                 return
 
         # Fallback for non-questionary environment (pure click)
@@ -423,8 +447,8 @@ def init(interactive, config_types):
                     if new_val:
                         field.value = new_val
     
-    BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
-    click.echo(f"Configuration saved to {CHATTOOL_ENV_FILE}")
+    _write_config_files(target_configs)
+    click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
 
 @cli.command(name='set')
 @click.argument('key_value')
@@ -438,28 +462,41 @@ def set_env(key_value):
     key = key.strip()
     value = value.strip()
     
+    match = BaseEnvConfig.find_field(key)
+    if match is None:
+        click.echo(f"Error: Key '{key}' not found", err=True)
+        return
+
+    config_cls, _ = match
     BaseEnvConfig.set(key, value)
-    
-    BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
+    _write_config_files([config_cls])
     click.echo(f"Set {key}={value}")
 
 @cli.command(name='get')
 @click.argument('key')
 def get_env(key):
     """Get a configuration value."""
-    values = BaseEnvConfig.get_all_values()
-    if key in values:
-        val = values[key]
-        click.echo(val if val is not None else "")
-    else:
+    _reload_runtime_config()
+    match = BaseEnvConfig.find_field(key)
+    if match is None:
         click.echo(f"Error: Key '{key}' not found", err=True)
+        return
+    _, field = match
+    val = field.value
+    click.echo(val if val is not None else "")
 
 @cli.command(name='unset')
 @click.argument('key')
 def unset_env(key):
     """Unset a configuration value."""
+    match = BaseEnvConfig.find_field(key)
+    if match is None:
+        click.echo(f"Error: Key '{key}' not found", err=True)
+        return
+
+    config_cls, _ = match
     BaseEnvConfig.set(key, "")
-    BaseEnvConfig.save_env_file(str(CHATTOOL_ENV_FILE), __version__)
+    _write_config_files([config_cls])
     click.echo(f"Unset {key}")
 
 cli.add_command(test_cmd)

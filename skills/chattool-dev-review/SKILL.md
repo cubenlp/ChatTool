@@ -34,6 +34,11 @@ Default goal: review the feature change, not the whole repository, unless the us
    - Update [CHANGELOG.md](CHANGELOG.md).
    - For CLI changes, update the matching doc-first case under [cli-tests](cli-tests) and add/adjust the `.py` test when needed.
 
+5. Branch is rebased or merged with the latest mainline before MR/PR
+   - Before the final MR/PR pass, update from the latest `master` branch.
+   - Prefer merging or rebasing `origin/master` into the working branch before submission, then resolve conflicts locally.
+   - Treat “not synced with latest master” as a review issue because it hides integration conflicts until review or merge time.
+
 ## Review Workflow
 
 1. Scope the review.
@@ -54,11 +59,18 @@ Default goal: review the feature change, not the whole repository, unless the us
    - Run the smallest useful test or CLI invocation for the changed feature.
    - If you cannot validate, say so explicitly.
 
+5. Before final MR/PR, sync mainline and recheck.
+   - Run `git fetch origin` and bring `origin/master` into the current branch.
+   - Resolve conflicts before final review output or PR update.
+   - Re-run the smallest relevant verification after conflict resolution when the merge changes the affected area.
+
 ## Useful Commands
 
 ```bash
 git diff --stat
 git diff --name-only
+git fetch origin
+git merge origin/master
 rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
 rg -n "lazy import|utils/tui.py|interactive" docs/development-guide docs README.md
 ```

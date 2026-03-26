@@ -43,11 +43,12 @@ def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(preferred_auth_method, base_url, model, interactive):
+def codex_setup(preferred_auth_method, base_url, model, env_ref, interactive):
     setup_codex(
         preferred_auth_method=preferred_auth_method,
         base_url=base_url,
         model=model,
+        env_ref=env_ref,
         interactive=interactive,
     )
 
@@ -187,6 +188,10 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--model",),
                 kwargs={"default": None, "help": "Optional default model name."},
             ),
+            SetupOptionElement(
+                param_decls=("-e", "--env"),
+                kwargs={"default": None, "help": "Load OpenAI config from a .env file path or saved OpenAI profile name."},
+            ),
         ),
     ),
     SetupCommandElement(
@@ -214,7 +219,7 @@ SETUP_COMMAND_ELEMENTS = (
     ),
     SetupCommandElement(
         name="playground",
-        help="Bootstrap an empty workspace with a ChatTool clone, memory files, and workspace skills.",
+        help="Bootstrap or update a workspace with a ChatTool clone, memory files, and workspace skills.",
         callback=playground_setup,
         options=(
             SetupOptionElement(
@@ -223,15 +228,15 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("--workspace-dir", "--dir"),
-                kwargs={"default": None, "help": "Empty directory to bootstrap as the workspace root. Defaults to current directory."},
+                kwargs={"default": None, "help": "Workspace root directory. Defaults to current directory."},
             ),
             SetupOptionElement(
                 param_decls=("--chattool-source", "--source"),
-                kwargs={"default": None, "help": "Git URL or local ChatTool repo path used for cloning into workspace/chattool."},
+                kwargs={"default": None, "help": "Git URL or local ChatTool repo path used for cloning/updating workspace/ChatTool."},
             ),
             SetupOptionElement(
                 param_decls=("--force",),
-                kwargs={"is_flag": True, "help": "Allow rerunning in a non-empty workspace and overwrite generated files / reclone chattool."},
+                kwargs={"is_flag": True, "help": "Allow overwriting generated files and replace a broken non-git ChatTool directory when rerunning."},
             ),
         ),
     ),

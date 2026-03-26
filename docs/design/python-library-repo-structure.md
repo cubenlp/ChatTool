@@ -16,8 +16,8 @@
 - `pyproject.toml` 定义了项目元数据、依赖、可选依赖与 CLI 入口。
 - `src/chattool/` 采用标准 `src` 布局，适合避免本地路径污染。
 - `docs/` 使用 MkDocs 承载对外文档。
-- `tests/` 承载 Python 单元测试。
-- `cli-tests/` 承载 CLI doc-first 测试设计与实现。
+- `cli-tests/` 承载 CLI doc-first 测试设计与真实执行实现。
+- 仓库根下 `tests/` 仍有历史文件，但对 ChatTool 仓库自身已不再作为长期维护主线。
 - `skills/` 存放可分发的技能模板与说明。
 
 这套结构总体合理，但要把“工具仓库”进一步稳定成“Python 库仓库”，需要把各目录职责与发布边界写清楚。
@@ -43,7 +43,7 @@ ChatTool/
 │       ├── skill/          # skill CLI 与安装逻辑
 │       ├── docker/         # 容器模板与相关支持
 │       └── utils/          # 稳定且可复用的通用辅助模块
-├── tests/                  # Python 单元/集成测试
+├── tests/                  # 历史参考测试（弃用区，不再作为仓库主维护面）
 ├── cli-tests/              # CLI doc-first 测试文档与真实链路测试
 ├── docs/                   # MkDocs 文档
 ├── skills/                 # 可安装 skill 资产与说明
@@ -66,16 +66,17 @@ ChatTool/
 - 对外可 import 的能力都应该从这里暴露。
 - 新功能优先进入明确子目录，不在 `src/chattool/` 根下堆积业务文件。
 
-### `tests/`
-
-- 放 Python 级别测试，覆盖模块 API、内部编排与边界条件。
-- 重点验证 import、对象行为、参数解析、纯函数与非交互逻辑。
-
 ### `cli-tests/`
 
-- 放 CLI 真实链路测试。
+- 这是 ChatTool 仓库唯一长期维护的测试主线。
 - 延续当前 doc-first 机制：先写 `.md`，再补 `.py`。
-- 与 `tests/` 分离，避免 Python 单测和真实命令链路混杂。
+- `.md` 是测试设计与评审对象，`.py` 是真实执行实现。
+
+### `tests/`
+
+- 对 ChatTool 仓库自身，它是历史参考区，不再作为新开发默认维护面。
+- 仅在迁移历史行为到 `cli-tests/` 时参考。
+- 这一定义不影响 ChatTool 生成的外部 Python 包骨架继续使用自己的 `tests/` 目录。
 
 ### `docs/`
 
@@ -158,7 +159,7 @@ config / utils
 ### 建议保留
 
 - 保留 `src/` 布局。
-- 保留 `tests/` 与 `cli-tests/` 双轨测试结构。
+- 保留 `cli-tests/` 作为仓库测试主线。
 - 保留 `docs/` 与 `skills/` 的独立目录，不混入 Python 包源码。
 
 ### 建议约束
@@ -179,6 +180,6 @@ config / utils
 
 - 顶层使用 `pyproject.toml` 管打包与入口。
 - 代码统一收敛到 `src/chattool/`。
-- `tests/`、`cli-tests/`、`docs/`、`skills/` 作为独立配套目录。
+- `cli-tests/`、`docs/`、`skills/` 作为独立配套目录；`tests/` 仅保留为历史参考区。
 
 这能同时满足 PyPI 发布、CLI 演进、文档沉淀与 Agent 资产管理四类需求，并且与当前仓库现实结构基本一致，迁移成本最低。

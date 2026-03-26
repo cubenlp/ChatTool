@@ -73,14 +73,16 @@ chattool setup nodejs -i
 预期过程和结果：
   1. 执行 `chattool setup cc-connect -i`，预期先检查 Node.js（>= 20），必要时提示执行 `chattool setup nodejs` 安装/升级，然后安装或确认 `cc-connect` CLI。
   2. 执行 `chattool setup codex -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
-  3. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
-  4. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  3. 执行 `chattool setup codex -e work` 时，预期可显式从 `OpenAI` profile 读取 `OPENAI_API_KEY`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`。
+  4. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  5. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool setup cc-connect -i
 chattool setup codex -i
+chattool setup codex -e work
 chattool setup claude -i
 chattool setup opencode -i
 ```
@@ -96,15 +98,16 @@ chattool setup opencode -i
   - `<workspace>/Memory/`
   - `<workspace>/skills/`
   - `<workspace>/scratch/`
-  - `<workspace>/chattool/`
+  - `<workspace>/ChatTool/`
 
 预期过程和结果：
-  1. 执行 `chattool setup playground --workspace-dir <workspace> --chattool-source <repo-or-url>`，预期在目标目录下 clone `chattool/`。
-  2. 若目标目录非空且当前终端可交互，预期先提示是否继续；确认后继续初始化，并保留已有文件。
-  3. 若目标目录中已经存在 `chattool/`，预期继续提示是否“跳过克隆并保留本地版本”，默认值为 `yes`；确认后直接继续后续初始化。
+  1. 首次执行 `chattool setup playground --workspace-dir <workspace> --chattool-source <repo-or-url>`，预期在目标目录下 clone `ChatTool/`。
+  2. 若目标目录只是普通非空目录且当前终端可交互，预期先提示是否继续；确认后继续初始化，并保留已有文件。
+  3. 若目标目录中已经存在 `ChatTool/`（或历史遗留的 `chattool/`），预期进入更新模式：优先更新仓库，并在交互模式下提示是否同步工作区 `skills/`。
   4. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`。
   5. 预期创建 `Memory/`、`skills/`、`scratch/`。
-  6. 预期从 `chattool/skills/` 复制 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
+  6. 预期从 `ChatTool/skills/` 复制或更新 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
+  7. 预期 skills 同步只替换常规文件，不修改已有 `experience/` 内容。
 
 参考执行脚本（伪代码）：
 

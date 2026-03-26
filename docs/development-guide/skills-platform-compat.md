@@ -164,7 +164,7 @@ globs:
 # Copilot Instructions
 
 - 优先复用已有工具，避免引入新依赖
-- 行为变更必须附带单元测试
+- 行为变更应同步补对应的 `cli-tests/*.md`
 - PR 保持聚焦，改动范围最小化
 ```
 
@@ -236,7 +236,6 @@ skills/
 ---
 name: <skill-name>
 description: "<一句话描述，用于触发判断>"
-version: 0.1.0
 ---
 
 ## Quick Start
@@ -248,9 +247,8 @@ chattool ...
 
 **ChatTool 仓库约定**
 
-- ChatTool 仓库内的 skill frontmatter 除了 `name`、`description` 外，还要求维护 `version`
-- `version` 使用 Semantic Versioning，例如 `0.1.0`
-- 新增 skill 时以 `0.1.0` 作为初始版本；后续改动 skill 内容时同步递增
+- ChatTool 仓库内的 skill frontmatter 至少维护 `name`、`description`
+- `version` 可以作为可选元信息保留，但不作为安装校验前提
 
 **跨平台适配建议**
 

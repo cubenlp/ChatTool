@@ -1,14 +1,19 @@
 # test_chattool_lark_basic
 
-测试 `chattool lark` 的基础链路，覆盖 info/send/upload/scopes 的 CLI 调用。
+测试 `chattool lark` 的基础链路，覆盖 info / scopes / send / upload / reply / listen / chat，并把它作为后续 `chattool lark <topic> ...` 扩展的公共基线。
 
 ## 元信息
 
 - 命令：`chattool lark <command> [args]`
 - 目的：验证飞书 CLI 的核心命令可用。
 - 标签：`cli`
-- 前置条件：具备飞书凭证与测试用户。
-- 环境准备：配置 `FEISHU_APP_ID` 与 `FEISHU_APP_SECRET`。
+- 前置条件：具备飞书凭证与至少一个可用接收者。
+- 环境准备：
+  - `FEISHU_APP_ID`
+  - `FEISHU_APP_SECRET`
+  - `FEISHU_DEFAULT_RECEIVER_ID`
+  - `FEISHU_TEST_USER_ID`（可选；仅在 CLI 真实测试需要隔离目标时指定）
+  - `FEISHU_TEST_USER_ID_TYPE`（可选；默认 `user_id`）
 - 回滚：删除测试消息与上传文件（如适用）。
 
 ## 用例 1：获取机器人信息
@@ -58,6 +63,13 @@ chattool lark scopes
 ```sh
 chattool lark send <user_id> "hello"
 ```
+
+补充说明：
+
+- 如果 `send` 因权限问题失败，CLI 应优先做一次 scopes 诊断。
+- 若已配置 `FEISHU_DEFAULT_RECEIVER_ID`，CLI 应尽量自动发送权限引导卡。
+- 若 CLI 真实测试显式配置了 `FEISHU_TEST_USER_ID`，也可用它做隔离排障。
+- 若自动发卡也失败，CLI 至少应导出一份权限引导卡 JSON，供继续排障。
 
 ## 用例 4：上传文件
 

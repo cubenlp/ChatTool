@@ -6,7 +6,7 @@ test_dir = CHATTOOL_REPO_DIR / 'tests' / 'testfiles'
 async def get_res(msg):
     chat = Chat(msg)
     chat.assistant('hi')
-    asyncio.sleep(0.1)
+    await asyncio.sleep(0.1)
     return chat
 
 def test_batch():

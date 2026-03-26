@@ -8,6 +8,12 @@
 - 目的：验证飞书云文档 CLI 的基础命令可用。
 - 标签：`cli`
 - 前置条件：具备飞书凭证与文档权限。
+- 环境准备：
+  - `FEISHU_APP_ID`
+  - `FEISHU_APP_SECRET`
+  - `FEISHU_DEFAULT_RECEIVER_ID`
+  - `FEISHU_TEST_USER_ID`（可选；仅在 CLI 真实测试需要隔离目标时指定）
+  - `FEISHU_TEST_USER_ID_TYPE`（可选；默认 `user_id`）
 - 回滚：删除测试文档或测试块（如适用）。
 
 ## 用例 1：创建文档

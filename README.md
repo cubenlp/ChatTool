@@ -40,7 +40,8 @@ chatenv init -i -t openai        # 仅初始化指定服务
 chatenv cat                      # 查看配置（敏感值打码）
 chatenv cat -t feishu           # 查看飞书配置，供 chattool cc init 默认候选值参考
 chatenv set OPENAI_API_KEY=sk-xxx
-chatenv save work && chatenv use work   # 多 profile 管理
+chatenv save work -t openai && chatenv use work -t openai   # 按类型管理 profile
+chattool lark info -e work       # 显式使用 Feishu profile，优先级高于当前 shell 环境变量
 ```
 
 ### LLM 对话 (`chattool.Chat`)
@@ -70,6 +71,10 @@ async for chunk in Chat().user("写一首诗").async_get_response_stream():
 ```bash
 chattool lark send USER_ID "Hello"
 chattool lark send USER_ID --image photo.png
+chattool lark doc parse-md weekly.md -o weekly.blocks.json
+chattool lark doc append-json DOC_ID weekly.blocks.json
+chattool lark doc append-file DOC_ID weekly.md
+chattool lark notify-doc "周报草稿" --append-file weekly.md
 chattool serve lark echo                        # 回显机器人
 chattool serve lark ai --system "你是工作助手"  # AI 对话机器人
 ```
