@@ -49,8 +49,9 @@ chattool cc init -I \
 
 ### 预期过程和结果
 
-- 执行 `chattool cc init -i --config <path>` 时提示默认值来自已有配置
-- 覆盖确认选择否，退出成功
+- 执行 `chattool cc init -i --config <path>` 时先提示是否覆盖已有配置文件
+- 覆盖确认选择否，立即退出成功，不再继续询问其它字段
+- 覆盖确认选择是后，后续字段提示默认值来自已有配置
 
 ### 参考执行脚本（伪代码）
 
@@ -70,7 +71,8 @@ chattool cc init -i --config /tmp/config.toml
 - 执行 `chattool cc init -i --agent claudecode --platform feishu --config <path>` 返回 0
 - 交互阶段提示检测到 `chatenv` 的飞书配置候选
 - `app_id` 提示默认值来自 `FEISHU_APP_ID`
-- 选择沿用默认 `app_secret` 后，生成的配置文件写入对应飞书凭证
+- `app_secret` 直接以默认值形式提供，回车即可复用
+- 生成的配置文件写入对应飞书凭证
 
 ### 参考执行脚本（伪代码）
 
