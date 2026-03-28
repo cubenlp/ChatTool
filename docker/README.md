@@ -84,7 +84,6 @@ docker build -f Dockerfile.playground -t chattool-playground .
 
 1. `chattool setup playground`
 2. `chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills`
-3. `chattool skill install --all -p codex -d /root/.codex/skills --force`
-4. `chattool setup alias`
+3. `chattool setup alias`
 
-随后启动 `sshd`。
+构建时会先在 `/opt/venv` 虚拟环境里安装 ChatTool，随后启动 `sshd`。

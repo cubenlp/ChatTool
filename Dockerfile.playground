@@ -9,18 +9,30 @@ RUN apt-get update \
         openssh-server \
         python3 \
         python3-pip \
+        python3-venv \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /var/run/sshd /root/.codex/skills \
     && sed -ri 's/^#?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && sed -ri 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && sed -ri 's/^#?UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
 
+ENV PATH=/opt/venv/bin:$PATH
+
 WORKDIR /playground
 COPY . ./ChatTool
 
-RUN python3 -m pip install --no-cache-dir --break-system-packages ./ChatTool
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && /opt/venv/bin/pip install --no-cache-dir ./ChatTool
 
 WORKDIR /workspace
 EXPOSE 22 10080
 
-CMD ["bash", "-lc", "set -euo pipefail; mkdir -p /var/run/sshd /root/.codex/skills /root/.ssh /workspace; echo 'root:chattool' | chpasswd; chattool setup playground --workspace-dir /workspace --chattool-source /playground/ChatTool -I; chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills; chattool skill install --all -p codex -d /root/.codex/skills --force; chattool setup alias; exec /usr/sbin/sshd -D -e"]
+CMD ["bash", "-lc", "\
+set -euo pipefail\n\
+mkdir -p /var/run/sshd /root/.codex/skills /root/.ssh /workspace\n\
+chattool setup playground --workspace-dir /workspace --chattool-source /playground/ChatTool -I\n\
+chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills\n\
+chattool setup alias\n\
+exec /usr/sbin/sshd -D -e\n\
+"]
