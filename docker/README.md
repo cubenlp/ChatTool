@@ -5,6 +5,7 @@
 - `docker-compose.chromium.yml`
 - `docker-compose.playwright.yml`
 - `docker-compose.headless-chromedriver.yml`
+- `../Dockerfile.playground`
 - `chromium.env.example`
 - `playwright.env.example`
 - `headless-chromedriver.env.example`
@@ -72,3 +73,18 @@ chattool docker headless-chromedriver /path/to --set WEBDRIVER_PORT=5555
 ```bash
 chattool docker chromium /path/to --compose-name compose.yaml --env-name chromium.local.env.example
 ```
+
+另外，仓库根目录提供了一个直接可构建的 Playground 镜像文件：
+
+```bash
+docker build -f Dockerfile.playground -t chattool-playground .
+```
+
+这个镜像会在线性启动流程里依次执行：
+
+1. `chattool setup playground`
+2. `chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills`
+3. `chattool skill install --all -p codex -d /root/.codex/skills --force`
+4. `chattool setup alias`
+
+随后启动 `sshd`。

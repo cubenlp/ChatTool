@@ -2,6 +2,8 @@
 
 `chattool docker` 用于快速生成浏览器相关 Docker 模板文件。
 
+仓库根目录另外提供了一个静态的 `Dockerfile.playground`，用于直接构建一个 ChatTool Playground 镜像，不经过 `chattool docker` 模板生成。
+
 ## 1) 基本用法
 
 支持的模板：
@@ -70,3 +72,20 @@ chattool docker chromium /path/to --set PORT=3100 --set BIND_IP=0.0.0.0
 # 自定义输出文件名
 chattool docker chromium /path/to --compose-name compose.yaml --env-name chromium.local.env.example
 ```
+
+## 4) Playground 镜像
+
+直接构建：
+
+```bash
+docker build -f Dockerfile.playground -t chattool-playground .
+```
+
+镜像启动后会按固定顺序执行：
+
+1. `chattool setup playground --workspace-dir /workspace --chattool-source /playground/ChatTool -I`
+2. `chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills`
+3. `chattool skill install --all -p codex -d /root/.codex/skills --force`
+4. `chattool setup alias`
+
+然后启动 `sshd`。默认工作目录是 `/workspace`。
