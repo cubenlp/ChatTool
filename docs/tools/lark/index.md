@@ -120,5 +120,6 @@ lark-cli auth login --recommend
 进一步阅读：
 
 - `docs/blog/agent-cli/lark-cli-guide.md`
+- `docs/blog/agent-cli/feishu-cli-doc-practice.md`
 - `docs/env/lark-cli.md`
 - `skills/feishu/SKILL.md`

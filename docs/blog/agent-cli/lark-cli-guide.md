@@ -1,8 +1,8 @@
-# Lark CLI 实战：真正把飞书文档创建、读取、更新、评论跑一遍
+# Lark CLI 实战：真正把飞书文档创建、读取、更新、评论与权限跑一遍
 
 这一篇不再按“读完 README 后复述功能表”的方式写，而是直接讲一条更有实践意义的路线：
 
-> **先把 `lark-cli` 装好，再用真实命令把飞书文档的创建、读取、更新、评论跑通，并明确哪些能力必须走 user 身份。**
+> **先把 `lark-cli` 装好，再用真实命令把飞书文档的创建、读取、更新、评论、协作者权限和群内送达跑通，并明确哪些能力必须走 user 身份。**
 
 本文基于 **2026-03-29** 在 ChatTool 工作区里的真实操作整理，重点不是列举命令，而是回答几个更实际的问题：
 
@@ -10,6 +10,7 @@
 - 没有 user login 时，bot 身份能做到哪一步？
 - 哪些命令看起来都叫“docs”，实际上权限边界完全不同？
 - 在 shell 里直接拼 Markdown，有哪些很容易踩坑的地方？
+- 如果文档最终是给人协作的，最小可用的“交付”动作应该做到哪一步？
 
 ---
 
@@ -100,7 +101,9 @@ lark-cli auth status
 5. 添加局部高亮评论
 6. 解决 / 恢复评论
 7. 添加基础协作者权限
-8. 读取评论
+8. 回复评论
+9. 把文档送达给人
+10. 读取评论
 
 ---
 
@@ -373,7 +376,108 @@ lark-cli drive permission.members create \
 
 ---
 
-## 第八步：读取评论时，不要假设“刚写完就立刻能列出来”
+## 第八步：评论线程要补一次 reply，才更接近真实 review
+
+如果只验证“能写评论”，还不够接近真实使用。
+
+真正做文档 review 时，更常见的是：
+
+1. 在正文上留下局部评论
+2. 其他人继续在这个评论线程下回复
+
+这一步我用 bot 身份直接给评论线程补了回复：
+
+```bash
+lark-cli drive file.comment.replys create \
+  --as bot \
+  --params '{"file_token":"My7IdiXGbotSsSxYPAEcvYLnnWg","comment_id":"7622399158548188121","file_type":"docx"}' \
+  --data '{"content":{"elements":[{"type":"text_run","text_run":{"text":"已收到，这条用于评论回复链路测试。"}}]}}'
+```
+
+另一条评论也回了一次：
+
+```bash
+lark-cli drive file.comment.replys create \
+  --as bot \
+  --params '{"file_token":"My7IdiXGbotSsSxYPAEcvYLnnWg","comment_id":"7622399484672084960","file_type":"docx"}' \
+  --data '{"content":{"elements":[{"type":"text_run","text_run":{"text":"你好，已经看到；我这边继续补权限和配置测试。"}}]}}'
+```
+
+这一步真实跑通后，quickstart 至少可以确认：
+
+- 评论线程不是只能创建，reply 也可用
+- bot 可以把“自动 review 输出”继续挂到已有评论下
+- 后面如果要做“agent 对评论做跟进”，这条链路是够用的
+
+---
+
+## 第九步：把文档真正送达给人
+
+如果 quickstart 只停在“文档写好了”，其实还是差最后一公里。
+
+这次真实实践里，我补了三件最小但非常关键的动作：
+
+### 1. 给具体用户加可管理权限
+
+```bash
+lark-cli drive permission.members create \
+  --as bot \
+  --params '{"token":"My7IdiXGbotSsSxYPAEcvYLnnWg","type":"docx","need_notification":true}' \
+  --data '{"member_id":"ou_dff064deeac5f3685099e2917a166d3a","member_type":"openid","perm":"full_access","type":"user"}'
+```
+
+返回里能看到：
+
+- `member_type = openid`
+- `perm = full_access`
+
+这说明 bot 不只是能给协作者加 `view`，也能把指定用户提到“可管理”。
+
+### 2. 给群聊加可读权限
+
+```bash
+lark-cli drive permission.members create \
+  --as bot \
+  --params '{"token":"My7IdiXGbotSsSxYPAEcvYLnnWg","type":"docx","need_notification":false}' \
+  --data '{"member_id":"oc_9f05297e6ae9cfb7e49f7776c01e4058","member_type":"openchat","perm":"view","type":"chat"}'
+```
+
+返回里能看到：
+
+- `member_type = openchat`
+- `perm = view`
+
+这一步的实践意义非常直接：
+
+- 文档不是停在 bot 自己可见
+- 可以先把一个群挂成基础可读
+- 再由群里的具体负责人拿更高权限继续处理
+
+### 3. 直接把文档链接发到群里
+
+仅有权限还不够，最好把送达动作也一起验证。
+
+这次我是直接用保留下来的最小 ChatTool 命令面发送群消息：
+
+```bash
+chattool lark send oc_9f05297e6ae9cfb7e49f7776c01e4058 \
+  '飞书文档实测链接：https://www.feishu.cn/docx/My7IdiXGbotSsSxYPAEcvYLnnWg' \
+  -t chat_id
+```
+
+发送返回：
+
+- `message_id = om_x100b53b735c598a0b3cb15e1b7f5958`
+
+所以如果把“文档 quickstart”理解成一条完整的交付链，这条线其实应该写成：
+
+```text
+create -> fetch -> update -> comment -> reply -> permission -> send link
+```
+
+---
+
+## 第十步：读取评论时，不要假设“刚写完就立刻能列出来”
 
 紧接着我马上执行：
 
@@ -555,6 +659,27 @@ Error: --as bot is not supported, this command only supports: user
 
 否则很容易把“延迟可见”误判成“写入失败”。
 
+### 经验 6：文档交付至少分成“谁能管”和“谁能看”
+
+只验证正文写入还不够。
+
+这次实践更有价值的一点是把权限分成了两层：
+
+- 具体负责人：`full_access`
+- 群聊范围：`view`
+
+这比一上来就做复杂权限矩阵更适合 quickstart，也更贴近日常协作。
+
+### 经验 7：送达动作值得保留在 ChatTool 最小命令面里
+
+现在 ChatTool 已经不再维护一整套平行的飞书文档 CLI，这个方向是对的。
+
+但 `chattool lark send` 这种最短消息链路依然有价值，因为它刚好能补上：
+
+- 文档创建完成后，把链接发给用户
+- 文档授权完成后，把链接发到群里
+- 做临时调试时，验证默认用户 / 默认群聊目标
+
 ---
 
 ## 对 ChatTool 的现实意义
@@ -600,8 +725,10 @@ lark-cli docs +update --as bot --doc <DOC_URL> --mode append ...
 lark-cli drive +add-comment --as bot --doc <DOC_URL> --full-comment ...
 lark-cli drive +add-comment --as bot --doc <DOC_URL> --selection-with-ellipsis "..." ...
 lark-cli drive file.comments patch --as bot ...
+lark-cli drive file.comment.replys create --as bot ...
 lark-cli drive permission.members create --as bot ...
 lark-cli drive permission.members create --as bot --data '{"member_type":"openchat","type":"chat",...}'
+chattool lark send <OPENCHAT_ID> "<DOC_URL>" -t chat_id
 lark-cli drive file.comments list --as bot --params '{"file_token":"<DOC_ID>","file_type":"docx"}'
 ```
 
@@ -614,4 +741,4 @@ lark-cli docs +search --as user --query "<KEYWORD>"
 
 一句话总结：
 
-> **飞书文档 quickstart 最实用的切法，不是先学完整命令树，而是先把 bot 可跑通的“创建 -> 读取 -> 更新 -> 全文评论 -> 局部评论 -> solve/restore -> 基础权限”打通，再把 search 这类 user-only 能力单独补上。**
+> **飞书文档 quickstart 最实用的切法，不是先学完整命令树，而是先把 bot 可跑通的“创建 -> 读取 -> 更新 -> 全文评论 -> 局部评论 -> solve/restore -> reply -> 基础权限 -> 送达”打通，再把 search 这类 user-only 能力单独补上。**

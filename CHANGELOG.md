@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool skill install` 不再强制要求 skill frontmatter 包含 `version`，只校验 `name` 与 `description`
 
 ### Added
+- `chatenv new <profile> -t <type>`，用于从当前激活的类型配置直接创建并激活一个新 profile，补齐 `save/use/delete` 之间的便捷新建入口
 - `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
 - `chattool setup codex -e ...` 现可显式复用 OpenAI 配置来源：支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 oai 配置 > 当前 oai 配置 > 现有 codex 配置 > 默认值` 回退
 - `chattool setup lark-cli`，用于安装官方 `lark-cli`，并按 `显式参数 > -e 指定的 feishu 配置 > 当前 feishu 配置 > 现有 lark-cli 配置 > 默认值` 复用 ChatTool 的 Feishu 配置；文档补充了 `~/.lark-cli/config.json` 与 ChatTool `envs/Feishu/.env` 的默认位置说明

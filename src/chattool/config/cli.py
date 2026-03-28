@@ -46,6 +46,42 @@ def _require_single_config(config_types, action: str):
     return matched[0]
 
 
+def _select_single_config_interactive(action: str):
+    choices = []
+    for config_cls in BaseEnvConfig._registry:
+        aliases = getattr(config_cls, '_aliases', [])
+        alias_text = f" ({', '.join(aliases)})" if aliases else ""
+        choices.append(
+            create_choice(
+                title=f"{config_cls.get_storage_name()}{alias_text}",
+                value=config_cls,
+            )
+        )
+
+    selected = ask_select(
+        f"Select one config type for {action}:",
+        choices=choices,
+    )
+    if selected == BACK_VALUE:
+        raise click.Abort()
+    return selected
+
+
+def _resolve_single_config_for_profile_action(config_types, action: str):
+    if config_types:
+        return _require_single_config(config_types, action)
+    if is_interactive_available():
+        return _select_single_config_interactive(action)
+    raise click.ClickException(f"{action} requires --type/-t outside interactive mode.")
+
+
+def _normalize_profile_name(name: str) -> str:
+    profile_name = str(name).strip()
+    if not profile_name:
+        raise click.ClickException("Profile name cannot be empty.")
+    return profile_name.removesuffix(".env")
+
+
 def _write_config_files(configs):
     CHATTOOL_ENV_DIR.mkdir(parents=True, exist_ok=True)
     for config_cls in configs:
@@ -281,7 +317,8 @@ def cat_env(name, no_mask, config_types):
               help='Target exactly one configuration type.')
 def save_env(name, config_types):
     """Save the current active config for one type as a profile."""
-    config_cls = _require_single_config(config_types, "save")
+    config_cls = _resolve_single_config_for_profile_action(config_types, "save")
+    name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if target_path.exists():
         click.confirm(f"Profile '{name}' already exists. Overwrite?", abort=True)
@@ -291,13 +328,48 @@ def save_env(name, config_types):
     target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
     click.echo(f"Saved current {config_cls.get_storage_name()} configuration to profile '{target_path.name}'")
 
+
+@cli.command(name='new')
+@click.argument('name', required=False)
+@click.option('--type', '-t', 'config_types', multiple=True,
+              help='Target exactly one configuration type.')
+def new_env(name, config_types):
+    """Create a new typed profile from current active config and activate it."""
+    config_cls = _resolve_single_config_for_profile_action(config_types, "new")
+
+    if not name:
+        if not is_interactive_available():
+            raise click.ClickException("new requires a profile name outside interactive mode.")
+        name = ask_text("New profile name")
+        if name == BACK_VALUE:
+            raise click.Abort()
+
+    name = _normalize_profile_name(name)
+    target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+    if target_path.exists():
+        click.confirm(f"Profile '{name}' already exists. Overwrite and activate it?", abort=True)
+
+    _reload_runtime_config()
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
+
+    active_path = config_cls.get_active_env_file(CHATTOOL_ENV_DIR)
+    active_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(target_path, active_path)
+    _reload_runtime_config()
+
+    click.echo(
+        f"Created and activated {config_cls.get_storage_name()} profile '{target_path.name}'"
+    )
+
 @cli.command(name='use')
 @click.argument('name')
 @click.option('--type', '-t', 'config_types', multiple=True,
               help='Target exactly one configuration type.')
 def use_env(name, config_types):
     """Activate a profile for one config type."""
-    config_cls = _require_single_config(config_types, "use")
+    config_cls = _resolve_single_config_for_profile_action(config_types, "use")
+    name = _normalize_profile_name(name)
     source_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if not source_path.exists():
         click.echo(f"Error: Profile '{name}' not found.", err=True)
@@ -315,7 +387,8 @@ def use_env(name, config_types):
               help='Target exactly one configuration type.')
 def delete_env(name, config_types):
     """Delete a profile for one config type."""
-    config_cls = _require_single_config(config_types, "delete")
+    config_cls = _resolve_single_config_for_profile_action(config_types, "delete")
+    name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if not target_path.exists():
         click.echo(f"Error: Profile '{name}' not found.", err=True)
