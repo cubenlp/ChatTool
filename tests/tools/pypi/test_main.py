@@ -10,10 +10,9 @@ from chattool.tools.pypi.main import (
     check_repository_conflicts,
     collect_doctor_checks,
     normalize_module_name,
-    publish_distributions,
     read_project_metadata,
-    release_package,
     scaffold_package,
+    upload_distributions,
 )
 
 
@@ -153,7 +152,7 @@ def test_check_distributions_requires_existing_build_artifacts(tmp_path):
         check_distributions(project_dir, project_dir / "dist")
 
 
-def test_publish_distributions_builds_twine_command_and_env(tmp_path):
+def test_upload_distributions_uses_default_twine_upload(tmp_path):
     project_dir = tmp_path / "pkg"
     project_dir.mkdir()
     _write_minimal_project(project_dir)
@@ -178,58 +177,20 @@ def test_publish_distributions_builds_twine_command_and_env(tmp_path):
             },
         )()
 
-    result, files = publish_distributions(
+    result, files = upload_distributions(
         project_dir,
         dist_dir,
-        repository="testpypi",
         skip_existing=True,
-        username="__token__",
-        password="secret-token",
         runner=fake_runner,
     )
 
     assert captured["args"][:4] == [sys.executable, "-m", "twine", "upload"]
-    assert "--repository" in captured["args"]
     assert "--skip-existing" in captured["args"]
-    assert "--non-interactive" in captured["args"]
-    assert captured["env"]["TWINE_USERNAME"] == "__token__"
-    assert captured["env"]["TWINE_PASSWORD"] == "secret-token"
+    assert "--repository" not in captured["args"]
+    assert "--non-interactive" not in captured["args"]
+    assert captured["env"] is None
     assert result.stdout == "upload ok"
     assert files == [artifact.resolve()]
-
-
-def test_release_package_runs_build_check_publish_in_order(tmp_path):
-    project_dir = tmp_path / "pkg"
-    project_dir.mkdir()
-    _write_minimal_project(project_dir)
-    dist_dir = project_dir / "dist"
-    dist_dir.mkdir()
-    artifact = dist_dir / "demo_pkg-0.1.0-py3-none-any.whl"
-    calls = []
-
-    def fake_runner(args, cwd, env=None):
-        calls.append(args)
-        if args[2] == "build":
-            artifact.write_text("wheel", encoding="utf-8")
-        return type(
-            "Result",
-            (),
-            {
-                "returncode": 0,
-                "stdout": "ok",
-                "stderr": "",
-                "args": args,
-            },
-        )()
-
-    summary = release_package(project_dir, dist_dir, runner=fake_runner)
-
-    assert [call[2:] for call in calls] == [
-        ["build", "--outdir", str(dist_dir)],
-        ["twine", "check", str(artifact.resolve())],
-        ["twine", "upload", "--repository", "testpypi", "--non-interactive", str(artifact.resolve())],
-    ]
-    assert summary["files"] == [artifact.resolve()]
 
 
 def test_normalize_module_name_rewrites_hyphenated_package_name():

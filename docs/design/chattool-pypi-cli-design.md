@@ -1,304 +1,60 @@
 # ChatTool PyPI CLI 设计
 
-> 目标：通过 `chattool pypi` 统一完成 Python 包的构建、校验与发布，让维护者不必手写 `python -m build`、`twine check`、`twine upload` 命令链。
+> 当前版本把 `chattool pypi` 收口为最小命令集：`init`、`build`、`check`、`upload`、`probe`。上传不再做额外封装，直接复用原始 `twine upload` 行为。
 
 ## 设计目标
 
-- 提供统一的 PyPI 发布命令入口，覆盖 build、check、publish 的核心流程。
-- 对齐 ChatTool 现有 CLI 规范：缺参自动交互，支持 `-i` / `-I`，敏感信息自动脱敏。
-- 默认走安全路径，避免误发正式 PyPI。
-- 保持和标准 Python 打包工具兼容，底层继续复用 `build` 与 `twine`。
+- 只保留本地最常用的五个命令：模板初始化、构建、元数据检查、上传、仓库探测。
+- 避免在 PyPI 上传上叠加额外策略、凭证管理和交互流程。
+- 和标准 Python 打包工具保持一致，底层直接复用 `build` 与 `twine`。
 
 ## 非目标
 
-- 一阶段不自动修改版本号、不自动打 git tag、不自动推送 commit。
-- 一阶段不替代 CI 发布流程，主要服务于本地手工发版与排障。
+- 不提供 `publish` / `release` 这类额外编排命令。
+- 不接管 `twine` 的凭证发现、仓库选择和交互提示。
+- 不自动改版本号、不自动打 tag、不自动推送 commit。
 
-## 适用场景
-
-- 本地验证 `pyproject.toml` 是否可构建。
-- 构建 wheel / sdist 并做元数据检查。
-- 先发 TestPyPI，再确认后发正式 PyPI。
-- 对已有仓库进行发版前自检。
-
-## 代码归位建议
-
-按照当前仓库工具结构，建议新增：
-
-```text
-src/chattool/tools/pypi/
-├── __init__.py
-├── cli.py        # chattool pypi
-└── main.py       # build/check/publish 核心逻辑
-```
-
-接入方式：
-
-- 在 `src/chattool/client/main.py` 中以 lazy import 方式挂载 `pypi`
-- 不需要 MCP 入口
-- 与 `setup/` 解耦，避免把打包发布逻辑塞进环境安装模块
-
-## 命令总览（阶段一）
+## 命令总览
 
 ```bash
 chattool pypi init
-chattool pypi doctor
 chattool pypi build
 chattool pypi check
-chattool pypi publish
-chattool pypi release
+chattool pypi upload
+chattool pypi probe
 ```
 
-## 默认约定
+## 行为边界
 
-- 项目目录默认：当前工作目录
-- 构建产物目录默认：`dist/`
-- 构建配置默认读取：`pyproject.toml`
-- 默认发布目标：`testpypi`
-- 发布到正式 `pypi` 时必须显式指定 `--repository pypi`
-- 所有认证信息默认复用标准 `twine` 生态，不额外发明私有协议
+### `chattool pypi init`
 
-## 命令设计
+- 生成最小可发布的 `src/` 布局 Python 包骨架。
+- 不做交互补参；缺少 `NAME` 时可以从 `--project-dir` 目录名推断，否则直接报错。
 
-### 1) `chattool pypi init`
+### `chattool pypi build`
 
-- 作用：生成一个最小可发布的 `src/` 布局 Python 包骨架
-- 默认行为：
-  - 缺少包名时自动进入向导
-  - `-i` 进入完整交互，按顺序补全 `Package name`、`project_dir`、`description`、`requires_python`、`license`、`author`、`email`
-  - 所有 prompt 展示实际默认值
-  - 生成的项目可直接运行 `python -m pytest -q`
+- 调用 `python -m build`。
+- 默认清理旧的 `dist/` 产物。
+- 默认同时构建 `sdist` 和 `wheel`。
 
-建议选项：
+### `chattool pypi check`
 
-- `NAME`
-- `--project-dir PATH`
-- `--description TEXT`
-- `--python SPEC`
-- `--license TEXT`
-- `--author TEXT`
-- `--email TEXT`
-- `-i/--interactive`
-- `-I/--no-interactive`
+- 调用 `python -m twine check dist/*`。
+- 若 `dist/` 为空，直接报错。
 
-输出重点：
+### `chattool pypi upload`
 
-- 创建后的项目目录
-- 规范化后的模块名
-- 生成文件列表
+- 调用默认的 `python -m twine upload dist/*`。
+- 只支持薄封装参数，例如 `--skip-existing`。
+- 不再提供仓库、凭证、确认和交互机制；如需复杂上传参数，直接使用原始 `twine upload`。
 
-### 2) `chattool pypi doctor`
+### `chattool pypi probe`
 
-- 作用：发版前自检
-- 检查项：
-  - `pyproject.toml` 是否存在
-  - `project.name`、`readme`、`requires-python`、`license` 等关键字段是否可读
-  - 动态版本是否可解析
-  - `README.md`、`LICENSE` 是否存在
-  - `build`、`twine` 是否已安装
-  - `dist/` 是否存在旧产物
-- 输出：
-  - 列表式检查结果
-  - 失败原因
-  - 下一步建议
+- 检查候选包名和版本在目标仓库是否已被占用。
+- 默认从当前项目的 `pyproject.toml` 读取名称和版本。
 
-建议选项：
+## 原则
 
-- `--project-dir PATH`
-- `--dist-dir PATH`
-- `-i/--interactive`
-- `-I/--no-interactive`
-
-### 3) `chattool pypi build`
-
-- 作用：生成 wheel / sdist
-- 默认行为：
-  - 默认先清理目标 `dist/` 目录中的旧构建产物
-  - 默认同时构建 `sdist` 与 `wheel`
-  - 调用底层 `python -m build`
-
-建议选项：
-
-- `--project-dir PATH`
-- `--dist-dir PATH`
-- `--sdist`
-- `--wheel`
-- `--clean/--no-clean`
-- `-i/--interactive`
-- `-I/--no-interactive`
-
-行为约束：
-
-- 若 `pyproject.toml` 缺失，直接失败
-- 若指定 `-i`，提示 `project_dir`、`dist_dir`、`build_target`、`clean`
-- 若指定 `-I`，不进入交互
-
-### 4) `chattool pypi check`
-
-- 作用：检查构建产物元数据与长描述
-- 默认行为：
-  - 若 `dist/` 不存在，提示先执行 `chattool pypi build`
-  - 调用底层 `twine check dist/*`
-  - 尽量保持与 `twine check` 行为一致，不默认掺入远端仓库占用逻辑
-
-建议选项：
-
-- `--project-dir PATH`
-- `--dist-dir PATH`
-- `--strict`
-
-输出重点：
-
-- 哪些文件被检查
-- 哪些元数据失败
-- README 渲染或 metadata 问题的定位提示
-- 若指定 `-i`，提示 `project_dir`、`dist_dir`、`strict`
-
-### 5) `chattool pypi publish`
-
-- 作用：上传构建产物到 TestPyPI 或 PyPI
-- 默认行为：
-  - 默认目标仓库为 `testpypi`
-  - 默认要求先有可用构建产物
-  - 认证优先复用 `.pypirc`，其次才是 `TWINE_USERNAME` / `TWINE_PASSWORD`
-  - 若进入交互，可提示输入 token，但回显必须脱敏
-
-建议选项：
-
-- `--project-dir PATH`
-- `--dist-dir PATH`
-- `--repository [testpypi|pypi]`
-- `--repository-url URL`
-- `--skip-existing`
-- `--yes`
-- `-i/--interactive`
-- `-I/--no-interactive`
-
-安全策略：
-
-- 发布到 `pypi` 时，如果没有 `--yes`，必须二次确认
-- 若当前目录仍有未处理构建失败痕迹，可提示用户先 `build` / `check`
-- 不在日志中打印 token 明文
-- 若指定 `-i`，提示目录、仓库、上传参数与凭证默认值
-
-### 6) `chattool pypi release`
-
-- 作用：串联 `build -> check -> publish`
-- 默认行为：
-  - 默认发布到 `testpypi`
-  - 执行前打印完整计划
-  - 任何一步失败则中断
-
-建议选项：
-
-- `--project-dir PATH`
-- `--dist-dir PATH`
-- `--repository [testpypi|pypi]`
-- `--skip-existing`
-- `--yes`
-- `--dry-run`
-- `-i/--interactive`
-- `-I/--no-interactive`
-
-说明：
-
-- 这是面向高频发版路径的快捷命令
-- 一阶段不做版本递增，只消费当前仓库已有版本
-- 若指定 `-i`，提示目录、构建参数、检查参数、发布参数与凭证默认值
-
-### 5.1) `chattool pypi probe`
-
-- 作用：检查候选包名和版本在目标仓库是否已被占用
-- 默认行为：
-  - 默认从当前项目的 `pyproject.toml` 读取名称和版本
-  - 支持通过 `--name`、`--version` 覆盖，便于在改名或改版本前先探测
-  - 默认目标仓库为 `testpypi`
-
-建议选项：
-
-- `--project-dir PATH`
-- `--repository [testpypi|pypi]`
-- `--repository-url URL`
-- `--name TEXT`
-- `--version TEXT`
-- `-i/--interactive`
-- `-I/--no-interactive`
-
-## 交互式流程（草案）
-
-```text
-chattool pypi release -i
-1) 识别项目目录和 pyproject.toml
-2) 解析当前包名与版本
-3) 选择目标仓库: testpypi / pypi
-4) 检查认证来源: .pypirc / 环境变量 / 手动输入
-5) 确认是否清理旧 dist 产物
-6) 执行 build
-7) 执行 twine check
-8) 输出待上传文件清单并确认发布
-```
-
-## 认证与配置策略
-
-优先顺序建议如下：
-
-1. 显式 CLI 参数
-2. `.pypirc`
-3. `TWINE_USERNAME` / `TWINE_PASSWORD`
-4. 交互式输入
-
-设计原则：
-
-- 复用标准 Python 发布生态，避免引入 ChatTool 私有认证格式
-- 命令输出中只显示脱敏后的用户名或 token 前后缀
-- 若用户选择交互输入 token，一阶段默认只用于本次命令，不自动持久化
-
-## 典型用法
-
-### 构建并检查
-
-```bash
-chattool pypi build
-chattool pypi check
-```
-
-### 先发 TestPyPI
-
-```bash
-chattool pypi release --repository testpypi
-```
-
-### 发正式 PyPI
-
-```bash
-chattool pypi publish --repository pypi --yes
-```
-
-## 与当前仓库的关系
-
-当前仓库已经具备 `pyproject.toml`、`build`、`twine`、`README.md`、`LICENSE` 等基础条件，因此新增 `chattool pypi` 的价值主要在于：
-
-- 收敛重复的发版命令
-- 统一交互体验与错误提示
-- 降低新维护者的发布门槛
-- 为后续 CI/CD 与 doc-first CLI 测试提供稳定接口
-
-## 后续实现建议
-
-- 底层命令封装放在 `src/chattool/tools/pypi/main.py`
-- `cli.py` 只处理参数、交互与输出展示
-- 构建与上传相关 import 放到函数内部，保持 CLI 冷启动速度
-- 为 `cli-tests/` 新增 `test_chattool_pypi_basic.md`
-- 正式实现时补充：
-  - `cli-tests/pypi/` doc-first CLI 测试
-  - `docs/tools/` 下的正式用户文档
-
-## 结论
-
-`chattool pypi` 最适合作为一个轻量、可审阅、默认安全的发布编排 CLI：
-
-- `doctor` 负责发现问题
-- `build` / `check` 负责产物质量
-- `publish` / `release` 负责发版流程
-
-这样既不破坏标准 Python 打包生态，也能让 ChatTool 的发版能力符合项目现有 CLI 风格。
+- CLI 简单直接，缺参即失败，不进入向导。
+- 上传行为尽量与用户手写 `twine upload` 保持一致。
+- `chattool pypi` 负责模板和本地校验，不负责发版策略。

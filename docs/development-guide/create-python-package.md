@@ -8,28 +8,10 @@
 chattool pypi init mychat --description "My chat package"
 cd mychat
 python -m pytest -q
-chattool pypi doctor --project-dir .
 chattool pypi build --project-dir .
 chattool pypi check --project-dir .
+chattool pypi upload --project-dir .
 ```
-
-如果你希望按统一 CLI 向导逐项确认默认值，可以直接运行：
-
-```bash
-chattool pypi init -i
-```
-
-它会依次提示：
-
-- `Package name`
-- `project_dir`
-- `description`
-- `requires_python`
-- `license`
-- `author (optional)`
-- `email (optional)`
-
-这些 prompt 中展示的默认值会与最终实际写入的值保持一致。
 
 如果你要显式指定作者信息：
 
@@ -39,6 +21,8 @@ chattool pypi init mychat \
   --email "rex@example.com" \
   --description "My chat package"
 ```
+
+`chattool pypi` 现在不再提供交互式补参；缺少必要输入时会直接报错。`upload` 也只是对原始 `twine upload` 的薄封装，如需更复杂的上传参数，直接使用 `twine upload`。
 
 ## 默认生成结构
 
@@ -62,8 +46,7 @@ mychat/
 - `pyproject.toml` 默认采用 `setuptools.build_meta`。
 - 版本号来自 `src/mychat/__init__.py` 中的 `__version__`，通过 `tool.setuptools.dynamic` 暴露。
 - `tests/conftest.py` 会自动把 `src/` 加入导入路径，保证新项目能直接运行 `python -m pytest -q`。
-- 交互模式遵守全局 CLI 规范：缺参自动进入向导，`-i` 强制完整交互，`-I` 禁止交互。
-- 初始 README 已包含 `chattool pypi doctor/build/check` 的最短验证命令。
+- 初始 README 已包含 `chattool pypi build/check` 的最短验证命令。
 
 ## 适用场景
 
