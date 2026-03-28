@@ -358,6 +358,18 @@ def _repo_has_local_changes(repo_dir: Path) -> bool:
     return bool(result.stdout.strip())
 
 
+def _update_submodules(repo_dir: Path) -> None:
+    result = _run_git(repo_dir, ["submodule", "update", "--init", "--recursive"])
+    if result.returncode != 0:
+        logger.error(f"Failed to update git submodules under {repo_dir}")
+        click.echo("Failed to update git submodules.", err=True)
+        stderr = (result.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort()
+    logger.info(f"Updated git submodules under {repo_dir}")
+
+
 def _maybe_migrate_legacy_repo_dir(workspace_dir: Path) -> Path | None:
     preferred = _preferred_workspace_repo_dir(workspace_dir)
     legacy = _legacy_workspace_repo_dir(workspace_dir)
@@ -415,6 +427,7 @@ def _update_chattool_repo(
             click.echo(stderr, err=True)
         raise click.Abort()
 
+    _update_submodules(repo_dir)
     logger.info(f"Updated existing ChatTool repo: {repo_dir}")
     return "updated"
 
@@ -615,6 +628,8 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
         interactive=interactive,
         can_prompt=can_prompt,
     )
+    if repo_action == "cloned":
+        _update_submodules(repo_path)
     skills_source = _workspace_skills_source(repo_path)
     _validate_cloned_repo(skills_source)
 
