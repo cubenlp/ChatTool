@@ -57,7 +57,11 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         abort_if_force_without_tty,
         resolve_interactive_mode,
     )
-    from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
+    from chattool.setup.nodejs import (
+        ensure_nodejs_requirement,
+        run_npm_command,
+        should_install_global_npm_package,
+    )
     from chattool.utils.custom_logger import setup_logger
     from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -120,14 +124,20 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         click.echo("Missing auth token.", err=True)
         raise click.Abort()
 
-    logger.info("Installing claude-code cli with npm")
-    result = run_npm_command(["install", "-g", "@anthropic-ai/claude-code"])
-    if result.returncode != 0:
-        logger.error("Failed to install claude-code cli")
-        click.echo("Failed to install claude-code.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
-        raise click.Abort()
+    if should_install_global_npm_package(
+        "@anthropic-ai/claude-code",
+        "Claude Code CLI",
+        interactive=interactive,
+        can_prompt=can_prompt,
+    ):
+        logger.info("Installing claude-code cli with npm")
+        result = run_npm_command(["install", "-g", "@anthropic-ai/claude-code"])
+        if result.returncode != 0:
+            logger.error("Failed to install claude-code cli")
+            click.echo("Failed to install claude-code.", err=True)
+            if result.stderr:
+                click.echo(result.stderr.strip(), err=True)
+            raise click.Abort()
 
     base_url = base_url or existing.get("base_url") or DEFAULT_BASE_URL
     small_fast_model = small_fast_model or existing.get("small_fast_model") or DEFAULT_SMALL_FAST_MODEL

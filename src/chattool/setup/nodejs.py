@@ -1,4 +1,5 @@
 from importlib import resources
+import json
 import shlex
 import shutil
 import subprocess
@@ -164,6 +165,48 @@ def run_npm_command(args):
         )
         return _run_bash(command)
     return subprocess.run(["npm", *args], capture_output=True, text=True)
+
+
+def get_global_npm_package_version(package_name):
+    result = run_npm_command(["list", "-g", package_name, "--depth=0", "--json"])
+    if result.returncode != 0:
+        return None
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except Exception:
+        return None
+    dependencies = payload.get("dependencies")
+    if not isinstance(dependencies, dict):
+        return None
+    package = dependencies.get(package_name)
+    if not isinstance(package, dict):
+        return None
+    version = package.get("version")
+    if not isinstance(version, str) or not version.strip():
+        return None
+    return version.strip()
+
+
+def should_install_global_npm_package(package_name, display_name, interactive=None, can_prompt=False):
+    version = get_global_npm_package_version(package_name)
+    if not version:
+        return True
+
+    click.echo(f"{display_name} already installed: {version}")
+    if interactive is not False and can_prompt:
+        update_now = ask_confirm(
+            f"Update {display_name} now via npm install -g?",
+            default=False,
+        )
+        if update_now == BACK_VALUE:
+            raise click.Abort()
+        if update_now:
+            return True
+        click.echo(f"Skip updating {display_name}.")
+        return False
+
+    click.echo(f"Skip npm install for {display_name}. Use -i to confirm an update.")
+    return False
 
 
 def _read_bundled_nvm_script():

@@ -13,7 +13,12 @@ from chattool.setup.interactive import (
     abort_if_missing_without_tty,
     resolve_interactive_mode,
 )
-from chattool.setup.nodejs import _detect_nodejs_runtime, ensure_nodejs_requirement, run_npm_command
+from chattool.setup.nodejs import (
+    _detect_nodejs_runtime,
+    ensure_nodejs_requirement,
+    run_npm_command,
+    should_install_global_npm_package,
+)
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -293,14 +298,20 @@ def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, inter
         click.echo("Invalid brand. Expected `feishu` or `lark`.", err=True)
         raise click.Abort()
 
-    logger.info("Installing lark-cli with npm")
-    install_result = run_npm_command(["install", "-g", "@larksuite/cli@latest"])
-    if install_result.returncode != 0:
-        logger.error("Failed to install lark-cli")
-        click.echo("Failed to install lark-cli.", err=True)
-        if install_result.stderr:
-            click.echo(install_result.stderr.strip(), err=True)
-        raise click.Abort()
+    if should_install_global_npm_package(
+        "@larksuite/cli",
+        "lark-cli",
+        interactive=interactive,
+        can_prompt=can_prompt,
+    ):
+        logger.info("Installing lark-cli with npm")
+        install_result = run_npm_command(["install", "-g", "@larksuite/cli@latest"])
+        if install_result.returncode != 0:
+            logger.error("Failed to install lark-cli")
+            click.echo("Failed to install lark-cli.", err=True)
+            if install_result.stderr:
+                click.echo(install_result.stderr.strip(), err=True)
+            raise click.Abort()
 
     logger.info("Initializing lark-cli config")
     init_result = _run_lark_cli_command(
