@@ -60,8 +60,9 @@ chattool env list -t feishu
 预期过程和结果：
   1. 执行 `chattool env save work -t openai`，预期生成 `envs/OpenAI/work.env`，内容包含当前 `OPENAI_API_KEY`。
   2. 执行 `chattool env new mini -t feishu`，预期创建 `envs/Feishu/mini.env`，并立刻激活到 `envs/Feishu/.env`。
-  3. 修改当前 `envs/OpenAI/.env` 内容后，执行 `chattool env use work -t openai`，预期提示已激活，并恢复为保存内容。
-  4. 执行 `chattool env delete work -t openai`，预期 `work.env` 被删除。
+  3. 在交互终端里执行 `chattool env new -t openai`，预期先询问 profile 名，再继续补齐 `OpenAI` 字段，而不是直接退化成 `save`。
+  4. 修改当前 `envs/OpenAI/.env` 内容后，执行 `chattool env use work -t openai`，预期提示已激活，并恢复为保存内容。
+  5. 执行 `chattool env delete work -t openai`，预期 `work.env` 被删除。
 
 参考执行脚本（伪代码）：
 
@@ -71,6 +72,7 @@ chattool env save work -t openai
 chattool env set FEISHU_APP_ID=cli-one
 chattool env set FEISHU_APP_SECRET=secret-one
 chattool env new mini -t feishu
+chattool env new -t openai
 chattool env set OPENAI_API_KEY=sk-two
 chattool env use work -t openai
 chattool env delete work -t openai

@@ -189,7 +189,7 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("--preferred-auth-method", "--pam"),
-                kwargs={"default": None, "help": "Value for preferred_auth_method and OPENAI_API_KEY."},
+                kwargs={"default": None, "help": "OpenAI API key to write into Codex auth.json; config.toml will use preferred_auth_method = \"apikey\"."},
             ),
             SetupOptionElement(
                 param_decls=("--base-url", "--url"),

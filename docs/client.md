@@ -55,10 +55,10 @@ chattool setup codex
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
 
-直接传参：
+直接传 API key（当前 `--preferred-auth-method` / `--pam` 实际承载的是 `OPENAI_API_KEY`）：
 
 ```bash
-chattool setup codex --pam "cr_xxx"
+chattool setup codex --pam "sk-xxx"
 ```
 
 如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
@@ -75,7 +75,7 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 
 解析顺序为：
 
-1. 显式参数：`--pam`、`--base-url`、`--model`
+1. 显式参数：`--pam`（OpenAI API key）、`--base-url`、`--model`
 2. `-e/--env` 指定的 OpenAI 配置
 3. 当前 `oai/openai` 生效配置
 4. 现有 `~/.codex/` 配置
@@ -84,7 +84,7 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
+chattool setup codex --pam "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 ### 0.2 Claude Code (`setup claude`)
@@ -168,13 +168,15 @@ lark-cli auth login --recommend
 把一个目录快速初始化或更新为工作区：
 
 1. clone `ChatTool/`
-2. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
-3. 创建 `Memory/`、`skills/`、`scratch/`
-4. 从 clone 出来的 `ChatTool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+2. 运行 `git submodule update --init --recursive`
+3. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
+4. 创建 `Memory/`、`skills/`、`scratch/`
+5. 从 clone 出来的 `ChatTool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
 
 如果目标目录已经是已有工作区，再次执行时会进入更新模式：
 
 - 优先更新 `ChatTool/` 仓库；如果仓库里有本地改动，则默认跳过仓库更新，避免覆盖工作区中的开发状态
+- 仓库完成 clone / fast-forward 后，会自动执行 `git submodule update --init --recursive`，确保诸如 `lark-cli/` 这类子模块同步到当前仓库版本
 - 交互模式下会提示是否同步工作区 `skills/`
 - 同步 `skills/` 时只覆盖常规文件，不会改动各 skill 下的 `experience/`
 - 已存在的工作区说明文件默认仍然保留；只有显式传 `--force` 时才会覆盖这些生成文件

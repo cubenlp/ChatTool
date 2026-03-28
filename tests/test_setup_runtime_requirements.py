@@ -29,7 +29,7 @@ def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp
     def fake_ask_text(message, default="", password=False):
         events.append(("prompt", message))
         prompts.append((message, default, password))
-        if "preferred_auth_method" in message:
+        if "OPENAI_API_KEY" in message:
             return "cr_test_token"
         return default
 
@@ -43,10 +43,14 @@ def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp
     codex_module.setup_codex(interactive=None)
 
     assert events[0] == ("nodejs", None, True)
+    assert prompts[0][0].startswith("OPENAI_API_KEY")
     assert prompts[1] == ("base_url (optional)", "https://api.openai.com/v1", False)
     assert prompts[2] == ("default model (optional)", "gpt-5.4", False)
     config_text = (tmp_path / ".codex" / "config.toml").read_text(encoding="utf-8")
     assert 'model = "gpt-5.4"' in config_text
+    assert 'preferred_auth_method = "apikey"' in config_text
+    auth_text = (tmp_path / ".codex" / "auth.json").read_text(encoding="utf-8")
+    assert '"OPENAI_API_KEY": "cr_test_token"' in auth_text
 
 
 def test_setup_claude_checks_nodejs_before_prompts_and_uses_new_default_model(tmp_path, monkeypatch):
