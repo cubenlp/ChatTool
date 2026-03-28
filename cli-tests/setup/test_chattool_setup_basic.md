@@ -63,7 +63,7 @@ chattool setup frp -i
 chattool setup nodejs -i
 ```
 
-## 用例 4：cc-connect/codex/claude/opencode
+## 用例 4：cc-connect/codex/claude/opencode/lark-cli
 
 - 初始环境准备：
   - 准备 API key 与 base_url。
@@ -76,6 +76,7 @@ chattool setup nodejs -i
   3. 执行 `chattool setup codex -e work` 时，预期可显式从 `OpenAI` profile 读取 `OPENAI_API_KEY`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`。
   4. 执行 `chattool setup claude -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
   5. 执行 `chattool setup opencode -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级，然后再进入交互式配置流程。
+  6. 执行 `chattool setup lark-cli -i`，预期在收集配置前先检查 Node.js（>= 20）；若不满足，则先提示是否执行 `chattool setup nodejs` 进行安装/升级；随后可直接复用当前 ChatTool Feishu 配置或显式 `-e` 指定的 profile，并调用官方 `lark-cli config init --app-secret-stdin` 落盘到 `~/.lark-cli/config.json`（或 `LARKSUITE_CLI_CONFIG_DIR/config.json`）。
 
 参考执行脚本（伪代码）：
 
@@ -85,6 +86,7 @@ chattool setup codex -i
 chattool setup codex -e work
 chattool setup claude -i
 chattool setup opencode -i
+chattool setup lark-cli -i
 ```
 
 ## 用例 5：playground

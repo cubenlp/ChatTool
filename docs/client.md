@@ -12,10 +12,10 @@ CLI按功能分为几个命令组：
 - **`serve`**: 本地服务器实用工具（例如，请求捕获）。
 - **`client`**: 远程服务客户端工具。
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
-- **`lark`**: 飞书机器人与云文档工具。
+- **`lark`**: 保留的飞书最小调试命令（`info` / `send` / `chat`）。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
@@ -125,7 +125,45 @@ chattool setup opencode
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 ```
 
-### 0.4 Playground (`setup playground`)
+### 0.4 Lark CLI (`setup lark-cli`)
+
+安装官方 `lark-cli`，并把 ChatTool 当前生效的 Feishu 配置复用过去：
+
+```bash
+chattool setup lark-cli
+```
+
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 `lark-cli` 的配置流程。
+
+如果你已经在 `chatenv` 里维护了 `feishu/lark` 配置，也可以显式复用：
+
+```bash
+chattool setup lark-cli -e work
+chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
+```
+
+这里的 `-e/--env` 支持两种形式：
+
+- `.env` 文件路径
+- `Feishu` 类型下保存过的 profile 名称，例如 `work`
+
+解析顺序为：
+
+1. 显式参数：`--app-id`、`--app-secret`、`--brand`
+2. `-e/--env` 指定的 Feishu 配置
+3. 当前 `feishu/lark` 生效配置
+4. 现有 `~/.lark-cli/config.json` 中的 app 元信息
+5. 默认品牌值 `feishu`
+
+默认情况下，官方 `lark-cli` 配置写到 `~/.lark-cli/config.json`；若设置了 `LARKSUITE_CLI_CONFIG_DIR`，则改写到该目录下的 `config.json`。
+
+执行完成后，下一步再运行：
+
+```bash
+lark-cli auth login --recommend
+```
+
+### 0.5 Playground (`setup playground`)
 
 把一个目录快速初始化或更新为工作区：
 

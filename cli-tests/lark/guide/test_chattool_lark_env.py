@@ -26,7 +26,9 @@ def test_chattool_lark_env(lark_testkit):
     assert "激活状态" in file_result.output
 
     profile_name = f"pytest-feishu-{lark_testkit.unique_name('profile')}"
-    profile_path = lark_testkit.env_dir / f"{profile_name}.env"
+    profile_dir = lark_testkit.env_dir / "Feishu"
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    profile_path = profile_dir / f"{profile_name}.env"
     profile_path.write_text(env_path.read_text(encoding="utf-8"), encoding="utf-8")
     try:
         profile_result = lark_testkit.invoke("lark", "info", "-e", profile_name)
@@ -35,4 +37,3 @@ def test_chattool_lark_env(lark_testkit):
     finally:
         if profile_path.exists():
             profile_path.unlink()
-

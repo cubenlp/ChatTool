@@ -7,6 +7,7 @@ from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
 from chattool.setup.cc_connect import setup_cc_connect
 from chattool.setup.frp import setup_frp
+from chattool.setup.lark_cli import setup_lark_cli
 from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
@@ -71,6 +72,16 @@ def opencode_setup(base_url, api_key, model, interactive):
         base_url=base_url,
         api_key=api_key,
         model=model,
+        interactive=interactive,
+    )
+
+
+def lark_cli_setup(app_id, app_secret, brand, env_ref, interactive):
+    setup_lark_cli(
+        app_id=app_id,
+        app_secret=app_secret,
+        brand=brand,
+        env_ref=env_ref,
         interactive=interactive,
     )
 
@@ -214,6 +225,33 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--model",),
                 kwargs={"default": None, "help": "Required default model name."},
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="lark-cli",
+        help="Setup official lark-cli and reuse ChatTool Feishu config.",
+        callback=lark_cli_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+            SetupOptionElement(
+                param_decls=("--app-id",),
+                kwargs={"default": None, "help": "Lark/Feishu app id."},
+            ),
+            SetupOptionElement(
+                param_decls=("--app-secret",),
+                kwargs={"default": None, "help": "Lark/Feishu app secret."},
+            ),
+            SetupOptionElement(
+                param_decls=("--brand",),
+                kwargs={"default": None, "type": click.Choice(["feishu", "lark"]), "help": "Official brand value written to lark-cli config."},
+            ),
+            SetupOptionElement(
+                param_decls=("-e", "--env"),
+                kwargs={"default": None, "help": "Load Feishu config from a .env file path or saved Feishu profile name."},
             ),
         ),
     ),

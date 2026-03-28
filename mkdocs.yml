@@ -33,6 +33,7 @@ plugins:
         'setup/index.md': 'env/index.md'
         'setup/chrome.md': 'env/chrome.md'
         'setup/codex.md': 'env/codex.md'
+        'setup/lark-cli.md': 'env/lark-cli.md'
         'setup/frp.md': 'env/frp.md'
         'setup/nginx_proxy.md': 'env/nginx_proxy.md'
         'design/index.md': 'development-guide/index.md'
@@ -148,6 +149,7 @@ nav:
     - 概览: env/index.md
     - Chrome 环境: env/chrome.md
     - Codex 配置: env/codex.md
+    - Lark CLI 配置: env/lark-cli.md
     - OpenCode 配置: env/opencode.md
     - FRP 安装: env/frp.md
     - Nginx 反向代理: env/nginx_proxy.md

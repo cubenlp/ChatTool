@@ -25,7 +25,7 @@ version: 0.5.0
 - 飞书自动化优先复用官方 `lark-cli`，不要再为相同能力补一套平行 skill 文档
 - 有副作用的操作先用 `--dry-run`，并尽量保持最小 scope
 - 需要 Agent 协作登录时，优先用 `lark-cli auth login --no-wait` 和 `--device-code`
-- ChatTool 内遗留的 `chattool lark` 只作为历史实现参考，不再是默认推荐入口
+- ChatTool 内遗留的 `chattool lark` 现在只保留 `info`、`send`、`chat` 三个最小调试命令，不再是默认推荐入口
 
 ## 对应测试
 

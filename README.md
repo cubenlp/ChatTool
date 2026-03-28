@@ -70,13 +70,9 @@ async for chunk in Chat().user("写一首诗").async_get_response_stream():
 
 ```bash
 chattool lark send USER_ID "Hello"
-chattool lark send USER_ID --image photo.png
-chattool lark doc perm-public-set DOC_ID --share-entity same_tenant --link-share-entity tenant_editable
-chattool lark doc perm-member-add DOC_ID USER_ID --member-type userid --perm edit
-chattool lark doc parse-md weekly.md -o weekly.blocks.json
-chattool lark doc append-json DOC_ID weekly.blocks.json
-chattool lark doc append-file DOC_ID weekly.md
-chattool lark notify-doc "周报草稿" --append-file weekly.md
+chattool lark send "Hello"                  # 使用 FEISHU_DEFAULT_RECEIVER_ID
+chattool lark info
+chattool setup lark-cli
 chattool serve lark echo                        # 回显机器人
 chattool serve lark ai --system "你是工作助手"  # AI 对话机器人
 ```
@@ -126,7 +122,7 @@ chattool explore arxiv get 1706.03762 -v
 | 网络扫描 | `chattool network` | 扫描局域网主机和端口 |
 | PyPI 工具 | `chattool pypi` | 创建、检查、构建、校验与发布 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
-| 环境安装 | `chattool setup codex/claude` | 安装 Codex / Claude Code 并写入配置 |
+| 环境安装 | `chattool setup codex/claude/lark-cli` | 安装 Codex / Claude Code / 官方 lark-cli 并写入配置 |
 | Playground | `chattool setup playground` | 初始化工作区，并可在完成后复用 `chatenv` 中的 GitHub token 配置 Git HTTPS 鉴权 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude Code |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
