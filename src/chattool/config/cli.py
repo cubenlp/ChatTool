@@ -197,7 +197,7 @@ def _configure_provider(config_cls):
             
             new_val = ask_text(message, password=True)
             if new_val == BACK_VALUE:
-                return
+                return False
             if new_val:
                 field.value = new_val
         else:
@@ -206,9 +206,10 @@ def _configure_provider(config_cls):
                 default=str(default_val) if default_val is not None else ""
             )
             if new_val == BACK_VALUE:
-                return
+                return False
             if new_val:
                 field.value = new_val
+    return True
 
 
 def _interactive_config_loop(grouped_configs):
@@ -336,6 +337,7 @@ def save_env(name, config_types):
 def new_env(name, config_types):
     """Create a new typed profile from current active config and activate it."""
     config_cls = _resolve_single_config_for_profile_action(config_types, "new")
+    prompt_for_values = False
 
     if not name:
         if not is_interactive_available():
@@ -343,6 +345,7 @@ def new_env(name, config_types):
         name = ask_text("New profile name")
         if name == BACK_VALUE:
             raise click.Abort()
+        prompt_for_values = True
 
     name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
@@ -350,6 +353,9 @@ def new_env(name, config_types):
         click.confirm(f"Profile '{name}' already exists. Overwrite and activate it?", abort=True)
 
     _reload_runtime_config()
+    if prompt_for_values and not _configure_provider(config_cls):
+        raise click.Abort()
+
     target_path.parent.mkdir(parents=True, exist_ok=True)
     target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
 

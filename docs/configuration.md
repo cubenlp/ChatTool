@@ -89,6 +89,9 @@ chat = Chat()
 # 从当前激活配置直接新建一个 profile，并立刻切过去
 chatenv new mini -t feishu
 
+# 省略 profile 名时，会先询问名称，再进入该类型的交互配置
+chatenv new -t openai
+
 # 保存当前 OpenAI 配置为 'dev' 环境
 chatenv save dev -t openai
 
@@ -124,6 +127,7 @@ chatenv delete test -t openai
 - `envs/<Config>/.env` 表示该类型当前激活的默认配置。
 - `envs/<Config>/<profile>.env` 表示该类型下保存的 profile。
 - `chatenv new <profile> -t <type>` 的语义是：从当前激活配置复制一份新 profile，并立刻激活它。
+- `chatenv new -t <type>` 在交互终端里会先询问 profile 名，再像 `init -t <type>` 一样补齐该类型字段，然后写入并激活该 profile。
 - `chatenv use <profile> -t <type>` 的语义是把对应 profile 激活到该类型的 `.env`。
 - 命令如果支持 `-e/--env`，优先接受真实 `.env` 文件路径；如命令做了类型约束，也可以接受该类型下保存过的 profile 名称。
 
