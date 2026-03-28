@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup playground` 现在默认使用工作区仓库目录名 `ChatTool/`；再次执行时会进入更新模式，优先更新现有仓库，并在交互模式下提示是否同步工作区 `skills/`
 - `chattool setup playground` 同步 `skills/` 时现在只覆盖常规文件，继续保留各 skill 下的 `experience/` 目录和历史记录；历史工作区里的 `chattool/` 目录也会自动迁移到 `ChatTool/`
 - 仓库开发规范现在把“绝对禁止 mock”明确写入 `AGENTS.md`、`DEVELOP.md`、`docs/development-guide/` 与 `cli-tests/README.md`：宁可做更窄的真实测试，也不接受用 mock 伪造行为
+- 开发规范现补充说明：GitHub 自动测试当前只覆盖 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 这类第三方链路与大多数真实 CLI 测试；相关能力需要本地单独验证
 - `chattool gh pr-check` 现在支持 `--wait` 轮询等待 CI 结束；默认不设超时，只有显式传 `--timeout` 时才会超时报错
 - `skills/feishu/` 现已收缩为单文件入口，只保留 `SKILL.md` 指向官方 `lark-cli` 与仓库内教程；原有专题 skill 文档与对应 doc-audit 测试一并清理
 - `chattool pypi` 现已收口为最小命令集：只保留 `init/build/check/upload/probe`；移除 `doctor/publish/release`，并取消原有交互式补参与上传封装逻辑，`upload` 直接复用默认 `twine upload` 行为

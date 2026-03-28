@@ -144,6 +144,7 @@ INFO: Start opencode setup
 - **唯一长期维护的测试设计面**：`cli-tests/*.md` 是唯一长期维护的测试设计文档；评审、验收和后续补测都以它为准。
 - **真实执行测试的落点**：`cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现，真实链路测试应标记为 `@pytest.mark.e2e`。
 - **绝对禁止 mock**：宁可做更窄、更针对性的真实测试，也绝不允许用 mock 伪造行为。mock 对真实表现没有验收价值，还容易误导实现是否真的成立。
+- **GitHub 自动测试范围有限**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 `lark` / `dns` 等第三方链路与大多数 `@pytest.mark.e2e`；不要把“GitHub CI 通过”误当成这些能力已验收。
 - **`tests/` 的定位**：仓库根下 `tests/` 视为弃用区，只保留历史参考，不再作为新开发的默认测试落点，也不再作为交付要求。
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
 - 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。

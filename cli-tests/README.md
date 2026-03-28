@@ -9,6 +9,7 @@
 - 文档先行：每个命令先落 `.md`，再决定是否补 `.py`。
 - 真实链路：以真实 CLI 链路为准；对应 `.py` 应标记 `@pytest.mark.e2e`。
 - 绝对禁止 mock：宁可缩小测试范围，也不能使用 mock 伪造行为。
+- GitHub 自动测试当前只跑 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 与大多数真实链路用例；相关 `.md` / `.py` 需要本地单独执行。
 - 模板一致：以 `cli-tests/env/test_chattool_env_basic.md` 为模板。
 - 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认维护面。
 
