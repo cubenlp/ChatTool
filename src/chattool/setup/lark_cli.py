@@ -128,6 +128,61 @@ def _load_existing_lark_cli_config(config_path: Path) -> dict[str, str | None]:
     return existing
 
 
+def _load_existing_lark_cli_users(config_path: Path) -> list[dict]:
+    if not config_path.exists():
+        return []
+
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+    apps = data.get("apps")
+    if not isinstance(apps, list) or not apps:
+        return []
+
+    app = apps[0]
+    if not isinstance(app, dict):
+        return []
+
+    users = app.get("users")
+    if not isinstance(users, list):
+        return []
+
+    return [user for user in users if isinstance(user, dict)]
+
+
+def _write_lark_cli_file_secret_config(
+    config_path: Path,
+    app_id: str,
+    app_secret: str,
+    brand: str,
+) -> Path:
+    config_dir = config_path.parent
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    secret_path = config_dir / "app-secret.txt"
+    secret_path.write_text(f"{app_secret}\n", encoding="utf-8")
+    secret_path.chmod(0o600)
+
+    config_payload = {
+        "apps": [
+            {
+                "appId": app_id,
+                "appSecret": {"source": "file", "id": str(secret_path)},
+                "brand": brand,
+                "users": _load_existing_lark_cli_users(config_path),
+            }
+        ]
+    }
+    config_path.write_text(
+        json.dumps(config_payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    config_path.chmod(0o600)
+    return secret_path
+
+
 def _run_lark_cli_command(args: list[str], input_text: str | None = None) -> subprocess.CompletedProcess[str]:
     runtime = _detect_nodejs_runtime()
     if runtime.get("source") == "nvm":
@@ -261,13 +316,27 @@ def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, inter
         input_text=f"{app_secret}\n",
     )
     if init_result.returncode != 0:
-        logger.error("Failed to initialize lark-cli config")
-        click.echo("Failed to initialize lark-cli config.", err=True)
-        if init_result.stderr:
-            click.echo(init_result.stderr.strip(), err=True)
-        elif init_result.stdout:
-            click.echo(init_result.stdout.strip(), err=True)
-        raise click.Abort()
+        stderr_text = (init_result.stderr or "").strip()
+        stdout_text = (init_result.stdout or "").strip()
+        combined_output = "\n".join(part for part in [stderr_text, stdout_text] if part)
+        if "keychain unavailable" in combined_output:
+            logger.warning("lark-cli keychain unavailable, falling back to file secret reference")
+            secret_path = _write_lark_cli_file_secret_config(
+                config_path=config_path,
+                app_id=str(app_id),
+                app_secret=str(app_secret),
+                brand=str(brand),
+            )
+            click.echo("lark-cli keychain unavailable; wrote config with file secret reference.")
+            click.echo(f"Secret file: {secret_path}")
+        else:
+            logger.error("Failed to initialize lark-cli config")
+            click.echo("Failed to initialize lark-cli config.", err=True)
+            if stderr_text:
+                click.echo(stderr_text, err=True)
+            elif stdout_text:
+                click.echo(stdout_text, err=True)
+            raise click.Abort()
 
     click.echo("lark-cli setup completed.")
     click.echo(f"Config dir: {config_dir}")
