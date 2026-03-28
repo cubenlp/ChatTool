@@ -55,10 +55,10 @@ chattool setup codex
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
 
-直接传参：
+直接传 API key（当前 `--preferred-auth-method` / `--pam` 实际承载的是 `OPENAI_API_KEY`）：
 
 ```bash
-chattool setup codex --pam "cr_xxx"
+chattool setup codex --pam "sk-xxx"
 ```
 
 如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
@@ -75,7 +75,7 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 
 解析顺序为：
 
-1. 显式参数：`--pam`、`--base-url`、`--model`
+1. 显式参数：`--pam`（OpenAI API key）、`--base-url`、`--model`
 2. `-e/--env` 指定的 OpenAI 配置
 3. 当前 `oai/openai` 生效配置
 4. 现有 `~/.codex/` 配置
@@ -84,7 +84,7 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --pam "cr_xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
+chattool setup codex --pam "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 ### 0.2 Claude Code (`setup claude`)

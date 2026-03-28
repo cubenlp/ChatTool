@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Feishu 真实测试与文档说明现在回到生产口径，不再引入独立的 `FEISHU_TEST_USER_ID` / `FEISHU_TEST_USER_ID_TYPE`
 
 ### Fixed
+- `chattool setup codex` 现在不再把实际 API key 错写进 `preferred_auth_method`：`config.toml` 中该字段固定为 `"apikey"`，真实密钥只写入 `auth.json` 的 `OPENAI_API_KEY`
 - `chatenv new -t <type>` 在交互终端里不再退化成单纯的 `save` 语义：省略 profile 名时现在会先询问名称，再进入该类型字段填写，然后写入并激活新 profile
 - `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败
 - `chattool gh pr-merge` 新增可选的 `--check` 开关，用于在合并前显式检查 check runs 与 workflow runs，避免再次误把带红 CI 的 PR 当成可安全合并

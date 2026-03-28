@@ -19,6 +19,7 @@ from chattool.utils.tui import BACK_VALUE, ask_text
 
 DEFAULT_MODEL = "gpt-5.4"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
+DEFAULT_AUTH_METHOD = "apikey"
 logger = setup_logger("setup_codex")
 
 
@@ -134,7 +135,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
     existing = _load_existing_codex_config(codex_dir)
     current_openai = _snapshot_openai_values()
     env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
-    existing_auth = existing.get("openai_api_key") or existing.get("preferred_auth_method")
+    existing_api_key = existing.get("openai_api_key")
     logger.info("Start codex setup")
 
     if isinstance(base_url, str) and not base_url.strip():
@@ -142,17 +143,17 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
     if isinstance(model, str) and not model.strip():
         model = None
 
-    auth_method = (
+    api_key = (
         preferred_auth_method
         or env_config.get("openai_api_key")
         or current_openai.get("openai_api_key")
-        or existing_auth
+        or existing_api_key
     )
-    missing_required = not auth_method
+    missing_required = not api_key
     has_existing_config = any(
         value for key, value in existing.items() if key != "openai_api_key"
     ) or bool(existing.get("openai_api_key"))
-    usage = "Usage: chattool setup codex [--preferred-auth-method <value>] [--base-url <value>] [--model <value>] [-e <openai-env>] [-i|-I]"
+    usage = "Usage: chattool setup codex [--preferred-auth-method <openai-api-key>] [--base-url <value>] [--model <value>] [-e <openai-env>] [-i|-I]"
     interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
         interactive=interactive,
         auto_prompt_condition=(missing_required or has_existing_config),
@@ -169,25 +170,25 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
             missing_required=missing_required,
             interactive=interactive,
             can_prompt=can_prompt,
-            message="Missing required argument --preferred-auth-method and no TTY is available for interactive prompts.",
+            message="Missing required OpenAI API key and no TTY is available for interactive prompts.",
             usage=usage,
         )
     except click.Abort:
-        logger.error("Missing required argument --preferred-auth-method and no TTY available")
+        logger.error("Missing required OpenAI API key and no TTY available")
         raise
 
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
 
     if need_prompt:
-        auth_for_prompt = auth_method
-        auth_label = "preferred_auth_method / OPENAI_API_KEY"
-        if auth_for_prompt:
-            auth_label = f"{auth_label} (current: {_mask_secret(auth_for_prompt)}, enter to keep)"
-        auth_method = ask_text(auth_label, password=True)
-        if auth_method == BACK_VALUE:
+        api_key_for_prompt = api_key
+        api_key_label = "OPENAI_API_KEY"
+        if api_key_for_prompt:
+            api_key_label = f"{api_key_label} (current: {_mask_secret(api_key_for_prompt)}, enter to keep)"
+        api_key = ask_text(api_key_label, password=True)
+        if api_key == BACK_VALUE:
             return
-        if not auth_method and auth_for_prompt:
-            auth_method = auth_for_prompt
+        if not api_key and api_key_for_prompt:
+            api_key = api_key_for_prompt
 
         base_url_default = (
             base_url
@@ -211,9 +212,9 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         if model == BACK_VALUE:
             return
 
-    if not auth_method:
-        logger.error("Missing auth method")
-        click.echo("Missing auth method.", err=True)
+    if not api_key:
+        logger.error("Missing OpenAI API key")
+        click.echo("Missing OpenAI API key.", err=True)
         raise click.Abort()
 
     if should_install_global_npm_package(
@@ -253,7 +254,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         f'model = "{model}"\n'
         'model_reasoning_effort = "high"\n'
         'disable_response_storage = true\n'
-        f'preferred_auth_method = "{auth_method}"\n\n'
+        f'preferred_auth_method = "{DEFAULT_AUTH_METHOD}"\n\n'
         '[model_providers.crs]\n'
         'name = "crs"\n'
         f'base_url = "{base_url}"\n'
@@ -265,7 +266,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
     config_path.chmod(0o600)
     logger.info(f"Wrote config file: {config_path}")
 
-    auth_json = {"OPENAI_API_KEY": auth_method}
+    auth_json = {"OPENAI_API_KEY": api_key}
     auth_path = codex_dir / "auth.json"
     auth_path.write_text(json.dumps(auth_json, ensure_ascii=False, indent=2), encoding="utf-8")
     auth_path.chmod(0o600)
