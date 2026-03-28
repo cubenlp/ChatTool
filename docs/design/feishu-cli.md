@@ -1,6 +1,15 @@
 # ChatTool Feishu 设计
 
-> 目标：把飞书能力统一整理成一套可持续演进的 ChatTool 开发结构。这个文档不是现状调研，而是后续开发时应对齐的目标形态。
+> 说明：本设计文档保留为历史实现参考。当前默认路线已经切到官方 `lark-cli`，`skills/feishu/` 仅保留一个入口文件把使用者路由到 `larksuite/cli`。
+
+## 当前默认路线
+
+- 默认优先使用官方 `lark-cli`：`https://github.com/larksuite/cli`
+- ChatTool 内 `skills/feishu/` 只保留 `SKILL.md` 作为跳转入口
+- `docs/blog/agent-cli/lark-cli-guide.md` 负责维护当前推荐用法
+- `chattool lark` 相关设计内容仅作为仓库内遗留实现和迁移背景参考
+
+## 历史设计目标
 
 ## 设计目标
 

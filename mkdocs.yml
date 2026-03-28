@@ -169,6 +169,7 @@ nav:
       - Codex CLI 教程: blog/agent-cli/codex-cli-guide.md
       - OpenCode CLI 教程: blog/agent-cli/opencode-cli-guide.md
       - Claude Code CLI 教程: blog/agent-cli/claude-cli-guide.md
+      - Lark CLI 教程: blog/agent-cli/lark-cli-guide.md
       - cc-connect 教程: blog/agent-cli/cc-connect-guide.md
       - cc-connect 编排教程: blog/agent-cli/cc-connect-orchestration.md
     - 白嫖 AI 生图实战: blog/free-image-guide.md

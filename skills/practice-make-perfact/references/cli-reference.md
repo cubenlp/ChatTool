@@ -25,8 +25,10 @@ Use it when a task already works and you need to decide whether the result shoul
 
 - `chattool lark --help`
 - `chattool lark doc --help`
+- `lark-cli --help`
 - Docs: `docs/tools/lark/index.md`
-- Skill reference: `skills/feishu/guide/api-reference.md`
+- Blog guide: `docs/blog/agent-cli/lark-cli-guide.md`
+- Skill pointer: `skills/feishu/SKILL.md`
 
 ### Setup / local tooling
 

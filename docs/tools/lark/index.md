@@ -23,11 +23,10 @@
 - 消息读取与资源下载：`im list`、`im download`
 - 常见排障入口：`troubleshoot doctor/check-scopes/check-events/check-card-action`
 
-如果你的目标是继续扩展 Feishu 能力，而不是只执行现有命令，请先同时阅读：
+如果你的目标是继续扩展 Feishu 能力，而不是只执行现有命令，请先阅读：
 
 - `skills/feishu/SKILL.md`
-- `skills/feishu/guide/setup-and-routing.md`
-- `skills/feishu/guide/api-reference.md`
+- `docs/blog/agent-cli/lark-cli-guide.md`
 - `docs/design/feishu-cli.md`
 
 ## 前置准备
@@ -454,7 +453,7 @@ chattool lark troubleshoot check-scopes --send-card --receiver <user_id>
 - 列出协作者：`https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-member/list`
 - 添加协作者：`https://open.feishu.cn/document/server-docs/docs/drive-v1/permission-member/create`
 
-如果当前能力缺口具有复用价值，优先把结果沉淀回 `src/chattool/tools/lark/` 和 `skills/feishu/`。
+如果当前能力缺口具有复用价值，优先判断是否应直接转向官方 `lark-cli`；只有确实属于 ChatTool 内部遗留实现维护时，才继续沉淀到 `src/chattool/tools/lark/`。
 
 ## 常见排查顺序
 

@@ -1,0 +1,4 @@
+[submodule "lark-cli"]
+	path = lark-cli
+	url = https://github.com/larksuite/cli.git
+	branch = main
