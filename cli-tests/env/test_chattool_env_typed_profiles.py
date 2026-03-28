@@ -58,6 +58,26 @@ def test_env_typed_profile_roundtrip(tmp_path: Path):
     assert active_path.read_text(encoding="utf-8") == profile_path.read_text(encoding="utf-8")
 
 
+def test_env_new_typed_profile_creates_and_activates(tmp_path: Path):
+    config_dir = tmp_path / "config"
+
+    result = _run_chattool_env(["set", "FEISHU_APP_ID=cli-one"], config_dir=config_dir)
+    assert result.returncode == 0, result.stderr
+    result = _run_chattool_env(["set", "FEISHU_APP_SECRET=secret-one"], config_dir=config_dir)
+    assert result.returncode == 0, result.stderr
+
+    result = _run_chattool_env(["new", "mini", "-t", "feishu"], config_dir=config_dir)
+    assert result.returncode == 0, result.stderr
+    assert "Created and activated Feishu profile 'mini.env'" in result.stdout
+
+    active_path = config_dir / "envs" / "Feishu" / ".env"
+    profile_path = config_dir / "envs" / "Feishu" / "mini.env"
+    assert active_path.exists()
+    assert profile_path.exists()
+    assert "FEISHU_APP_ID='cli-one'" in profile_path.read_text(encoding="utf-8")
+    assert active_path.read_text(encoding="utf-8") == profile_path.read_text(encoding="utf-8")
+
+
 def test_env_os_environment_overrides_typed_env_file(tmp_path: Path):
     config_dir = tmp_path / "config"
 

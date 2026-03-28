@@ -7,7 +7,11 @@ from chattool.setup.interactive import (
     abort_if_missing_without_tty,
     resolve_interactive_mode,
 )
-from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
+from chattool.setup.nodejs import (
+    ensure_nodejs_requirement,
+    run_npm_command,
+    should_install_global_npm_package,
+)
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -148,14 +152,20 @@ def setup_opencode(base_url=None, api_key=None, model=None, interactive=None):
         click.echo("Missing base_url, api_key, or model.", err=True)
         raise click.Abort()
 
-    logger.info("Installing opencode cli with npm")
-    result = run_npm_command(["install", "-g", "opencode-ai"])
-    if result.returncode != 0:
-        logger.error("Failed to install opencode cli")
-        click.echo("Failed to install opencode.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
-        raise click.Abort()
+    if should_install_global_npm_package(
+        "opencode-ai",
+        "OpenCode CLI",
+        interactive=interactive,
+        can_prompt=can_prompt,
+    ):
+        logger.info("Installing opencode cli with npm")
+        result = run_npm_command(["install", "-g", "opencode-ai"])
+        if result.returncode != 0:
+            logger.error("Failed to install opencode cli")
+            click.echo("Failed to install opencode.", err=True)
+            if result.stderr:
+                click.echo(result.stderr.strip(), err=True)
+            raise click.Abort()
 
     config_payload = config_data if isinstance(config_data, dict) else {}
     config_payload["$schema"] = "https://opencode.ai/config.json"

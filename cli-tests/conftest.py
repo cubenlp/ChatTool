@@ -63,10 +63,9 @@ def lark_testkit(tmp_path: Path):
         pytest.skip("Feishu config is not available")
 
     default_receiver_id = FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
-    test_user_id = FeishuConfig.FEISHU_TEST_USER_ID.value or None
-    test_user_id_type = FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id"
-    message_receiver_id = default_receiver_id or test_user_id
-    message_receiver_type = "user_id" if default_receiver_id else test_user_id_type
+    default_chat_id = FeishuConfig.FEISHU_DEFAULT_CHAT_ID.value or None
+    message_receiver_id = default_receiver_id
+    message_receiver_type = "user_id"
 
     def invoke(*args: str):
         runner = CliRunner()
@@ -117,8 +116,7 @@ def lark_testkit(tmp_path: Path):
         message_receiver_id=message_receiver_id,
         message_receiver_type=message_receiver_type,
         default_receiver_id=default_receiver_id,
-        test_user_id=test_user_id,
-        test_user_id_type=test_user_id_type,
+        default_chat_id=default_chat_id,
         message_id_from_output=lambda output: _extract_match(
             output,
             r"message_id=([A-Za-z0-9_]+)",

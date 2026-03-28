@@ -86,6 +86,9 @@ chat = Chat()
 你可以按配置类型保存多个 profile 并单独切换：
 
 ```bash
+# 从当前激活配置直接新建一个 profile，并立刻切过去
+chatenv new mini -t feishu
+
 # 保存当前 OpenAI 配置为 'dev' 环境
 chatenv save dev -t openai
 
@@ -120,6 +123,7 @@ chatenv delete test -t openai
 
 - `envs/<Config>/.env` 表示该类型当前激活的默认配置。
 - `envs/<Config>/<profile>.env` 表示该类型下保存的 profile。
+- `chatenv new <profile> -t <type>` 的语义是：从当前激活配置复制一份新 profile，并立刻激活它。
 - `chatenv use <profile> -t <type>` 的语义是把对应 profile 激活到该类型的 `.env`。
 - 命令如果支持 `-e/--env`，优先接受真实 `.env` 文件路径；如命令做了类型约束，也可以接受该类型下保存过的 profile 名称。
 
@@ -175,14 +179,14 @@ BaseEnvConfig.print_config()
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
-- **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID`, `FEISHU_TEST_USER_ID`, `FEISHU_TEST_USER_ID_TYPE` 等
+- **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID`, `FEISHU_DEFAULT_CHAT_ID` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 - **GitHub**: `GITHUB_ACCESS_TOKEN`, `GITHUB_DEFAULT_REPO`
 
 其中飞书相关有两个额外约定：
 
-- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` 提供默认发送目标。
-- `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE`：给 `@pytest.mark.lark` 真实测试提供统一测试用户，推荐配合 `chatenv cat -t feishu` 一起查看。
+- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` 提供默认用户发送目标。
+- `FEISHU_DEFAULT_CHAT_ID`：给 `chattool lark send -t chat_id` 提供默认群聊发送目标。
 
 ## SVG 转 GIF 服务配置
 

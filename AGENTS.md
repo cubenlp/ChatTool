@@ -70,6 +70,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - **唯一长期维护的测试设计面**：`cli-tests/*.md` 是唯一长期维护的测试设计文档。
 - **真实执行测试**：`cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现；真实链路测试应标记为 `@pytest.mark.e2e`。
 - **绝对禁止 mock**：宁可做范围更窄、更针对性的真实测试，也绝不允许用 mock 伪造行为。mock 对真实表现没有验收价值，且容易误导实现判断。
+- **GitHub 自动测试边界**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 `lark` / `dns` 这类第三方链路与大多数真实 CLI 测试；本地验证不能省。
 - **`tests/` 定位**：仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新功能默认测试落点或交付要求。
 - **第三方集成规则**：真实测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。

@@ -1,6 +1,6 @@
 # test_chattool_env_typed_profiles
 
-测试按类型拆分后的 env 目录模型，覆盖 profile 保存/切换，以及显式 `-e` 配置对运行时优先级的影响。
+测试按类型拆分后的 env 目录模型，覆盖 profile 新建/保存/切换，以及显式 `-e` 配置对运行时优先级的影响。
 
 ## 元信息
 
@@ -11,7 +11,7 @@
 - 环境准备：使用临时目录作为 `CHATTOOL_CONFIG_DIR`，在真实文件系统中构造 `envs/<Config>/`。
 - 回滚：测试结束后临时目录自动删除。
 
-## 用例 1：按类型保存与切换 profile
+## 用例 1：按类型新建、保存与切换 profile
 
 - 初始环境准备：
   - 创建临时配置目录。
@@ -22,13 +22,17 @@
 
 预期过程和结果：
   1. 执行 `chattool env save work -t openai`，预期生成 `envs/OpenAI/work.env`。
-  2. 修改当前 `envs/OpenAI/.env` 后执行 `chattool env use work -t openai`，预期活动配置恢复为保存内容。
+  2. 执行 `chattool env new mini -t feishu`，预期生成 `envs/Feishu/mini.env`，并立即激活。
+  3. 修改当前 `envs/OpenAI/.env` 后执行 `chattool env use work -t openai`，预期活动配置恢复为保存内容。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool env set OPENAI_API_KEY=sk-one
 chattool env save work -t openai
+chattool env set FEISHU_APP_ID=cli-one
+chattool env set FEISHU_APP_SECRET=secret-one
+chattool env new mini -t feishu
 chattool env set OPENAI_API_KEY=sk-two
 chattool env use work -t openai
 ```

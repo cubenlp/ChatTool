@@ -41,6 +41,7 @@ export FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ```bash
 chatenv set FEISHU_DEFAULT_RECEIVER_ID=f25gc16d
+chatenv set FEISHU_DEFAULT_CHAT_ID=oc_xxxxx
 ```
 
 ## `-e/--env`
@@ -80,9 +81,18 @@ chattool lark info -e work
 chattool lark send "你好"
 chattool lark send f25gc16d "你好"
 chattool lark send oc_xxxxx "群通知" -t chat_id
+chattool lark send -t chat_id "群通知"
 ```
 
-如果配置了 `FEISHU_DEFAULT_RECEIVER_ID`，单参数形式会被视为消息文本，自动发给默认接收者。
+如果配置了 `FEISHU_DEFAULT_RECEIVER_ID`，单参数形式会被视为消息文本，自动发给默认用户。
+
+如果配置了 `FEISHU_DEFAULT_CHAT_ID`，则可以直接：
+
+```bash
+chattool lark send -t chat_id "群通知"
+```
+
+这时 CLI 会自动把消息发给默认群聊。
 
 ### 本地调试 AI 对话
 
@@ -110,5 +120,6 @@ lark-cli auth login --recommend
 进一步阅读：
 
 - `docs/blog/agent-cli/lark-cli-guide.md`
+- `docs/blog/agent-cli/feishu-cli-doc-practice.md`
 - `docs/env/lark-cli.md`
 - `skills/feishu/SKILL.md`

@@ -9,7 +9,11 @@ from chattool.setup.interactive import (
     abort_if_missing_without_tty,
     resolve_interactive_mode,
 )
-from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
+from chattool.setup.nodejs import (
+    ensure_nodejs_requirement,
+    run_npm_command,
+    should_install_global_npm_package,
+)
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -212,14 +216,20 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         click.echo("Missing auth method.", err=True)
         raise click.Abort()
 
-    logger.info("Installing codex cli with npm")
-    result = run_npm_command(["install", "-g", "@openai/codex@latest"])
-    if result.returncode != 0:
-        logger.error("Failed to install codex cli")
-        click.echo("Failed to install codex.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
-        raise click.Abort()
+    if should_install_global_npm_package(
+        "@openai/codex",
+        "Codex CLI",
+        interactive=interactive,
+        can_prompt=can_prompt,
+    ):
+        logger.info("Installing codex cli with npm")
+        result = run_npm_command(["install", "-g", "@openai/codex@latest"])
+        if result.returncode != 0:
+            logger.error("Failed to install codex cli")
+            click.echo("Failed to install codex.", err=True)
+            if result.stderr:
+                click.echo(result.stderr.strip(), err=True)
+            raise click.Abort()
 
     base_url = (
         base_url

@@ -9,6 +9,7 @@
 - 文档先行：每个命令先落 `.md`，再决定是否补 `.py`。
 - 真实链路：以真实 CLI 链路为准；对应 `.py` 应标记 `@pytest.mark.e2e`。
 - 绝对禁止 mock：宁可缩小测试范围，也不能使用 mock 伪造行为。
+- GitHub 自动测试当前只跑 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 与大多数真实链路用例；相关 `.md` / `.py` 需要本地单独执行。
 - 模板一致：以 `cli-tests/env/test_chattool_env_basic.md` 为模板。
 - 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认维护面。
 
@@ -42,6 +43,6 @@
 
 - Feishu 测试设计统一放到 `cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留一个入口 `SKILL.md`，不再要求与 skill 子目录逐一对齐。
 - Feishu 真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为规范依据。
-- Feishu 测试文档至少显式列出：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
+- Feishu 测试文档至少显式列出：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`。
 - Feishu 测试文档必须说明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
-- 对消息相关任务，优先把 `FEISHU_DEFAULT_RECEIVER_ID` 当作默认测试目标；`FEISHU_TEST_USER_ID` 只在需要隔离真实测试用户时再单独指定。
+- 对消息相关任务，优先把 `FEISHU_DEFAULT_RECEIVER_ID` 当作默认用户目标，把 `FEISHU_DEFAULT_CHAT_ID` 当作默认群聊目标。

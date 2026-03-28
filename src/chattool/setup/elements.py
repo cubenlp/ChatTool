@@ -44,12 +44,12 @@ def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(preferred_auth_method, base_url, model, env_ref, interactive):
+def codex_setup(preferred_auth_method, base_url, model, env, interactive):
     setup_codex(
         preferred_auth_method=preferred_auth_method,
         base_url=base_url,
         model=model,
-        env_ref=env_ref,
+        env_ref=env,
         interactive=interactive,
     )
 
@@ -76,12 +76,12 @@ def opencode_setup(base_url, api_key, model, interactive):
     )
 
 
-def lark_cli_setup(app_id, app_secret, brand, env_ref, interactive):
+def lark_cli_setup(app_id, app_secret, brand, env, interactive):
     setup_lark_cli(
         app_id=app_id,
         app_secret=app_secret,
         brand=brand,
-        env_ref=env_ref,
+        env_ref=env,
         interactive=interactive,
     )
 

@@ -21,3 +21,7 @@ def test_chattool_lark_skill_index():
     assert "https://github.com/larksuite/cli" in text
     assert "docs/blog/agent-cli/lark-cli-guide.md" in text
     assert "lark-cli/" in text
+    assert "docs +create" in text
+    assert "permission.members" in text
+    assert "wiki spaces get_node" in text
+    assert "chattool lark info" in text

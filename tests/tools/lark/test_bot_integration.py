@@ -7,8 +7,7 @@ Set the following environment variables (or put them in .env):
 
     FEISHU_APP_ID=<your app id>
     FEISHU_APP_SECRET=<your app secret>
-    FEISHU_TEST_USER_ID=<your test user id>
-    FEISHU_TEST_USER_ID_TYPE=user_id
+    FEISHU_DEFAULT_RECEIVER_ID=<your default user id>
 
 Run only these tests:
 
@@ -38,8 +37,8 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-TEST_USER_ID = FeishuConfig.FEISHU_TEST_USER_ID.value or FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
-USER_ID_TYPE = FeishuConfig.FEISHU_TEST_USER_ID_TYPE.value or "user_id"
+TEST_USER_ID = FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
+USER_ID_TYPE = "user_id"
 
 # ---------------------------------------------------------------------------
 # Helper
@@ -62,7 +61,7 @@ def assert_ok(response, label: str = ""):
 def require_test_user() -> str:
     """Return the configured test user ID or skip real-message tests."""
     if not TEST_USER_ID:
-        pytest.skip("需要在 `.env` 或环境变量中设置 FEISHU_TEST_USER_ID，或至少配置 FEISHU_DEFAULT_RECEIVER_ID，才能执行真实飞书消息测试")
+        pytest.skip("需要在 `.env` 或环境变量中设置 FEISHU_DEFAULT_RECEIVER_ID，才能执行真实飞书消息测试")
     return TEST_USER_ID
 
 # ---------------------------------------------------------------------------

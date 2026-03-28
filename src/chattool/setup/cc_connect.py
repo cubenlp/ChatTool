@@ -1,7 +1,11 @@
 import click
 
 from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
-from chattool.setup.nodejs import ensure_nodejs_requirement, run_npm_command
+from chattool.setup.nodejs import (
+    ensure_nodejs_requirement,
+    run_npm_command,
+    should_install_global_npm_package,
+)
 from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_cc_connect")
@@ -19,9 +23,12 @@ def setup_cc_connect(interactive=None):
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
 
     logger.info("Checking cc-connect installation")
-    check_result = run_npm_command(["list", "-g", "cc-connect", "--depth=0"])
-    if check_result.returncode == 0:
-        click.echo("cc-connect 已安装。")
+    if not should_install_global_npm_package(
+        "cc-connect",
+        "cc-connect",
+        interactive=interactive,
+        can_prompt=can_prompt,
+    ):
         return
 
     click.echo("未检测到 cc-connect，正在安装 (npm install -g cc-connect)...")
