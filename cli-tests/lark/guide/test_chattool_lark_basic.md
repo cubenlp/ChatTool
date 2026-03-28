@@ -12,8 +12,7 @@
   - `FEISHU_APP_ID`
   - `FEISHU_APP_SECRET`
   - `FEISHU_DEFAULT_RECEIVER_ID`
-  - `FEISHU_TEST_USER_ID`（可选；仅在 CLI 真实测试需要隔离目标时指定）
-  - `FEISHU_TEST_USER_ID_TYPE`（可选；默认 `user_id`）
+  - `FEISHU_DEFAULT_CHAT_ID`（可选；用于默认群聊发送）
 - 回滚：删除或忽略测试消息。
 
 ## 用例 1：获取机器人信息
@@ -46,6 +45,12 @@ chattool lark info
 
 ```sh
 chattool lark send <user_id> "hello"
+```
+
+也可以验证默认群聊路径：
+
+```sh
+chattool lark send -t chat_id "hello group"
 ```
 
 ## 用例 3：本地对话

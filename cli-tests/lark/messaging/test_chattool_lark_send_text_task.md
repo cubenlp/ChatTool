@@ -12,8 +12,7 @@
   - `FEISHU_APP_ID`
   - `FEISHU_APP_SECRET`
   - `FEISHU_DEFAULT_RECEIVER_ID`
-  - `FEISHU_TEST_USER_ID`（可选；如未配置，默认复用 `FEISHU_DEFAULT_RECEIVER_ID`）
-  - `FEISHU_TEST_USER_ID_TYPE`（可选；默认 `user_id`）
+  - `FEISHU_DEFAULT_CHAT_ID`（可选；仅在默认群聊发送测试里使用）
 - 回滚：删除或忽略测试消息；若消息会干扰日常对话，手动清理对应会话。
 
 ## 用例 1：使用默认用户发送文本

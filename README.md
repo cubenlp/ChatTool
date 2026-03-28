@@ -71,6 +71,7 @@ async for chunk in Chat().user("写一首诗").async_get_response_stream():
 ```bash
 chattool lark send USER_ID "Hello"
 chattool lark send "Hello"                  # 使用 FEISHU_DEFAULT_RECEIVER_ID
+chattool lark send -t chat_id "Hello team" # 使用 FEISHU_DEFAULT_CHAT_ID
 chattool lark info
 chattool setup lark-cli
 chattool serve lark echo                        # 回显机器人

@@ -147,10 +147,10 @@ INFO: Start opencode setup
 - **`tests/` 的定位**：仓库根下 `tests/` 视为弃用区，只保留历史参考，不再作为新开发的默认测试落点，也不再作为交付要求。
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
 - 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。
-- 如果测试依赖接收者、测试账号或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`，并在对应 `.md` 中写清配置要求与回滚方式。
+- 如果测试依赖接收者、群聊或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`，并在对应 `.md` 中写清配置要求与回滚方式。
 - Feishu 相关测试设计应统一落在 `cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留一个入口文件，不再要求和 skill 子目录一一对齐。
 - Feishu 的真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为主规范依据。
-- Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
+- Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`。
 - Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。

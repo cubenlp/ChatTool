@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool gh pr-check` 现在支持 `--wait` 轮询等待 CI 结束；默认不设超时，只有显式传 `--timeout` 时才会超时报错
 - `skills/feishu/` 现已收缩为单文件入口，只保留 `SKILL.md` 指向官方 `lark-cli` 与仓库内教程；原有专题 skill 文档与对应 doc-audit 测试一并清理
 - `chattool pypi` 现已收口为最小命令集：只保留 `init/build/check/upload/probe`；移除 `doctor/publish/release`，并取消原有交互式补参与上传封装逻辑，`upload` 直接复用默认 `twine upload` 行为
+- `chattool lark send` 现在把默认目标拆成“默认用户”和“默认群聊”两条路径：`FEISHU_DEFAULT_RECEIVER_ID` 继续用于用户消息，新增 `FEISHU_DEFAULT_CHAT_ID` 专门服务 `-t chat_id`
+- Feishu 真实测试与文档说明现在回到生产口径，不再引入独立的 `FEISHU_TEST_USER_ID` / `FEISHU_TEST_USER_ID_TYPE`
 
 ### Fixed
 - `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败
@@ -31,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool lark doc perm-public-get|perm-public-set` 与 `perm-member-list|perm-member-add`，补齐飞书文档权限读取、公开分享更新和显式协作者管理 CLI，避免再为“发出可编辑文档”临时写 SDK 脚本
 - `skills/practice-make-perfact/references/cli-reference.md`，新增后处理阶段的 CLI 参考索引，方便在“手写脚本还是该补 CLI”之间快速做归位判断
 - 博客新增 `docs/blog/agent-cli/lark-cli-guide.md`，整理官方 `larksuite/cli` 的安装、认证、三层命令体系与 Agent 场景下的安全使用路线
+- `FEISHU_DEFAULT_CHAT_ID` 配置项，并补充默认群聊发送与 docx `openchat` 群权限的 quickstart 示例
 
 ## [6.4.0]
 

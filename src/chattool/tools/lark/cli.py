@@ -68,8 +68,24 @@ def _get_bot():
         sys.exit(1)
 
 
-def _resolve_text_target(receiver: str | None, text: str | None) -> tuple[str | None, str | None]:
-    default_receiver = FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
+def _default_target_env_name(id_type: str) -> str:
+    if id_type == "chat_id":
+        return "FEISHU_DEFAULT_CHAT_ID"
+    return "FEISHU_DEFAULT_RECEIVER_ID"
+
+
+def _default_target_value(id_type: str) -> str | None:
+    if id_type == "chat_id":
+        return FeishuConfig.FEISHU_DEFAULT_CHAT_ID.value or None
+    return FeishuConfig.FEISHU_DEFAULT_RECEIVER_ID.value or None
+
+
+def _resolve_text_target(
+    receiver: str | None,
+    text: str | None,
+    id_type: str,
+) -> tuple[str | None, str | None]:
+    default_receiver = _default_target_value(id_type)
 
     if receiver and text:
         return receiver, text
@@ -125,19 +141,21 @@ def send(receiver, text, env_ref, id_type):
       chattool lark send "你好"
       chattool lark send f25gc16d "你好"
       chattool lark send oc_xxx "群通知" -t chat_id
+      chattool lark send -t chat_id "群通知"
     """
     _load_runtime_env(env_ref)
     bot = _get_bot()
-    receiver, text = _resolve_text_target(receiver, text)
+    default_target_env = _default_target_env_name(id_type)
+    receiver, text = _resolve_text_target(receiver, text, id_type)
 
     if receiver and not text:
         click.secho(
-            "单参数形式需要先配置 FEISHU_DEFAULT_RECEIVER_ID；否则请显式传入 receiver 和 text",
+            f"单参数形式需要先配置 {default_target_env}；否则请显式传入 receiver 和 text",
             fg="red",
         )
         return
     if not receiver:
-        click.secho("请指定接收者，或先配置 FEISHU_DEFAULT_RECEIVER_ID 作为默认发送目标", fg="red")
+        click.secho(f"请指定接收者，或先配置 {default_target_env} 作为默认发送目标", fg="red")
         return
     if not text:
         click.secho("请提供文本消息内容", fg="red")

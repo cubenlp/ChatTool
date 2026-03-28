@@ -1,474 +1,617 @@
-# Lark CLI 教程：认证、三层命令体系与 Agent 场景下的安全用法
+# Lark CLI 实战：真正把飞书文档创建、读取、更新、评论跑一遍
 
-这一篇讲官方的 **`lark-cli`**，仓库是 `larksuite/cli`。
+这一篇不再按“读完 README 后复述功能表”的方式写，而是直接讲一条更有实践意义的路线：
 
-它和 Codex、OpenCode、Claude Code 这类“通用代码 Agent CLI”不太一样：`lark-cli` 不是让模型自己去摸索网页或拼 SDK，而是把 **飞书/Lark 开放平台能力直接整理成命令行接口**，同时又专门给 AI Agent 准备了 Skills、结构化输出和更稳妥的默认参数。
+> **先把 `lark-cli` 装好，再用真实命令把飞书文档的创建、读取、更新、评论跑通，并明确哪些能力必须走 user 身份。**
 
-本文内容基于 **2026-03-29** 查看官方仓库 `https://github.com/larksuite/cli` 及其 README 整理，重点讲“终端里怎么用”。
+本文基于 **2026-03-29** 在 ChatTool 工作区里的真实操作整理，重点不是列举命令，而是回答几个更实际的问题：
 
----
-
-## 先理解它是什么
-
-官方对 `lark-cli` 的定位很明确：
-
-- 面向飞书 / Lark 开放平台
-- 同时服务 **人类用户** 和 **AI Agent**
-- 覆盖消息、文档、多维表格、日历、任务、邮箱、会议等业务域
-- 命令设计分成三层：**快捷命令 → API 命令 → 原始 API 调用**
-
-如果只记一句判断标准，可以记这个：
-
-> **想在终端里稳定操作飞书开放平台，优先用 `lark-cli`；想自己再封装 SDK，只在它现成命令不够时再考虑。**
+- 先装好以后，文档能力到底怎么串起来用？
+- 没有 user login 时，bot 身份能做到哪一步？
+- 哪些命令看起来都叫“docs”，实际上权限边界完全不同？
+- 在 shell 里直接拼 Markdown，有哪些很容易踩坑的地方？
 
 ---
 
-## 第一步：安装
+## 先把工具装好
 
-官方推荐从 npm 安装：
-
-```bash
-npm install -g @larksuite/cli
-```
-
-然后再安装它配套的 Skills：
+如果你已经在用 ChatTool，最直接的方式不是手工抄配置，而是直接：
 
 ```bash
-npx skills add larksuite/cli -y -g
+chattool setup lark-cli
 ```
 
-如果你是从源码安装，README 给出的方式是：
+这条命令现在会做几件事：
+
+1. 检查 `Node.js >= 20` 和 `npm`
+2. 检查本机是否已经装过 `lark-cli`
+3. 如果已经装过，先打印当前版本；默认跳过重复下载
+4. 复用 ChatTool 当前生效的 Feishu 配置写入 `lark-cli`
+
+这一点对日常开发很重要，因为你往往不是第一次装，而是反复调试：
+
+- 已安装时先看版本
+- 只有你明确确认，才去重新 `npm install -g`
+- 否则直接跳过下载，继续做配置或后续调试
+
+默认配置位置：
+
+```text
+~/.lark-cli/config.json
+```
+
+如果你是从 ChatTool 复用配置，来源默认是：
+
+```text
+~/.config/chattool/envs/Feishu/.env
+```
+
+或者你通过：
 
 ```bash
-git clone https://github.com/larksuite/cli.git
-cd cli
-make install
-
-npx skills add larksuite/cli -y -g
+chattool env cat -t Feishu
 ```
 
-### 环境要求
-
-README 里提到的前提是：
-
-- 日常使用至少要有 `Node.js`、`npm` / `npx`
-- 只有从源码构建时才需要 `Go >= 1.23` 和 `Python 3`
+看到的当前生效 Feishu 配置。
 
 ---
 
-## 第二步：先做配置和登录
+## 先分清 bot 和 user
 
-`lark-cli` 的第一次使用，不是直接发消息，而是先完成两件事：
+很多人第一次用 `lark-cli` 时，最容易混淆的一点是：
 
-1. 配置应用凭证
-2. 完成登录授权
+> **“已经配置了 app_id / app_secret” 不等于 “已经有 user 身份”。**
 
-### 初始化应用配置
-
-```bash
-lark-cli config init
-```
-
-如果你是在 Agent 场景下让用户配合完成浏览器授权，官方 README 还给了一个更适合自动化的入口：
+我在本地跑完配置后，先看状态：
 
 ```bash
-lark-cli config init --new
+lark-cli auth status
 ```
 
-这个模式会输出授权链接，用户在浏览器完成配置后，命令再自动退出。
+返回的是：
 
-### 登录授权
+```json
+{
+  "identity": "bot",
+  "note": "No user logged in. Only bot (tenant) identity is available for API calls."
+}
+```
 
-最常见的登录方式：
+这意味着当前状态是：
+
+- app 已配置
+- bot 身份可用
+- 但还没有 user login
+
+这件事非常关键，因为后面飞书文档相关命令，**有些 bot 能做，有些只能 user 做**。
+
+---
+
+## 一条真正能跑通的文档链路
+
+下面这组命令，是我在当前环境里真实跑过的。
+
+目标很简单：
+
+1. 创建文档
+2. 读回内容
+3. 追加更新
+4. 添加全文评论
+5. 添加局部高亮评论
+6. 解决 / 恢复评论
+7. 添加基础协作者权限
+8. 读取评论
+
+---
+
+## 第一步：用 bot 创建文档
+
+先说结论：
+
+> **`docs +create` 可以直接用 bot 身份。**
+
+实际命令：
 
 ```bash
-lark-cli auth login
+lark-cli docs +create \
+  --as bot \
+  --title "ChatTool Lark CLI Practice 20260329-031654" \
+  --markdown "# ChatTool Lark CLI Practice\n\n- created by lark-cli bot\n- branch: rex/feishu-doc"
 ```
 
-推荐直接用常见权限集合：
+这次真实返回成功：
+
+```json
+{
+  "ok": true,
+  "identity": "bot",
+  "data": {
+    "doc_id": "My7IdiXGbotSsSxYPAEcvYLnnWg",
+    "doc_url": "https://www.feishu.cn/docx/My7IdiXGbotSsSxYPAEcvYLnnWg",
+    "message": "文档创建成功"
+  }
+}
+```
+
+这说明至少在“创建一份新文档”这个动作上，bot 身份是够用的。
+
+---
+
+## 第二步：把文档读回来
+
+创建成功后，立刻可以读：
+
+```bash
+lark-cli docs +fetch \
+  --as bot \
+  --doc https://www.feishu.cn/docx/My7IdiXGbotSsSxYPAEcvYLnnWg \
+  --format pretty
+```
+
+这一步也真实成功了。
+
+不过这里马上踩到一个非常典型的 shell 坑：
+
+```text
+# ChatTool Lark CLI Practice\n\n- created by lark-cli bot\n- branch: rex/feishu-doc
+```
+
+也就是说，我最开始在命令行里直接传的 `\n`，最终被当成了字面文本，而不是换行。
+
+### 这说明什么
+
+如果你直接在 shell 里把 Markdown 塞进一个参数字符串，**很容易把 `\n` 当普通字符传进去**。
+
+更稳妥的写法是先用 heredoc 组装内容：
+
+```bash
+MARKDOWN=$(cat <<'EOF'
+# ChatTool Lark CLI Practice
+
+- created by lark-cli bot
+- branch: rex/feishu-doc
+EOF
+)
+
+lark-cli docs +create \
+  --as bot \
+  --title "ChatTool Lark CLI Practice" \
+  --markdown "$MARKDOWN"
+```
+
+这比在一行 shell 命令里硬塞转义字符可靠得多。
+
+---
+
+## 第三步：追加更新文档
+
+接下来我继续用 bot 身份追加内容：
+
+```bash
+lark-cli docs +update \
+  --as bot \
+  --doc https://www.feishu.cn/docx/My7IdiXGbotSsSxYPAEcvYLnnWg \
+  --mode append \
+  --markdown "
+## Update Round 1
+
+- appended by lark-cli
+- operation: docs +update --mode append"
+```
+
+返回成功：
+
+```json
+{
+  "ok": true,
+  "identity": "bot",
+  "data": {
+    "message": "文档更新成功（append模式）",
+    "mode": "append",
+    "success": true
+  }
+}
+```
+
+这说明在当前环境下，下面这条 bot 路径是可行的：
+
+```text
+docs +create -> docs +fetch -> docs +update
+```
+
+如果你的目标是：
+
+- 让 agent 自动写计划
+- 自动把执行进度追加到文档
+- 自动产出结果摘要
+
+那么这条 bot 路径已经足够有用了。
+
+---
+
+## 第四步：给文档加全文评论
+
+飞书文档工作流里，评论非常关键，因为这直接关系到 review。
+
+这里要注意：
+
+- 文档内容编辑走 `docs`
+- 文档评论走 `drive`
+
+实际命令：
+
+```bash
+lark-cli drive +add-comment \
+  --as bot \
+  --doc https://www.feishu.cn/docx/My7IdiXGbotSsSxYPAEcvYLnnWg \
+  --full-comment \
+  --content '[{"type":"text","text":"comment from lark-cli bot"}]'
+```
+
+真实返回：
+
+```json
+{
+  "ok": true,
+  "identity": "bot",
+  "data": {
+    "comment_id": "7622387805116697557",
+    "comment_mode": "full",
+    "file_type": "docx"
+  }
+}
+```
+
+这一点很重要，因为它说明：
+
+> **bot 不只是能改正文，也能直接往 docx 上写评论。**
+
+---
+
+## 第五步：给一段正文加局部高亮评论
+
+如果你只是做 quickstart，全文评论还不够，因为真实 review 更常见的是“圈住一段话再评论”。
+
+这一步我直接对文档中的一句正文做局部评论：
+
+```bash
+lark-cli drive +add-comment \
+  --as bot \
+  --doc https://www.feishu.cn/docx/My7IdiXGbotSsSxYPAEcvYLnnWg \
+  --selection-with-ellipsis 'docs +search rejected bot identity' \
+  --content '[{"type":"text","text":"local comment: user-only boundary"}]'
+```
+
+CLI 会先自动定位正文块：
+
+```text
+Locate-doc matched 1 block(s); using match #1
+Creating local comment in My7I...nnWg
+```
+
+这条链路真实跑通后，评论列表里可以看到：
+
+- `is_whole = false`
+- `quote = "docs +search rejected bot identity and is user-only"`
+
+这比全文评论更接近“给文档做 review”时的实际体验。
+
+---
+
+## 第六步：解决评论，再恢复评论
+
+评论不只是“写进去”，还要能进入已解决状态。
+
+我先把全文评论标记为已解决：
+
+```bash
+lark-cli drive file.comments patch \
+  --as bot \
+  --params '{"file_token":"My7IdiXGbotSsSxYPAEcvYLnnWg","comment_id":"7622387805116697557","file_type":"docx"}' \
+  --data '{"is_solved":true}'
+```
+
+返回成功后，再列评论能看到：
+
+- `is_solved = true`
+- `solver_user_id` 已出现
+
+随后我又把它恢复回来：
+
+```bash
+lark-cli drive file.comments patch \
+  --as bot \
+  --params '{"file_token":"My7IdiXGbotSsSxYPAEcvYLnnWg","comment_id":"7622387805116697557","file_type":"docx"}' \
+  --data '{"is_solved":false}'
+```
+
+所以 quickstart 至少可以确认：
+
+- 评论创建可用
+- 评论 solve 可用
+- 评论 restore 可用
+
+---
+
+## 第七步：给文档加基础协作者权限
+
+权限这块如果做全，会很复杂；但 quickstart 至少可以先验证两种最基础的场景：
+
+- 给一个用户加只读权限
+- 给一个群聊加只读权限
+
+我直接给默认飞书用户加了 `view` 权限：
+
+```bash
+lark-cli drive permission.members create \
+  --as bot \
+  --params '{"token":"My7IdiXGbotSsSxYPAEcvYLnnWg","type":"docx","need_notification":false}' \
+  --data '{"member_id":"9dd3d3ea","member_type":"userid","perm":"view","type":"user"}'
+```
+
+真实返回里能看到：
+
+- `member_id = 9dd3d3ea`
+- `perm = view`
+- `perm_type = container`
+
+群聊权限也可以用同一条 API，只是把 `member_type` / `type` 切到群聊：
+
+```bash
+lark-cli drive permission.members create \
+  --as bot \
+  --params '{"token":"My7IdiXGbotSsSxYPAEcvYLnnWg","type":"docx","need_notification":false}' \
+  --data '{"member_id":"<OPENCHAT_ID>","member_type":"openchat","perm":"view","type":"chat"}'
+```
+
+也就是说，quickstart 里“权限基础的”这一步，最合适的就是：
+
+- 给一个用户加 `view`
+- 给一个群聊加 `view`
+- 先不碰 owner transfer
+- 先不碰更复杂的 department / wiki 权限
+
+---
+
+## 第八步：读取评论时，不要假设“刚写完就立刻能列出来”
+
+紧接着我马上执行：
+
+```bash
+lark-cli drive file.comments list \
+  --as bot \
+  --params '{"file_token":"My7IdiXGbotSsSxYPAEcvYLnnWg","file_type":"docx"}'
+```
+
+第一次返回的是空列表。
+
+两秒后再读一次，才拿到了评论：
+
+```json
+{
+  "code": 0,
+  "data": {
+    "items": [
+      {
+        "comment_id": "7622387805116697557",
+        "is_whole": true,
+        "reply_list": {
+          "replies": [
+            {
+              "content": {
+                "elements": [
+                  {
+                    "text_run": {
+                      "text": "comment from lark-cli bot"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+这件事的实践意义很强：
+
+- **评论写入成功**
+- **列表接口未必立刻可见**
+- 如果你要把“写评论 -> 读评论 -> 汇总评论”串成自动流程，最好带一个短重试
+
+也就是说，不要把第一次空列表立刻判成失败。
+
+---
+
+## 一个真实踩出来的身份边界
+
+前面几步基本都能用 bot 跑通，但到了搜索这里，情况就不一样了。
+
+我真实执行了：
+
+```bash
+lark-cli docs +search --as bot --query ChatTool --page-size 5
+```
+
+CLI 直接报错：
+
+```text
+Error: --as bot is not supported, this command only supports: user
+```
+
+这说明：
+
+> **`docs +search` 是 user-only，不要指望 bot 帮你做文档搜索。**
+
+这个边界非常适合写进工作流设计：
+
+- bot 适合“已知 doc_id / doc_url 后的自动执行”
+- user 更适合“搜索、发现、浏览、授权范围内查找”
+
+如果你后面要做飞书任务编排，这会直接影响入口设计：
+
+- 已有项目主文档时，bot 可以稳定接手
+- 如果用户只说“找一下那篇文档”，往往还是得走 user 身份
+
+---
+
+## 所以，飞书文档能力到底怎么拆最实用
+
+如果只从“实战价值”出发，我现在更推荐这样理解 `lark-cli` 的文档面：
+
+### 1. `docs`
+
+负责正文内容工作流：
+
+- `docs +create`
+- `docs +fetch`
+- `docs +update`
+
+这条线非常适合：
+
+- 计划文档
+- 阶段进展记录
+- 结果摘要
+- 验收说明
+
+### 2. `drive`
+
+负责评论和文件侧动作：
+
+- `drive +add-comment`
+- `drive file.comments list`
+
+这条线更适合：
+
+- review
+- 留批注
+- 读取评论线程
+
+### 3. `wiki`
+
+负责从知识库节点解析真实对象类型和 token。
+
+如果你拿到的是 `/wiki/...` 链接，不要直接猜它是不是 docx，要先解到真实对象。
+
+### 4. `base`
+
+负责多维表格，不属于本文重点，但如果你后面要做任务面板、状态板、任务总览，最终会落到这条线上。
+
+---
+
+## 如果你要做“飞书文档工作流”，先记住这几个经验
+
+### 经验 1：先拿稳定文档 ID，再谈自动化
+
+只要你已经有了 `doc_url` 或 `doc_id`，bot 路线就很顺：
+
+- 创建
+- 读取
+- 追加
+- 评论
+
+而“搜索文档”这一步更像 user 路线，不适合混在 bot 自动链路里硬做。
+
+### 经验 2：正文和评论不是一套命令面
+
+很多人会自然地以为“文档评论”也在 `docs` 下面，其实不是。
+
+- 正文编辑：`docs`
+- 评论：`drive`
+
+这个边界要在设计里提前接受。
+
+### 经验 3：不要在 shell 里硬写带 `\n` 的 Markdown
+
+这是今天最容易踩的坑之一。
+
+更稳妥的做法：
+
+- heredoc
+- 临时变量
+- 或者先把内容生成到文件，再读进 shell 变量
+
+### 经验 4：局部评论是 quickstart 里最值得保留的一步
+
+如果你只做全文评论，很难看出这条链路到底能不能支撑真正的 review。
+
+局部评论更有价值，因为它同时验证了：
+
+- 正文定位
+- block 定位链路
+- quote 回显
+- 评论列表返回结构
+
+### 经验 5：写完评论后，读取时给一点延迟
+
+如果你要把这套东西做成 agent 流程，建议把评论列表读取做成：
+
+1. 立即读一次
+2. 若为空，短暂等待
+3. 再读一次
+
+否则很容易把“延迟可见”误判成“写入失败”。
+
+---
+
+## 对 ChatTool 的现实意义
+
+站在 ChatTool 当前这条路线看，`lark-cli` 最值得用的不是“覆盖面大”这件事本身，而是：
+
+> **它已经足够把飞书文档工作流拆成一条可执行的链。**
+
+至少对于文档这块，已经可以很明确地分成两类：
+
+- ChatTool 负责：
+  - `chattool setup lark-cli`
+  - 配置复用
+  - 最短调试链路
+- 官方 `lark-cli` 负责：
+  - 文档创建
+  - 文档读取
+  - 文档更新
+  - 文档评论
+  - 后续 wiki / base / drive 扩展
+
+这比在 ChatTool 里继续维护一整套平行的飞书文档 CLI，更有现实意义。
+
+---
+
+## 最后给一条最实用的起步路线
+
+如果你现在就想把飞书文档能力真正用起来，建议按这个 quickstart 顺序：
+
+```bash
+chattool setup lark-cli
+lark-cli auth status
+```
+
+先确认当前是 bot-only 还是已经 user login。
+
+然后直接从这条链开始：
+
+```bash
+lark-cli docs +create --as bot ...
+lark-cli docs +fetch --as bot --doc <DOC_URL>
+lark-cli docs +update --as bot --doc <DOC_URL> --mode append ...
+lark-cli drive +add-comment --as bot --doc <DOC_URL> --full-comment ...
+lark-cli drive +add-comment --as bot --doc <DOC_URL> --selection-with-ellipsis "..." ...
+lark-cli drive file.comments patch --as bot ...
+lark-cli drive permission.members create --as bot ...
+lark-cli drive permission.members create --as bot --data '{"member_type":"openchat","type":"chat",...}'
+lark-cli drive file.comments list --as bot --params '{"file_token":"<DOC_ID>","file_type":"docx"}'
+```
+
+如果你后面需要“搜索文档”，再补：
 
 ```bash
 lark-cli auth login --recommend
+lark-cli docs +search --as user --query "<KEYWORD>"
 ```
 
-查看当前登录状态：
+一句话总结：
 
-```bash
-lark-cli auth status
-```
-
-列出当前 app 可申请的 scope：
-
-```bash
-lark-cli auth scopes
-```
-
-列出本地已经登录过的身份：
-
-```bash
-lark-cli auth list
-```
-
----
-
-## 登录时最实用的几种写法
-
-如果你不想每次都走完整交互流程，README 里给了几种常用筛选方式。
-
-### 按业务域申请权限
-
-```bash
-lark-cli auth login --domain calendar,task
-```
-
-适合你这次只想用日历和任务，不想一上来就申请一大堆能力。
-
-### 精确申请某个 scope
-
-```bash
-lark-cli auth login --scope "calendar:calendar:readonly"
-```
-
-这类方式适合做最小权限控制，尤其适合自动化任务和内部受控环境。
-
-### Agent 非阻塞登录
-
-如果你是让 Agent 帮用户完成配置，最值得记住的是 `--no-wait`：
-
-```bash
-lark-cli auth login --domain calendar --no-wait
-```
-
-这个模式下，CLI 会尽快返回验证 URL，不会一直阻塞在终端里等用户操作。
-
-之后可以带着设备码继续轮询：
-
-```bash
-lark-cli auth login --device-code <DEVICE_CODE>
-```
-
-这套流程很适合：
-
-- 远程 SSH 环境
-- 让 AI Agent 先发链接给用户
-- 用户在浏览器完成授权后再回到终端继续
-
----
-
-## 身份切换：区分 user 和 bot
-
-`lark-cli` 一个很重要的设计是：**很多命令支持显式指定以用户还是机器人身份执行。**
-
-例如：
-
-```bash
-lark-cli calendar +agenda --as user
-lark-cli im +messages-send --as bot --chat-id "oc_xxx" --text "Hello"
-```
-
-这点非常关键，因为飞书很多 API 的可见性、权限和行为都跟当前身份有关。
-
-如果你碰到“同一个命令有时能跑、有时拿不到数据”，先检查这三件事：
-
-- 当前登录的是谁
-- 当前 scope 是否够
-- 当前是不是该用 `--as user` 或 `--as bot`
-
----
-
-## 核心设计：三层命令体系
-
-`lark-cli` 最值得学的，不是某一条具体命令，而是它把调用方式拆成了三层。
-
----
-
-## 第一层：快捷命令 `+`，最适合日常使用
-
-快捷命令是 README 里最推荐的人机通用入口，特点是：
-
-- 参数更短
-- 默认值更合理
-- 输出更适合直接阅读
-- 通常还支持 `--dry-run`
-
-比如：
-
-```bash
-lark-cli calendar +agenda
-lark-cli im +messages-send --chat-id "oc_xxx" --text "Hello"
-lark-cli docs +create --title "Weekly Report" --markdown "# Progress\n- Completed feature X"
-```
-
-如果你的目标是“尽快把事做完”，一般先从快捷命令开始。
-
-查看某个业务域有哪些快捷命令：
-
-```bash
-lark-cli <service> --help
-```
-
-例如：
-
-```bash
-lark-cli calendar --help
-lark-cli im --help
-lark-cli docs --help
-```
-
----
-
-## 第二层：API 命令，对应平台能力但还保留命令结构
-
-当快捷命令不够细，或者你想更贴近官方 API 模型时，就用 API 命令。
-
-README 里的例子：
-
-```bash
-lark-cli calendar calendars list
-lark-cli calendar events instance_view --params '{"calendar_id":"primary","start_time":"1700000000","end_time":"1700086400"}'
-```
-
-这一层的特点是：
-
-- 命令名通常更贴近官方端点语义
-- 参数会更多、更显式
-- 适合做精确控制
-- 比直接发原始 HTTP 请求仍然更省心
-
-如果你已经在读开放平台文档，这一层通常会比快捷命令更容易对上官方概念。
-
----
-
-## 第三层：原始 API 调用，覆盖面最大
-
-如果前两层都不够，`lark-cli` 还允许你直接调用开放平台接口。
-
-```bash
-lark-cli api GET /open-apis/calendar/v4/calendars
-lark-cli api POST /open-apis/im/v1/messages --params '{"receive_id_type":"chat_id"}' --body '{"receive_id":"oc_xxx","msg_type":"text","content":"{\"text\":\"Hello\"}"}'
-```
-
-这一层适合：
-
-- 官方已经支持，但快捷命令还没包好
-- 你要验证某个具体接口行为
-- 你希望 1:1 对照开放平台文档
-
-你可以把三层理解成：
-
-- **先用 `+` 命令做事**
-- **不够细就切 API 命令**
-- **再不够就直接 `api`**
-
----
-
-## 常用输出格式：给人看，还是给程序吃
-
-README 里给出的输出格式很实用：
-
-```bash
---format json
---format pretty
---format table
---format ndjson
---format csv
-```
-
-可以粗略记成：
-
-- `json`：默认，信息最全
-- `pretty`：给人读更舒服
-- `table`：列表数据更直观
-- `ndjson`：适合管道和流式处理
-- `csv`：适合导出给表格工具
-
-如果你在 shell 里串后续处理，`json` 和 `ndjson` 最常用；如果你只是自己读，`pretty` 和 `table` 更轻松。
-
----
-
-## 分页和批量拉取
-
-飞书里很多列表接口都会分页，所以官方专门给了统一参数：
-
-```bash
---page-all
---page-limit 5
---page-delay 500
-```
-
-例如：
-
-```bash
-lark-cli mail ... --page-all
-```
-
-这类参数很适合做“先小范围试，再全量拉”的节奏：
-
-1. 先不加 `--page-all` 看单页结果
-2. 确认字段没问题后再全量翻页
-3. 需要限速时加 `--page-delay`
-
----
-
-## 有副作用的命令，先 `--dry-run`
-
-官方特别提了 `--dry-run`，这是很值得保留的习惯：
-
-```bash
-lark-cli im +messages-send --chat-id oc_xxx --text "hello" --dry-run
-```
-
-对发送消息、写文档、改任务、写表格这类操作，建议都先预演一次。尤其是把它接给 AI Agent 时，`--dry-run` 能显著降低误发和误写风险。
-
----
-
-## `schema`：比翻文档更快的命令级自省
-
-`lark-cli` 还有一个很适合边查边用的入口：
-
-```bash
-lark-cli schema
-lark-cli schema calendar.events.instance_view
-lark-cli schema im.messages.delete
-```
-
-它的价值是让你直接看到某个 API 方法对应的：
-
-- 参数结构
-- 请求体结构
-- 响应结构
-- 支持的身份
-- 需要的 scopes
-
-如果你经常在“README、开放平台文档、终端试命令”之间来回跳，`schema` 会是效率很高的中间层。
-
----
-
-## 业务域覆盖很广，但建议先从 3 个方向上手
-
-官方 README 列出的业务域很多：
-
-- `calendar`
-- `im`
-- `docs`
-- `drive`
-- `base`
-- `sheets`
-- `task`
-- `wiki`
-- `contact`
-- `mail`
-- `meetings`
-
-如果你第一次接触，建议优先从这三块开始：
-
-### 1. 即时通讯 `im`
-
-最容易看到结果，适合验证认证和权限是否正常。
-
-```bash
-lark-cli im +messages-send --chat-id "oc_xxx" --text "Hello from CLI"
-```
-
-### 2. 日历 `calendar`
-
-适合查 agenda、忙闲和时间建议，常见自动化价值很高。
-
-```bash
-lark-cli calendar +agenda
-```
-
-### 3. 文档 `docs`
-
-适合做周报、会议记录、Agent 生成内容落地。
-
-```bash
-lark-cli docs +create --title "Weekly Report" --markdown "# 本周进展"
-```
-
----
-
-## 对 AI Agent 来说，它真正有价值的点
-
-从 README 看，`lark-cli` 不是“顺手兼容 Agent”，而是明显按 Agent 场景设计过。
-
-最有代表性的几个点是：
-
-- 提供配套 Skills，减少 Agent 自己拼 prompt 和 API 的成本
-- 输出结构化，方便被脚本或其他 Agent 接住
-- 命令命名和参数比原始接口更短、更稳定
-- 有 `--no-wait`、`--device-code` 这类适合人机协作的认证流程
-- 强调 `--dry-run` 和安全提示，降低误操作风险
-
-所以它特别适合这类工作流：
-
-1. Agent 帮用户完成安装和初始化
-2. Agent 发授权链接给用户
-3. 用户在浏览器完成授权
-4. Agent 回到终端执行 `calendar`、`docs`、`im` 等业务命令
-5. 必要时再切到底层 `api`
-
----
-
-## 使用时要特别注意的风险点
-
-官方 README 对安全提示写得很重，这不是形式化文案，而是真的要重视。
-
-最核心的风险是：
-
-- Agent 可能会幻觉、误解任务或过度执行
-- 一旦授权，命令是在你的飞书身份与 scope 范围内执行
-- 如果把机器人拉进群聊或暴露给其他人，可能造成权限滥用和数据泄露
-
-比较稳妥的实践是：
-
-- 初次接入时只申请最小 scope
-- 有副作用操作默认先 `--dry-run`
-- 明确区分 `--as user` 和 `--as bot`
-- 先在私人环境、小数据范围内验证
-- 不主动关闭它默认的安全保护
-
----
-
-## 一条实用上手路线
-
-如果你只是想今天把它跑起来，可以按这个顺序：
-
-```bash
-npm install -g @larksuite/cli
-npx skills add larksuite/cli -y -g
-lark-cli config init
-lark-cli auth login --recommend
-lark-cli auth status
-lark-cli calendar +agenda
-```
-
-如果你是要把它交给 Agent 使用，更推荐下面这条：
-
-```bash
-npm install -g @larksuite/cli
-npx skills add larksuite/cli -y -g
-lark-cli config init --new
-lark-cli auth login --recommend --no-wait
-lark-cli auth status
-```
-
-之后再根据实际任务进入：
-
-- `im`：发消息、查消息、处理附件
-- `docs`：写文档、生成周报、沉淀知识
-- `calendar`：看日程、查忙闲、辅助排会
-- `task`：创建和跟踪待办
-
----
-
-## 最后怎么选
-
-如果你平时主要在飞书开放平台上做自动化，`lark-cli` 最大的价值不是“命令多”，而是它把使用路线整理得很清楚：
-
-- **先完成配置和登录**
-- **先用快捷命令解决 80% 的问题**
-- **需要精细控制时再切 API 命令**
-- **最后才使用原始 API**
-
-对于人类开发者，这是一个更省事的飞书终端工具；对于 AI Agent，这是一个比“直接调 SDK + 自己拼 OAuth 流程”稳定得多的执行层。
+> **飞书文档 quickstart 最实用的切法，不是先学完整命令树，而是先把 bot 可跑通的“创建 -> 读取 -> 更新 -> 全文评论 -> 局部评论 -> solve/restore -> 基础权限”打通，再把 search 这类 user-only 能力单独补上。**
