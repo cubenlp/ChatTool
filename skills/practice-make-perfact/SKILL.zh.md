@@ -1,7 +1,7 @@
 ---
 name: practice-make-perfact
-description: ChatTool 仓库任务的后处理工作流。适用于任务实现完成后，回顾已有改动、提取可复用内容落回仓库、调用 $chattool-dev-review 做开发验收，并按规范补齐文档/测试/变更记录与 PR/MR 流程。
-version: 0.2.0
+description: ChatTool 仓库任务的后处理工作流。适用于任务实现完成后，回顾已有改动、先检查现有 CLI 是否已覆盖、提取可复用内容落回仓库、调用 $chattool-dev-review 做开发验收，并按规范补齐文档/测试/变更记录与 PR/MR 流程。
+version: 0.3.0
 ---
 
 # Practice Make Perfact（中文）
@@ -38,6 +38,8 @@ version: 0.2.0
    - 任务特定：补充到 `skills/<name>/`
    - 只有需要长期保留的结果，才整理后放回仓库里的正式位置
    - 统一命名、目录和职责边界，避免“任务做完了，但沉淀位置还是临时的”
+   - 在决定保留临时脚本前，先检查现有 CLI 是否已经覆盖类似动作
+   - 这一步先看 `references/cli-reference.md`，再决定是补 CLI 还是保留为一次性探索
 
 4. **任务后强制 review**  
    - 默认 review 当前 diff，而不是整个仓库  
@@ -72,3 +74,4 @@ version: 0.2.0
 - 这份 skill 应服务于任务结束后的回顾与沉淀，而不是前期探索。
 - 它应明确串联 `$chattool-dev-review`，帮助模型按开发规范做收尾。
 - 默认落点应是已经进入 PR/MR 阶段的结果。
+- 它还应提供一个很轻的 CLI 参考面，帮助模型快速判断“该继续手写脚本，还是应该补一个正式命令”。

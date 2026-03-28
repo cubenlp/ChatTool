@@ -40,7 +40,7 @@
 
 ## Feishu 约束
 
-- Feishu 测试设计统一放到 `cli-tests/lark/<topic>/`，目录应尽量和 `skills/feishu/<topic>/` 的主题划分对应，例如 `guide/`、`messaging/`、`documents/`、`im/`、`troubleshoot/`、`task/`、`calendar/`、`bitable/`。
+- Feishu 测试设计统一放到 `cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留一个入口 `SKILL.md`，不再要求与 skill 子目录逐一对齐。
 - Feishu 真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为规范依据。
 - Feishu 测试文档至少显式列出：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_TEST_USER_ID`、`FEISHU_TEST_USER_ID_TYPE`。
 - Feishu 测试文档必须说明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。

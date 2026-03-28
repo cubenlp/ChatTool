@@ -51,3 +51,9 @@ def test_abort_if_missing_without_tty():
 def test_setup_frp_has_interactive_option():
     frp = next(item for item in SETUP_COMMAND_ELEMENTS if item.name == "frp")
     assert any("-i/-I" in option.param_decls for option in frp.options)
+
+
+def test_setup_lark_cli_has_interactive_and_env_options():
+    lark_cli = next(item for item in SETUP_COMMAND_ELEMENTS if item.name == "lark-cli")
+    assert any("-i/-I" in option.param_decls for option in lark_cli.options)
+    assert any("--env" in option.param_decls for option in lark_cli.options)

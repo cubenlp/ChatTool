@@ -32,6 +32,16 @@ chattool setup opencode
 
 详细文档：[opencode.md](opencode.md)
 
+### Lark CLI 配置
+
+使用 `setup lark-cli` 快速安装官方 `lark-cli`，并复用 ChatTool 现有的 Feishu 配置。
+
+```bash
+chattool setup lark-cli
+```
+
+详细文档：[lark-cli.md](lark-cli.md)
+
 ### Chrome 浏览器驱动安装
 
 自动安装 Chrome 和 Chromedriver。

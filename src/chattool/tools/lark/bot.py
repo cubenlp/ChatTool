@@ -1588,6 +1588,107 @@ class LarkBot:
         request = BatchQueryMetaRequest.builder().request_body(body).build()
         return self.client.drive.v1.meta.batch_query(request)
 
+    def get_doc_public_permission(self, document_id: str) -> Any:
+        """Fetch public sharing settings for a docx document."""
+        from lark_oapi.api.drive.v1.model import GetPermissionPublicRequest
+
+        request = (
+            GetPermissionPublicRequest.builder()
+            .type("docx")
+            .token(document_id)
+            .build()
+        )
+        return self.client.drive.v1.permission_public.get(request)
+
+    def patch_doc_public_permission(
+        self,
+        document_id: str,
+        *,
+        external_access: bool = None,
+        security_entity: str = None,
+        comment_entity: str = None,
+        share_entity: str = None,
+        link_share_entity: str = None,
+        invite_external: bool = None,
+    ) -> Any:
+        """Patch public sharing settings for a docx document."""
+        from lark_oapi.api.drive.v1.model import (
+            PatchPermissionPublicRequest,
+            PermissionPublicRequest,
+        )
+
+        payload = {}
+        if external_access is not None:
+            payload["external_access"] = external_access
+        if security_entity is not None:
+            payload["security_entity"] = security_entity
+        if comment_entity is not None:
+            payload["comment_entity"] = comment_entity
+        if share_entity is not None:
+            payload["share_entity"] = share_entity
+        if link_share_entity is not None:
+            payload["link_share_entity"] = link_share_entity
+        if invite_external is not None:
+            payload["invite_external"] = invite_external
+
+        request = (
+            PatchPermissionPublicRequest.builder()
+            .type("docx")
+            .token(document_id)
+            .request_body(PermissionPublicRequest(payload))
+            .build()
+        )
+        return self.client.drive.v1.permission_public.patch(request)
+
+    def list_doc_permission_members(
+        self,
+        document_id: str,
+        *,
+        perm_type: str = None,
+    ) -> Any:
+        """List explicit members on a docx document."""
+        from lark_oapi.api.drive.v1.model import ListPermissionMemberRequest
+
+        builder = (
+            ListPermissionMemberRequest.builder()
+            .type("docx")
+            .token(document_id)
+        )
+        if perm_type:
+            builder.perm_type(perm_type)
+        return self.client.drive.v1.permission_member.list(builder.build())
+
+    def create_doc_permission_member(
+        self,
+        document_id: str,
+        member_id: str,
+        *,
+        member_type: str = "userid",
+        perm: str = "edit",
+        perm_type: str = None,
+        need_notification: bool = None,
+    ) -> Any:
+        """Add an explicit member permission to a docx document."""
+        from lark_oapi.api.drive.v1.model import BaseMember, CreatePermissionMemberRequest
+
+        payload = {
+            "member_type": member_type,
+            "member_id": member_id,
+            "perm": perm,
+        }
+        if perm_type is not None:
+            payload["perm_type"] = perm_type
+
+        builder = (
+            CreatePermissionMemberRequest.builder()
+            .type("docx")
+            .token(document_id)
+            .request_body(BaseMember(payload))
+        )
+        if need_notification is not None:
+            builder.need_notification(need_notification)
+        return self.client.drive.v1.permission_member.create(builder.build())
+
 
 # ---------------------------------------------------------------------------
 # Card action context (lightweight, used inside card_action handlers)

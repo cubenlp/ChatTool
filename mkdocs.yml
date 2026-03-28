@@ -33,6 +33,7 @@ plugins:
         'setup/index.md': 'env/index.md'
         'setup/chrome.md': 'env/chrome.md'
         'setup/codex.md': 'env/codex.md'
+        'setup/lark-cli.md': 'env/lark-cli.md'
         'setup/frp.md': 'env/frp.md'
         'setup/nginx_proxy.md': 'env/nginx_proxy.md'
         'design/index.md': 'development-guide/index.md'
@@ -148,6 +149,7 @@ nav:
     - 概览: env/index.md
     - Chrome 环境: env/chrome.md
     - Codex 配置: env/codex.md
+    - Lark CLI 配置: env/lark-cli.md
     - OpenCode 配置: env/opencode.md
     - FRP 安装: env/frp.md
     - Nginx 反向代理: env/nginx_proxy.md
@@ -159,11 +161,19 @@ nav:
     - 架构概览与设计特点: development-guide/architecture-overview.md
     - 任务驱动沉淀: development-guide/task-driven-iteration.md
     - 飞书能力设计: design/feishu-cli.md
+    - 飞书任务编排工作流设计: design/feishu-task-orchestration-workflow.md
     - 创建 Python 包: development-guide/create-python-package.md
     - Python 库仓库构成设计: design/python-library-repo-structure.md
     - ChatTool PyPI CLI 设计: design/chattool-pypi-cli-design.md
 
   - 博客:
+    - Agent CLI 系列:
+      - Codex CLI 教程: blog/agent-cli/codex-cli-guide.md
+      - OpenCode CLI 教程: blog/agent-cli/opencode-cli-guide.md
+      - Claude Code CLI 教程: blog/agent-cli/claude-cli-guide.md
+      - Lark CLI 教程: blog/agent-cli/lark-cli-guide.md
+      - cc-connect 教程: blog/agent-cli/cc-connect-guide.md
+      - cc-connect 编排教程: blog/agent-cli/cc-connect-orchestration.md
     - 白嫖 AI 生图实战: blog/free-image-guide.md
     - 从代码到 Agent 技能: blog/code_tool_skill.md
     - v0.5.3 飞书机器人: blog/larkbot_v053.md

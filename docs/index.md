@@ -87,6 +87,7 @@ print(resp.content)
 
 ```bash
 chattool lark send USER_ID "Hello"
+chattool lark info
 chattool serve lark ai --system "你是工作助手"
 ```
 

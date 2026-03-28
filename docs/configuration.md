@@ -181,7 +181,7 @@ BaseEnvConfig.print_config()
 
 其中飞书相关有两个额外约定：
 
-- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` / `notify-doc` 提供默认发送目标。
+- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` 提供默认发送目标。
 - `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE`：给 `@pytest.mark.lark` 真实测试提供统一测试用户，推荐配合 `chatenv cat -t feishu` 一起查看。
 
 ## SVG 转 GIF 服务配置
