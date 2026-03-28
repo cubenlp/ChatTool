@@ -1,11 +1,11 @@
 # test_chattool_pypi_basic
 
-测试 `chattool pypi` 的基础 CLI 链路，覆盖 init、doctor 与 release --dry-run。
+测试 `chattool pypi` 的基础 CLI 链路，覆盖 init、build 与 check。
 
 ## 元信息
 
 - 命令：`chattool pypi <command> [args]`
-- 目的：验证 PyPI 工具板块已接入主 CLI，并具备最小可用的包检查与发布计划输出能力。
+- 目的：验证 PyPI 工具板块已接入主 CLI，并具备最小可用的建包与产物校验能力。
 - 标签：`cli`、`e2e`
 - 前置条件：本地可执行 Python，临时目录可写。
 - 环境准备：创建一个最小 Python 包目录，包含 `pyproject.toml`、`README.md`、`LICENSE`。
@@ -28,7 +28,7 @@
 chattool pypi init mychat --project-dir /tmp/mychat
 ```
 
-## 用例 2：doctor 检查最小包结构
+## 用例 2：build/check 验证最小包结构
 
 - 初始环境准备：
   - 已完成 `chattool pypi init mychat`。
@@ -38,32 +38,17 @@ chattool pypi init mychat --project-dir /tmp/mychat
   - `<tmp>/mychat/LICENSE`
 
 预期过程和结果：
-  1. 执行 `chattool pypi doctor --project-dir <tmp>/mychat`，预期输出 pyproject、readme、license 等检查项。
+  1. 执行 `chattool pypi build --project-dir <tmp>/mychat`，预期输出开始日志，并在 `dist/` 下生成构建产物。
+  2. 执行 `chattool pypi check --project-dir <tmp>/mychat`，预期输出被检查的构建产物列表。
 
 参考执行脚本（伪代码）：
 
 ```sh
-chattool pypi doctor --project-dir /tmp/mychat
+chattool pypi build --project-dir /tmp/mychat
+chattool pypi check --project-dir /tmp/mychat
 ```
 
-## 用例 3：release dry-run 输出发版计划
-
-- 初始环境准备：
-  - 复用同一个包目录。
-- 相关文件：
-  - `<tmp>/mychat/pyproject.toml`
-
-预期过程和结果：
-  1. 执行 `chattool pypi release --project-dir <tmp>/mychat --dry-run`，预期输出 build/check/publish 顺序计划，但不真正执行构建和上传。
-  2. 若显式使用 `-i`，应继续提示当前命令相关的目录、构建、校验和发布参数，而不是只做局部补问。
-
-参考执行脚本（伪代码）：
-
-```sh
-chattool pypi release --project-dir /tmp/mychat --dry-run
-```
-
-## 用例 4：生成后可直接运行 pytest
+## 用例 3：生成后可直接运行 pytest
 
 - 初始环境准备：
   - 已完成 `chattool pypi init mychat`。

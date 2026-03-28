@@ -120,7 +120,7 @@ chattool explore arxiv get 1706.03762 -v
 | 工具 | 命令 | 说明 |
 |------|------|------|
 | 网络扫描 | `chattool network` | 扫描局域网主机和端口 |
-| PyPI 工具 | `chattool pypi` | 创建、检查、构建、校验与发布 Python 包 |
+| PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup codex/claude/lark-cli` | 安装 Codex / Claude Code / 官方 lark-cli 并写入配置 |
 | Playground | `chattool setup playground` | 初始化工作区，并可在完成后复用 `chatenv` 中的 GitHub token 配置 Git HTTPS 鉴权 |
@@ -136,8 +136,10 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 快速建包可直接运行：
 
 ```bash
-chattool pypi init -i
+chattool pypi init mychat
 ```
+
+`chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
 
 ## 开源协议
 

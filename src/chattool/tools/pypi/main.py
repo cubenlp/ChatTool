@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import importlib
 import json
 import importlib.util
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -195,9 +194,9 @@ def scaffold_package(
             ## Quick Start
 
             ```bash
-            chattool pypi doctor --project-dir .
             chattool pypi build --project-dir .
             chattool pypi check --project-dir .
+            chattool pypi upload --project-dir .
             ```
         """).strip() + "\n",
         project_dir / "LICENSE": f"{license_name}\n",
@@ -563,15 +562,15 @@ def check_repository_conflicts(
             label="repository.project",
             status="warn",
             detail=f"{package_name} already exists on {target_label}",
-            hint="Existing projects are normal if you own the package; use a new name if this is a first publish.",
+            hint="Existing projects are normal if you own the package; use a new name if this is a first upload.",
         ))
 
     if not version:
         checks.append(RepositoryCheck(
             label="repository.version",
             status="warn",
-            detail=f"version unavailable; skip release check on {target_label}",
-            hint="Set [project].version or pass --version to verify whether the target release already exists.",
+            detail=f"version unavailable; skip version check on {target_label}",
+            hint="Set [project].version or pass --version to verify whether the target version already exists.",
         ))
         return checks
 
@@ -679,25 +678,11 @@ def check_distributions(
     return result, files
 
 
-def _build_twine_env(username: str | None, password: str | None) -> dict[str, str]:
-    env = os.environ.copy()
-    if username is not None:
-        env["TWINE_USERNAME"] = username
-    if password is not None:
-        env["TWINE_PASSWORD"] = password
-    return env
-
-
-def publish_distributions(
+def upload_distributions(
     project_dir: Path,
     dist_dir: Path | None = None,
     *,
-    repository: str = "testpypi",
-    repository_url: str | None = None,
     skip_existing: bool = False,
-    username: str | None = None,
-    password: str | None = None,
-    non_interactive: bool = True,
     runner=run_command,
 ) -> tuple[CommandResult, list[Path]]:
     project_dir = Path(project_dir)
@@ -709,85 +694,8 @@ def publish_distributions(
         )
 
     args = [sys.executable, "-m", "twine", "upload"]
-    if repository_url:
-        args.extend(["--repository-url", repository_url])
-    else:
-        args.extend(["--repository", repository])
     if skip_existing:
         args.append("--skip-existing")
-    if non_interactive:
-        args.append("--non-interactive")
     args.extend(str(path) for path in files)
-    env = _build_twine_env(username, password)
-    result = _ensure_success(runner(args, project_dir, env=env), "Twine upload")
+    result = _ensure_success(runner(args, project_dir), "Twine upload")
     return result, files
-
-
-def build_release_plan(
-    project_dir: Path,
-    dist_dir: Path | None = None,
-    *,
-    repository: str = "testpypi",
-    repository_url: str | None = None,
-    skip_existing: bool = False,
-) -> list[str]:
-    project_dir = Path(project_dir)
-    dist_dir = resolve_dist_dir(project_dir, dist_dir)
-    target = repository_url or repository
-    return [
-        f"project_dir={project_dir}",
-        f"dist_dir={dist_dir}",
-        "step=build",
-        "step=check",
-        f"step=publish target={target}",
-        f"skip_existing={'yes' if skip_existing else 'no'}",
-    ]
-
-
-def release_package(
-    project_dir: Path,
-    dist_dir: Path | None = None,
-    *,
-    clean: bool = True,
-    sdist: bool = False,
-    wheel: bool = False,
-    strict: bool = False,
-    repository: str = "testpypi",
-    repository_url: str | None = None,
-    skip_existing: bool = False,
-    username: str | None = None,
-    password: str | None = None,
-    non_interactive: bool = True,
-    runner=run_command,
-) -> dict[str, object]:
-    build_result, build_files = build_package(
-        project_dir,
-        dist_dir,
-        clean=clean,
-        sdist=sdist,
-        wheel=wheel,
-        runner=runner,
-    )
-    check_result, checked_files = check_distributions(
-        project_dir,
-        dist_dir,
-        strict=strict,
-        runner=runner,
-    )
-    publish_result, published_files = publish_distributions(
-        project_dir,
-        dist_dir,
-        repository=repository,
-        repository_url=repository_url,
-        skip_existing=skip_existing,
-        username=username,
-        password=password,
-        non_interactive=non_interactive,
-        runner=runner,
-    )
-    return {
-        "build_result": build_result,
-        "check_result": check_result,
-        "publish_result": publish_result,
-        "files": published_files or checked_files or build_files,
-    }
