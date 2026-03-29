@@ -1,62 +1,137 @@
 ---
 name: feishu
-description: Use the official `lark-cli` from `larksuite/cli` as the Feishu entrypoint. For document work, split body edits to `docs`, comments and permissions to `drive`, wiki resolving to `wiki`, and keep `chattool lark` only for the shortest debug and delivery path.
-version: 0.6.0
+description: Use for Feishu/Lark work in ChatTool. Default to official lark-cli, route document body edits to docs, comments and permissions to drive, wiki links to wiki, IM sending/reply/search to im, and keep chattool lark only for info/send/chat debug and delivery.
+version: 1.0.0
 ---
 
 # Feishu Skill
 
-这个目录现在只保留一个入口文件：`skills/feishu/SKILL.md`。
+This is the fast mental model for Feishu/Lark work inside the ChatTool repo.
 
-飞书相关工作默认直接使用官方 `lark-cli`，不再从仓库内主题 skill 文档开始：
+Chinese version: `skills/feishu/SKILL.zh.md`
 
-- 上游仓库：`https://github.com/larksuite/cli`
-- ChatTool 子模块：`lark-cli/`
-- 仓库内教程：`docs/blog/agent-cli/lark-cli-guide.md`
-- 文档实践博客：`docs/blog/agent-cli/feishu-cli-doc-practice.md`
+## When To Use
 
-## 默认路线
+Use this skill when the task involves any of these:
 
-1. 先阅读 `docs/blog/agent-cli/lark-cli-guide.md`
-2. 需要源码或固定版本时，直接使用仓库内的 `lark-cli/` 子模块
-3. 优先使用官方三层命令体系：快捷命令 `+` -> API 命令 -> 原始 `api`
+- Feishu / Lark CLI work
+- sending messages, replying, or figuring out `chat_id` vs `open_id`
+- creating, fetching, updating, commenting on, or sharing Feishu docs
+- resolving wiki links
+- deciding between `chattool lark` and `lark-cli`
+- migrating Feishu config with `chattool setup lark-cli`
 
-## 文档工作流怎么拆
+## Boundary First
 
-对于文档相关任务，先按这个命令面拆：
+- The default entrypoint is official `lark-cli`
+- `chattool lark` is kept only for the shortest debug path: `info` / `send` / `chat`
+- Do not rebuild a parallel “full Feishu CLI” inside ChatTool
 
-- 正文内容：`lark-cli docs +create` / `+fetch` / `+update`
-- 评论与权限：`lark-cli drive +add-comment` / `file.comment.replys` / `file.comments` / `permission.members`
-- wiki 节点解析：`lark-cli wiki spaces get_node`
-- 最后送达和最短调试：`chattool lark info` / `send` / `chat`
+High-value repo references:
 
-如果任务落在“创建文档 -> 更新正文 -> 留评论 -> 授权 -> 把链接发给人”这条链上，不要回到旧的 `chattool lark` 文档子命令。
+- `docs/blog/agent-cli/lark-cli-guide.md`
+- `docs/blog/agent-cli/feishu-cli-doc-practice.md`
+- `docs/blog/lark-message-session-debug.md`
+- `docs/tools/lark/index.md`
+- `lark-cli/`
 
-## 当前已验证的实践边界
+## Default Workflow
 
-这些结论已经在仓库当前文档实战里跑过，可先按默认假设使用：
+1. Classify the task: config, messaging, documents, wiki, or permissions
+2. Start from `lark-cli` by default
+3. Use `--dry-run` first for write operations
+4. Only switch to user login when bot identity is not enough
 
-- `docs +create / +fetch / +update` 可以走 `--as bot`
-- `drive +add-comment`、`drive file.comment.replys create`、`drive permission.members create` 可以走 `--as bot`
-- `docs +search` 实测应视为 `user`-only
-- 评论刚创建后，`file.comments list` 可能需要短暂重试
-- shell 里不要用带字面量 `\\n` 的字符串硬拼 Markdown，优先用真实换行或 heredoc
+Config and auth starting points:
 
-## 默认决策规则
+```bash
+chattool setup lark-cli
+lark-cli auth status
+lark-cli auth login --recommend
+```
 
-1. 安装或迁移配置：先用 `chattool setup lark-cli`
-2. 最短本地调试：才用 `chattool lark`
-3. 已知 doc URL/token 的自动化：先尝试 bot 路线
-4. 搜索、发现、浏览：预期需要 user 身份
-5. `/wiki/...` 链接不要直接当 doc token，用 `wiki spaces get_node` 先解析真实对象
+## Command Routing
 
-## 工作原则
+### 1. Shortest Debug And Delivery Path
 
-- 飞书自动化优先复用官方 `lark-cli`，不要再为相同能力补一套平行 skill 文档
-- 有副作用的操作先用 `--dry-run`，并尽量保持最小 scope
-- 需要 Agent 协作登录时，优先用 `lark-cli auth login --no-wait` 和 `--device-code`
-- ChatTool 内遗留的 `chattool lark` 现在只保留 `info`、`send`、`chat` 三个最小调试命令，不再是默认推荐入口
+Use `chattool lark` only for:
 
-## 对应测试
+- quick bot credential check: `chattool lark info`
+- sending one simple text message: `chattool lark send`
+- local prompt/session debugging in terminal: `chattool lark chat`
 
-- `cli-tests/lark/guide/test_chattool_lark_skill_index.md`
+Do not move document, comment, permission, search, or reply workflows back into `chattool lark`.
+
+### 2. Messages And Session Debugging
+
+Use `lark-cli im` first:
+
+- send: `lark-cli im +messages-send`
+- reply: `lark-cli im +messages-reply`
+- search chats / find `chat_id`: `lark-cli im +chat-search`
+- list messages in a chat: `lark-cli im +chat-messages-list`
+- inspect threads: `lark-cli im +threads-messages-list`
+
+Core identifiers:
+
+- `message_id`: one message; replies depend on this
+- `chat_id`: one conversation or group chat
+- `open_id`: one user object; usable for direct messages
+- `receive_id_type`: tells the API what the target ID means
+
+Heuristics:
+
+- for a new send, first decide whether the real target is `chat_id` or `open_id`
+- for a reply, think in `message_id`, not `chat_id`
+- for the shortest delivery test, `chattool lark send` is fine
+- for richer output and better debugging fields, prefer `lark-cli im +messages-send`
+
+### 3. Document Body
+
+Document body operations belong to `docs`:
+
+- `lark-cli docs +create`
+- `lark-cli docs +fetch`
+- `lark-cli docs +update`
+
+### 4. Comments And Permissions
+
+Comments, comment replies, and permissions belong to `drive`:
+
+- `lark-cli drive +add-comment`
+- `lark-cli drive file.comment.replys create`
+- `lark-cli drive file.comments list`
+- `lark-cli drive file.comments patch`
+- `lark-cli drive permission.members create`
+
+### 5. Wiki Links
+
+Resolve wiki links before treating them as doc tokens:
+
+- `lark-cli wiki spaces get_node`
+
+## Current Working Assumptions
+
+These are consistent with the current repo docs and are safe defaults:
+
+- try bot identity first for document body operations: `docs +create / +fetch / +update`
+- try bot identity first for comments and basic sharing: `drive +add-comment`, `file.comment.replys create`, `permission.members create`
+- search and discovery actions are more likely to require user identity
+- do not build Markdown with literal `\n` in shell strings; prefer real newlines or heredoc
+- comment listing may need a short retry right after creation
+
+## Decision Rules
+
+1. install or migrate config: `chattool setup lark-cli`
+2. send one minimal text message: `chattool lark send`
+3. reply, search, or inspect message/chat/thread state: `lark-cli im`
+4. edit document body: `lark-cli docs`
+5. comments, permission, comment replies: `lark-cli drive`
+6. wiki resolution: `lark-cli wiki`
+
+## What Matters Most
+
+- choose the right command surface before writing commands
+- do not design another parallel Feishu CLI
+- if parameter shape is unclear, check `--help` or `schema`
+- prefer the shortest executable path over a broad explanation
