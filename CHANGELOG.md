@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败
 - `chattool gh pr-merge` 新增可选的 `--check` 开关，用于在合并前显式检查 check runs 与 workflow runs，避免再次误把带红 CI 的 PR 当成可安全合并
 - `chattool skill install` 不再强制要求 skill frontmatter 包含 `version`，只校验 `name` 与 `description`
+- `chattool setup alias` 的自定义多选现在统一走 `utils/tui.py` 的 checkbox 封装，交互里显式显示 `☑/☐` 勾选态，不再只靠高亮区分选中项
 
 ### Added
 - 新增根目录 `Dockerfile.playground`，用于直接构建一个最小的 ChatTool Playground 镜像；镜像在 `/opt/venv` 中安装 ChatTool，容器启动后会线性执行 `chattool setup playground -> chattool env set CHATTOOL_SKILLS_DIR -> chattool setup alias`
