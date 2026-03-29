@@ -19,6 +19,22 @@ class LazyGroup(click.Group):
             self.commands[name] = self._lazy_commands.pop(name)()
         return super().get_command(ctx, name)
 
+    def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        rows = []
+        for subcommand in self.list_commands(ctx):
+            if subcommand in self.commands:
+                cmd = self.commands[subcommand]
+                if cmd is None or cmd.hidden:
+                    continue
+                help_text = cmd.get_short_help_str()
+            else:
+                help_text = ""
+            rows.append((subcommand, help_text))
+
+        if rows:
+            with formatter.section("Commands"):
+                formatter.write_dl(rows)
+
 
 def _load_attr(module_path: str, attr: str) -> click.Command:
     module = importlib.import_module(module_path)

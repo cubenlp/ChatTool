@@ -6,7 +6,6 @@ from github import Github
 from github.GithubException import GithubException
 from github.ContentFile import ContentFile
 from chattool.utils import setup_logger
-from batch_executor import batch_thread_executor
 
 class GitHubClient:
     def __init__(self, 
@@ -162,8 +161,15 @@ class GitHubClient:
         # 定义获取单个仓库README的函数
         def _get_single_readme(repo_name: str) -> Optional[str]:
             return self.get_repository_readme(repo_name)
-        
-        # 使用batch_executor并发执行
+
+        try:
+            from batch_executor import batch_thread_executor
+        except ImportError as exc:
+            raise ImportError(
+                "Concurrent GitHub helpers require the optional 'batch' extra: "
+                "pip install \"chattool[github,batch]\""
+            ) from exc
+
         readme_contents = batch_thread_executor(
             items=repo_names,
             func=_get_single_readme,
@@ -190,8 +196,15 @@ class GitHubClient:
         # 定义获取单个文件内容的函数
         def _get_single_file_content(file_path: str) -> Optional[str]:
             return self.get_file_content(repo_name, file_path)
-        
-        # 使用batch_executor并发执行
+
+        try:
+            from batch_executor import batch_thread_executor
+        except ImportError as exc:
+            raise ImportError(
+                "Concurrent GitHub helpers require the optional 'batch' extra: "
+                "pip install \"chattool[github,batch]\""
+            ) from exc
+
         file_contents = batch_thread_executor(
             items=file_paths,
             func=_get_single_file_content,

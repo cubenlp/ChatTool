@@ -522,8 +522,23 @@ class Chat(HTTPClient):
                         return chats
         # 开始处理数据
         with tempfile.TemporaryDirectory() as temp_dir:
-            from filelock import FileLock
-            from batch_executor import batch_async_executor, batch_hybrid_executor
+            try:
+                from batch_executor import batch_async_executor, batch_hybrid_executor
+            except ImportError as exc:
+                raise ImportError(
+                    "batch_process_chat requires the optional 'batch' extra: "
+                    "pip install \"chattool[batch]\""
+                ) from exc
+
+            if checkpoint:
+                try:
+                    from filelock import FileLock
+                except ImportError as exc:
+                    raise ImportError(
+                        "Checkpointed batch_process_chat requires the optional 'batch' extra: "
+                        "pip install \"chattool[batch]\""
+                    ) from exc
+
             if checkpoint: # TODO: 多进程模式下使用
                 # if pool_id is not None: 
                 #     lock = f'{temp_dir}/{checkpoint.stem}_{pool_id}.lock'

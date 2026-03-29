@@ -1,18 +1,23 @@
+import importlib
+
 import click
-
-from .capture import main as capture_main
-from .cert_server import cert_app
-from .lark_serve import cli as lark_serve_cli
-from .svg2gif import svg2gif_app
+from chattool.client.main import LazyGroup
 
 
-@click.group(name="serve")
+def _load_attr(module_path: str, attr: str):
+    module = importlib.import_module(module_path)
+    return getattr(module, attr)
+
+
+@click.group(name="serve", cls=LazyGroup)
 def serve_cli():
     """Local server tools."""
     pass
 
 
-serve_cli.add_command(capture_main, name="capture")
-serve_cli.add_command(cert_app, name="cert")
-serve_cli.add_command(lark_serve_cli, name="lark")
-serve_cli.add_command(svg2gif_app, name="svg2gif")
+serve_cli._lazy_commands.update({
+    "capture": lambda: _load_attr("chattool.serve.capture", "main"),
+    "cert": lambda: _load_attr("chattool.serve.cert_server", "cert_app"),
+    "lark": lambda: _load_attr("chattool.serve.lark_serve", "cli"),
+    "svg2gif": lambda: _load_attr("chattool.serve.svg2gif", "svg2gif_app"),
+})
