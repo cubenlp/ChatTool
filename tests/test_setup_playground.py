@@ -41,6 +41,7 @@ def _install_fake_clone(monkeypatch, source_repo: Path) -> None:
 
     monkeypatch.setattr("chattool.setup.playground._clone_chattool_repo", fake_clone)
     monkeypatch.setattr("chattool.setup.playground._update_chattool_repo", fake_update)
+    monkeypatch.setattr("chattool.setup.playground._update_submodules", lambda repo_dir: None)
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +64,7 @@ def test_setup_playground_bootstraps_workspace(tmp_path, monkeypatch):
     setup_playground(workspace_dir=workspace, chattool_source=str(source_repo), interactive=False)
 
     assert (workspace / "ChatTool").exists()
-    assert not (workspace / "chattool").exists()
+    assert "ChatTool" in {path.name for path in workspace.iterdir()}
     assert (workspace / "AGENTS.md").exists()
     assert (workspace / "CHATTOOL.md").exists()
     assert (workspace / "MEMORY.md").exists()
@@ -313,5 +314,39 @@ def test_setup_playground_renames_legacy_chattool_dir(tmp_path, monkeypatch):
 
     setup_playground(workspace_dir=workspace, chattool_source=str(source_repo), interactive=False)
 
-    assert not legacy_repo.exists()
     assert (workspace / "ChatTool").exists()
+    assert "ChatTool" in {path.name for path in workspace.iterdir()}
+
+
+def test_setup_playground_with_uv_runs_uv_setup_for_repo(tmp_path, monkeypatch):
+    source_repo = _create_fake_chattool_repo(tmp_path)
+    workspace = tmp_path / "workspace"
+    _install_fake_clone(monkeypatch, source_repo)
+
+    calls = []
+    monkeypatch.setattr(
+        "chattool.setup.playground.setup_uv",
+        lambda project_dir, interactive=None, activate_shell=None, **kwargs: calls.append(
+            {
+                "project_dir": project_dir,
+                "interactive": interactive,
+                "activate_shell": activate_shell,
+                **kwargs,
+            }
+        ),
+    )
+
+    setup_playground(
+        workspace_dir=workspace,
+        chattool_source=str(source_repo),
+        interactive=False,
+        configure_uv=True,
+    )
+
+    assert calls == [
+        {
+            "project_dir": workspace / "ChatTool",
+            "interactive": False,
+            "activate_shell": True,
+        }
+    ]

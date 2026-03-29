@@ -15,7 +15,7 @@ CLI按功能分为几个命令组：
 - **`lark`**: 保留的飞书最小调试命令（`info` / `send` / `chat`）。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（uv / Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
@@ -31,7 +31,42 @@ CLI按功能分为几个命令组：
 
 ## 0. 环境初始化 (`setup`)
 
-### 0.0 CC-Connect (`setup cc-connect`)
+### 0.0 uv (`setup uv`)
+
+为当前 Python 项目初始化 `uv` 工作流：
+
+1. 如有需要先安装 `uv`
+2. 在项目目录执行 `uv python pin`
+3. 生成或更新 `uv.lock`
+4. 执行 `uv sync`
+5. 如果项目存在 `dev` extra，则默认同步 `uv sync --extra dev`
+6. 可选把当前项目的 `.venv/bin/activate` 追加到当前 shell rc
+
+最简用法：
+
+```bash
+chattool setup uv
+```
+
+显式指定项目目录和 Python 版本：
+
+```bash
+chattool setup uv --project-dir ~/workspace/ChatTool --python 3.12
+```
+
+如果你想顺手写入 `uv` 的默认镜像：
+
+```bash
+chattool setup uv --default-index https://pypi.tuna.tsinghua.edu.cn/simple/
+```
+
+如果你希望把当前项目的 `.venv` 激活脚本写入 `~/.zshrc` / `~/.bashrc`：
+
+```bash
+chattool setup uv --activate-shell
+```
+
+### 0.1 CC-Connect (`setup cc-connect`)
 
 安装或检查 `cc-connect` CLI，并在需要时先补齐 `Node.js >= 20` 与 `npm`：
 
@@ -45,7 +80,7 @@ chattool setup cc-connect
 chattool cc setup
 ```
 
-### 0.1 Codex (`setup codex`)
+### 0.2 Codex (`setup codex`)
 
 默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
 
@@ -87,7 +122,7 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 chattool setup codex --pam "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
-### 0.2 Claude Code (`setup claude`)
+### 0.3 Claude Code (`setup claude`)
 
 默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
 
@@ -109,7 +144,7 @@ chattool setup claude --auth-token "sk-ant-xxx"
 chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-opus-4-6"
 ```
 
-### 0.3 OpenCode (`setup opencode`)
+### 0.4 OpenCode (`setup opencode`)
 
 默认交互输入配置项（会读取已有配置并以 mask 形式展示）：
 
@@ -125,7 +160,7 @@ chattool setup opencode
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 ```
 
-### 0.4 Lark CLI (`setup lark-cli`)
+### 0.5 Lark CLI (`setup lark-cli`)
 
 安装官方 `lark-cli`，并把 ChatTool 当前生效的 Feishu 配置复用过去：
 
@@ -163,7 +198,7 @@ chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
 lark-cli auth login --recommend
 ```
 
-### 0.5 Playground (`setup playground`)
+### 0.6 Playground (`setup playground`)
 
 把一个目录快速初始化或更新为工作区：
 
@@ -189,6 +224,16 @@ lark-cli auth login --recommend
 - 交互模式下会提示是否配置，并允许输入新的 token；直接回车则保留当前配置值
 - 非交互模式下如果当前 `chatenv` 里已有 `GITHUB_ACCESS_TOKEN`，会自动写入 `git credential store`
 - 该步骤会执行 `git config --global credential.helper store`，并为 `https://github.com` 写入一份 PAT 凭据，方便后续 `git push` / `git fetch`
+
+如果你希望在初始化 Playground 时，顺手把 clone 下来的 `ChatTool/` 项目切到 `uv` 工作流，也可以显式打开：
+
+- 在 `ChatTool/` 目录执行 `uv python pin`、`uv lock`、`uv sync`
+- 若仓库存在 `dev` extra，则自动执行 `uv sync --extra dev`
+- 把 `ChatTool/.venv/bin/activate` 追加到当前 shell rc，方便后续直接 `source`
+
+```bash
+chattool setup playground --uv
+```
 
 在目标空目录里直接执行：
 

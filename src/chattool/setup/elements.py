@@ -12,6 +12,7 @@ from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
 from chattool.setup.playground import setup_playground
+from chattool.setup.uv import setup_uv
 
 
 @dataclass(frozen=True)
@@ -86,12 +87,24 @@ def lark_cli_setup(app_id, app_secret, brand, env, interactive):
     )
 
 
-def playground_setup(workspace_dir, chattool_source, interactive, force):
+def playground_setup(workspace_dir, chattool_source, interactive, force, uv):
     setup_playground(
         workspace_dir=workspace_dir,
         chattool_source=chattool_source,
         interactive=interactive,
         force=force,
+        configure_uv=uv,
+    )
+
+
+def uv_setup(project_dir, python, default_index, activate_shell, include_dev, interactive):
+    setup_uv(
+        project_dir=project_dir,
+        python_version=python,
+        default_index=default_index,
+        activate_shell=activate_shell,
+        include_dev=include_dev,
+        interactive=interactive,
     )
 
 
@@ -256,6 +269,37 @@ SETUP_COMMAND_ELEMENTS = (
         ),
     ),
     SetupCommandElement(
+        name="uv",
+        help="Setup uv for the current Python project and optionally activate its .venv from shell rc.",
+        callback=uv_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+            SetupOptionElement(
+                param_decls=("--project-dir", "--dir"),
+                kwargs={"default": None, "help": "Target project directory. Defaults to current directory."},
+            ),
+            SetupOptionElement(
+                param_decls=("--python",),
+                kwargs={"default": None, "help": "Python version to pin with uv, such as 3.12."},
+            ),
+            SetupOptionElement(
+                param_decls=("--default-index", "--index"),
+                kwargs={"default": None, "help": "Optional default package index URL written to ~/.config/uv/uv.toml."},
+            ),
+            SetupOptionElement(
+                param_decls=("--activate-shell/--no-activate-shell",),
+                kwargs={"default": None, "help": "Append this project's .venv activation to the current shell rc."},
+            ),
+            SetupOptionElement(
+                param_decls=("--include-dev/--no-include-dev",),
+                kwargs={"default": None, "help": "If the project exposes a dev extra, sync it during initialization."},
+            ),
+        ),
+    ),
+    SetupCommandElement(
         name="playground",
         help="Bootstrap or update a workspace with a ChatTool clone, memory files, and workspace skills.",
         callback=playground_setup,
@@ -275,6 +319,10 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--force",),
                 kwargs={"is_flag": True, "help": "Allow overwriting generated files and replace a broken non-git ChatTool directory when rerunning."},
+            ),
+            SetupOptionElement(
+                param_decls=("--uv/--no-uv",),
+                kwargs={"default": None, "help": "Optionally initialize the cloned ChatTool project with uv and append its .venv activation to shell rc."},
             ),
         ),
     ),

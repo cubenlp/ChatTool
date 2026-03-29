@@ -1,6 +1,6 @@
 # test_chattool_setup_basic
 
-测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/cc-connect/codex/claude/opencode/playground 等子命令入口。
+测试 `chattool setup` 的基础链路，覆盖 alias/uv/chrome/frp/nodejs/cc-connect/codex/claude/opencode/playground 等子命令入口。
 
 ## 元信息
 
@@ -43,7 +43,33 @@ chattool setup --help
 chattool setup alias --dry-run
 ```
 
-## 用例 3：chrome/frp/nodejs
+## 用例 3：uv
+
+- 初始环境准备：
+  - 准备一个带 `pyproject.toml` 的 Python 项目目录。
+- 相关文件：
+  - `<project>/pyproject.toml`
+  - `<project>/.python-version`
+  - `<project>/uv.lock`
+  - `<project>/.venv/`
+  - `~/.config/uv/uv.toml`（若配置镜像）
+  - `~/.zshrc` / `~/.bashrc`（若启用 shell activation）
+
+预期过程和结果：
+  1. 执行 `chattool setup uv --project-dir <project>`，预期必要时先安装 `uv`，然后在项目目录执行 `uv python pin`、`uv lock`、`uv sync`。
+  2. 若项目定义了 `dev` extra，预期默认执行 `uv sync --extra dev`。
+  3. 若传入 `--default-index <url>`，预期把默认索引写入 `~/.config/uv/uv.toml`。
+  4. 若传入 `--activate-shell`，预期把 `<project>/.venv/bin/activate` 追加到 `~/.zshrc` 或 `~/.bashrc` 的受管区块中。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool setup uv --project-dir /path/to/project --python 3.12
+chattool setup uv --project-dir /path/to/project --default-index https://pypi.tuna.tsinghua.edu.cn/simple/
+chattool setup uv --project-dir /path/to/project --activate-shell
+```
+
+## 用例 4：chrome/frp/nodejs
 
 - 初始环境准备：
   - 确保可安装依赖。
@@ -63,7 +89,7 @@ chattool setup frp -i
 chattool setup nodejs -i
 ```
 
-## 用例 4：cc-connect/codex/claude/opencode/lark-cli
+## 用例 5：cc-connect/codex/claude/opencode/lark-cli
 
 - 初始环境准备：
   - 准备 API key 与 base_url。
@@ -89,7 +115,7 @@ chattool setup opencode -i
 chattool setup lark-cli -i
 ```
 
-## 用例 5：playground
+## 用例 6：playground
 
 - 初始环境准备：
   - 准备一个空目录作为工作区根目录。
@@ -110,11 +136,13 @@ chattool setup lark-cli -i
   5. 预期创建 `Memory/`、`skills/`、`scratch/`。
   6. 预期从 `ChatTool/skills/` 复制或更新 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
   7. 预期 skills 同步只替换常规文件，不修改已有 `experience/` 内容。
+  8. 若传入 `--uv`，预期在 clone/update 完成后，对工作区下的 `ChatTool/` 执行 `chattool setup uv` 对应的初始化逻辑，并把 `ChatTool/.venv/bin/activate` 追加到当前 shell rc。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool setup playground --workspace-dir /tmp/my-playground --chattool-source /path/to/ChatTool
+chattool setup playground --workspace-dir /tmp/my-playground --chattool-source /path/to/ChatTool --uv
 ```
 
 ## 清理 / 回滚

@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 
 from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
+from chattool.setup.uv import setup_uv
 from chattool.utils import mask_secret
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text
@@ -51,12 +52,21 @@ def _legacy_workspace_repo_dir(workspace_dir: Path) -> Path:
     return workspace_dir / LEGACY_CHATTOOL_REPO_DIRNAME
 
 
+def _workspace_child_by_name(workspace_dir: Path, name: str) -> Path | None:
+    if not workspace_dir.exists():
+        return None
+    for child in workspace_dir.iterdir():
+        if child.name == name:
+            return child
+    return None
+
+
 def _find_existing_workspace_repo_dir(workspace_dir: Path) -> Path | None:
-    preferred = _preferred_workspace_repo_dir(workspace_dir)
-    if preferred.exists():
+    preferred = _workspace_child_by_name(workspace_dir, DEFAULT_CHATTOOL_REPO_DIRNAME)
+    if preferred is not None:
         return preferred
-    legacy = _legacy_workspace_repo_dir(workspace_dir)
-    if legacy.exists():
+    legacy = _workspace_child_by_name(workspace_dir, LEGACY_CHATTOOL_REPO_DIRNAME)
+    if legacy is not None:
         return legacy
     return None
 
@@ -371,12 +381,22 @@ def _update_submodules(repo_dir: Path) -> None:
 
 
 def _maybe_migrate_legacy_repo_dir(workspace_dir: Path) -> Path | None:
-    preferred = _preferred_workspace_repo_dir(workspace_dir)
-    legacy = _legacy_workspace_repo_dir(workspace_dir)
-    if preferred.exists() or not legacy.exists():
+    preferred = _workspace_child_by_name(workspace_dir, DEFAULT_CHATTOOL_REPO_DIRNAME)
+    legacy = _workspace_child_by_name(workspace_dir, LEGACY_CHATTOOL_REPO_DIRNAME)
+    if preferred is not None or legacy is None:
         return _find_existing_workspace_repo_dir(workspace_dir)
+    preferred = _preferred_workspace_repo_dir(workspace_dir)
     logger.info(f"Migrating legacy workspace repo dir from {legacy} to {preferred}")
-    legacy.rename(preferred)
+    if legacy.name.lower() == preferred.name.lower():
+        temp_dir = workspace_dir / "__chattool_repo_tmp__"
+        suffix = 0
+        while temp_dir.exists():
+            suffix += 1
+            temp_dir = workspace_dir / f"__chattool_repo_tmp__{suffix}"
+        legacy.rename(temp_dir)
+        temp_dir.rename(preferred)
+    else:
+        legacy.rename(preferred)
     click.echo(f"Renamed legacy repo dir: {legacy.name} -> {preferred.name}")
     return preferred
 
@@ -576,7 +596,13 @@ def _should_sync_skills(existing_repo: bool, interactive, can_prompt) -> bool:
     return True
 
 
-def setup_playground(workspace_dir=None, chattool_source=None, interactive=None, force=False):
+def _resolve_configure_uv(configure_uv, interactive, can_prompt) -> bool:
+    if configure_uv is not None:
+        return bool(configure_uv)
+    return False
+
+
+def setup_playground(workspace_dir=None, chattool_source=None, interactive=None, force=False, configure_uv=None):
     logger.info("Start playground setup")
 
     workspace_default = _resolve_workspace_dir(workspace_dir=workspace_dir)
@@ -584,7 +610,7 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
     has_existing = _workspace_has_existing_files(workspace_default)
     usage = (
         "Usage: chattool setup playground [--workspace-dir <path>] [--chattool-source <path-or-url>] "
-        "[--force] [-i|-I]"
+        "[--force] [--uv|--no-uv] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
         interactive=interactive,
@@ -635,6 +661,19 @@ def setup_playground(workspace_dir=None, chattool_source=None, interactive=None,
 
     logger.info(f"Cloned ChatTool repo dir: {repo_path}")
     logger.info(f"Skills source dir: {skills_source}")
+
+    should_configure_uv = _resolve_configure_uv(
+        configure_uv=configure_uv,
+        interactive=interactive,
+        can_prompt=can_prompt,
+    )
+    if should_configure_uv:
+        logger.info(f"Running uv setup for workspace ChatTool repo: {repo_path}")
+        setup_uv(
+            project_dir=repo_path,
+            interactive=interactive,
+            activate_shell=True,
+        )
 
     memory_dir = workspace_path / "Memory"
     logs_dir = memory_dir / "logs"
