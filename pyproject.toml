@@ -25,29 +25,25 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
-    "questionary>=2.1.0",
     "requests>=2.20",
-    "aiohttp>=3.8",
-    "tqdm>=4.60",
-    # "docstring_parser>=0.10",
     "python-dotenv>=0.17.0",
-    "loguru>=0.7",
-    "fastmcp; python_version >= '3.10'",
-    "batch_executor>=0.3.0",
     "colorama",
-    "fastapi",
-    "uvicorn",
     "platformdirs>=3.0",
-    "pydantic>=2.0.0",
     "httpx",
-    "gitpython",
-    "PyGithub",
-    "filelock",
-    "pillow"
 ]
 
 [project.optional-dependencies]
+interactive = [
+    "questionary>=2.1.0",
+    "prompt_toolkit",
+]
+batch = [
+    "batch_executor>=0.3.0",
+    "filelock",
+]
 dns = [
+    "aiohttp>=3.8",
+    "cryptography",
     "netifaces",
     "alibabacloud_alidns20150109>=3.5.10",
     "alibabacloud_tea_openapi>=0.3.0",
@@ -71,12 +67,27 @@ browser = [
     "imageio",
     "playwright"
 ]
+serve = [
+    "fastapi",
+    "uvicorn",
+    "pydantic>=2.0.0",
+]
+mcp = [
+    "fastmcp; python_version >= '3.10'",
+]
+github = [
+    "PyGithub",
+]
+client = [
+    "gitpython",
+    "rich",
+]
 pypi = [
     "build",
     "twine",
 ]
 tools = [
-    "chattool[dns, lark, images, screenshot]",
+    "chattool[batch,browser,client,dns,github,images,interactive,lark,mcp,serve,screenshot]",
 ]
 tests = [
     "coverage",

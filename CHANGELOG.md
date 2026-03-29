@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Changed
+- 默认 `pip install chattool` 现在只保留核心聊天能力与基础 CLI 依赖；`questionary`、`aiohttp`、`fastapi`、`uvicorn`、`pydantic`、`fastmcp`、`PyGithub`、`gitpython`、`pillow`、`batch_executor`、`filelock` 等已拆分到新的 optional extras（如 `interactive`、`dns`、`serve`、`mcp`、`github`、`client`、`batch`）
+- `import chattool`、`chattool serve`、`chattool mcp` 与 `chattool.tools` 现在进一步收紧为惰性导入，避免默认安装路径被 DNS / Lark / MCP / Serve 等可选功能反向拉重
 - env 配置机制开始切换为按类型拆分的目录模型：活动配置与 profile 现在按 `envs/<Config>/.env`、`envs/<Config>/<profile>.env` 管理，不再把单个全局 `.env` 作为唯一真相
 - 配置优先级现调整为 `显式参数 > os.environ > env 文件 > 默认值`
 - 对支持 `-e/--env` 的命令，配置优先级进一步固定为 `显式参数 > -e/显式 env > os.environ > 类型内置 .env > 默认值`，并写入配置文档与开发规范，便于后续统一复用

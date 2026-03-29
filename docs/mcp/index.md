@@ -39,7 +39,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
       "command": "uvx",
       "args": [
         "--from",
-        "chattool[dev]",
+        "chattool[mcp,dns]",
         "mcp-server-chattool"
       ]
     }
@@ -59,7 +59,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
         "--directory",
         "/absolute/path/to/ChatTool",
         "--extra",
-        "dev",
+        "mcp",
+        "--extra",
+        "dns",
         "mcp-server-chattool"
       ]
     }

@@ -23,11 +23,15 @@
 
 ## 安装
 
+默认安装只包含核心聊天能力和基础 CLI。DNS、MCP、Serve、交互式 TUI 等较重依赖已拆到 extras。
+
 ```bash
 pip install chattool --upgrade
-pip install "chattool[images]"   # 含图像工具
-pip install "chattool[pypi]"     # 含 Python 包构建/发布依赖
-pip install "chattool[dev]"      # 含 MCP 等开发依赖
+pip install "chattool[tools]"        # 常用工具全集
+pip install "chattool[mcp,dns]"      # MCP 服务 + DNS 工具
+pip install "chattool[images]"       # 含图像工具
+pip install "chattool[pypi]"         # 含 Python 包构建/发布依赖
+pip install "chattool[dev]"          # 仓库开发依赖
 ```
 
 ## 功能概览

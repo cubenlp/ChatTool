@@ -1,20 +1,34 @@
+import importlib
 import os
+
 try:
     from fastmcp import FastMCP
 except ImportError:
     FastMCP = None
+
 from chattool.utils import setup_logger
-from chattool.tools.dns.mcp import register as register_dns_tools
-from chattool.tools.network.mcp import register as register_network_tools
-from chattool.tools.zulip.mcp import register as register_zulip_tools
 
 logger = setup_logger("mcp_server", log_level="INFO")
 SERVER_NAME = "ChatTool MCP Server"
+REGISTER_MODULES = (
+    "chattool.tools.zulip.mcp",
+    "chattool.tools.dns.mcp",
+    "chattool.tools.network.mcp",
+)
+
+
+def _register_optional_tools(mcp_instance):
+    for module_name in REGISTER_MODULES:
+        try:
+            register = getattr(importlib.import_module(module_name), "register")
+        except ImportError as exc:
+            logger.warning(f"Skipping MCP module {module_name}: {exc}")
+            continue
+        register(mcp_instance)
 
 if FastMCP:
     mcp = FastMCP(SERVER_NAME)
-    for register in (register_zulip_tools, register_dns_tools, register_network_tools):
-        register(mcp)
+    _register_optional_tools(mcp)
 else:
     mcp = None
     logger.warning("FastMCP module not found. MCP functionality will be disabled.")
