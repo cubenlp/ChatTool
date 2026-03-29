@@ -31,6 +31,7 @@ plugins:
       redirect_maps:
         'setup/docker.md': 'env/docker.md'
         'setup/index.md': 'env/index.md'
+        'setup/uv.md': 'env/uv.md'
         'setup/chrome.md': 'env/chrome.md'
         'setup/codex.md': 'env/codex.md'
         'setup/lark-cli.md': 'env/lark-cli.md'
@@ -147,6 +148,7 @@ nav:
 
   - 环境安装:
     - 概览: env/index.md
+    - uv 配置: env/uv.md
     - Chrome 环境: env/chrome.md
     - Codex 配置: env/codex.md
     - Lark CLI 配置: env/lark-cli.md

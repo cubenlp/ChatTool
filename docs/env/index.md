@@ -4,6 +4,16 @@ ChatTool 提供了一系列辅助工具的安装和配置功能。
 
 ## 功能列表
 
+### uv 配置
+
+使用 `setup uv` 把当前 Python 项目切到 `uv` 工作流。
+
+```bash
+chattool setup uv
+```
+
+详细文档：[uv.md](uv.md)
+
 ### Codex 配置
 
 使用 `setup codex` 快速安装并写入配置。
@@ -41,6 +51,17 @@ chattool setup lark-cli
 ```
 
 详细文档：[lark-cli.md](lark-cli.md)
+
+### Playground 工作区初始化
+
+使用 `setup playground` 初始化或更新一个工作区，并按需把 clone 下来的 `ChatTool/` 项目继续接入 `uv`。
+
+```bash
+chattool setup playground
+chattool setup playground --uv
+```
+
+详细文档：参见 [client.md](../client.md) 中的 `setup playground` 章节。
 
 ### Chrome 浏览器驱动安装
 
