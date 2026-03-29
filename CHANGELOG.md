@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool skill install` 不再强制要求 skill frontmatter 包含 `version`，只校验 `name` 与 `description`
 
 ### Added
+- 博客新增 `docs/blog/uv-guide.md`，整理 `uv` 的安装方式、常用命令、项目结构与关键文件职责，作为仓库后续从 `pip` 迁到 `uv` 前的统一背景材料
 - 新增根目录 `Dockerfile.playground`，用于直接构建一个最小的 ChatTool Playground 镜像；镜像在 `/opt/venv` 中安装 ChatTool，容器启动后会线性执行 `chattool setup playground -> chattool env set CHATTOOL_SKILLS_DIR -> chattool setup alias`
 - `chatenv new <profile> -t <type>`，用于从当前激活的类型配置直接创建并激活一个新 profile，补齐 `save/use/delete` 之间的便捷新建入口
 - `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
