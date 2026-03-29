@@ -53,13 +53,21 @@ ChatTool 按层构建：
 
 ## 安装
 
+默认安装只包含核心聊天能力和基础 CLI；可选工具链按 extra 分组安装。
+
 ```bash
 pip install chattool --upgrade
+
+# 常用工具全集
+pip install "chattool[tools]"
 
 # 含图像工具
 pip install "chattool[images]"
 
-# 含开发依赖（MCP 等）
+# 含 MCP 服务与 DNS 工具
+pip install "chattool[mcp,dns]"
+
+# 含开发依赖
 pip install "chattool[dev]"
 ```
 
