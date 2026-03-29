@@ -121,5 +121,6 @@ lark-cli auth login --recommend
 
 - `docs/blog/agent-cli/lark-cli-guide.md`
 - `docs/blog/agent-cli/feishu-cli-doc-practice.md`
+- `docs/blog/lark-message-session-debug.md`
 - `docs/env/lark-cli.md`
 - `skills/feishu/SKILL.md`
