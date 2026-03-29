@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import ask_select, is_interactive_available
+from chattool.utils.tui import ask_checkbox, ask_select, is_interactive_available
 
 logger = setup_logger("setup_alias")
 
@@ -86,16 +86,20 @@ def select_aliases_interactively(default_selected):
         return list(ALIAS_MAP.keys())
     if preset == "Unselect all":
         return []
-    import questionary
+    from chattool.utils.tui import create_choice
 
     choices = [
-        questionary.Choice(title=f"{name} => {cmd}", value=name, checked=name in default_selected)
+        create_choice(
+            title=f"{name} => {cmd}",
+            value=name,
+            checked=name in default_selected,
+        )
         for name, cmd in ALIAS_MAP.items()
     ]
-    selected = questionary.checkbox(
+    selected = ask_checkbox(
         "Select aliases (Space to toggle, A select/unselect all)",
         choices=choices,
-    ).ask()
+    )
     return selected or []
 
 
