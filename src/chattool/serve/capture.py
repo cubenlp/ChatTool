@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 from fastapi import FastAPI, Request
 from datetime import datetime

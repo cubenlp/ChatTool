@@ -27,7 +27,7 @@ build-backend = "setuptools.build_meta"
 name = "demo-pkg"
 version = "0.1.0"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 """.strip()
         + "\n",
@@ -50,7 +50,7 @@ build-backend = "setuptools.build_meta"
 name = "demo-pkg"
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 
 [tool.setuptools.dynamic]
@@ -90,7 +90,7 @@ build-backend = "setuptools.build_meta"
 name = "demo-pkg"
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 
 [tool.setuptools.dynamic]
@@ -218,6 +218,7 @@ def test_scaffold_package_creates_expected_src_layout(tmp_path):
     assert (project_dir / "tests" / "test_version.py").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
     assert 'name = "mychat"' in pyproject_text
+    assert 'requires-python = ">=3.9"' in pyproject_text
     assert 'version = {attr = "mychat.__version__"}' in pyproject_text
     assert 'license = "MIT"' in pyproject_text
     assert 'authors = [{name = "Rex", email = "rex@example.com"}]' in pyproject_text

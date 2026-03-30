@@ -1,0 +1,4 @@
+interface:
+  display_name: "ChatTool Release"
+  short_description: "Prepare or execute a ChatTool release after merge"
+  default_prompt: "Use $chattool-release when ChatTool work includes version bumps, tag timing, Publish Package verification, PyPI checks, or release.log updates after a real release."

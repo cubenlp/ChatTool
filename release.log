@@ -1,0 +1,2 @@
+2026-03-30 13:35:42 CST | version=6.4.1 | tag=6.4.1 | commit=5219007 | operator=openclaw | summary=Prepare ChatTool 6.4.1 with Python >=3.9 support, align pypi scaffolding/docs/tests, and validate CI/release workflows.
+2026-03-30 16:09:37 CST | version=6.4.1 | tag=v6.4.1 | commit=1142319 | operator=openclaw | summary=Post-merge release for ChatTool 6.4.1 via canonical v-tag flow; Publish Package run 23734455750 completed successfully.

@@ -21,6 +21,8 @@
 
 以 CLI 为核心的 Python 开发套件，集成 LLM 对话、工具箱（DNS、飞书、绘图等）、MCP 服务和环境管理。
 
+支持 Python `>=3.9`。
+
 ## 安装
 
 默认安装只包含核心聊天能力和基础 CLI。DNS、MCP、Serve、交互式 TUI 等较重依赖已拆到 extras。
@@ -48,6 +50,7 @@ chatenv new mini -t feishu      # 从当前激活配置新建并切换到 Feishu
 chatenv new -t openai           # 交互式创建 OpenAI profile：先问名称，再补齐字段
 chatenv save work -t openai && chatenv use work -t openai   # 按类型管理 profile
 chattool lark info -e work       # 显式使用 Feishu profile，优先级高于当前 shell 环境变量
+chattool cc init -i --quiet      # 生成默认 quiet 的 cc-connect 项目配置
 ```
 
 ### LLM 对话 (`chattool.Chat`)
@@ -145,6 +148,8 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 ```bash
 chattool pypi init mychat
 ```
+
+默认生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`。
 
 `chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
 

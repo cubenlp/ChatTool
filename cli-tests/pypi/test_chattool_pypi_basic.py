@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 name = "demo-pkg"
 version = "0.1.0"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 """.strip()
         + "\n",
@@ -102,6 +102,7 @@ def test_chattool_pypi_basic(tmp_path):
     assert init.exit_code == 0
     assert (project_dir / "src" / "mychat" / "__init__.py").exists()
     assert (project_dir / "tests" / "conftest.py").exists()
+    assert 'requires-python = ">=3.9"' in (project_dir / "pyproject.toml").read_text(encoding="utf-8")
 
     pytest_result = subprocess.run(
         [sys.executable, "-m", "pytest", "-q"],

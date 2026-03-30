@@ -45,6 +45,12 @@ chattool setup cc-connect
 chattool cc setup
 ```
 
+生成最小可用配置时，如需默认隐藏思考和工具进度中间消息，可直接写入项目级 quiet 配置：
+
+```bash
+chattool cc init -i --quiet
+```
+
 ### 0.1 Codex (`setup codex`)
 
 默认交互输入密钥（会读取已有配置并以 mask 形式展示）：

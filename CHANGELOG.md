@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Changed
+- `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
+- `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
+- `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
+- `Publish Package` workflow 现在会在发布前显式检查 PyPI 是否已存在同版本；若 `src/chattool/__init__.py` 未提前 bump、或同版本已发布，工作流会直接失败，而不是靠 `twine upload --skip-existing` 静默跳过
+- GitHub PR smoke tests 现从多版本矩阵收敛为最小双平台覆盖：`ubuntu-latest + Python 3.10` 与 `macos-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
+
+### Added
+- `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
+- 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查、PyPI 校验和正式发版后的 `release.log` 记录
+- 新增 `cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
+- 新增 `cli-tests/skill/test_chattool_release_tag_format.md` 与 `cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
+- 新增 `cli-tests/skill/test_chattool_release_version_bump.md` 与 `cli-tests/skill/test_chattool_release_version_bump.py`，校对 release/practice/dev-review skill、开发文档与 workflow 都明确要求“版本号必须在 PR 阶段先 bump，PyPI 已有同版本时必须失败”
+
+## [6.4.1] - 2026-03-30
+
+### Changed
+- ChatTool 现统一以 `Python >=3.9` 作为公开支持下限：`chattool pypi init` 默认生成 `requires-python = ">=3.9"`，包元数据不再用最高到 3.12 的 classifier 形成隐性上限；GitHub CI 只保留最小 smoke-test 覆盖
 - 默认 `pip install chattool` 现在只保留核心聊天能力与基础 CLI 依赖；`questionary`、`aiohttp`、`fastapi`、`uvicorn`、`pydantic`、`fastmcp`、`PyGithub`、`gitpython`、`pillow`、`batch_executor`、`filelock` 等已拆分到新的 optional extras（如 `interactive`、`dns`、`serve`、`mcp`、`github`、`client`、`batch`）
 - `import chattool`、`chattool serve`、`chattool mcp` 与 `chattool.tools` 现在进一步收紧为惰性导入，避免默认安装路径被 DNS / Lark / MCP / Serve 等可选功能反向拉重
 - env 配置机制开始切换为按类型拆分的目录模型：活动配置与 profile 现在按 `envs/<Config>/.env`、`envs/<Config>/<profile>.env` 管理，不再把单个全局 `.env` 作为唯一真相
@@ -26,11 +43,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Feishu 真实测试与文档说明现在回到生产口径，不再引入独立的 `FEISHU_TEST_USER_ID` / `FEISHU_TEST_USER_ID_TYPE`
 
 ### Fixed
+- 若干使用 `X | Y` 类型注解的核心模块现统一补上 `from __future__ import annotations`，避免 Python 3.9 在导入阶段因注解求值失败
 - `chattool setup codex` 现在不再把实际 API key 错写进 `preferred_auth_method`：`config.toml` 中该字段固定为 `"apikey"`，真实密钥只写入 `auth.json` 的 `OPENAI_API_KEY`
 - `chatenv new -t <type>` 在交互终端里不再退化成单纯的 `save` 语义：省略 profile 名时现在会先询问名称，再进入该类型字段填写，然后写入并激活新 profile
 - `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败
 - `chattool gh pr-merge` 新增可选的 `--check` 开关，用于在合并前显式检查 check runs 与 workflow runs，避免再次误把带红 CI 的 PR 当成可安全合并
 - `chattool skill install` 不再强制要求 skill frontmatter 包含 `version`，只校验 `name` 与 `description`
+- `chattool setup alias` 的自定义多选现在统一走 `utils/tui.py` 的 checkbox 封装，交互里显式显示 `☑/☐` 勾选态，不再只靠高亮区分选中项
 
 ### Added
 - 新增根目录 `Dockerfile.playground`，用于直接构建一个最小的 ChatTool Playground 镜像；镜像在 `/opt/venv` 中安装 ChatTool，容器启动后会线性执行 `chattool setup playground -> chattool env set CHATTOOL_SKILLS_DIR -> chattool setup alias`

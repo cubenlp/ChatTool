@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .elements import BaseEnvConfig, EnvField
 
 

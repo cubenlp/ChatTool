@@ -1,7 +1,7 @@
 ---
 name: chattool-dev-review
 description: Review a ChatTool feature after implementation. Use when asked to do a post-change audit focused on lazy import, missing-arg interactive behavior, unified utils/tui prompts, and whether docs/tests/changelog were updated with the feature.
-version: 0.1.0
+version: 0.2.1
 ---
 
 # ChatTool Dev Review
@@ -9,6 +9,8 @@ version: 0.1.0
 Use this skill after a new ChatTool feature or CLI change is implemented.
 
 Default goal: review the feature change, not the whole repository, unless the user explicitly asks for a broader audit.
+
+Boundary: this skill stops at development review. Merge timing, release prep, tag creation, `Publish Package`, PyPI verification, and `release.log` belong to `$chattool-release`.
 
 ## What To Check
 
@@ -33,11 +35,7 @@ Default goal: review the feature change, not the whole repository, unless the us
    - Update [README.md](README.md) when the feature is user-facing.
    - Update [CHANGELOG.md](CHANGELOG.md).
    - For CLI changes, update the matching doc-first case under [cli-tests](cli-tests) and add/adjust the `.py` test when needed.
-
-5. Branch is rebased or merged with the latest mainline before MR/PR
-   - Before the final MR/PR pass, update from the latest `master` branch.
-   - Prefer merging or rebasing `origin/master` into the working branch before submission, then resolve conflicts locally.
-   - Treat “not synced with latest master” as a review issue because it hides integration conflicts until review or merge time.
+   - If the PR is meant to ship as a specific package release, the intended `__version__` / changelog updates should already be in the diff before merge; do not defer version bumps to the post-merge tag step.
 
 ## Review Workflow
 
@@ -59,18 +57,11 @@ Default goal: review the feature change, not the whole repository, unless the us
    - Run the smallest useful test or CLI invocation for the changed feature.
    - If you cannot validate, say so explicitly.
 
-5. Before final MR/PR, sync mainline and recheck.
-   - Run `git fetch origin` and bring `origin/master` into the current branch.
-   - Resolve conflicts before final review output or PR update.
-   - Re-run the smallest relevant verification after conflict resolution when the merge changes the affected area.
-
 ## Useful Commands
 
 ```bash
 git diff --stat
 git diff --name-only
-git fetch origin
-git merge origin/master
 rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
 rg -n "lazy import|utils/tui.py|interactive" docs/development-guide docs README.md
 ```
