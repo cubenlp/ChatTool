@@ -27,13 +27,6 @@ def _get_console():
     return Console(stderr=True)
 
 
-def _prompt_or_back(prompt_fn):
-    try:
-        return prompt_fn()
-    except (click.Abort, EOFError, KeyboardInterrupt):
-        return BACK_VALUE
-
-
 def _render_heading(title, subtitle=None):
     console = _get_console()
     if not console:
@@ -95,46 +88,113 @@ def _normalize_choice(choice):
 
 
 def ask_select(message, choices, style=None):
-    """Ask a selection question using Rich rendering and click input."""
-    normalized = [_normalize_choice(choice) for choice in choices]
-    selectable = [choice for choice in normalized if not choice["separator"]]
+    """Ask a selection question using questionary for arrow-key navigation."""
+    import questionary
 
-    if not selectable:
+    normalized = [_normalize_choice(choice) for choice in choices]
+    questionary_choices = []
+    selectable_count = 0
+    for choice in normalized:
+        if choice["separator"]:
+            questionary_choices.append(questionary.Separator())
+            continue
+        selectable_count += 1
+        questionary_choices.append(
+            questionary.Choice(
+                title=choice["title"],
+                value=choice["value"],
+            )
+        )
+
+    if selectable_count == 0:
         return BACK_VALUE
 
-    _render_heading("Select Option", message)
-    console = _get_console()
-    if console:
-        table = Table(show_header=True, header_style="bold cyan", box=None, pad_edge=False)
-        table.add_column("#", style="bold yellow", width=4)
-        table.add_column("Choice", style="white")
-        index = 1
-        for choice in normalized:
-            if choice["separator"]:
-                table.add_row("", "[dim]----[/dim]")
-                continue
-            table.add_row(str(index), choice["title"])
-            index += 1
-        console.print(table)
-    else:
-        index = 1
-        for choice in normalized:
-            if choice["separator"]:
-                click.echo("  ----", err=True)
-                continue
-            click.echo(f"  {index}. {choice['title']}", err=True)
-            index += 1
+    select_style = questionary.Style([
+        ("qmark", ""),
+        ("question", ""),
+        ("answer", ""),
+        ("pointer", ""),
+        ("highlighted", "noreverse"),
+        ("selected", "noreverse"),
+        ("separator", "dim"),
+        ("instruction", "dim"),
+        ("text", ""),
+        ("disabled", "italic"),
+    ])
 
-    def _prompt():
-        selected_index = click.prompt(
-            "Enter choice number",
-            type=click.IntRange(1, len(selectable)),
-            show_choices=False,
-            err=True,
+    selected = questionary.select(
+        message,
+        choices=questionary_choices,
+        qmark="",
+        pointer=">",
+        style=select_style,
+        use_arrow_keys=True,
+        use_jk_keys=True,
+        instruction="",
+    ).ask()
+    if selected is None:
+        raise click.Abort()
+    return selected
+
+
+def ask_checkbox(message, choices, default_values=None, style=None):
+    """Ask a checkbox question using questionary for multi-select."""
+    import questionary
+    from questionary.prompts import common as questionary_common
+
+    normalized = [_normalize_choice(choice) for choice in choices]
+    questionary_choices = []
+    default_set = set(default_values or [])
+    for choice in normalized:
+        if choice["separator"]:
+            questionary_choices.append(questionary.Separator())
+            continue
+        questionary_choices.append(
+            questionary.Choice(
+                title=choice["title"],
+                value=choice["value"],
+                checked=choice["value"] in default_set,
+            )
         )
-        return selectable[selected_index - 1]["value"]
 
-    return _prompt_or_back(_prompt)
+    if not questionary_choices:
+        return []
+
+    checkbox_style = questionary.Style([
+        ("qmark", ""),
+        ("question", ""),
+        ("answer", ""),
+        ("pointer", ""),
+        ("highlighted", "noreverse"),
+        ("selected", "noreverse"),
+        ("separator", "dim"),
+        ("instruction", "dim"),
+        ("text", ""),
+        ("disabled", "italic"),
+    ])
+
+    original_selected = questionary_common.INDICATOR_SELECTED
+    original_unselected = questionary_common.INDICATOR_UNSELECTED
+    questionary_common.INDICATOR_SELECTED = "[x]"
+    questionary_common.INDICATOR_UNSELECTED = "[ ]"
+    try:
+        selected = questionary.checkbox(
+            message,
+            choices=questionary_choices,
+            qmark="",
+            pointer=">",
+            style=checkbox_style,
+            use_arrow_keys=True,
+            use_jk_keys=True,
+            instruction="",
+        ).ask()
+    finally:
+        questionary_common.INDICATOR_SELECTED = original_selected
+        questionary_common.INDICATOR_UNSELECTED = original_unselected
+
+    if selected is None:
+        raise click.Abort()
+    return selected
 
 
 def ask_text(message, default="", password=False, style=None):
@@ -159,7 +219,7 @@ def ask_text(message, default="", password=False, style=None):
             err=True,
         )
 
-    return _prompt_or_back(_prompt)
+    return _prompt()
 
 
 def ask_path(message, default="", style=None):
@@ -177,7 +237,7 @@ def ask_path(message, default="", style=None):
             err=True,
         )
 
-    return _prompt_or_back(_prompt)
+    return _prompt()
 
 
 def ask_confirm(message, default=True, style=None):
@@ -187,4 +247,4 @@ def ask_confirm(message, default=True, style=None):
     def _prompt():
         return click.confirm("Continue", default=default, prompt_suffix=" ", err=True)
 
-    return _prompt_or_back(_prompt)
+    return _prompt()

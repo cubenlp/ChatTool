@@ -226,7 +226,7 @@ def _interactive_config_loop(grouped_configs):
         main_choices.append("Exit without Saving")
         
         selected_section = ask_select(
-            "Select a category to configure (Arrow keys to move, Enter to select):",
+            "Select a category to configure:",
             choices=main_choices
         )
         
@@ -257,7 +257,7 @@ def _interactive_config_loop(grouped_configs):
             sub_choices.append(create_choice(title="Back", value="Back"))
             
             selected_config = ask_select(
-                f"[{selected_section}] Select a provider to configure (Esc to back):",
+                f"[{selected_section}] Select a provider to configure:",
                 choices=sub_choices
             )
             

@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_select, ask_text, is_interactive_available
+from chattool.utils.tui import BACK_VALUE, ask_checkbox, ask_select, is_interactive_available
 
 logger = setup_logger("setup_alias")
 
@@ -89,44 +89,16 @@ def select_aliases_interactively(default_selected):
     if preset == "Unselect all":
         return []
 
-    click.echo("Custom alias selection:")
-    click.echo("Enter comma-separated numbers, `all`, or `none`.")
     ordered_names = list(ALIAS_MAP.keys())
-    default_indexes = [str(index) for index, name in enumerate(ordered_names, start=1) if name in default_selected]
-    for index, name in enumerate(ordered_names, start=1):
-        marker = "*" if name in default_selected else " "
-        click.echo(f"  {index}. [{marker}] {name} => {ALIAS_MAP[name]}")
-
-    selection = ask_text("Alias numbers", default=",".join(default_indexes))
-    if selection == BACK_VALUE:
-        return BACK_VALUE
-
-    text = str(selection).strip().lower()
-    if not text:
-        return [name for name in ordered_names if name in default_selected]
-    if text == "all":
-        return ordered_names
-    if text == "none":
-        return []
-
-    selected = []
-    seen = set()
-    for part in text.split(","):
-        item = part.strip()
-        if not item:
-            continue
-        if not item.isdigit():
-            click.echo(f"Ignore invalid selection: {item}")
-            continue
-        index = int(item)
-        if index < 1 or index > len(ordered_names):
-            click.echo(f"Ignore out-of-range selection: {item}")
-            continue
-        name = ordered_names[index - 1]
-        if name not in seen:
-            selected.append(name)
-            seen.add(name)
-    return selected
+    choices = [
+        {"title": f"{name} => {ALIAS_MAP[name]}", "value": name}
+        for name in ordered_names
+    ]
+    return ask_checkbox(
+        "Select aliases",
+        choices=choices,
+        default_values=default_selected,
+    )
 
 
 def setup_alias(shell=None, dry_run=False):
