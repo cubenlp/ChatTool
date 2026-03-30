@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [6.4.1] - 2026-03-30
+
 ### Changed
+- ChatTool 现统一以 `Python >=3.9` 作为公开支持下限：`chattool pypi init` 默认生成 `requires-python = ">=3.9"`，包元数据不再用最高到 3.12 的 classifier 形成隐性上限，CI smoke tests 覆盖 `3.9` 到 `3.13`
 - 默认 `pip install chattool` 现在只保留核心聊天能力与基础 CLI 依赖；`questionary`、`aiohttp`、`fastapi`、`uvicorn`、`pydantic`、`fastmcp`、`PyGithub`、`gitpython`、`pillow`、`batch_executor`、`filelock` 等已拆分到新的 optional extras（如 `interactive`、`dns`、`serve`、`mcp`、`github`、`client`、`batch`）
 - `import chattool`、`chattool serve`、`chattool mcp` 与 `chattool.tools` 现在进一步收紧为惰性导入，避免默认安装路径被 DNS / Lark / MCP / Serve 等可选功能反向拉重
 - env 配置机制开始切换为按类型拆分的目录模型：活动配置与 profile 现在按 `envs/<Config>/.env`、`envs/<Config>/<profile>.env` 管理，不再把单个全局 `.env` 作为唯一真相
@@ -26,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Feishu 真实测试与文档说明现在回到生产口径，不再引入独立的 `FEISHU_TEST_USER_ID` / `FEISHU_TEST_USER_ID_TYPE`
 
 ### Fixed
+- 若干使用 `X | Y` 类型注解的核心模块现统一补上 `from __future__ import annotations`，避免 Python 3.9 在导入阶段因注解求值失败
 - `chattool setup codex` 现在不再把实际 API key 错写进 `preferred_auth_method`：`config.toml` 中该字段固定为 `"apikey"`，真实密钥只写入 `auth.json` 的 `OPENAI_API_KEY`
 - `chatenv new -t <type>` 在交互终端里不再退化成单纯的 `save` 语义：省略 profile 名时现在会先询问名称，再进入该类型字段填写，然后写入并激活新 profile
 - `skills/feishu/` 补回 `SKILL.zh.md`，避免技能资产检查在 CI 中因缺少中文入口文件失败

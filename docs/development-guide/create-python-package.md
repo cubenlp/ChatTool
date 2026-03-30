@@ -44,6 +44,7 @@ mychat/
 
 - 使用标准 `src/` 布局，避免本地路径污染。
 - `pyproject.toml` 默认采用 `setuptools.build_meta`。
+- 生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`。
 - 版本号来自 `src/mychat/__init__.py` 中的 `__version__`，通过 `tool.setuptools.dynamic` 暴露。
 - `tests/conftest.py` 会自动把 `src/` 加入导入路径，保证新项目能直接运行 `python -m pytest -q`。
 - 初始 README 已包含 `chattool pypi build/check` 的最短验证命令。

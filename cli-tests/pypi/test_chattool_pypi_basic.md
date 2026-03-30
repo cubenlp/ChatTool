@@ -20,12 +20,14 @@
 
 预期过程和结果：
   1. 执行 `chattool pypi init mychat --project-dir <tmp>/mychat`，预期生成 `pyproject.toml`、`README.md`、`LICENSE`、`src/mychat/__init__.py`、`tests/conftest.py`、`tests/test_version.py`。
-  2. 当缺少包名且存在 TTY 时，`chattool pypi init` 应进入统一向导，继续提示 `Package name`、`project_dir`、`description`、`requires_python`、`license`、`author`、`email`，并展示默认值。
+  2. 生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`。
+  3. 当缺少包名时，`chattool pypi init` 应直接报错提示需要传入包名或 `--project-dir`，不进入交互式补参。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool pypi init mychat --project-dir /tmp/mychat
+chattool pypi init
 ```
 
 ## 用例 2：build/check 验证最小包结构
