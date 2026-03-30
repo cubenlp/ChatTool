@@ -6,7 +6,7 @@
 
 ```bash
 chattool setup cc-connect
-chattool cc init -i
+chattool cc init -i --quiet
 chattool cc start
 ```
 
@@ -28,7 +28,9 @@ chattool cc start
 - 一阶段只覆盖高频最小能力，更多高级配置请直接编辑 `config.toml`。
 - `chattool cc init -i` 若检测到已有配置文件，会先确认是否覆盖；确认后才继续进入 Agent/Platform/Mode 与凭证填写。
 - `chattool cc init -i` 会把已有配置与环境候选值直接作为默认值展示，回车即可复用，不再额外询问是否沿用默认。
+- `chattool cc init` 现支持 `--quiet/--no-quiet`，写入项目级 `quiet = true/false`，用于控制默认是否隐藏 thinking / tool progress 中间消息。
 - 若已有平台凭证且本次不重新填写，`chattool cc init -i` 会保留原有平台配置，不会清空已有 token / secret。
+- `chattool cc init -i` 若检测到已有项目级 `quiet` 配置，会把它作为 quiet 提示的默认值展示。
 - 飞书平台会直接提示 `app_id` 与 `app_secret`；如果当前 `chatenv` 已配置飞书凭证，会自动作为默认候选值。
 - 生成的配置会包含可选代理字段（`proxy`/`proxy_username`/`proxy_password`）注释。
 - 如需填写代理配置，请使用 `chattool cc init -i --full-options`。

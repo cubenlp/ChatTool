@@ -31,6 +31,7 @@ def test_cc_init_non_interactive(tmp_path):
             "claudecode",
             "--platform",
             "feishu",
+            "--quiet",
             "--project",
             "demo",
             "--work-dir",
@@ -45,6 +46,7 @@ def test_cc_init_non_interactive(tmp_path):
     content = config_path.read_text(encoding="utf-8")
     assert "[[projects]]" in content
     assert "name = \"demo\"" in content
+    assert "quiet = true" in content
 
 
 def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
@@ -57,12 +59,14 @@ def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
             [
                 "[[projects]]",
                 "name = \"demo-project\"",
+                "quiet = true",
                 "",
                 "[projects.agent]",
                 "type = \"opencode\"",
                 "",
                 "[projects.agent.options]",
                 f"work_dir = \"{tmp_path}\"",
+                "mode = \"default\"",
                 "",
                 "[[projects.platforms]]",
                 "type = \"telegram\"",
@@ -84,7 +88,7 @@ def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
             "--config",
             str(config_path),
         ],
-        input="y\n\n\n\n\n\nn\n",
+        input="y\n\n\n\n\n\n\nn\n",
     )
 
     assert result.exit_code == 0
@@ -95,6 +99,7 @@ def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
     assert "选择消息平台" in result.output
     assert "[telegram]" in result.output
     assert "项目名称 [demo-project]" in result.output
+    assert "默认 quiet 模式（隐藏思考和工具进度消息）" in result.output
     assert "是否沿用现有平台配置?" not in result.output
 
 
@@ -147,12 +152,14 @@ def test_cc_init_preserves_existing_platform_config_without_reprompt(tmp_path, m
             [
                 "[[projects]]",
                 "name = \"demo-project\"",
+                "quiet = true",
                 "",
                 "[projects.agent]",
                 "type = \"opencode\"",
                 "",
                 "[projects.agent.options]",
                 f"work_dir = \"{tmp_path}\"",
+                "mode = \"default\"",
                 "",
                 "[[projects.platforms]]",
                 "type = \"telegram\"",
@@ -174,11 +181,12 @@ def test_cc_init_preserves_existing_platform_config_without_reprompt(tmp_path, m
             "--config",
             str(config_path),
         ],
-        input="y\n\n\n\n\n\nn\n",
+        input="y\n\n\n\n\n\n\nn\n",
     )
 
     assert result.exit_code == 0
     content = config_path.read_text(encoding="utf-8")
+    assert "quiet = true" in content
     assert 'token = "test-token"' in content
     assert "检测到已有平台配置" in result.output
     assert "是否填写平台鉴权信息?" in result.output
@@ -218,7 +226,7 @@ def test_cc_init_feishu_uses_chatenv_candidates(tmp_path, monkeypatch):
             "--config",
             str(config_path),
         ],
-        input="\n\n\nY\n\n",
+        input="\n\n\n\nY\n\n",
     )
 
     assert result.exit_code == 0
