@@ -23,6 +23,7 @@ pip install "chattool[pypi]"
 - `--project-dir` 默认为当前目录
 - `--dist-dir` 默认为 `<project-dir>/dist`
 - `build` 默认同时构建 `sdist` 和 `wheel`
+- `init --python` 默认为 `>=3.9`
 - `upload` 不接管仓库、凭证和交互，直接复用原始 `twine upload` 默认行为
 - `init --version` 可直接设置模板初始版本，`probe` 会解析 dynamic version 的真实值
 
@@ -68,3 +69,4 @@ chattool pypi upload --project-dir .
 - `tests/test_version.py`
 
 其中 `tests/conftest.py` 会自动把 `src/` 加入导入路径，因此生成后可以直接运行 `python -m pytest -q`。
+生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`。

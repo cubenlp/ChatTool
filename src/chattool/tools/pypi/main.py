@@ -154,7 +154,7 @@ def scaffold_package(
     *,
     initial_version: str = "0.1.0",
     description: str | None = None,
-    requires_python: str = ">=3.10",
+    requires_python: str = ">=3.9",
     license_name: str = "MIT",
     author: str | None = None,
     email: str | None = None,

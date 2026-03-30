@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 name = "demo-pkg"
 version = "0.1.0"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 """.strip()
         + "\n",
@@ -65,6 +65,7 @@ def test_init_command_creates_package_scaffold(tmp_path):
     assert (project_dir / "src" / "mychat" / "__init__.py").exists()
     assert (project_dir / "tests" / "conftest.py").exists()
     assert (project_dir / "tests" / "test_version.py").exists()
+    assert 'requires-python = ">=3.9"' in (project_dir / "pyproject.toml").read_text(encoding="utf-8")
 
 
 def test_init_command_requires_package_name_when_project_dir_missing():

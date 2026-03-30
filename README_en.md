@@ -32,6 +32,8 @@ A Python toolkit integrating LLM chat, Feishu/Lark bots, DNS management, SSL cer
 pip install chattool --upgrade
 ```
 
+Minimum supported Python version: `3.9`.
+
 ## Features
 
 ### 1. Environment Management (`chatenv`)

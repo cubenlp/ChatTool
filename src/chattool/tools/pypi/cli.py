@@ -81,7 +81,7 @@ def _resolve_init_inputs(
         package_name,
         _normalize_optional_text(description) or f"{package_name} package",
         initial_version or "0.1.0",
-        requires_python or ">=3.10",
+        requires_python or ">=3.9",
         license_name or "MIT",
         _normalize_optional_text(author),
         _normalize_optional_text(email),
@@ -114,7 +114,7 @@ def cli():
 @click.option("--author", default=None, help="Author name to record in pyproject.toml.")
 @click.option("--license", "license_name", default="MIT", show_default=True, help="Project license label.")
 @click.option("--version", "initial_version", default="0.1.0", show_default=True, help="Initial package version written to src/<module>/__init__.py.")
-@click.option("--python", "requires_python", default=">=3.10", show_default=True, help="Supported Python version specifier.")
+@click.option("--python", "requires_python", default=">=3.9", show_default=True, help="Supported Python version specifier.")
 @click.option("--description", default=None, help="Project description.")
 @click.option(
     "--project-dir",
