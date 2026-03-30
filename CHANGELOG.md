@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chatup codex` 的交互式补参现在不再因为旧的 login shell 副作用和隐藏输入提示显示异常而表现成“像是已经回到 shell、但实际还在等待输入”
 - 共享 `utils/tui.py` 现改为更安全的 `click + Rich` 提示实现，并对敏感输入统一走 `stderr` 渲染与读取，降低 setup 交互过程中终端状态错乱的概率
 - `chatenv init` 与 `chattool setup alias` 的交互菜单现在恢复了更直接的终端操作体验：`Ctrl-C` 会直接退出，alias 自定义选择支持键盘 checkbox 式勾选
+- `utils/tui.py` 现在会正确处理纯字符串选项，避免 `chattool setup alias` 等页面把 `str.title` 方法错误渲染成 `<built-in method title ...>`
+- 当 `questionary` 不可用时，统一 TUI 现在会安全降级到编号选择和逗号分隔多选，避免交互命令直接因可选依赖缺失而中断
 
 ## [6.4.1] - 2026-03-30
 

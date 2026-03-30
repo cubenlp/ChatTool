@@ -4,15 +4,6 @@ from contextlib import contextmanager
 
 import click
 
-try:
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.table import Table
-except ImportError:  # pragma: no cover - optional dependency fallback
-    Console = None
-    Panel = None
-    Table = None
-
 
 BACK_VALUE = "__BACK__"
 CHECKBOX_SELECTED_INDICATOR = "[x]"
@@ -25,7 +16,9 @@ def get_style():
 
 
 def _get_console():
-    if Console is None:
+    try:
+        from rich.console import Console
+    except ImportError:  # pragma: no cover - optional dependency fallback
         return None
     return Console(stderr=True)
 
@@ -33,6 +26,15 @@ def _get_console():
 def _render_heading(title, subtitle=None):
     console = _get_console()
     if not console:
+        if subtitle:
+            click.echo(f"\n{title}\n{subtitle}", err=True)
+        else:
+            click.echo(f"\n{title}", err=True)
+        return
+
+    try:
+        from rich.panel import Panel
+    except ImportError:  # pragma: no cover - optional dependency fallback
         if subtitle:
             click.echo(f"\n{title}\n{subtitle}", err=True)
         else:
@@ -68,8 +70,11 @@ def get_separator():
 
 
 def create_choice(title, value, checked=False):
-    """Return a questionary Choice for select/checkbox prompts."""
-    import questionary
+    """Return a choice object for select/checkbox prompts."""
+    try:
+        import questionary
+    except ImportError:
+        return {"title": title, "value": value, "checked": checked}
 
     return questionary.Choice(title=title, value=value, checked=checked)
 
@@ -82,6 +87,14 @@ def _normalize_choice(choice):
             "title": str(choice.get("title", choice.get("value", ""))),
             "value": choice.get("value"),
             "checked": bool(choice.get("checked", False)),
+            "separator": False,
+        }
+
+    if isinstance(choice, str):
+        return {
+            "title": choice,
+            "value": choice,
+            "checked": False,
             "separator": False,
         }
 
@@ -111,24 +124,45 @@ def _questionary_select_style(questionary):
     ])
 
 
+def _render_numbered_choices(message, normalized):
+    _render_heading("Select Option", message)
+    index = 1
+    for choice in normalized:
+        if choice["separator"]:
+            click.echo("  ----", err=True)
+            continue
+        click.echo(f"  {index}. {choice['title']}", err=True)
+        index += 1
+
+
 def ask_select(message, choices, style=None):
     """Ask a selection question using questionary for arrow-key navigation."""
-    import questionary
-
     normalized = [_normalize_choice(choice) for choice in choices]
+    selectable = [choice for choice in normalized if not choice["separator"]]
+
+    if not selectable:
+        return BACK_VALUE
+
+    try:
+        import questionary
+    except ImportError:
+        _render_numbered_choices(message, normalized)
+        selected_index = click.prompt(
+            "Enter choice number",
+            type=click.IntRange(1, len(selectable)),
+            show_choices=False,
+            err=True,
+        )
+        return selectable[selected_index - 1]["value"]
+
     questionary_choices = []
-    selectable_count = 0
     for choice in normalized:
         if choice["separator"]:
             questionary_choices.append(questionary.Separator())
             continue
-        selectable_count += 1
         questionary_choices.append(
             questionary.Choice(title=choice["title"], value=choice["value"])
         )
-
-    if selectable_count == 0:
-        return BACK_VALUE
 
     selected = questionary.select(
         message,
@@ -171,10 +205,42 @@ def checkbox_indicator_style():
 
 def ask_checkbox(message, choices, default_values=None, style=None, instruction=None):
     """Ask a checkbox question using questionary for multi-select."""
-    import questionary
-
     normalized = [_normalize_choice(choice) for choice in choices]
     default_set = set(default_values or [])
+    selectable = [choice for choice in normalized if not choice["separator"]]
+    if not selectable:
+        return []
+
+    try:
+        import questionary
+    except ImportError:
+        _render_heading("Checkbox", message)
+        click.echo("Enter comma-separated numbers to keep selected items.", err=True)
+        selected_indexes = [
+            str(index)
+            for index, choice in enumerate(selectable, start=1)
+            if choice["checked"] or (choice["value"] in default_set)
+        ]
+        for index, choice in enumerate(selectable, start=1):
+            marker = "x" if (choice["checked"] or (choice["value"] in default_set)) else " "
+            click.echo(f"  {index}. [{marker}] {choice['title']}", err=True)
+        raw_value = click.prompt(
+            "Choice numbers",
+            default=",".join(selected_indexes),
+            show_default=bool(selected_indexes),
+            prompt_suffix=": ",
+            err=True,
+        )
+        selected = []
+        for part in str(raw_value).split(","):
+            item = part.strip()
+            if not item or not item.isdigit():
+                continue
+            index = int(item)
+            if 1 <= index <= len(selectable):
+                selected.append(selectable[index - 1]["value"])
+        return selected
+
     questionary_choices = []
     for choice in normalized:
         if choice["separator"]:
@@ -187,10 +253,6 @@ def ask_checkbox(message, choices, default_values=None, style=None, instruction=
                 checked=choice["checked"] or (choice["value"] in default_set),
             )
         )
-
-    if not questionary_choices:
-        return []
-
     with checkbox_indicator_style():
         selected = questionary.checkbox(
             message,
