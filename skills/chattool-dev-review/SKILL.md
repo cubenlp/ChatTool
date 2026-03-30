@@ -1,7 +1,7 @@
 ---
 name: chattool-dev-review
 description: Review a ChatTool feature after implementation. Use when asked to do a post-change audit focused on lazy import, missing-arg interactive behavior, unified utils/tui prompts, and whether docs/tests/changelog were updated with the feature.
-version: 0.2.0
+version: 0.2.1
 ---
 
 # ChatTool Dev Review
@@ -35,6 +35,7 @@ Boundary: this skill stops at development review. Merge timing, release prep, ta
    - Update [README.md](README.md) when the feature is user-facing.
    - Update [CHANGELOG.md](CHANGELOG.md).
    - For CLI changes, update the matching doc-first case under [cli-tests](cli-tests) and add/adjust the `.py` test when needed.
+   - If the PR is meant to ship as a specific package release, the intended `__version__` / changelog updates should already be in the diff before merge; do not defer version bumps to the post-merge tag step.
 
 ## Review Workflow
 

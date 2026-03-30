@@ -1,7 +1,7 @@
 ---
 name: practice-make-perfact
 description: Post-task normalization workflow for ChatTool development. Use after implementation to review the completed work, extract reusable pieces into the repo, check existing CLI surfaces before adding scripts, run $chattool-dev-review, and then drive docs/tests/changelog/PR updates through the project standards. If the task also includes merged-mainline release work, hand off to $chattool-release after PR/MR stage.
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Practice Make Perfact
@@ -46,6 +46,7 @@ Core idea: finish the task first, then explicitly enter a cleanup and extraction
    - Add or update docs under `docs/`.
    - Update `README.md` for user-facing changes.
    - Update `CHANGELOG.md`.
+   - If this work is intended to ship as a specific package release, bump `src/chattool/__init__.py` to the target version before PR/MR, not after merge.
    - If a skill is added or updated, maintain both `SKILL.md` and `SKILL.zh.md`.
    - Keep skill frontmatter aligned, including `version`.
    - Keep directory structure flat and intentional.
@@ -62,6 +63,7 @@ Core idea: finish the task first, then explicitly enter a cleanup and extraction
    - If the task includes version tags, `Publish Package`, PyPI verification, or `release.log`, switch to `$chattool-release`.
    - Treat post-merge release work as a separate phase from development review.
    - Do not tag from an unmerged PR head just because the implementation is ready.
+   - Do not treat “push the tag again” as a fix for a missed version bump. If PyPI already has that version, the next step is a new PR with a new version, not a reused tag.
 
 8. Only stop early when explicitly asked
    - If the user wants analysis only, brainstorming only, or a partial checkpoint, respect that.
