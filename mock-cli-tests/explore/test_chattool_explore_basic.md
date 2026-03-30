@@ -1,12 +1,12 @@
 # test_chattool_explore_basic
 
-测试 `chattool explore arxiv` 的基础链路，覆盖帮助信息、preset 搜索、daily 聚合、单篇获取与 preset 列表。
+测试 `chattool explore arxiv` 的 mock 基础链路，覆盖帮助信息、preset 搜索、daily 聚合、单篇获取与 preset 列表。
 
 ## 元信息
 
 - 命令：`chattool explore arxiv <command> [args]`
-- 目的：验证 `explore` 命令已接入主 CLI，且 `arxiv` 子命令的核心输出链路可用。
-- 标签：`cli`
+- 目的：验证 `explore` 命令已接入主 CLI，且 `arxiv` 子命令的编排与输出链路可用。
+- 标签：`cli`、`mock`
 - 前置条件：无真实 arXiv 网络依赖；通过 mock `ArxivClient` / `DailyFetcher` 隔离外部请求。
 - 环境准备：使用 `CliRunner` 调用统一入口 `chattool`。
 - 回滚：无持久化文件写入，无需额外回滚。

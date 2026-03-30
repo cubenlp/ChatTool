@@ -8,7 +8,7 @@ from chattool.client.main import cli
 import chattool.tools.github.cli as gh_cli
 
 
-pytestmark = pytest.mark.e2e
+pytestmark = pytest.mark.mock_cli
 
 
 def _dt(value: str) -> datetime:

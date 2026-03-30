@@ -7,13 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Changed
+- CLI 测试规范现拆成双轨：`cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入新目录 `mock-cli-tests/`
+- GitHub CI 的 stable smoke tests 现同步切到 `mock-cli-tests/` 新目录，避免继续引用已迁走的 `cli-tests/gh`
 - `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
 - `Publish Package` workflow 现在会在发布前显式检查 PyPI 是否已存在同版本；若 `src/chattool/__init__.py` 未提前 bump、或同版本已发布，工作流会直接失败，而不是靠 `twine upload --skip-existing` 静默跳过
 - GitHub PR smoke tests 现从多版本矩阵收敛为最小双平台覆盖：`ubuntu-latest + Python 3.10` 与 `macos-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
 
+### Fixed
+- `skills/feishu/` 现在把 Agent 协作登录明确收口到 `lark-cli auth login --recommend --no-wait` 与 `--device-code` 的非阻塞 device flow，避免 skill 入口直接把会话带进阻塞式浏览器登录
+- `cli-tests/lark/guide/test_chattool_lark_skill_index.py` 现在会同时校对 `SKILL.md` 与 `SKILL.zh.md` 的命令分流和 Agent 登录指引，避免中文入口回归时被漏检
+
 ### Added
+- 新增 `mock-cli-tests/` 测试线，并补充 `chattool` 统一入口 lazy dispatch 的 mock CLI 测试
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
 - 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查、PyPI 校验和正式发版后的 `release.log` 记录
 - 新增 `cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系

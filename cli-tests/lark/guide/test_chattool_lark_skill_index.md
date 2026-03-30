@@ -25,8 +25,9 @@
    2. 检查索引中是否已明确把官方 `lark-cli` 作为默认推荐入口。
    3. 检查索引中是否给出子模块目录和仓库内教程地址，包括消息与会话调试博客。
    4. 检查索引中是否写清消息走 `im`、文档正文走 `docs`、评论与权限走 `drive`、wiki 解析走 `wiki`。
-   5. 检查索引中是否保留 `chattool lark info/send/chat` 作为最短调试或送达链路。
-   6. 检查 `skills/feishu/` 下不再残留其他专题 `.md` 文件。
+   5. 检查双语索引中是否都保留 `chattool lark info/send/chat` 作为最短调试或送达链路。
+   6. 检查双语索引中是否都给出 Agent 协作登录时使用 `--no-wait` / `--device-code` 的非阻塞路径。
+   7. 检查 `skills/feishu/` 下不再残留其他专题 `.md` 文件。
 
 参考执行脚本（伪代码）：
 

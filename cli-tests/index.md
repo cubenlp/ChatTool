@@ -1,6 +1,6 @@
 # CLI Tests（文档先行）
 
-`cli-tests/` 是 ChatTool 仓库内唯一长期维护的测试设计入口，采用文档先行：先写 `.md`，再实现 `.py`。
+`cli-tests/` 是 ChatTool 仓库内真实 CLI 测试的设计入口，采用文档先行：先写 `.md`，再实现 `.py`。
 
 ## 目录结构
 
@@ -12,40 +12,40 @@ cli-tests/
 ├── README.md                # 迁移计划与执行顺序
 ├── browser/
 │   └── test_chattool_browser_basic.md
+├── cc/
+│   └── 真实 CLI 用例待补
 ├── client/
 │   └── test_chattool_client_basic.md
-├── dns/
-│   └── test_chattool_dns_basic.md
 ├── docker/
 │   └── test_chattool_docker_basic.md
 ├── env/
-│   └── test_chattool_env_basic.md
-├── explore/
-│   └── test_chattool_explore_basic.md
-├── gh/
-│   ├── test_chattool_gh_basic.md
-│   └── test_chattool_gh_actions_diagnostics.md
+│   ├── test_chattool_env_basic.md
+│   └── test_chattool_env_typed_profiles.md
 ├── image/
 │   └── test_chattool_image_basic.md
 ├── lark/
 │   ├── guide/
 │   ├── messaging/
-│   ├── documents/
-│   ├── im/
-│   ├── troubleshoot/
-│   ├── bitable/
-│   ├── calendar/
-│   └── task/
+│   └── documents/
 ├── mcp/
 │   └── test_chattool_mcp_basic.md
 ├── network/
 │   └── test_chattool_network_basic.md
+├── pypi/
+│   ├── test_chattool_pypi_basic.md
+│   └── test_chattool_pypi_probe.md
 ├── serve/
 │   └── test_chattool_serve_basic.md
 ├── setup/
-│   └── test_chattool_setup_basic.md
+│   ├── test_chattool_setup_basic.md
+│   ├── test_chattool_setup_codex_env.md
+│   └── test_chattool_setup_lark_cli_env.md
 ├── skill/
-│   └── test_chattool_skill_basic.md
+│   ├── test_chattool_skill_basic.md
+│   ├── test_chattool_skill_release_boundary.md
+│   ├── test_chattool_release_tag_format.md
+│   ├── test_chattool_release_version_bump.md
+│   └── test_chattool_skill_practice_make_perfact_reference.md
 ├── tplogin/
 │   └── test_chattool_tplogin_basic.md
 └── zulip/
@@ -78,8 +78,9 @@ cli-tests/
 
 ## 仓库规则
 
-- ChatTool 仓库后续只长期维护 `cli-tests/` 这条测试主线。
+- ChatTool 仓库长期维护两条 CLI 测试线：`cli-tests/` 负责真实链路，`mock-cli-tests/` 负责 mock 链路。
 - `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认测试落点。
 - 新 CLI 行为必须先补 `.md`，没有对应 `.md` 的 `.py` 不应新增。
 - 缺少真实环境/变量的用例先保留 `.md`，待环境满足后再补 `.py`。
+- 使用 `mock`、`patch`、`monkeypatch`、fake client / API 的 CLI 测试，必须写到 `mock-cli-tests/`。
 - Feishu 的任务实践文档统一按能力落到 `cli-tests/lark/<topic>/`，先描述真实任务，再补自动化实现。

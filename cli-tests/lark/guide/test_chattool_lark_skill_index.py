@@ -19,14 +19,37 @@ def test_chattool_lark_skill_index():
     assert skill_docs == ["SKILL.md", "SKILL.zh.md"], (
         f"Unexpected files left under skills/feishu: {skill_docs}"
     )
-    assert "lark-cli" in text
-    assert "docs/blog/agent-cli/lark-cli-guide.md" in text
-    assert "docs/blog/lark-message-session-debug.md" in text
-    assert "lark-cli/" in text
-    assert "docs +create" in text
-    assert "permission.members" in text
-    assert "wiki spaces get_node" in text
-    assert "chattool lark info" in text
-    assert "lark-cli im" in text
-    assert "docs/blog/lark-message-session-debug.md" in text_zh
-    assert "chattool lark send" in text_zh
+    expected_en = [
+        "lark-cli",
+        "docs/blog/agent-cli/lark-cli-guide.md",
+        "docs/blog/lark-message-session-debug.md",
+        "lark-cli/",
+        "lark-cli im",
+        "docs +create",
+        "permission.members",
+        "wiki spaces get_node",
+        "chattool lark info",
+        "chattool lark send",
+        "chattool lark chat",
+        "--no-wait",
+        "--device-code",
+    ]
+    expected_zh = [
+        "docs/blog/agent-cli/lark-cli-guide.md",
+        "docs/blog/lark-message-session-debug.md",
+        "lark-cli/",
+        "lark-cli im",
+        "docs +create",
+        "permission.members",
+        "wiki spaces get_node",
+        "chattool lark info",
+        "chattool lark send",
+        "chattool lark chat",
+        "--no-wait",
+        "--device-code",
+    ]
+
+    for snippet in expected_en:
+        assert snippet in text
+    for snippet in expected_zh:
+        assert snippet in text_zh

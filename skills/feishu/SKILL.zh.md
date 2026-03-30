@@ -50,6 +50,13 @@ lark-cli auth status
 lark-cli auth login --recommend
 ```
 
+如果是 Agent 协作登录，优先走非阻塞 device flow：
+
+```bash
+lark-cli auth login --recommend --no-wait
+lark-cli auth login --device-code <DEVICE_CODE>
+```
+
 ## 命令分流
 
 ### 1. 最短调试与送达
@@ -133,5 +140,6 @@ wiki URL / token 先解析，不要直接当 doc token：
 
 - 先选对命令面，再写命令
 - 不要重复设计一套平行 Feishu CLI
+- Agent 会话里需要 user login 时，优先 `--no-wait` + `--device-code`
 - 不确定参数结构时，先看 `--help` 或 `schema`
 - 优先给出最小可执行路径，不要先展开大而全说明

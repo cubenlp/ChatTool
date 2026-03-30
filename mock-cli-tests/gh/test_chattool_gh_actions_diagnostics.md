@@ -1,14 +1,14 @@
 # test_chattool_gh_actions_diagnostics
 
-测试 `chattool gh` 的 Actions 诊断链路，覆盖 workflow run 查看与 job 日志拉取。
+测试 `chattool gh` 的 Actions 诊断 mock 链路，覆盖 workflow run 查看与 job 日志拉取。
 
 ## 元信息
 
 - 命令：`chattool gh <command> [args]`
-- 目的：验证 GitHub Actions 排错所需的 run / job / logs 接口可用。
-- 标签：`cli`
-- 前置条件：具备 GitHub token 与可访问仓库。
-- 环境准备：配置 `GITHUB_ACCESS_TOKEN` 与 `GITHUB_DEFAULT_REPO`。
+- 目的：验证 GitHub Actions 排错相关 CLI 的格式化输出与日志裁剪逻辑可用。
+- 标签：`cli`、`mock`
+- 前置条件：无真实 GitHub token 或 Actions run 依赖；通过 fake API 返回固定 run / job / logs 数据。
+- 环境准备：使用 `CliRunner` 调用统一入口 `chattool`，并 monkeypatch GitHub API 访问函数。
 - 回滚：只读操作，无需回滚。
 
 ## 用例 1：查看 workflow run 与 jobs

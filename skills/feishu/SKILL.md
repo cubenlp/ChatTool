@@ -50,6 +50,13 @@ lark-cli auth status
 lark-cli auth login --recommend
 ```
 
+For agent-assisted user login, prefer the non-blocking device flow:
+
+```bash
+lark-cli auth login --recommend --no-wait
+lark-cli auth login --device-code <DEVICE_CODE>
+```
+
 ## Command Routing
 
 ### 1. Shortest Debug And Delivery Path
@@ -133,5 +140,6 @@ These are consistent with the current repo docs and are safe defaults:
 
 - choose the right command surface before writing commands
 - do not design another parallel Feishu CLI
+- when user login is needed in an agent session, prefer `--no-wait` + `--device-code`
 - if parameter shape is unclear, check `--help` or `schema`
 - prefer the shortest executable path over a broad explanation
