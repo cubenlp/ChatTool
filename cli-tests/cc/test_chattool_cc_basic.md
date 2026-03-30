@@ -26,9 +26,10 @@ chattool cc --help
 
 ### 预期过程和结果
 
-- 执行 `chattool cc init -I --agent claudecode --platform feishu ...` 返回 0
+- 执行 `chattool cc init -I --agent claudecode --platform feishu --quiet ...` 返回 0
 - `config.toml` 被创建
 - 配置文件包含 `[[projects]]` 与项目名称
+- 配置文件写入项目级 `quiet = true`
 
 ### 参考执行脚本（伪代码）
 
@@ -36,6 +37,7 @@ chattool cc --help
 chattool cc init -I \
   --agent claudecode \
   --platform feishu \
+  --quiet \
   --project demo \
   --work-dir /tmp/work \
   --config /tmp/config.toml
@@ -45,14 +47,16 @@ chattool cc init -I \
 
 ### 初始环境准备
 
-- 准备已有 `config.toml`，包含项目/agent/platform/work_dir
+- 准备已有 `config.toml`，包含项目/agent/platform/work_dir/quiet
 
 ### 预期过程和结果
 
 - 执行 `chattool cc init -i --config <path>` 时先提示是否覆盖已有配置文件
 - 覆盖确认选择否，立即退出成功，不再继续询问其它字段
 - 覆盖确认选择是后，后续字段提示默认值来自已有配置
+- 若已有 `quiet = true`，交互阶段会把 quiet 提示的默认值展示为开启
 - 若已有平台凭证且选择不重新填写，生成的新配置会保留原有平台凭证
+- 若沿用默认 quiet，生成的新配置会继续写入 `quiet = true`
 
 ### 参考执行脚本（伪代码）
 
