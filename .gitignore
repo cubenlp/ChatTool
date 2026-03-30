@@ -60,6 +60,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+!release.log
 local_settings.py
 
 # Flask stuff:
