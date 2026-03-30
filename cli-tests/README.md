@@ -1,14 +1,14 @@
 # CLI Tests 规范
 
-本文档定义 ChatTool 仓库内 CLI 测试的长期维护规则。
+本文档定义 ChatTool 仓库内真实 CLI 测试的长期维护规则。
 
 ## 关键要求
 
-- `cli-tests/*.md` 是唯一长期维护的测试设计面。
+- `cli-tests/*.md` 是真实 CLI 测试的长期维护设计面。
 - `cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现。
 - 文档先行：每个命令先落 `.md`，再决定是否补 `.py`。
 - 真实链路：以真实 CLI 链路为准；对应 `.py` 应标记 `@pytest.mark.e2e`。
-- 绝对禁止 mock：宁可缩小测试范围，也不能使用 mock 伪造行为。
+- 所有 mock CLI 测试统一放到 `mock-cli-tests/`，不要继续混入 `cli-tests/`。
 - GitHub 自动测试当前只跑 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 与大多数真实链路用例；相关 `.md` / `.py` 需要本地单独执行。
 - 模板一致：以 `cli-tests/env/test_chattool_env_basic.md` 为模板。
 - 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认维护面。
@@ -36,7 +36,7 @@
 ## 第三方集成要求
 
 - 真实 CLI 测试必须从默认 `chatenv` / 配置对象读取生效值。
-- 不允许通过 mock 伪装成真实链路；如环境复杂，优先收窄测试目标或补更明确的前置条件。
+- 不允许通过 mock 伪装成真实链路；如需要 mock，请切换到 `mock-cli-tests/`。
 - 文档中必须写清需要的配置项、权限和回滚方式。
 
 ## Feishu 约束

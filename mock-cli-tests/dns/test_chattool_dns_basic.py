@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from chattool.client.main import cli
 
 
-pytestmark = pytest.mark.e2e
+pytestmark = pytest.mark.mock_cli
 
 
 @pytest.fixture

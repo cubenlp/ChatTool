@@ -133,6 +133,7 @@ include-package-data = true
 markers = [
     "integration: mark test as integration test",
     "e2e: mark test as end-to-end test",
+    "mock_cli: mark test as mock-based cli test",
     "dns: mark test as dns test",
     "mcp: mark test as mcp test",
     "lark: mark test as lark test"

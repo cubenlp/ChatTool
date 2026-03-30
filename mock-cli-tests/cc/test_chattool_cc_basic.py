@@ -1,10 +1,15 @@
 import importlib
 
+import pytest
+
 from click.testing import CliRunner
 
 from chattool.client.main import cli
 
 cc_cli = importlib.import_module("chattool.tools.cc.cli")
+
+
+pytestmark = pytest.mark.mock_cli
 
 
 def test_cc_help():
