@@ -8,6 +8,7 @@ from chattool.setup.alias import (
     render_alias_block,
     resolve_shell,
     resolve_shell_rc,
+    select_aliases_interactively,
     setup_alias,
 )
 
@@ -70,3 +71,24 @@ def test_setup_alias_dry_run_does_not_write(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "[dry-run] target shell rc:" in out
     assert "alias chatenv='chattool env'" in out
+
+
+def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
+    monkeypatch.setattr("chattool.setup.alias.ask_select", lambda *args, **kwargs: "Custom")
+
+    captured = {}
+
+    def fake_ask_checkbox(message, choices, style=None, instruction=None):
+        captured["message"] = message
+        captured["choices"] = choices
+        return ["chatgh"]
+
+    monkeypatch.setattr("chattool.setup.alias.ask_checkbox", fake_ask_checkbox)
+    selected = select_aliases_interactively(["chatenv", "chatgh"])
+
+    assert selected == ["chatgh"]
+    assert captured["message"] == "Select aliases (Space to toggle, A select/unselect all)"
+    checked = {choice.value: choice.checked for choice in captured["choices"]}
+    assert checked["chatenv"] is True
+    assert checked["chatgh"] is True
+    assert checked["chatdns"] is False

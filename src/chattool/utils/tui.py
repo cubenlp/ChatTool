@@ -1,4 +1,9 @@
+from contextlib import contextmanager
+
+
 BACK_VALUE = "__BACK__"
+CHECKBOX_SELECTED_INDICATOR = "☑"
+CHECKBOX_UNSELECTED_INDICATOR = "☐"
 
 def get_style():
     """Custom style for questionary."""
@@ -47,10 +52,10 @@ def get_separator():
     import questionary
     return questionary.Separator()
 
-def create_choice(title, value):
+def create_choice(title, value, checked=False):
     """Return a questionary Choice."""
     import questionary
-    return questionary.Choice(title=title, value=value)
+    return questionary.Choice(title=title, value=value, checked=checked)
 
 def ask_select(message, choices, style=None):
     """Ask a selection question with escape back support."""
@@ -63,6 +68,45 @@ def ask_select(message, choices, style=None):
         style=style,
         use_arrow_keys=True
     ))
+
+
+@contextmanager
+def checkbox_indicator_style():
+    """Temporarily render questionary checkboxes as checkbox glyphs."""
+    import questionary.constants as constants
+    import questionary.prompts.common as common
+
+    old_selected = constants.INDICATOR_SELECTED
+    old_unselected = constants.INDICATOR_UNSELECTED
+    old_common_selected = common.INDICATOR_SELECTED
+    old_common_unselected = common.INDICATOR_UNSELECTED
+
+    constants.INDICATOR_SELECTED = CHECKBOX_SELECTED_INDICATOR
+    constants.INDICATOR_UNSELECTED = CHECKBOX_UNSELECTED_INDICATOR
+    common.INDICATOR_SELECTED = CHECKBOX_SELECTED_INDICATOR
+    common.INDICATOR_UNSELECTED = CHECKBOX_UNSELECTED_INDICATOR
+    try:
+        yield
+    finally:
+        constants.INDICATOR_SELECTED = old_selected
+        constants.INDICATOR_UNSELECTED = old_unselected
+        common.INDICATOR_SELECTED = old_common_selected
+        common.INDICATOR_UNSELECTED = old_common_unselected
+
+
+def ask_checkbox(message, choices, style=None, instruction=None):
+    """Ask a checkbox question with shared style and escape back support."""
+    import questionary
+    if style is None:
+        style = get_style()
+    with checkbox_indicator_style():
+        return ask_with_escape_back(questionary.checkbox(
+            message,
+            choices=choices,
+            style=style,
+            use_arrow_keys=True,
+            instruction=instruction,
+        ))
 
 def ask_text(message, default="", password=False, style=None):
     """Ask a text question with escape back support."""
