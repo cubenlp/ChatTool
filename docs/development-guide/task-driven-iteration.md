@@ -35,6 +35,8 @@
    - 做一次代码 review，统一命名、结构与文档。  
    - 若需要把已完成任务统一整理成仓库规范，显式调用 `skills/practice-make-perfact/` 作为后处理阶段，而不是在任务开始前套流程。
    - 在这个后处理阶段，默认串联 `skills/chattool-dev-review/` 做开发规范检查。
+   - 若任务继续进入合并后的版本 tag / 发布阶段，再切到 `skills/chattool-release/`，不要把正式发版动作混进开发 review。
+   - 正式发版的标准 tag 统一为 `vX.Y.Z`，且只能从已合并并同步到最新的主线创建。
    - 更新导航（如 `mkdocs.yml`）与文档索引。
    - 将任务推进到 PR/MR 阶段，而不是只停留在本地提交。
    - GitHub 流程优先使用 `chattool gh`，包括 `pr-create`、`pr-update`、`pr-view` 等。
