@@ -175,6 +175,7 @@ nav:
       - Lark CLI 教程: blog/agent-cli/lark-cli-guide.md
       - cc-connect 教程: blog/agent-cli/cc-connect-guide.md
       - cc-connect 编排教程: blog/agent-cli/cc-connect-orchestration.md
+    - 飞书消息与会话调试: blog/lark-message-session-debug.md
     - 白嫖 AI 生图实战: blog/free-image-guide.md
     - 从代码到 Agent 技能: blog/code_tool_skill.md
     - v0.5.3 飞书机器人: blog/larkbot_v053.md

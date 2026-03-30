@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `Publish Package` workflow 现在会在发布前显式检查 PyPI 是否已存在同版本；若 `src/chattool/__init__.py` 未提前 bump、或同版本已发布，工作流会直接失败，而不是靠 `twine upload --skip-existing` 静默跳过
 - GitHub PR smoke tests 现从多版本矩阵收敛为最小双平台覆盖：`ubuntu-latest + Python 3.10` 与 `macos-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
 
+### Fixed
+- `skills/feishu/` 现在把 Agent 协作登录明确收口到 `lark-cli auth login --recommend --no-wait` 与 `--device-code` 的非阻塞 device flow，避免 skill 入口直接把会话带进阻塞式浏览器登录
+- `cli-tests/lark/guide/test_chattool_lark_skill_index.py` 现在会同时校对 `SKILL.md` 与 `SKILL.zh.md` 的命令分流和 Agent 登录指引，避免中文入口回归时被漏检
+
 ### Added
 - 新增 `mock-cli-tests/` 测试线，并补充 `chattool` 统一入口 lazy dispatch 的 mock CLI 测试
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
@@ -40,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - 仓库开发规范现在把“绝对禁止 mock”明确写入 `AGENTS.md`、`DEVELOP.md`、`docs/development-guide/` 与 `cli-tests/README.md`：宁可做更窄的真实测试，也不接受用 mock 伪造行为
 - 开发规范现补充说明：GitHub 自动测试当前只覆盖 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 这类第三方链路与大多数真实 CLI 测试；相关能力需要本地单独验证
 - `chattool gh pr-check` 现在支持 `--wait` 轮询等待 CI 结束；默认不设超时，只有显式传 `--timeout` 时才会超时报错
-- `skills/feishu/` 现已收缩为单文件入口，只保留 `SKILL.md` 指向官方 `lark-cli` 与仓库内教程；原有专题 skill 文档与对应 doc-audit 测试一并清理
+- `skills/feishu/` 现在改为紧凑双语入口：`SKILL.md` / `SKILL.zh.md` 统一强调官方 `lark-cli` 为默认入口，并把消息调试路由到 `im`、正文路由到 `docs`、评论与权限路由到 `drive`、wiki 路由到 `wiki`
 - `chattool pypi` 现已收口为最小命令集：只保留 `init/build/check/upload/probe`；移除 `doctor/publish/release`，并取消原有交互式补参与上传封装逻辑，`upload` 直接复用默认 `twine upload` 行为
 - `chattool lark send` 现在把默认目标拆成“默认用户”和“默认群聊”两条路径：`FEISHU_DEFAULT_RECEIVER_ID` 继续用于用户消息，新增 `FEISHU_DEFAULT_CHAT_ID` 专门服务 `-t chat_id`
 - Feishu 真实测试与文档说明现在回到生产口径，不再引入独立的 `FEISHU_TEST_USER_ID` / `FEISHU_TEST_USER_ID_TYPE`
@@ -63,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool lark doc perm-public-get|perm-public-set` 与 `perm-member-list|perm-member-add`，补齐飞书文档权限读取、公开分享更新和显式协作者管理 CLI，避免再为“发出可编辑文档”临时写 SDK 脚本
 - `skills/practice-make-perfact/references/cli-reference.md`，新增后处理阶段的 CLI 参考索引，方便在“手写脚本还是该补 CLI”之间快速做归位判断
 - 博客新增 `docs/blog/agent-cli/lark-cli-guide.md`，整理官方 `larksuite/cli` 的安装、认证、三层命令体系与 Agent 场景下的安全使用路线
+- 博客新增 `docs/blog/lark-message-session-debug.md`，先从消息 ID、会话 ID、最小送达链路与 capture/replay 边界澄清飞书消息/会话调试专题的探索范围
 - `FEISHU_DEFAULT_CHAT_ID` 配置项，并补充默认群聊发送与 docx `openchat` 群权限的 quickstart 示例
 
 ## [6.4.0]
