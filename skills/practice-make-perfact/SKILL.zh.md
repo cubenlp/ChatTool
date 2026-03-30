@@ -1,7 +1,7 @@
 ---
 name: practice-make-perfact
 description: ChatTool 仓库任务的后处理工作流。适用于任务实现完成后，回顾已有改动、先检查现有 CLI 是否已覆盖、提取可复用内容落回仓库、调用 $chattool-dev-review 做开发验收，并按规范补齐文档/测试/变更记录与 PR/MR 流程；若任务还包含合并后的正式发版，则在 PR/MR 阶段后切到 $chattool-release。
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Practice Make Perfact（中文）
@@ -53,6 +53,7 @@ version: 0.4.0
    - 在 `docs/` 补充或更新相关说明  
    - 用户可见变更同步更新 `README.md`  
    - 更新 `CHANGELOG.md`  
+   - 如果这次任务要作为某个正式包版本发出，必须在 PR/MR 阶段前就把 `src/chattool/__init__.py` bump 到目标版本，而不是合并后再改
    - skill 变更时，维护 `SKILL.md` 与 `SKILL.zh.md`  
    - skill frontmatter 中的 `version` 要同步维护
 
@@ -67,6 +68,7 @@ version: 0.4.0
    - 如果任务还包括版本 tag、`Publish Package`、PyPI 校验或 `release.log`，在 PR/MR 阶段后切到 `$chattool-release`
    - 把“开发后整理”与“合并后发版”视为两个阶段
    - 不要因为实现已经 ready，就从未合并分支直接打 tag
+   - 如果 PyPI 已经有该版本，不要试图重推同版本 tag 解决问题；正确动作是回到新的 PR，先把版本号 bump 到下一个版本
 
 8. **只有明确要求时才提前停下**  
    - 如果用户明确只要分析、只要方案、只做到一半，就按用户要求停  
