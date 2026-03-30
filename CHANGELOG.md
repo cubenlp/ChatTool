@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
 - `Publish Package` workflow 现在会在发布前显式检查 PyPI 是否已存在同版本；若 `src/chattool/__init__.py` 未提前 bump、或同版本已发布，工作流会直接失败，而不是靠 `twine upload --skip-existing` 静默跳过
-- GitHub PR smoke tests 现从多版本矩阵收敛为单一 `ubuntu-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
+- GitHub PR smoke tests 现从多版本矩阵收敛为最小双平台覆盖：`ubuntu-latest + Python 3.10` 与 `macos-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
 
 ### Added
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值

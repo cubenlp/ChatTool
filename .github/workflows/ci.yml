@@ -18,7 +18,12 @@ jobs:
       ZULIP_SITE: ${{ secrets.ZULIP_SITE }}
       ZULIP_BOT_EMAIL: ${{ secrets.ZULIP_BOT_EMAIL }}
       ZULIP_BOT_API_KEY: ${{ secrets.ZULIP_BOT_API_KEY }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
 
     steps:
     - uses: actions/checkout@v2
