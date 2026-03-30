@@ -1,7 +1,7 @@
 ---
 name: chattool-dev-review
 description: 对 ChatTool 新功能做开发后 review。适用于检查 lazy import、缺参自动交互、统一 utils/tui 交互样式，以及相关文档/测试/变更记录是否同步更新。
-version: 0.2.0
+version: 0.2.1
 ---
 
 # ChatTool 开发 Review
@@ -35,6 +35,7 @@ version: 0.2.0
    - 用户可见功能同步更新 [README.md](README.md)
    - 更新 [CHANGELOG.md](CHANGELOG.md)
    - CLI 变更同步更新 [cli-tests](cli-tests) 下对应 `.md` 与需要的 `.py`
+   - 如果这个 PR 计划作为某个正式包版本发出，那么目标 `__version__` 和 changelog 变更必须在合并前就已经出现在 diff 里；不要把版本号调整拖到合并后打 tag 阶段。
 
 ## Review 流程
 

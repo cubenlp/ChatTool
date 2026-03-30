@@ -1,5 +1,6 @@
 import getpass
 import sys
+from contextlib import contextmanager
 
 import click
 
@@ -14,6 +15,8 @@ except ImportError:  # pragma: no cover - optional dependency fallback
 
 
 BACK_VALUE = "__BACK__"
+CHECKBOX_SELECTED_INDICATOR = "[x]"
+CHECKBOX_UNSELECTED_INDICATOR = "[ ]"
 
 
 def get_style():
@@ -56,8 +59,6 @@ def _render_note(message):
 
 def is_interactive_available():
     """Check if interactive mode is available."""
-    import sys
-
     return bool(sys.stdin.isatty() and sys.stdout.isatty())
 
 
@@ -66,9 +67,9 @@ def get_separator():
     return {"separator": True}
 
 
-def create_choice(title, value):
-    """Return a logical choice object for select prompts."""
-    return {"title": title, "value": value}
+def create_choice(title, value, checked=False):
+    """Return a logical choice object for select/checkbox prompts."""
+    return {"title": title, "value": value, "checked": checked}
 
 
 def _normalize_choice(choice):
@@ -78,13 +79,34 @@ def _normalize_choice(choice):
         return {
             "title": str(choice.get("title", choice.get("value", ""))),
             "value": choice.get("value"),
+            "checked": bool(choice.get("checked", False)),
             "separator": False,
         }
+
+    title = getattr(choice, "title", choice)
+    value = getattr(choice, "value", choice)
+    checked = bool(getattr(choice, "checked", False))
     return {
-        "title": str(choice),
-        "value": choice,
+        "title": str(title),
+        "value": value,
+        "checked": checked,
         "separator": False,
     }
+
+
+def _questionary_select_style(questionary):
+    return questionary.Style([
+        ("qmark", ""),
+        ("question", ""),
+        ("answer", ""),
+        ("pointer", ""),
+        ("highlighted", "noreverse"),
+        ("selected", "noreverse"),
+        ("separator", "dim"),
+        ("instruction", "dim"),
+        ("text", ""),
+        ("disabled", "italic"),
+    ])
 
 
 def ask_select(message, choices, style=None):
@@ -100,34 +122,18 @@ def ask_select(message, choices, style=None):
             continue
         selectable_count += 1
         questionary_choices.append(
-            questionary.Choice(
-                title=choice["title"],
-                value=choice["value"],
-            )
+            questionary.Choice(title=choice["title"], value=choice["value"])
         )
 
     if selectable_count == 0:
         return BACK_VALUE
-
-    select_style = questionary.Style([
-        ("qmark", ""),
-        ("question", ""),
-        ("answer", ""),
-        ("pointer", ""),
-        ("highlighted", "noreverse"),
-        ("selected", "noreverse"),
-        ("separator", "dim"),
-        ("instruction", "dim"),
-        ("text", ""),
-        ("disabled", "italic"),
-    ])
 
     selected = questionary.select(
         message,
         choices=questionary_choices,
         qmark="",
         pointer=">",
-        style=select_style,
+        style=style or _questionary_select_style(questionary),
         use_arrow_keys=True,
         use_jk_keys=True,
         instruction="",
@@ -137,14 +143,37 @@ def ask_select(message, choices, style=None):
     return selected
 
 
-def ask_checkbox(message, choices, default_values=None, style=None):
+@contextmanager
+def checkbox_indicator_style():
+    """Temporarily render questionary checkboxes with ASCII indicators."""
+    import questionary.constants as constants
+    import questionary.prompts.common as common
+
+    old_selected = constants.INDICATOR_SELECTED
+    old_unselected = constants.INDICATOR_UNSELECTED
+    old_common_selected = common.INDICATOR_SELECTED
+    old_common_unselected = common.INDICATOR_UNSELECTED
+
+    constants.INDICATOR_SELECTED = CHECKBOX_SELECTED_INDICATOR
+    constants.INDICATOR_UNSELECTED = CHECKBOX_UNSELECTED_INDICATOR
+    common.INDICATOR_SELECTED = CHECKBOX_SELECTED_INDICATOR
+    common.INDICATOR_UNSELECTED = CHECKBOX_UNSELECTED_INDICATOR
+    try:
+        yield
+    finally:
+        constants.INDICATOR_SELECTED = old_selected
+        constants.INDICATOR_UNSELECTED = old_unselected
+        common.INDICATOR_SELECTED = old_common_selected
+        common.INDICATOR_UNSELECTED = old_common_unselected
+
+
+def ask_checkbox(message, choices, default_values=None, style=None, instruction=None):
     """Ask a checkbox question using questionary for multi-select."""
     import questionary
-    from questionary.prompts import common as questionary_common
 
     normalized = [_normalize_choice(choice) for choice in choices]
-    questionary_choices = []
     default_set = set(default_values or [])
+    questionary_choices = []
     for choice in normalized:
         if choice["separator"]:
             questionary_choices.append(questionary.Separator())
@@ -153,45 +182,24 @@ def ask_checkbox(message, choices, default_values=None, style=None):
             questionary.Choice(
                 title=choice["title"],
                 value=choice["value"],
-                checked=choice["value"] in default_set,
+                checked=choice["checked"] or (choice["value"] in default_set),
             )
         )
 
     if not questionary_choices:
         return []
 
-    checkbox_style = questionary.Style([
-        ("qmark", ""),
-        ("question", ""),
-        ("answer", ""),
-        ("pointer", ""),
-        ("highlighted", "noreverse"),
-        ("selected", "noreverse"),
-        ("separator", "dim"),
-        ("instruction", "dim"),
-        ("text", ""),
-        ("disabled", "italic"),
-    ])
-
-    original_selected = questionary_common.INDICATOR_SELECTED
-    original_unselected = questionary_common.INDICATOR_UNSELECTED
-    questionary_common.INDICATOR_SELECTED = "[x]"
-    questionary_common.INDICATOR_UNSELECTED = "[ ]"
-    try:
+    with checkbox_indicator_style():
         selected = questionary.checkbox(
             message,
             choices=questionary_choices,
             qmark="",
             pointer=">",
-            style=checkbox_style,
+            style=style or _questionary_select_style(questionary),
             use_arrow_keys=True,
             use_jk_keys=True,
-            instruction="",
+            instruction=instruction or "",
         ).ask()
-    finally:
-        questionary_common.INDICATOR_SELECTED = original_selected
-        questionary_common.INDICATOR_UNSELECTED = original_unselected
-
     if selected is None:
         raise click.Abort()
     return selected

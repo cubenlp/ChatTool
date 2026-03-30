@@ -19,6 +19,33 @@ jobs:
             echo "Tag $GITHUB_REF_NAME does not match package version $package_version"
             exit 1
           fi
+          echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
+      - name: Fail if version already exists on PyPI
+        run: |
+          python3 - <<'PY'
+          import os
+          import sys
+          import urllib.error
+          import urllib.request
+
+          package = "chattool"
+          version = os.environ["PACKAGE_VERSION"]
+          url = f"https://pypi.org/pypi/{package}/{version}/json"
+
+          try:
+              urllib.request.urlopen(url)
+          except urllib.error.HTTPError as exc:
+              if exc.code == 404:
+                  print(f"{package} {version} is not yet on PyPI; continuing.")
+                  sys.exit(0)
+              raise
+          else:
+              print(
+                  f"{package} {version} is already on PyPI. "
+                  "Bump src/chattool/__init__.py and merge that change before pushing a release tag."
+              )
+              sys.exit(1)
+          PY
       - name: Set up Python "3.9"
         uses: actions/setup-python@v2
         with:
@@ -34,4 +61,4 @@ jobs:
         run: |
           python3 -m build
           twine check dist/*
-          twine upload dist/* --skip-existing
+          twine upload dist/*

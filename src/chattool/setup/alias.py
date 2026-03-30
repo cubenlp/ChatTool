@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_checkbox, ask_select, is_interactive_available
+from chattool.utils.tui import BACK_VALUE, ask_checkbox, ask_select, create_choice, is_interactive_available
 
 logger = setup_logger("setup_alias")
 
@@ -89,16 +89,22 @@ def select_aliases_interactively(default_selected):
     if preset == "Unselect all":
         return []
 
-    ordered_names = list(ALIAS_MAP.keys())
     choices = [
-        {"title": f"{name} => {ALIAS_MAP[name]}", "value": name}
-        for name in ordered_names
+        create_choice(
+            title=f"{name} => {cmd}",
+            value=name,
+            checked=name in default_selected,
+        )
+        for name, cmd in ALIAS_MAP.items()
     ]
-    return ask_checkbox(
+    selected = ask_checkbox(
         "Select aliases",
         choices=choices,
-        default_values=default_selected,
+        instruction="",
     )
+    if selected == BACK_VALUE:
+        return BACK_VALUE
+    return selected or []
 
 
 def setup_alias(shell=None, dry_run=False):

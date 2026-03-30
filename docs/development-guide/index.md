@@ -155,7 +155,7 @@ INFO: Start opencode setup
 - Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
-- **发版记录**：每次正式发版完成后，必须从已合并主线推送标准 tag `vX.Y.Z` 触发发布，并在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
+- **发版记录**：每次正式发版完成后，必须先确保目标版本已在 PR/MR 阶段写入 `src/chattool/__init__.py` 与对应 `CHANGELOG.md`，再从已合并主线推送标准 tag `vX.Y.Z` 触发发布；若 PyPI 已存在该版本，必须先走新的版本 bump 变更，不能复用同版本 tag，并在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
 
 ### CLI 测试文档驱动机制（`cli-tests`）
 
