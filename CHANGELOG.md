@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
 - `Publish Package` workflow 现在会在发布前显式检查 PyPI 是否已存在同版本；若 `src/chattool/__init__.py` 未提前 bump、或同版本已发布，工作流会直接失败，而不是靠 `twine upload --skip-existing` 静默跳过
+- GitHub PR smoke tests 现从多版本矩阵收敛为单一 `ubuntu-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
 
 ### Added
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
@@ -22,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [6.4.1] - 2026-03-30
 
 ### Changed
-- ChatTool 现统一以 `Python >=3.9` 作为公开支持下限：`chattool pypi init` 默认生成 `requires-python = ">=3.9"`，包元数据不再用最高到 3.12 的 classifier 形成隐性上限，CI smoke tests 覆盖 `3.9` 到 `3.13`
+- ChatTool 现统一以 `Python >=3.9` 作为公开支持下限：`chattool pypi init` 默认生成 `requires-python = ">=3.9"`，包元数据不再用最高到 3.12 的 classifier 形成隐性上限；GitHub CI 只保留最小 smoke-test 覆盖
 - 默认 `pip install chattool` 现在只保留核心聊天能力与基础 CLI 依赖；`questionary`、`aiohttp`、`fastapi`、`uvicorn`、`pydantic`、`fastmcp`、`PyGithub`、`gitpython`、`pillow`、`batch_executor`、`filelock` 等已拆分到新的 optional extras（如 `interactive`、`dns`、`serve`、`mcp`、`github`、`client`、`batch`）
 - `import chattool`、`chattool serve`、`chattool mcp` 与 `chattool.tools` 现在进一步收紧为惰性导入，避免默认安装路径被 DNS / Lark / MCP / Serve 等可选功能反向拉重
 - env 配置机制开始切换为按类型拆分的目录模型：活动配置与 profile 现在按 `envs/<Config>/.env`、`envs/<Config>/<profile>.env` 管理，不再把单个全局 `.env` 作为唯一真相
