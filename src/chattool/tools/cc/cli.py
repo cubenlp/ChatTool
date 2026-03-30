@@ -125,6 +125,7 @@ def _load_existing_defaults(config_path: Path) -> dict[str, object]:
 
     return {
         "project": project.get("name"),
+        "quiet": project.get("quiet"),
         "agent": agent.get("type"),
         "work_dir": agent_opts.get("work_dir"),
         "mode": agent_opts.get("mode"),
@@ -136,6 +137,7 @@ def _load_existing_defaults(config_path: Path) -> dict[str, object]:
 def _write_config(
     config_path: Path,
     project_name: str,
+    quiet: bool | None,
     agent: str,
     work_dir: str,
     mode: str,
@@ -146,6 +148,8 @@ def _write_config(
     lines: list[str] = []
     lines.append("[[projects]]")
     lines.append(f"name = \"{_toml_string(project_name)}\"")
+    if quiet is not None:
+        lines.append(f"quiet = {'true' if quiet else 'false'}")
     lines.append("")
     lines.append("[projects.agent]")
     lines.append(f"type = \"{_toml_string(agent)}\"")
@@ -340,6 +344,7 @@ def setup(interactive: bool | None) -> None:
 @click.option("--platform", default=None, type=click.Choice(PLATFORM_CHOICES), help="Platform type.")
 @click.option("--work-dir", default=None, type=click.Path(file_okay=False, dir_okay=True), help="Agent work dir.")
 @click.option("--mode", default=None, help="Agent mode (depends on agent type).")
+@click.option("--quiet/--no-quiet", default=None, help="Project default quiet mode.")
 @click.option("--full-options", is_flag=True, help="Prompt advanced options (e.g. proxy).")
 @click.option("--config", "-c", default=None, help="Config file path.")
 @click.option(
@@ -354,6 +359,7 @@ def init(
     platform: str | None,
     work_dir: str | None,
     mode: str | None,
+    quiet: bool | None,
     full_options: bool,
     config: str | None,
     interactive: bool | None,
@@ -372,6 +378,9 @@ def init(
     default_agent = defaults.get("agent")
     default_platform = defaults.get("platform")
     default_mode = defaults.get("mode")
+    default_quiet = defaults.get("quiet")
+    if not isinstance(default_quiet, bool):
+        default_quiet = None
 
     effective_agent = agent or default_agent
     effective_platform = platform or default_platform
@@ -427,6 +436,11 @@ def init(
                 )
         work_dir = click.prompt("Agent 工作目录", default=work_dir)
         project = click.prompt("项目名称", default=project)
+        if quiet is None:
+            quiet = click.confirm(
+                "默认 quiet 模式（隐藏思考和工具进度消息）",
+                default=default_quiet if default_quiet is not None else False,
+            )
     elif mode:
         mode_choices = AGENT_MODE_CHOICES.get(agent or "")
         if mode_choices and mode not in mode_choices:
@@ -453,6 +467,7 @@ def init(
     _write_config(
         config_path=config_path,
         project_name=project,
+        quiet=quiet if quiet is not None else default_quiet,
         agent=agent or default_agent or "claudecode",
         work_dir=work_dir,
         mode=mode

@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
 
 ### Added
+- `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
 - 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查、PyPI 校验和正式发版后的 `release.log` 记录
 - 新增 `cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
 - 新增 `cli-tests/skill/test_chattool_release_tag_format.md` 与 `cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
