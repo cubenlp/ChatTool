@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 - CLI 测试规范现拆成双轨：`cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入新目录 `mock-cli-tests/`
+- GitHub CI 的 stable smoke tests 现同步切到 `mock-cli-tests/` 新目录，避免继续引用已迁走的 `cli-tests/gh`
 - `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯

@@ -12,6 +12,8 @@ cli-tests/
 ├── README.md                # 迁移计划与执行顺序
 ├── browser/
 │   └── test_chattool_browser_basic.md
+├── cc/
+│   └── 真实 CLI 用例待补
 ├── client/
 │   └── test_chattool_client_basic.md
 ├── docker/
@@ -21,6 +23,10 @@ cli-tests/
 │   └── test_chattool_env_typed_profiles.md
 ├── image/
 │   └── test_chattool_image_basic.md
+├── lark/
+│   ├── guide/
+│   ├── messaging/
+│   └── documents/
 ├── mcp/
 │   └── test_chattool_mcp_basic.md
 ├── network/

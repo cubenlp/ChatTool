@@ -42,4 +42,4 @@ jobs:
           tests/skills/test_cli.py \
           tests/skills/test_skill_assets.py \
           tests/tools/github/test_cli.py \
-          mock-cli-tests/gh
+          mock-cli-tests
