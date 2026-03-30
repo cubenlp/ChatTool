@@ -143,6 +143,12 @@ chattool explore arxiv get 1706.03762 -v
 仓库结构设计草案见 `docs/design/python-library-repo-structure.md`
 PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
+## 测试约定
+
+- `cli-tests/`：真实 CLI 链路与真实环境验收，采用 doc-first。
+- `mock-cli-tests/`：所有基于 `mock`、`patch`、`monkeypatch`、fake client / API 的 CLI 测试，统一集中到这里。
+- 仓库根下 `tests/` 仅保留历史参考，不再作为新的 CLI 测试主落点。
+
 快速建包可直接运行：
 
 ```bash

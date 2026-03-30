@@ -1,4 +1,6 @@
-# chattool cc 基础用例
+# chattool cc mock 基础用例
+
+> 该组用例验证 `chattool cc` 的 CLI 编排与交互默认值处理，不触达真实飞书或 Agent 后端。
 
 ## Case 1: 帮助信息
 
@@ -57,6 +59,7 @@ chattool cc init -I \
 - 若已有 `quiet = true`，交互阶段会把 quiet 提示的默认值展示为开启
 - 若已有平台凭证且选择不重新填写，生成的新配置会保留原有平台凭证
 - 若沿用默认 quiet，生成的新配置会继续写入 `quiet = true`
+- 该用例通过 monkeypatch 固定交互能力探测结果，不依赖真实 TTY。
 
 ### 参考执行脚本（伪代码）
 
@@ -78,6 +81,7 @@ chattool cc init -i --config /tmp/config.toml
 - `app_id` 提示默认值来自 `FEISHU_APP_ID`
 - `app_secret` 直接以默认值形式提供，回车即可复用
 - 生成的配置文件写入对应飞书凭证
+- 该用例通过 monkeypatch 固定 `chatenv` 候选值来源，不要求本机提前写入真实飞书配置。
 
 ### 参考执行脚本（伪代码）
 

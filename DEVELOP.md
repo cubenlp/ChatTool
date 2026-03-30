@@ -35,10 +35,11 @@
 
 ## 测试与文档
 
-- ChatTool 仓库只长期维护 `cli-tests/` 这条测试主线。
-- CLI 测试采用文档先行：先写 `cli-tests/*.md`，再实现对应 `.py`。
-- `cli-tests/*.md` 是唯一长期维护的测试设计面；`cli-tests/*.py` 只作为真实 CLI 执行实现。
-- 宁可做更窄的真实测试，也绝不允许使用 mock 伪造行为；mock 对真实表现没有验收价值，且容易误导开发判断。
+- ChatTool 仓库长期维护两条 CLI 测试线：`cli-tests/` 用于真实链路，`mock-cli-tests/` 用于 mock 链路。
+- CLI 测试采用文档先行：先写对应目录下的 `*.md`，再实现对应 `.py`。
+- `cli-tests/*.md` / `cli-tests/*.py` 只维护真实 CLI 执行与验收。
+- `mock-cli-tests/*.md` / `mock-cli-tests/*.py` 只维护基于 mock 的 CLI 编排测试。
+- 所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，必须收纳到 `mock-cli-tests/`。
 - GitHub 自动测试当前只覆盖 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 这类第三方链路与大多数 `@pytest.mark.e2e` 用例；相关能力必须在本地按文档单独验证。
 - 仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新开发默认测试落点。
 - 真实集成测试应标记为 `@pytest.mark.e2e`。

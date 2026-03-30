@@ -140,14 +140,16 @@ INFO: Start opencode setup
 
 ## 测试与文档
 
-- **CLI 测试文档先行**：ChatTool 仓库内的新功能、重构和 Bugfix 如涉及 CLI 行为，必须先补对应 `cli-tests/*.md`。
-- **唯一长期维护的测试设计面**：`cli-tests/*.md` 是唯一长期维护的测试设计文档；评审、验收和后续补测都以它为准。
+- **CLI 测试文档先行**：ChatTool 仓库内的新功能、重构和 Bugfix 如涉及 CLI 行为，必须先补对应测试线下的 `.md`。
+- **双轨测试面**：
+  - `cli-tests/*.md` / `cli-tests/*.py`：真实 CLI 链路与真实环境验收。
+  - `mock-cli-tests/*.md` / `mock-cli-tests/*.py`：基于 mock 的 CLI 编排、参数流向、输出格式与懒加载验证。
 - **真实执行测试的落点**：`cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现，真实链路测试应标记为 `@pytest.mark.e2e`。
-- **绝对禁止 mock**：宁可做更窄、更针对性的真实测试，也绝不允许用 mock 伪造行为。mock 对真实表现没有验收价值，还容易误导实现是否真的成立。
+- **Mock 收纳规则**：所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，都必须收纳到 `mock-cli-tests/`。
 - **GitHub 自动测试范围有限**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 `lark` / `dns` 等第三方链路与大多数 `@pytest.mark.e2e`；不要把“GitHub CI 通过”误当成这些能力已验收。
 - **`tests/` 的定位**：仓库根下 `tests/` 视为弃用区，只保留历史参考，不再作为新开发的默认测试落点，也不再作为交付要求。
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
-- 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值，不允许通过 mock 伪装成真实链路。
+- 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值；如果改用 mock，只能放到 `mock-cli-tests/`。
 - 如果测试依赖接收者、群聊或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`，并在对应 `.md` 中写清配置要求与回滚方式。
 - Feishu 相关测试设计应统一落在 `cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留一个入口文件，不再要求和 skill 子目录一一对齐。
 - Feishu 的真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为主规范依据。
@@ -157,12 +159,12 @@ INFO: Start opencode setup
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须先确保目标版本已在 PR/MR 阶段写入 `src/chattool/__init__.py` 与对应 `CHANGELOG.md`，再从已合并主线推送标准 tag `vX.Y.Z` 触发发布；若 PyPI 已存在该版本，必须先走新的版本 bump 变更，不能复用同版本 tag，并在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
 
-### CLI 测试文档驱动机制（`cli-tests`）
+### CLI 测试文档驱动机制（`cli-tests` / `mock-cli-tests`）
 
-- `cli-tests` 作为 CLI 测试设计入口，采用 **doc-first**：
+- `cli-tests` 与 `mock-cli-tests` 都采用 **doc-first**：
   - 先写 `.md`（测试目标、输入、执行顺序、预期）。
   - 文档评审通过后再实现对应 `.py`。
-- ChatTool 仓库的测试维护主线只看 `cli-tests/`；`tests/` 中的历史文件不再作为新样例、新要求或评审依据。
+- `cli-tests/` 只维护真实 CLI 测试；`mock-cli-tests/` 只维护 mock CLI 测试；`tests/` 中的历史文件不再作为新样例、新要求或评审依据。
 - 命名规范（与 CLI 命令保持一致）：
   - 至少一个基础文件：`test_<cli>_<command>_basic.py`
   - 按主题扩展：`test_<cli>_<command>_<topic>.py`
@@ -170,7 +172,7 @@ INFO: Start opencode setup
 - 目录建议：
   - 默认在命令目录下平铺；当某个 CLI 下面已经形成稳定专题时，可引入一层 topic 目录保持与 skill / CLI 结构一致。
   - 例如：`cli-tests/dns/test_chattool_dns_basic.md`
-  - 例如：`cli-tests/lark/documents/test_chattool_lark_doc_basic.md`
+  - 例如：`mock-cli-tests/gh/test_chattool_gh_basic.md`
 - 文档结构建议：
   - 每个 case 优先保留“初始环境准备 / 相关文件 / 预期过程和结果 / 参考执行脚本（伪代码）”结构。
   - 根据需要，可在 case 开头写必要的文字说明。
@@ -180,7 +182,8 @@ INFO: Start opencode setup
   - 路径语义、错误语义与核心返回字段应与当前设计文档和真实实现保持一致，避免保留旧接口预期。
 - 文档与实现关系：
   - 实现测试时严格遵循对应 `.md` 的步骤。
-  - 若需要验证真实行为，优先构造真实文件、真实目录、真实 git 仓库和真实配置，而不是插入 mock 层。
+  - 若需要验证真实行为，优先构造真实文件、真实目录、真实 git 仓库和真实配置，并放到 `cli-tests/`。
+  - 若需要验证 CLI 编排、参数传递、输出格式或懒加载，并依赖 mock / fake 数据，放到 `mock-cli-tests/`。
   - 若测试过程中发现 `.md` 逻辑有疑点，可反向更新 `.md` 保持一致性。
   - **非必要不改文档**；仅在逻辑冲突、步骤错误、预期失效时更新。
   - 若确需更新 `.md`，必须在文档变更中明确写清修改原因。
@@ -197,4 +200,5 @@ INFO: Start opencode setup
 - [目录职责说明](directory-responsibilities.md)：目录边界、依赖方向与归位规则。
 - [架构概览与设计特点](architecture-overview.md)：分层结构、设计目标、能力沉淀路径与架构优势。
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。
+- [Mock CLI Tests](mock-cli-tests.md)：mock CLI 测试的目录边界、doc-first 规则与使用边界。
 - [飞书能力设计](../design/feishu-cli.md)：`chattool lark` 与单目录 `skills/feishu/` 的目标形态。

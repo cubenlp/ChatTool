@@ -7,7 +7,7 @@ from chattool.client.main import cli
 from chattool.explore.arxiv.models import Paper
 
 
-pytestmark = pytest.mark.e2e
+pytestmark = pytest.mark.mock_cli
 
 
 def _paper(
