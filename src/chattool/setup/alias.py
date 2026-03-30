@@ -98,7 +98,7 @@ def select_aliases_interactively(default_selected):
         for name, cmd in ALIAS_MAP.items()
     ]
     selected = ask_checkbox(
-        "Select aliases",
+        "Select aliases (Space to toggle, A select/unselect all)",
         choices=choices,
         instruction="",
     )

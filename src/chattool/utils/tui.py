@@ -68,8 +68,10 @@ def get_separator():
 
 
 def create_choice(title, value, checked=False):
-    """Return a logical choice object for select/checkbox prompts."""
-    return {"title": title, "value": value, "checked": checked}
+    """Return a questionary Choice for select/checkbox prompts."""
+    import questionary
+
+    return questionary.Choice(title=title, value=value, checked=checked)
 
 
 def _normalize_choice(choice):
