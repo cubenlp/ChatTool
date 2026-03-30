@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import ask_select, is_interactive_available
+from chattool.utils.tui import BACK_VALUE, ask_select, ask_text, is_interactive_available
 
 logger = setup_logger("setup_alias")
 
@@ -82,21 +82,51 @@ def select_aliases_interactively(default_selected):
         "Alias preset",
         choices=["Select all", "Unselect all", "Custom"],
     )
+    if preset == BACK_VALUE:
+        return BACK_VALUE
     if preset == "Select all":
         return list(ALIAS_MAP.keys())
     if preset == "Unselect all":
         return []
-    import questionary
 
-    choices = [
-        questionary.Choice(title=f"{name} => {cmd}", value=name, checked=name in default_selected)
-        for name, cmd in ALIAS_MAP.items()
-    ]
-    selected = questionary.checkbox(
-        "Select aliases (Space to toggle, A select/unselect all)",
-        choices=choices,
-    ).ask()
-    return selected or []
+    click.echo("Custom alias selection:")
+    click.echo("Enter comma-separated numbers, `all`, or `none`.")
+    ordered_names = list(ALIAS_MAP.keys())
+    default_indexes = [str(index) for index, name in enumerate(ordered_names, start=1) if name in default_selected]
+    for index, name in enumerate(ordered_names, start=1):
+        marker = "*" if name in default_selected else " "
+        click.echo(f"  {index}. [{marker}] {name} => {ALIAS_MAP[name]}")
+
+    selection = ask_text("Alias numbers", default=",".join(default_indexes))
+    if selection == BACK_VALUE:
+        return BACK_VALUE
+
+    text = str(selection).strip().lower()
+    if not text:
+        return [name for name in ordered_names if name in default_selected]
+    if text == "all":
+        return ordered_names
+    if text == "none":
+        return []
+
+    selected = []
+    seen = set()
+    for part in text.split(","):
+        item = part.strip()
+        if not item:
+            continue
+        if not item.isdigit():
+            click.echo(f"Ignore invalid selection: {item}")
+            continue
+        index = int(item)
+        if index < 1 or index > len(ordered_names):
+            click.echo(f"Ignore out-of-range selection: {item}")
+            continue
+        name = ordered_names[index - 1]
+        if name not in seen:
+            selected.append(name)
+            seen.add(name)
+    return selected
 
 
 def setup_alias(shell=None, dry_run=False):
@@ -110,6 +140,8 @@ def setup_alias(shell=None, dry_run=False):
     default_selected = list(ALIAS_MAP.keys())
     if is_interactive_available():
         alias_keys = select_aliases_interactively(default_selected)
+        if alias_keys == BACK_VALUE:
+            raise click.Abort()
     else:
         alias_keys = default_selected
         click.echo("No interactive TTY detected, apply default alias set.")

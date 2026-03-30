@@ -1,4 +1,4 @@
-from importlib import resources
+from collections import deque
 import json
 import shlex
 import shutil
@@ -10,7 +10,8 @@ from chattool.setup.interactive import abort_if_force_without_tty, resolve_inter
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_confirm
 
-BUNDLED_NVM_VERSION = "v0.40.3"
+NVM_INSTALL_VERSION = "v0.40.4"
+NVM_INSTALL_URL = f"https://raw.githubusercontent.com/nvm-sh/nvm/{NVM_INSTALL_VERSION}/install.sh"
 MIN_NODEJS_MAJOR = 20
 NVM_INIT_BEGIN = "# >>> chattool nvm >>>"
 NVM_INIT_END = "# <<< chattool nvm <<<"
@@ -18,7 +19,28 @@ logger = setup_logger("setup_nodejs")
 
 
 def _run_bash(command):
-    return subprocess.run(["bash", "-lc", command], capture_output=True, text=True)
+    return subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+
+
+def _run_bash_with_output_tail(command, tail_lines=80):
+    process = subprocess.Popen(
+        ["bash", "-c", command],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    tail = deque(maxlen=tail_lines)
+    assert process.stdout is not None
+    for line in process.stdout:
+        tail.append(line.rstrip("\n"))
+    return subprocess.CompletedProcess(
+        process.args,
+        process.wait(),
+        "\n".join(tail).strip(),
+        "",
+    )
 
 
 def _get_cmd_output(command):
@@ -209,20 +231,6 @@ def should_install_global_npm_package(package_name, display_name, interactive=No
     return False
 
 
-def _read_bundled_nvm_script():
-    return resources.files("chattool.setup").joinpath("assets/nvm.sh").read_text(encoding="utf-8")
-
-
-def _render_nvm_init_block():
-    lines = [
-        NVM_INIT_BEGIN,
-        'export NVM_DIR="$HOME/.nvm"',
-        '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"',
-        NVM_INIT_END,
-    ]
-    return "\n".join(lines) + "\n"
-
-
 def _replace_managed_block(path, begin_marker, end_marker, block):
     content = ""
     if path.exists():
@@ -247,6 +255,22 @@ def _replace_managed_block(path, begin_marker, end_marker, block):
     path.write_text(content + ("\n" if content else ""), encoding="utf-8")
 
 
+def _has_managed_nvm_block(path):
+    if not path.exists():
+        return False
+    content = path.read_text(encoding="utf-8")
+    begin_idx = content.find(NVM_INIT_BEGIN)
+    end_idx = content.find(NVM_INIT_END)
+    return begin_idx != -1 and end_idx != -1 and end_idx >= begin_idx
+
+
+def _shell_rc_contains_nvm_init(path):
+    if not path.exists():
+        return False
+    content = path.read_text(encoding="utf-8")
+    return "NVM_DIR" in content and "nvm.sh" in content
+
+
 def _resolve_shell_rc_path():
     from chattool.setup.alias import resolve_shell, resolve_shell_rc
 
@@ -254,12 +278,22 @@ def _resolve_shell_rc_path():
     return resolve_shell_rc(shell_name), shell_name
 
 
-def _install_bundled_nvm(nvm_sh, shell_rc):
-    logger.info(f"Writing bundled nvm.sh ({BUNDLED_NVM_VERSION}) to {nvm_sh}")
-    nvm_sh.parent.mkdir(parents=True, exist_ok=True)
-    nvm_sh.write_text(_read_bundled_nvm_script(), encoding="utf-8")
-    nvm_sh.chmod(0o755)
-    _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block())
+def _install_nvm_via_official_script(shell_rc):
+    profile_path = shlex.quote(str(shell_rc))
+    command = (
+        f"export PROFILE={profile_path} && "
+        'export NVM_DIR="$HOME/.nvm" && '
+        f"curl -o- {shlex.quote(NVM_INSTALL_URL)} | bash"
+    )
+    return _run_bash_with_output_tail(command)
+
+
+def _echo_recent_output(result, heading):
+    output = (result.stdout or "").strip()
+    if not output:
+        return
+    click.echo(heading, err=True)
+    click.echo(output, err=True)
 
 
 def setup_nodejs(interactive=None):
@@ -287,22 +321,34 @@ def setup_nodejs(interactive=None):
 
     nvm_sh = Path.home() / ".nvm" / "nvm.sh"
     shell_rc, shell_name = _resolve_shell_rc_path()
-    if not nvm_sh.exists():
-        logger.info(f"nvm not found, installing bundled nvm ({BUNDLED_NVM_VERSION})")
-        click.echo(f"nvm not found, writing bundled nvm.sh ({BUNDLED_NVM_VERSION})...")
-        try:
-            _install_bundled_nvm(nvm_sh, shell_rc)
-        except Exception as exc:
-            logger.error(f"Failed to install bundled nvm: {exc}")
-            click.echo("Failed to install bundled nvm.", err=True)
-            raise click.Abort() from exc
-        click.echo(f"Bundled nvm installed: {nvm_sh}")
+    managed_block_present = _has_managed_nvm_block(shell_rc)
+    has_profile_init = _shell_rc_contains_nvm_init(shell_rc)
+    should_install_nvm = (not nvm_sh.exists()) or managed_block_present or (not has_profile_init)
+    if should_install_nvm:
+        if not shutil.which("curl"):
+            logger.error("curl is required to install nvm but was not found in PATH")
+            click.echo("curl is required to install nvm, but it was not found in PATH.", err=True)
+            raise click.Abort()
+        if not nvm_sh.exists():
+            logger.info(f"nvm not found, installing via official installer ({NVM_INSTALL_VERSION})")
+            click.echo(f"nvm not found, installing via official script ({NVM_INSTALL_VERSION})...")
+        else:
+            logger.info(f"Refreshing nvm install/profile via official installer ({NVM_INSTALL_VERSION})")
+            click.echo(f"Refreshing nvm via official script ({NVM_INSTALL_VERSION})...")
+        result = _install_nvm_via_official_script(shell_rc)
+        if result.returncode != 0:
+            logger.error("Failed to install nvm via official curl|bash installer")
+            click.echo("Failed to install nvm via official curl|bash installer.", err=True)
+            _echo_recent_output(result, "Recent installer output:")
+            raise click.Abort()
+        if managed_block_present:
+            _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, "")
+            logger.info(f"Removed legacy ChatTool-managed nvm init block from {shell_rc}")
+            click.echo(f"Removed legacy ChatTool nvm init block from {shell_rc}")
+        click.echo(f"nvm is ready: {nvm_sh}")
         click.echo(f"Updated {shell_name} init: {shell_rc}")
     else:
         click.echo(f"Found nvm: {nvm_sh}")
-        _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block())
-        logger.info(f"Ensured nvm init block in {shell_rc}")
-        click.echo(f"Ensured nvm init in {shell_rc}")
 
     version_spec = "lts/*"
     if need_prompt:
@@ -319,20 +365,12 @@ def setup_nodejs(interactive=None):
         "nvm use default && "
         "node -v && npm -v"
     )
-    result = _run_bash(nvm_cmd)
+    result = _run_bash_with_output_tail(nvm_cmd)
     if result.returncode != 0:
         logger.error(f"Failed to install/use Node.js via nvm for version target: {version_spec}")
         click.echo("Failed to install/use Node.js via nvm.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
+        _echo_recent_output(result, "Recent nvm output:")
         raise click.Abort()
-
-    output = (result.stdout or "").strip()
-    error_output = (result.stderr or "").strip()
-    if output:
-        click.echo(output)
-    if error_output:
-        click.echo(error_output)
 
     node_version = _get_bash_output(
         'export NVM_DIR="$HOME/.nvm" && '
