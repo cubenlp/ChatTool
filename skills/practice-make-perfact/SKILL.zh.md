@@ -1,7 +1,7 @@
 ---
 name: practice-make-perfact
-description: ChatTool 仓库任务的后处理工作流。适用于任务实现完成后，回顾已有改动、先检查现有 CLI 是否已覆盖、提取可复用内容落回仓库、调用 $chattool-dev-review 做开发验收，并按规范补齐文档/测试/变更记录与 PR/MR 流程。
-version: 0.3.0
+description: ChatTool 仓库任务的后处理工作流。适用于任务实现完成后，回顾已有改动、先检查现有 CLI 是否已覆盖、提取可复用内容落回仓库、调用 $chattool-dev-review 做开发验收，并按规范补齐文档/测试/变更记录与 PR/MR 流程；若任务还包含合并后的正式发版，则在 PR/MR 阶段后切到 $chattool-release。
+version: 0.4.0
 ---
 
 # Practice Make Perfact（中文）
@@ -63,7 +63,12 @@ version: 0.3.0
    - 若范围变化，继续更新 PR 内容  
    - 任务默认停在 PR/MR 阶段，而不是停在本地提交
 
-7. **只有明确要求时才提前停下**  
+7. **正式发版动作单独切阶段**  
+   - 如果任务还包括版本 tag、`Publish Package`、PyPI 校验或 `release.log`，在 PR/MR 阶段后切到 `$chattool-release`
+   - 把“开发后整理”与“合并后发版”视为两个阶段
+   - 不要因为实现已经 ready，就从未合并分支直接打 tag
+
+8. **只有明确要求时才提前停下**  
    - 如果用户明确只要分析、只要方案、只做到一半，就按用户要求停  
    - 否则默认走完整个“后处理整理 -> review -> PR”流程
 
@@ -73,5 +78,6 @@ version: 0.3.0
 - 阶段化输出与命名一致，便于检索与复用。
 - 这份 skill 应服务于任务结束后的回顾与沉淀，而不是前期探索。
 - 它应明确串联 `$chattool-dev-review`，帮助模型按开发规范做收尾。
+- 如果用户明确要求正式发版，它应把该阶段切给 `$chattool-release`。
 - 默认落点应是已经进入 PR/MR 阶段的结果。
 - 它还应提供一个很轻的 CLI 参考面，帮助模型快速判断“该继续手写脚本，还是应该补一个正式命令”。

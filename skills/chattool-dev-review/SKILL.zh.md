@@ -1,7 +1,7 @@
 ---
 name: chattool-dev-review
 description: 对 ChatTool 新功能做开发后 review。适用于检查 lazy import、缺参自动交互、统一 utils/tui 交互样式，以及相关文档/测试/变更记录是否同步更新。
-version: 0.1.0
+version: 0.2.0
 ---
 
 # ChatTool 开发 Review
@@ -9,6 +9,8 @@ version: 0.1.0
 这个 skill 用于在 ChatTool 新功能或 CLI 变更完成后做一轮开发验收。
 
 默认只 review 本次 feature 相关改动，除非用户明确要求做全局检查。
+
+边界：这个 skill 只负责开发验收，不负责发版时机、tag、`Publish Package`、PyPI 校验或 `release.log`。这些动作统一交给 `$chattool-release`。
 
 ## 检查重点
 
@@ -34,11 +36,6 @@ version: 0.1.0
    - 更新 [CHANGELOG.md](CHANGELOG.md)
    - CLI 变更同步更新 [cli-tests](cli-tests) 下对应 `.md` 与需要的 `.py`
 
-5. MR / PR 前是否已同步最新主分支
-   - 最终提 MR / PR 前，必须先同步最新 `master`。
-   - 提交前优先把 `origin/master` merge 或 rebase 到当前分支，并在本地先解决冲突。
-   - “分支未同步主分支”应视为 review 问题，因为这会把集成冲突拖到评审或合并阶段才暴露。
-
 ## Review 流程
 
 1. 先确定范围
@@ -59,18 +56,11 @@ version: 0.1.0
    - 运行最相关、最小的一条测试或 CLI 命令
    - 如果无法验证，要在结论里明确说明
 
-5. 最终 MR / PR 前同步主线并复查
-   - 运行 `git fetch origin`，把 `origin/master` 合入当前分支
-   - 若有冲突，先在本地解决，再给最终 review 结论或更新 PR
-   - 如果合主线影响到了相关区域，冲突解决后重新跑最小必要验证
-
 ## 常用命令
 
 ```bash
 git diff --stat
 git diff --name-only
-git fetch origin
-git merge origin/master
 rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
 rg -n "lazy import|utils/tui.py|interactive" docs/development-guide docs README.md
 ```

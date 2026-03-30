@@ -1,4 +1,4 @@
 interface:
   display_name: "Practice Make Perfact"
   short_description: "Post-task ChatTool normalization through PR stage"
-  default_prompt: "Use $practice-make-perfact after the ChatTool task is basically done to review the diff, extract reusable parts into the repo, call $chattool-dev-review, and then finish docs/tests/changelog and chattool gh PR updates."
+  default_prompt: "Use $practice-make-perfact after the ChatTool task is basically done to review the diff, extract reusable parts into the repo, call $chattool-dev-review, and finish docs/tests/changelog and chattool gh PR updates. If merged-mainline release work is also requested, hand that phase to $chattool-release."
