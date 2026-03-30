@@ -6,12 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [6.5.0] - 2026-03-31
+
 ### Changed
 - CLI 测试规范现拆成双轨：`cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入新目录 `mock-cli-tests/`
 - GitHub CI 的 stable smoke tests 现同步切到 `mock-cli-tests/` 新目录，避免继续引用已迁走的 `cli-tests/gh`
 - `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
+- `chattool setup` 相关的 `nvm` / `lark-cli` 子进程调用现统一避免使用 login shell，减少用户 shell 初始化把提示符和控制序列污染到当前交互页面的风险
 - `Publish Package` workflow 现在会在发布前显式检查 PyPI 是否已存在同版本；若 `src/chattool/__init__.py` 未提前 bump、或同版本已发布，工作流会直接失败，而不是靠 `twine upload --skip-existing` 静默跳过
 - GitHub PR smoke tests 现从多版本矩阵收敛为最小双平台覆盖：`ubuntu-latest + Python 3.10` 与 `macos-latest + Python 3.10`，减少日常 CI 资源消耗；跨版本兼容继续以本地验证和必要时的专项检查为主
 
@@ -26,6 +29,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - 新增 `cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
 - 新增 `cli-tests/skill/test_chattool_release_tag_format.md` 与 `cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
 - 新增 `cli-tests/skill/test_chattool_release_version_bump.md` 与 `cli-tests/skill/test_chattool_release_version_bump.py`，校对 release/practice/dev-review skill、开发文档与 workflow 都明确要求“版本号必须在 PR 阶段先 bump，PyPI 已有同版本时必须失败”
+
+### Fixed
+- `chattool setup codex` / `chatup codex` 的交互式补参现在不再因为旧的 login shell 副作用和隐藏输入提示显示异常而表现成“像是已经回到 shell、但实际还在等待输入”
+- 共享 `utils/tui.py` 现改为更安全的 `click + Rich` 提示实现，并对敏感输入统一走 `stderr` 渲染与读取，降低 setup 交互过程中终端状态错乱的概率
+- `chatenv init` 与 `chattool setup alias` 的交互菜单现在恢复了更直接的终端操作体验：`Ctrl-C` 会直接退出，alias 自定义选择支持键盘 checkbox 式勾选
+- `utils/tui.py` 现在会正确处理纯字符串选项，避免 `chattool setup alias` 等页面把 `str.title` 方法错误渲染成 `<built-in method title ...>`
+- 当 `questionary` 不可用时，统一 TUI 现在会安全降级到编号选择和逗号分隔多选，避免交互命令直接因可选依赖缺失而中断
 
 ## [6.4.1] - 2026-03-30
 

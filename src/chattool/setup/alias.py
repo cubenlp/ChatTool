@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import ask_checkbox, ask_select, is_interactive_available
+from chattool.utils.tui import BACK_VALUE, ask_checkbox, ask_select, create_choice, is_interactive_available
 
 logger = setup_logger("setup_alias")
 
@@ -82,11 +82,12 @@ def select_aliases_interactively(default_selected):
         "Alias preset",
         choices=["Select all", "Unselect all", "Custom"],
     )
+    if preset == BACK_VALUE:
+        return BACK_VALUE
     if preset == "Select all":
         return list(ALIAS_MAP.keys())
     if preset == "Unselect all":
         return []
-    from chattool.utils.tui import create_choice
 
     choices = [
         create_choice(
@@ -99,7 +100,10 @@ def select_aliases_interactively(default_selected):
     selected = ask_checkbox(
         "Select aliases (Space to toggle, A select/unselect all)",
         choices=choices,
+        instruction="",
     )
+    if selected == BACK_VALUE:
+        return BACK_VALUE
     return selected or []
 
 
@@ -114,6 +118,8 @@ def setup_alias(shell=None, dry_run=False):
     default_selected = list(ALIAS_MAP.keys())
     if is_interactive_available():
         alias_keys = select_aliases_interactively(default_selected)
+        if alias_keys == BACK_VALUE:
+            raise click.Abort()
     else:
         alias_keys = default_selected
         click.echo("No interactive TTY detected, apply default alias set.")

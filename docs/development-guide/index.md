@@ -103,11 +103,11 @@
 
 ```text
 Starting interactive configuration...
-? Select a category to configure (Arrow keys to move, Enter to select):
- » Model
-   DNS
-   Image
-   Other
+Select a category to configure:
+> Model
+  DNS
+  Image
+  Other
 ```
 
 - 对于目标非常明确、输入项很少的命令，可以直接进入逐项提问，例如 `chattool setup opencode`：
@@ -124,7 +124,7 @@ INFO: Start opencode setup
   - 多能力工具入口
   - 需要按类别拆分配置项的命令
 - 不推荐在复杂命令里一开始就连续抛出大量无分组问题，这会增加理解成本，也不利于后续扩展。
-- 交互式选择页应尽量复用统一的 TUI 能力与按键习惯，保持箭头选择、回车确认、默认值提示、敏感信息脱敏等体验一致。
+- 交互式选择页应尽量复用统一的 TUI 能力与按键习惯，保持上下选择、回车确认、默认值提示、敏感信息脱敏等体验一致。
 - 逐项提问的命令也应保持同样的风格约束：先输出开始信息，问题文案简短明确，默认值可见，敏感字段不回显。
 - 带默认值的向导式命令，默认值也应在交互 prompt 中可见。
 - 布尔确认、密码输入、仓库选择等交互保持同一套 TUI 风格。

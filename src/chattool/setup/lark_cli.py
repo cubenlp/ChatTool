@@ -200,7 +200,7 @@ def _run_lark_cli_command(args: list[str], input_text: str | None = None) -> sub
             f"{quoted}"
         )
         return subprocess.run(
-            ["bash", "-lc", command],
+            ["bash", "-c", command],
             input=input_text,
             capture_output=True,
             text=True,

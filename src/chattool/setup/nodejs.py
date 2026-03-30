@@ -1,3 +1,4 @@
+from collections import deque
 from importlib import resources
 import json
 import shlex
@@ -18,7 +19,28 @@ logger = setup_logger("setup_nodejs")
 
 
 def _run_bash(command):
-    return subprocess.run(["bash", "-lc", command], capture_output=True, text=True)
+    return subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+
+
+def _run_bash_with_output_tail(command, tail_lines=80):
+    process = subprocess.Popen(
+        ["bash", "-c", command],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    tail = deque(maxlen=tail_lines)
+    assert process.stdout is not None
+    for line in process.stdout:
+        tail.append(line.rstrip("\n"))
+    return subprocess.CompletedProcess(
+        process.args,
+        process.wait(),
+        "\n".join(tail).strip(),
+        "",
+    )
 
 
 def _get_cmd_output(command):
@@ -209,20 +231,6 @@ def should_install_global_npm_package(package_name, display_name, interactive=No
     return False
 
 
-def _read_bundled_nvm_script():
-    return resources.files("chattool.setup").joinpath("assets/nvm.sh").read_text(encoding="utf-8")
-
-
-def _render_nvm_init_block():
-    lines = [
-        NVM_INIT_BEGIN,
-        'export NVM_DIR="$HOME/.nvm"',
-        '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"',
-        NVM_INIT_END,
-    ]
-    return "\n".join(lines) + "\n"
-
-
 def _replace_managed_block(path, begin_marker, end_marker, block):
     content = ""
     if path.exists():
@@ -247,6 +255,20 @@ def _replace_managed_block(path, begin_marker, end_marker, block):
     path.write_text(content + ("\n" if content else ""), encoding="utf-8")
 
 
+def _read_bundled_nvm_script():
+    return resources.files("chattool.setup").joinpath("assets/nvm.sh").read_text(encoding="utf-8")
+
+
+def _render_nvm_init_block():
+    lines = [
+        NVM_INIT_BEGIN,
+        'export NVM_DIR="$HOME/.nvm"',
+        '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"',
+        NVM_INIT_END,
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def _resolve_shell_rc_path():
     from chattool.setup.alias import resolve_shell, resolve_shell_rc
 
@@ -260,6 +282,14 @@ def _install_bundled_nvm(nvm_sh, shell_rc):
     nvm_sh.write_text(_read_bundled_nvm_script(), encoding="utf-8")
     nvm_sh.chmod(0o755)
     _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block())
+
+
+def _echo_recent_output(result, heading):
+    output = (result.stdout or "").strip()
+    if not output:
+        return
+    click.echo(heading, err=True)
+    click.echo(output, err=True)
 
 
 def setup_nodejs(interactive=None):
@@ -319,20 +349,12 @@ def setup_nodejs(interactive=None):
         "nvm use default && "
         "node -v && npm -v"
     )
-    result = _run_bash(nvm_cmd)
+    result = _run_bash_with_output_tail(nvm_cmd)
     if result.returncode != 0:
         logger.error(f"Failed to install/use Node.js via nvm for version target: {version_spec}")
         click.echo("Failed to install/use Node.js via nvm.", err=True)
-        if result.stderr:
-            click.echo(result.stderr.strip(), err=True)
+        _echo_recent_output(result, "Recent nvm output:")
         raise click.Abort()
-
-    output = (result.stdout or "").strip()
-    error_output = (result.stderr or "").strip()
-    if output:
-        click.echo(output)
-    if error_output:
-        click.echo(error_output)
 
     node_version = _get_bash_output(
         'export NVM_DIR="$HOME/.nvm" && '

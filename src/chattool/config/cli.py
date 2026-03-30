@@ -6,7 +6,6 @@ import dotenv
 from chattool.config import BaseEnvConfig
 from chattool.cli_warnings import install_cli_warning_filters
 from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
-from chattool import __version__
 from chattool.utils import mask_secret
 from chattool.utils.tui import (
     ask_select, ask_text, ask_confirm, get_separator, 
@@ -213,7 +212,7 @@ def _configure_provider(config_cls):
 
 
 def _interactive_config_loop(grouped_configs):
-    """Main loop for interactive configuration using questionary."""
+    """Main loop for interactive configuration using shared tui helpers."""
     while True:
         # Main Menu
         main_choices = []
@@ -226,7 +225,7 @@ def _interactive_config_loop(grouped_configs):
         main_choices.append("Exit without Saving")
         
         selected_section = ask_select(
-            "Select a category to configure (Arrow keys to move, Enter to select):",
+            "Select a category to configure:",
             choices=main_choices
         )
         
@@ -257,7 +256,7 @@ def _interactive_config_loop(grouped_configs):
             sub_choices.append(create_choice(title="Back", value="Back"))
             
             selected_config = ask_select(
-                f"[{selected_section}] Select a provider to configure (Esc to back):",
+                f"[{selected_section}] Select a provider to configure:",
                 choices=sub_choices
             )
             
@@ -448,9 +447,9 @@ def init(interactive, config_types):
 
     if interactive:
         click.echo("Starting interactive configuration...")
-        use_questionary = is_interactive_available()
-        
-        if use_questionary:
+        interactive_tui_available = is_interactive_available()
+
+        if interactive_tui_available:
             if not config_types:
                 grouped = _group_configs(target_configs)
                 _interactive_config_loop(grouped)
@@ -464,7 +463,7 @@ def init(interactive, config_types):
                 click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
                 return
 
-        # Fallback for non-questionary environment (pure click)
+        # Fallback for non-interactive-tui environment (pure click)
         if not config_types:
             grouped = _group_configs(target_configs)
             selected_sections = []

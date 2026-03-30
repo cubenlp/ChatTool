@@ -71,14 +71,15 @@ chatenv init -t pollinations -t siliconflow
 ```bash
 ❯ chatenv init
 Starting interactive configuration...
-? Select a category to configure (Arrow keys to move, Enter to select): Image
-? [Image] Select a provider to configure (Esc to back): (Use arrow keys)
- » Tongyi Wanxiang Configuration (tongyi, dashscope)
-   Hugging Face Configuration (hf, huggingface)
-   Pollinations Configuration (pollinations, poll)
-   LiblibAI Configuration (liblib)
-   ---------------
-   Back
+Select a category to configure:
+> Image
+[Image] Select a provider to configure:
+> Tongyi Wanxiang Configuration (tongyi, dashscope)
+  Hugging Face Configuration (hf, huggingface)
+  Pollinations Configuration (pollinations, poll)
+  LiblibAI Configuration (liblib)
+  ----
+  Back
 ```
 
 低成本起步至少配置：
