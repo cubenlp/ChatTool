@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+- `chatenv init` / `chatenv new` 更新 active typed env 后，`chatenv cat` 与运行时配置加载现在会优先读取 `envs/<Config>/.env`，不再被已有 shell 环境变量意外覆盖，避免交互里刚保存的新值看起来“没有生效”
+
 ## [6.5.0] - 2026-03-31
 
 ### Changed

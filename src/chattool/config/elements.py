@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Dict, Any, List, Type
+from typing import Dict, Any, List, Type, Optional, Tuple
 import chattool
 import dotenv
 
@@ -99,12 +99,12 @@ class BaseEnvConfig:
         env_values = env_values or {}
         override_values = override_values or {}
         for field in cls.get_fields().values():
-            # 优先级: 覆盖值 > 系统环境变量 > 传入字典 > 默认值
+            # 优先级: 覆盖值 > typed env 文件 > 系统环境变量 > 默认值
             val = override_values.get(field.env_key)
             if val is None:
-                val = os.getenv(field.env_key)
-            if val is None:
                 val = env_values.get(field.env_key)
+            if val is None:
+                val = os.getenv(field.env_key)
 
             if val is not None:
                 field.value = val
@@ -118,7 +118,8 @@ class BaseEnvConfig:
         path = Path(env_file)
         if not path.exists() or not path.is_file():
             return {}
-        return dotenv.dotenv_values(path)
+        raw_values = dotenv.dotenv_values(path)
+        return {key: value for key, value in raw_values.items() if value is not None}
 
     @classmethod
     def _load_base_values(
@@ -188,7 +189,7 @@ class BaseEnvConfig:
         # print(f"Warning: Configuration key '{key}' not found.")
 
     @classmethod
-    def find_field(cls, key: str):
+    def find_field(cls, key: str) -> Optional[Tuple[Type['BaseEnvConfig'], EnvField]]:
         normalized = key.strip().lower()
         for config_cls in cls._registry:
             for name, field in config_cls.get_fields().items():
@@ -220,10 +221,11 @@ class BaseEnvConfig:
         return "\n".join(lines)
 
     @classmethod
-    def get_config_by_alias(cls, alias: str) -> Type['BaseEnvConfig']:
+    def get_config_by_alias(cls, alias: str) -> Optional[Type['BaseEnvConfig']]:
         """根据别名获取配置类"""
         for config_cls in cls._registry:
-            if alias in config_cls._aliases:
+            aliases = getattr(config_cls, '_aliases', [])
+            if alias in aliases:
                 return config_cls
         return None
 

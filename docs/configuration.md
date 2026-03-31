@@ -7,22 +7,23 @@ ChatTool 从 v5.0.0 开始引入了全新的集中式配置管理系统，支持
 对常规 CLI 与组件而言，配置读取顺序如下（优先级从高到低）：
 
 1. **CLI / 调用方显式指定**：命令行参数、函数参数或调用侧显式传入的值。
-2. **系统环境变量**：操作系统层面的环境变量（如 `export OPENAI_API_KEY=...`）。
-3. **env 文件**：项目配置目录下按类型拆分的 env 文件。
+2. **env 文件**：项目配置目录下按类型拆分的 env 文件。
+3. **系统环境变量**：操作系统层面的环境变量（如 `export OPENAI_API_KEY=...`）。
 4. **默认值**：代码中定义的默认值。
 
 对于支持 `-e/--env` 一类显式 env 覆盖源的命令，优先级进一步细化为：
 
 1. **CLI / 调用方显式指定**
 2. **显式 env 引用**：例如 `chattool lark -e work` 或 `chattool lark -e /path/to/file.env`
-3. **系统环境变量**
-4. **按类型拆分的内置 env 文件**：例如 `envs/Feishu/.env`
+3. **按类型拆分的内置 env 文件**：例如 `envs/Feishu/.env`
+4. **系统环境变量**
 5. **默认值**
 
 说明：
 
-- 该优先级对应 `BaseEnvConfig.load_from_dict()` 的真实实现：已注册配置项会优先读取 `os.environ`，其次才回退到 env 文件。
-- 当命令显式传入 `-e/--env` 时，会走 `BaseEnvConfig.load_all_with_override()`：先读取类型内置 `.env`，再叠加系统环境变量，最后让显式 env 覆盖前两者。
+- 该优先级对应 `BaseEnvConfig.load_from_dict()` / `load_all()` 的真实实现：已注册配置项会优先读取当前激活的 typed env 文件，其次才回退到 `os.environ`。
+- 当命令显式传入 `-e/--env` 时，会走 `BaseEnvConfig.load_all_with_override()`：先读取类型内置 `.env`，再在其上叠加显式 env；若显式 env 未提供某字段，才继续回退到系统环境变量与默认值。
+- 这样 `chatenv init` / `chatenv new` 刚写入的 active `.env` 会立刻成为当前生效配置，不会被已有 shell 环境变量意外盖掉。
 - `BaseEnvConfig.set()` 是运行时覆盖手段，只修改当前进程内的值；它不属于上面的“默认加载顺序”，也不会自动回写 `.env` 或同步系统环境变量。
 - 对于已经注册到 `src/chattool/config/` 的配置项，CLI 与业务代码应优先读取配置对象的 `.value`，不要只直接读取 `os.environ`，否则会绕过 `chatenv` 管理的默认值。
 - 例如 `chattool setup playground` 在补 GitHub 鉴权时，会优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，从而复用 `chatenv` 当前生效的 GitHub 配置。
