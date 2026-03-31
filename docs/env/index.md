@@ -32,6 +32,17 @@ chattool setup opencode
 
 详细文档：[opencode.md](opencode.md)
 
+### Workspace 协作脚手架
+
+使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架。
+
+```bash
+chattool setup workspace
+chattool setup workspace ~/workspace/demo
+```
+
+详细文档：[workspace.md](workspace.md)
+
 ### Lark CLI 配置
 
 使用 `setup lark-cli` 快速安装官方 `lark-cli`，并复用 ChatTool 现有的 Feishu 配置。

@@ -106,6 +106,13 @@ chattool dns get home.example.com
 chattool dns ddns home.example.com --monitor
 ```
 
+### Workspace 协作脚手架
+
+```bash
+chattool setup workspace
+chattool setup workspace ~/workspace/demo
+```
+
 ## 板块说明
 
 | 层次 | 板块 | 说明 |

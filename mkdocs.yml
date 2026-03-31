@@ -151,6 +151,7 @@ nav:
     - Codex 配置: env/codex.md
     - Lark CLI 配置: env/lark-cli.md
     - OpenCode 配置: env/opencode.md
+    - Workspace 协作脚手架: env/workspace.md
     - FRP 安装: env/frp.md
     - Nginx 反向代理: env/nginx_proxy.md
     - Docker 模板: env/docker.md
