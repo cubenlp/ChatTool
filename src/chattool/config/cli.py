@@ -334,7 +334,7 @@ def save_env(name, config_types):
 @click.option('--type', '-t', 'config_types', multiple=True,
               help='Target exactly one configuration type.')
 def new_env(name, config_types):
-    """Create a new typed profile from current active config and activate it."""
+    """Create a new typed profile without changing the active config."""
     config_cls = _resolve_single_config_for_profile_action(config_types, "new")
     prompt_for_values = False
 
@@ -349,7 +349,7 @@ def new_env(name, config_types):
     name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if target_path.exists():
-        click.confirm(f"Profile '{name}' already exists. Overwrite and activate it?", abort=True)
+        click.confirm(f"Profile '{name}' already exists. Overwrite it?", abort=True)
 
     _reload_runtime_config()
     if prompt_for_values and not _configure_provider(config_cls):
@@ -357,15 +357,9 @@ def new_env(name, config_types):
 
     target_path.parent.mkdir(parents=True, exist_ok=True)
     target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
-
-    active_path = config_cls.get_active_env_file(CHATTOOL_ENV_DIR)
-    active_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy(target_path, active_path)
     _reload_runtime_config()
 
-    click.echo(
-        f"Created and activated {config_cls.get_storage_name()} profile '{target_path.name}'"
-    )
+    click.echo(f"Created {config_cls.get_storage_name()} profile '{target_path.name}'")
 
 @cli.command(name='use')
 @click.argument('name')

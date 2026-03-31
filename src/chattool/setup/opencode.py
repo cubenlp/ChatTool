@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
 import click
 
+from chattool.config import BaseEnvConfig, OpenAIConfig
+from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 from chattool.setup.interactive import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
@@ -43,8 +47,50 @@ def _extract_model_id(model_value, provider_id):
     return model_id or None
 
 
+def _snapshot_openai_values() -> dict[str, str | None]:
+    return {
+        "api_key": OpenAIConfig.OPENAI_API_KEY.value,
+        "base_url": OpenAIConfig.OPENAI_API_BASE.value,
+        "model": OpenAIConfig.OPENAI_API_MODEL.value,
+    }
+
+
+def _restore_openai_values(values: dict[str, str | None]) -> None:
+    OpenAIConfig.OPENAI_API_KEY.value = values.get("api_key")
+    OpenAIConfig.OPENAI_API_BASE.value = values.get("base_url")
+    OpenAIConfig.OPENAI_API_MODEL.value = values.get("model")
+
+
+def _resolve_openai_env_path(env_ref: str) -> Path:
+    candidate = Path(env_ref).expanduser()
+    if candidate.is_file():
+        return candidate
+
+    profile_path = OpenAIConfig.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
+    if profile_path.exists():
+        return profile_path
+
+    raise click.ClickException(
+        f"未找到 OpenAI 配置: {env_ref}。可传入 .env 文件路径，或 OpenAI 类型下保存的 profile 名称。"
+    )
+
+
+def _load_openai_values_from_env_ref(env_ref: str) -> dict[str, str | None]:
+    current_values = _snapshot_openai_values()
+    try:
+        env_path = _resolve_openai_env_path(env_ref)
+        BaseEnvConfig.load_all_with_override(
+            CHATTOOL_ENV_DIR,
+            override_env_file=env_path,
+            legacy_env_file=CHATTOOL_ENV_FILE,
+        )
+        return _snapshot_openai_values()
+    finally:
+        _restore_openai_values(current_values)
+
+
 def _load_existing_opencode_config(config_path, provider_id):
-    existing = {
+    existing: dict[str, str | None] = {
         "base_url": None,
         "api_key": None,
         "model": None,
@@ -78,11 +124,13 @@ def _load_existing_opencode_config(config_path, provider_id):
     return existing, config_data
 
 
-def setup_opencode(base_url=None, api_key=None, model=None, interactive=None):
+def setup_opencode(base_url=None, api_key=None, model=None, env_ref=None, interactive=None):
     config_dir = Path.home() / ".config" / "opencode"
     config_path = config_dir / "opencode.json"
     provider_id = DEFAULT_PROVIDER_ID
     existing, config_data = _load_existing_opencode_config(config_path, provider_id)
+    current_openai = _snapshot_openai_values()
+    env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start opencode setup")
 
     if isinstance(base_url, str) and not base_url.strip():
@@ -92,15 +140,30 @@ def setup_opencode(base_url=None, api_key=None, model=None, interactive=None):
     if isinstance(model, str) and not model.strip():
         model = None
 
-    base_url = base_url or existing.get("base_url")
-    api_key = api_key or existing.get("api_key")
-    model = model or existing.get("model")
+    base_url = (
+        base_url
+        or env_config.get("base_url")
+        or current_openai.get("base_url")
+        or existing.get("base_url")
+    )
+    api_key = (
+        api_key
+        or env_config.get("api_key")
+        or current_openai.get("api_key")
+        or existing.get("api_key")
+    )
+    model = (
+        model
+        or env_config.get("model")
+        or current_openai.get("model")
+        or existing.get("model")
+    )
 
     missing_required = not (base_url and api_key and model)
     has_existing_config = any(value for value in existing.values())
     usage = (
         "Usage: chattool setup opencode [--base-url <value>] [--api-key <value>] "
-        "[--model <value>] [-i|-I]"
+        "[--model <value>] [-e <openai-env>] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
         interactive=interactive,
@@ -199,3 +262,5 @@ def setup_opencode(base_url=None, api_key=None, model=None, interactive=None):
 
     click.echo("OpenCode setup completed.")
     click.echo(f"Config: {config_path}")
+    if env_ref:
+        click.echo(f"Reused ChatTool OpenAI config: {env_ref}")

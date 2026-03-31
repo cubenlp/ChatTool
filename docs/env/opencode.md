@@ -32,6 +32,26 @@ chattool setup opencode
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 ```
 
+如果你已经在 `chatenv` 里维护了 OpenAI 配置，也可以显式复用：
+
+```bash
+chattool setup opencode -e work
+chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
+```
+
+这里的 `-e/--env` 支持两种形式：
+
+- `.env` 文件路径
+- `OpenAI` 类型下保存过的 profile 名称，例如 `work`
+
+解析顺序为：
+
+1. 显式参数：`--base-url`、`--api-key`、`--model`
+2. `-e/--env` 指定的 OpenAI 配置
+3. 当前 `openai/oai` 生效配置
+4. 现有 `~/.config/opencode/opencode.json` 中的对应字段
+5. 默认值
+
 ## 4. 配置文件位置
 
 配置默认写入：

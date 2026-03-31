@@ -185,7 +185,7 @@ def test_env_save_use_delete_profile(tmp_path: Path):
     assert not profile_path.exists()
 
 
-def test_env_new_profile_creates_and_activates(tmp_path: Path):
+def test_env_new_profile_creates_without_touching_active(tmp_path: Path):
     config_dir = tmp_path / "config"
 
     result = _run_chattool_env(["set", "FEISHU_APP_ID=cli-one"], config_dir=config_dir)
@@ -193,15 +193,17 @@ def test_env_new_profile_creates_and_activates(tmp_path: Path):
     result = _run_chattool_env(["set", "FEISHU_APP_SECRET=secret-one"], config_dir=config_dir)
     assert result.returncode == 0, result.stderr
 
+    active_path = config_dir / "envs" / "Feishu" / ".env"
+    active_before = active_path.read_text(encoding="utf-8")
+
     result = _run_chattool_env(["new", "mini", "-t", "feishu"], config_dir=config_dir)
     assert result.returncode == 0, result.stderr
-    assert "Created and activated Feishu profile 'mini.env'" in result.stdout
+    assert "Created Feishu profile 'mini.env'" in result.stdout
 
-    active_path = config_dir / "envs" / "Feishu" / ".env"
     profile_path = config_dir / "envs" / "Feishu" / "mini.env"
     assert active_path.exists()
     assert profile_path.exists()
-    assert active_path.read_text(encoding="utf-8") == profile_path.read_text(encoding="utf-8")
+    assert active_path.read_text(encoding="utf-8") == active_before
     assert "FEISHU_APP_ID='cli-one'" in profile_path.read_text(encoding="utf-8")
     assert "FEISHU_APP_SECRET='secret-one'" in profile_path.read_text(encoding="utf-8")
 
@@ -226,7 +228,7 @@ def test_env_new_without_name_prompts_and_configures_type(tmp_path: Path):
     assert "OPENAI_API_BASE='https://api.example/v1'" in content
     assert "OPENAI_API_KEY='sk-open'" in content
     assert "OPENAI_API_MODEL='gpt-3.5-turbo'" in content
-    assert active_path.read_text(encoding="utf-8") == content
+    assert active_path.read_text(encoding="utf-8") != content
 
 
 def test_env_init_type_updates_real_typed_env(tmp_path: Path):

@@ -10,6 +10,7 @@ from pathlib import Path
 import click
 
 from chattool.cli_warnings import install_cli_warning_filters
+from chattool.utils.tui import BACK_VALUE, ask_select, create_choice, is_interactive_available
 
 install_cli_warning_filters()
 
@@ -170,6 +171,19 @@ def _validate_skill_dir(skill_dir: Path) -> list[str]:
     return []
 
 
+def _prompt_install_target(available: list[str]) -> tuple[str | None, bool]:
+    choices = [
+        create_choice(title="Install all skills", value="__all__"),
+        *[create_choice(title=skill_name, value=skill_name) for skill_name in available],
+    ]
+    selected = ask_select("Select a skill to install:", choices=choices)
+    if selected == BACK_VALUE:
+        raise click.Abort()
+    if selected == "__all__":
+        return None, True
+    return str(selected), False
+
+
 @click.group(name="skill")
 def skill_cli():
     """Manage ChatTool skills."""
@@ -193,9 +207,6 @@ def skill_cli():
 @click.option("--prefix", is_flag=True, help="Prefix installed skill names with chattool-.")
 @click.option("-f", "--force", is_flag=True, help="Overwrite existing skills.")
 def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix, force):
-    if not name and not install_all:
-        click.echo("Missing skill name. Use --all to install all skills.", err=True)
-        raise click.Abort()
     if name and install_all:
         click.echo("Cannot use a skill name together with --all.", err=True)
         raise click.Abort()
@@ -210,6 +221,13 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
     if not available:
         click.echo(f"No skills found in {source}", err=True)
         raise click.Abort()
+
+    if not name and not install_all:
+        if is_interactive_available():
+            name, install_all = _prompt_install_target(available)
+        else:
+            click.echo("Missing skill name. Use --all to install all skills.", err=True)
+            raise click.Abort()
 
     if install_all:
         targets = available

@@ -131,6 +131,13 @@ chattool setup opencode
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 ```
 
+也可以显式复用 `chatenv` 里的 OpenAI 配置：
+
+```bash
+chattool setup opencode -e work
+chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
+```
+
 ### 0.4 Lark CLI (`setup lark-cli`)
 
 安装官方 `lark-cli`，并把 ChatTool 当前生效的 Feishu 配置复用过去：
