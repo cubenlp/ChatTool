@@ -12,12 +12,17 @@ from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
 from chattool.setup.playground import setup_playground
+from chattool.setup.workspace import setup_workspace
 
 
 @dataclass(frozen=True)
 class SetupOptionElement:
     param_decls: Sequence[str]
     kwargs: dict = field(default_factory=dict)
+
+    @property
+    def is_argument(self) -> bool:
+        return all(not str(decl).startswith("-") for decl in self.param_decls)
 
 
 @dataclass(frozen=True)
@@ -93,6 +98,16 @@ def playground_setup(workspace_dir, chattool_source, interactive, force):
         chattool_source=chattool_source,
         interactive=interactive,
         force=force,
+    )
+
+
+def workspace_setup(profile, workspace_dir, interactive, force, dry_run):
+    setup_workspace(
+        profile_name=profile,
+        workspace_dir=workspace_dir,
+        interactive=interactive,
+        force=force,
+        dry_run=dry_run,
     )
 
 
@@ -280,6 +295,33 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--force",),
                 kwargs={"is_flag": True, "help": "Allow overwriting generated files and replace a broken non-git ChatTool directory when rerunning."},
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="workspace",
+        help="Initialize a human-AI collaboration workspace scaffold.",
+        callback=workspace_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("profile",),
+                kwargs={"required": False},
+            ),
+            SetupOptionElement(
+                param_decls=("workspace_dir",),
+                kwargs={"required": False},
+            ),
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+            ),
+            SetupOptionElement(
+                param_decls=("--force", "-f"),
+                kwargs={"is_flag": True, "help": "Overwrite existing generated files except completed setup.md."},
+            ),
+            SetupOptionElement(
+                param_decls=("--dry-run",),
+                kwargs={"is_flag": True, "help": "Print planned workspace files and directories without writing anything."},
             ),
         ),
     ),

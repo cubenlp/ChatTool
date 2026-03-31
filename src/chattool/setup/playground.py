@@ -6,6 +6,9 @@ from pathlib import Path
 
 import click
 
+from chattool.setup.common import display_path as _display_path
+from chattool.setup.common import resolve_workspace_dir as _resolve_workspace_dir
+from chattool.setup.common import write_text_file as _write_text_file
 from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
 from chattool.utils import mask_secret
 from chattool.utils.custom_logger import setup_logger
@@ -28,21 +31,6 @@ def _default_chattool_source() -> str:
     if (repo_dir / ".git").exists():
         return str(repo_dir)
     return DEFAULT_CHATTOOL_REPO_URL
-
-
-def _normalize_path(value) -> Path | None:
-    if value is None:
-        return None
-    if isinstance(value, Path):
-        return value.expanduser().resolve()
-    text = str(value).strip()
-    if not text:
-        return None
-    return Path(text).expanduser().resolve()
-
-
-def _resolve_workspace_dir(workspace_dir=None) -> Path:
-    return _normalize_path(workspace_dir) or Path.cwd().resolve()
 
 
 def _preferred_workspace_repo_dir(workspace_dir: Path) -> Path:
@@ -85,13 +73,6 @@ def _workspace_has_existing_files(workspace_dir: Path) -> bool:
         _legacy_workspace_repo_dir(workspace_dir),
     ]
     return any(target.exists() for target in targets)
-
-
-def _display_path(path: Path, workspace_dir: Path) -> str:
-    try:
-        return str(path.relative_to(workspace_dir))
-    except ValueError:
-        return str(path)
 
 
 def _render_agents_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
@@ -271,17 +252,6 @@ def _render_experience_readme(skill_name: str) -> str:
         "- what failed\n"
         "- candidate updates for the skill or ChatTool repo\n"
     )
-
-
-def _write_text_file(path: Path, content: str, force: bool) -> str:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists() and not force:
-        logger.info(f"Skip existing file: {path}")
-        return "skipped"
-    action = "updated" if path.exists() else "created"
-    path.write_text(content, encoding="utf-8")
-    logger.info(f"{action.capitalize()} file: {path}")
-    return action
 
 
 def _copy_file(src: Path, dst: Path, force: bool) -> str:

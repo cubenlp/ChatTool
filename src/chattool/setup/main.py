@@ -6,7 +6,8 @@ from chattool.setup.elements import SETUP_COMMAND_ELEMENTS
 def _build_setup_command(command_element):
     callback = command_element.callback
     for option_element in reversed(command_element.options):
-        callback = click.option(*option_element.param_decls, **option_element.kwargs)(callback)
+        decorator = click.argument if option_element.is_argument else click.option
+        callback = decorator(*option_element.param_decls, **option_element.kwargs)(callback)
     return click.command(name=command_element.name, help=command_element.help)(callback)
 
 

@@ -236,6 +236,29 @@ my-playground/
 └── scratch/
 ```
 
+### 0.6 Workspace (`setup workspace`)
+
+如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 任务面 + 知识沉淀”工作区，可以用：
+
+```bash
+chattool setup workspace
+chattool setup workspace ~/workspace/demo
+```
+
+它会生成一套独立骨架，包括：
+
+- `AGENTS.md`：模型主协议
+- `MEMORY.md`：跨 session 记忆
+- `setup.md`：后续 onboarding 入口
+- `task.md`：模型工作面
+- `thoughts/`、`tasks/`、`playground/`、`knowledge/`
+
+如果只想先看计划不落盘：
+
+```bash
+chattool setup workspace ~/workspace/demo --dry-run -I
+```
+
 ## 1. DNS 管理 (`dns`)
 
 管理 DNS 记录并自动更新动态 DNS。支持阿里云 (Aliyun) 和腾讯云 (Tencent) DNS 提供商。

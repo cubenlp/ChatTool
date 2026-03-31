@@ -1,6 +1,6 @@
 # test_chattool_setup_basic
 
-测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/cc-connect/codex/claude/opencode/playground 等子命令入口。
+测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/cc-connect/codex/claude/opencode/playground/workspace 等子命令入口。
 
 ## 元信息
 
@@ -89,7 +89,7 @@ chattool setup opencode -i
 chattool setup lark-cli -i
 ```
 
-## 用例 5：playground
+## 用例 5：playground / workspace
 
 - 初始环境准备：
   - 准备一个空目录作为工作区根目录。
@@ -110,11 +110,15 @@ chattool setup lark-cli -i
   5. 预期创建 `Memory/`、`skills/`、`scratch/`。
   6. 预期从 `ChatTool/skills/` 复制或更新 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
   7. 预期 skills 同步只替换常规文件，不修改已有 `experience/` 内容。
+  8. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `AGENTS.md`、`MEMORY.md`、`setup.md`、`task.md`、`thoughts/`、`tasks/`、`playground/`、`knowledge/`。
+  9. 执行 `chattool setup workspace <workspace> --dry-run -I`，预期仅打印将创建的目录与文件，不实际写入。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool setup playground --workspace-dir /tmp/my-playground --chattool-source /path/to/ChatTool
+chattool setup workspace /tmp/my-workspace -I
+chattool setup workspace /tmp/my-workspace --dry-run -I
 ```
 
 ## 清理 / 回滚
