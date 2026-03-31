@@ -20,7 +20,7 @@ run chattool setup workspace
 assert setup callback received workspace path
 ```
 
-## Case 2: `--dry-run` should report planned writes without touching filesystem
+## Case 2: default language should be Chinese in dry-run output
 
 ### 初始环境准备
 
@@ -29,13 +29,32 @@ assert setup callback received workspace path
 ### 预期过程和结果
 
 - 执行 `chattool setup workspace <workspace-dir> --dry-run -I`。
-- 输出应包含 dry-run 摘要。
+- 输出应包含中文 dry-run 摘要。
 - 目录内不应出现生成文件。
 
 ### 参考执行脚本（伪代码）
 
 ```sh
 run chattool setup workspace /tmp/workspace --dry-run -I
-assert output mentions dry run
+assert output mentions Chinese dry run summary
 assert no generated files exist
+```
+
+## Case 3: explicit `--language en` should switch templates to English
+
+### 初始环境准备
+
+- 创建临时目录作为 workspace 根目录。
+
+### 预期过程和结果
+
+- 执行 `chattool setup workspace <workspace-dir> --language en -I`。
+- 生成的 `AGENTS.md` 应包含英文标题 `## Architecture`。
+- 不应保留中文标题 `## 架构`。
+
+### 参考执行脚本（伪代码）
+
+```sh
+run chattool setup workspace /tmp/workspace --language en -I
+assert AGENTS.md contains English headings
 ```

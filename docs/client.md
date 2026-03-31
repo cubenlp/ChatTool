@@ -243,6 +243,7 @@ my-playground/
 ```bash
 chattool setup workspace
 chattool setup workspace ~/workspace/demo
+chattool setup workspace ~/workspace/demo --language en
 ```
 
 它会生成一套独立骨架，包括：
@@ -252,6 +253,8 @@ chattool setup workspace ~/workspace/demo
 - `setup.md`：后续 onboarding 入口
 - `task.md`：模型工作面
 - `thoughts/`、`tasks/`、`playground/`、`knowledge/`
+
+默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 
 如果只想先看计划不落盘：
 

@@ -23,7 +23,7 @@ def test_setup_workspace_prompts_for_missing_profile_and_dir(tmp_path, monkeypat
     assert result.exit_code == 0
     assert selected["workspace"] is not None
     assert (tmp_path / "workspace" / "setup.md").exists()
-    assert "Workspace setup completed." in result.output
+    assert "Workspace 初始化完成。" in result.output
 
 
 def test_setup_workspace_dry_run_writes_nothing(tmp_path, runner):
@@ -35,5 +35,19 @@ def test_setup_workspace_dry_run_writes_nothing(tmp_path, runner):
     )
 
     assert result.exit_code == 0
-    assert "Workspace setup dry run." in result.output
+    assert "Workspace 初始化预演。" in result.output
     assert not workspace_dir.exists()
+
+
+def test_setup_workspace_explicit_english_language(tmp_path, runner):
+    workspace_dir = tmp_path / "workspace"
+
+    result = runner.invoke(
+        cli,
+        ["setup", "workspace", str(workspace_dir), "--language", "en", "-I"],
+    )
+
+    assert result.exit_code == 0
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    assert "## Architecture" in agents
+    assert "## 架构" not in agents

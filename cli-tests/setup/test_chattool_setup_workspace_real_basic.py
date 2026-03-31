@@ -29,10 +29,23 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
 
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
-    assert "Human" in agents
-    assert "Knowledge Write Rules" in agents
+    assert "## 架构" in agents
+    assert "## 知识写入规则" in agents
     assert "1. **Discover**" in setup_md
     assert "6. **Done**" in setup_md
+
+
+def test_setup_workspace_english_language_creates_english_templates(tmp_path: Path):
+    workspace_dir = tmp_path / "workspace"
+
+    result = _run_chattool_setup_workspace([str(workspace_dir), "--language", "en", "-I"])
+
+    assert result.returncode == 0, result.stderr
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
+    assert "## Architecture" in agents
+    assert "## 架构" not in agents
+    assert "# Workspace Setup Checklist" in setup_md
 
 def test_setup_workspace_force_does_not_overwrite_completed_setup_md(tmp_path: Path):
     workspace_dir = tmp_path / "workspace"

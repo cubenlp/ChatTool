@@ -101,10 +101,11 @@ def playground_setup(workspace_dir, chattool_source, interactive, force):
     )
 
 
-def workspace_setup(profile, workspace_dir, interactive, force, dry_run):
+def workspace_setup(profile, workspace_dir, language, interactive, force, dry_run):
     setup_workspace(
         profile_name=profile,
         workspace_dir=workspace_dir,
+        language=language,
         interactive=interactive,
         force=force,
         dry_run=dry_run,
@@ -310,6 +311,10 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("workspace_dir",),
                 kwargs={"required": False},
+            ),
+            SetupOptionElement(
+                param_decls=("--language",),
+                kwargs={"default": "zh", "type": click.Choice(["zh", "en"]), "show_default": True, "help": "Template language for generated workspace files."},
             ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
