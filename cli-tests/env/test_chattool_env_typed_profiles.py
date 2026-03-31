@@ -58,7 +58,7 @@ def test_env_typed_profile_roundtrip(tmp_path: Path):
     assert active_path.read_text(encoding="utf-8") == profile_path.read_text(encoding="utf-8")
 
 
-def test_env_new_typed_profile_creates_and_activates(tmp_path: Path):
+def test_env_new_typed_profile_creates_without_touching_active(tmp_path: Path):
     config_dir = tmp_path / "config"
 
     result = _run_chattool_env(["set", "FEISHU_APP_ID=cli-one"], config_dir=config_dir)
@@ -66,19 +66,21 @@ def test_env_new_typed_profile_creates_and_activates(tmp_path: Path):
     result = _run_chattool_env(["set", "FEISHU_APP_SECRET=secret-one"], config_dir=config_dir)
     assert result.returncode == 0, result.stderr
 
+    active_path = config_dir / "envs" / "Feishu" / ".env"
+    active_before = active_path.read_text(encoding="utf-8")
+
     result = _run_chattool_env(["new", "mini", "-t", "feishu"], config_dir=config_dir)
     assert result.returncode == 0, result.stderr
-    assert "Created and activated Feishu profile 'mini.env'" in result.stdout
+    assert "Created Feishu profile 'mini.env'" in result.stdout
 
-    active_path = config_dir / "envs" / "Feishu" / ".env"
     profile_path = config_dir / "envs" / "Feishu" / "mini.env"
     assert active_path.exists()
     assert profile_path.exists()
     assert "FEISHU_APP_ID='cli-one'" in profile_path.read_text(encoding="utf-8")
-    assert active_path.read_text(encoding="utf-8") == profile_path.read_text(encoding="utf-8")
+    assert active_path.read_text(encoding="utf-8") == active_before
 
 
-def test_env_os_environment_overrides_typed_env_file(tmp_path: Path):
+def test_env_typed_env_file_overrides_os_environment(tmp_path: Path):
     config_dir = tmp_path / "config"
 
     result = _run_chattool_env(["set", "OPENAI_API_KEY=from_env_file"], config_dir=config_dir)
@@ -90,7 +92,7 @@ def test_env_os_environment_overrides_typed_env_file(tmp_path: Path):
         extra_env={"OPENAI_API_KEY": "from_os"},
     )
     assert result.returncode == 0, result.stderr
-    assert "OPENAI_API_KEY='from_os'" in result.stdout
+    assert "OPENAI_API_KEY='from_env_file'" in result.stdout
 
 
 def test_env_list_profiles_by_type(tmp_path: Path):
@@ -147,4 +149,4 @@ def test_lark_explicit_env_ref_overrides_os_environment(tmp_path: Path):
         },
     )
     assert without_env_ref.returncode == 0, without_env_ref.stderr
-    assert without_env_ref.stdout.strip() == "from_os"
+    assert without_env_ref.stdout.strip() == "from_builtin"

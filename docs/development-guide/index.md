@@ -19,8 +19,8 @@
 ### 2) `config/`（env 管理）
 
 - 统一管理环境变量与默认值加载。
-- 统一解析顺序：默认是 `CLI / 调用方显式参数 > environment variable > typed env file > default value`。
-- 对支持 `-e/--env` 这类显式 env 覆盖源的命令，统一解析顺序是 `CLI / 调用方显式参数 > -e/显式 env > environment variable > typed env file > default value`。
+- 统一解析顺序：默认是 `CLI / 调用方显式参数 > typed env file > environment variable > default value`。
+- 对支持 `-e/--env` 这类显式 env 覆盖源的命令，统一解析顺序是 `CLI / 调用方显式参数 > -e/显式 env > typed env file > environment variable > default value`。
 - `typed env file` 指 `envs/<Config>/.env`；profile 固定放在 `envs/<Config>/<profile>.env`。
 - 以模块化配置对象组织，支持按功能扩展。
 - 凡是已经注册到 `src/chattool/config/` 的配置项，业务代码与 CLI 默认值读取都应优先走配置对象（如 `OpenAIConfig.OPENAI_API_KEY.value`），不能只直接读取 `os.environ`。

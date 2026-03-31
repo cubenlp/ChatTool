@@ -5,7 +5,7 @@
 ## 元信息
 
 - 命令：`chattool env ...`、`chattool lark ...`
-- 目的：验证 `envs/<Config>/.env` 与 `envs/<Config>/<profile>.env` 的真实行为，以及 `显式参数 > -e/显式 env > environment > 内置 .env > default` 的加载顺序。
+- 目的：验证 `envs/<Config>/.env` 与 `envs/<Config>/<profile>.env` 的真实行为，以及 `显式参数 > -e/显式 env > 内置 .env > environment > default` 的加载顺序。
 - 标签：`cli`
 - 前置条件：无
 - 环境准备：使用临时目录作为 `CHATTOOL_CONFIG_DIR`，在真实文件系统中构造 `envs/<Config>/`。
@@ -22,7 +22,7 @@
 
 预期过程和结果：
   1. 执行 `chattool env save work -t openai`，预期生成 `envs/OpenAI/work.env`。
-  2. 执行 `chattool env new mini -t feishu`，预期生成 `envs/Feishu/mini.env`，并立即激活。
+  2. 执行 `chattool env new mini -t feishu`，预期生成 `envs/Feishu/mini.env`，但不修改 `envs/Feishu/.env`。
   3. 修改当前 `envs/OpenAI/.env` 后执行 `chattool env use work -t openai`，预期活动配置恢复为保存内容。
 
 参考执行脚本（伪代码）：
@@ -37,14 +37,14 @@ chattool env set OPENAI_API_KEY=sk-two
 chattool env use work -t openai
 ```
 
-## 用例 2：系统环境变量覆盖类型内置 `.env`
+## 用例 2：类型内置 `.env` 优先于系统环境变量
 
 - 初始环境准备：
   - 在 `envs/OpenAI/.env` 写入 `OPENAI_API_KEY=from_env_file`。
   - 额外设置进程环境变量 `OPENAI_API_KEY=from_os`。
 
 预期过程和结果：
-  1. 执行 `chattool env cat -t openai --no-mask`，预期读取到 `from_os`，而不是类型目录里的 `.env`。
+  1. 执行 `chattool env cat -t openai --no-mask`，预期读取到 `from_env_file`，而不是进程环境变量中的 `from_os`。
 
 参考执行脚本（伪代码）：
 

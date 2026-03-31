@@ -67,11 +67,12 @@ def claude_setup(auth_token, base_url, small_fast_model, interactive):
     )
 
 
-def opencode_setup(base_url, api_key, model, interactive):
+def opencode_setup(base_url, api_key, model, env, interactive):
     setup_opencode(
         base_url=base_url,
         api_key=api_key,
         model=model,
+        env_ref=env,
         interactive=interactive,
     )
 
@@ -225,6 +226,10 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--model",),
                 kwargs={"default": None, "help": "Required default model name."},
+            ),
+            SetupOptionElement(
+                param_decls=("-e", "--env"),
+                kwargs={"default": None, "help": "Load OpenAI config from a .env file path or saved OpenAI profile name."},
             ),
         ),
     ),
