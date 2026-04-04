@@ -183,15 +183,15 @@ lark-cli auth login --recommend
 1. clone `ChatTool/`
 2. 运行 `git submodule update --init --recursive`
 3. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
-4. 创建 `Memory/`、`skills/`、`scratch/`
-5. 从 clone 出来的 `ChatTool/skills/` 复制 skills，并为每个 skill 创建 `experience/`
+4. 创建 `thoughts/`、`reports/`、`playgrounds/`、`knowledge/`
+5. 从 clone 出来的 `ChatTool/skills/` 复制 skills 到 `knowledge/skills/`，并为每个 skill 创建 `experience/`
 
 如果目标目录已经是已有工作区，再次执行时会进入更新模式：
 
 - 优先更新 `ChatTool/` 仓库；如果仓库里有本地改动，则默认跳过仓库更新，避免覆盖工作区中的开发状态
 - 仓库完成 clone / fast-forward 后，会自动执行 `git submodule update --init --recursive`，确保诸如 `lark-cli/` 这类子模块同步到当前仓库版本
-- 交互模式下会提示是否同步工作区 `skills/`
-- 同步 `skills/` 时只覆盖常规文件，不会改动各 skill 下的 `experience/`
+- 交互模式下会提示是否同步工作区 `knowledge/skills/`
+- 同步 `knowledge/skills/` 时只覆盖常规文件，不会改动各 skill 下的 `experience/`
 - 已存在的工作区说明文件默认仍然保留；只有显式传 `--force` 时才会覆盖这些生成文件
 
 如果目标目录只是普通非空目录而不是现有工作区，交互模式下仍会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。
@@ -231,10 +231,13 @@ my-playground/
 ├── CHATTOOL.md
 ├── MEMORY.md
 ├── ChatTool/
-├── Memory/
-├── skills/
-└── scratch/
+├── thoughts/
+├── reports/
+├── playgrounds/
+└── knowledge/
 ```
+
+其中外层协作逻辑与 `setup workspace` 类似：默认用常规任务目录，必要时再切到 task set；只是 playground 会额外保留 `ChatTool/` 仓库和同步过来的 `knowledge/skills/`。
 
 ### 0.6 Workspace (`setup workspace`)
 

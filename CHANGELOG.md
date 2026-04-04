@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 - `chattool setup workspace` 默认生成的 workspace scaffold 现改为按任务隔离的多任务协作约定：去掉单一 `task.md`，默认使用 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；对于长期系列工作，可升级为 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/` 并维护任务集级进展
+- `chattool setup playground` 的外层工作区结构现对齐 `setup workspace`：默认使用 `thoughts/`、`reports/`、`playgrounds/`、`knowledge/`，并把工作区 skills 副本收口到 `knowledge/skills/`；同时继续保留 `ChatTool/` 仓库和 skills 同步逻辑
 
 ## [6.5.0] - 2026-03-31
 

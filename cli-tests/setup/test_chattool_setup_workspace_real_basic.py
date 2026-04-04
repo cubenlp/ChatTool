@@ -1,14 +1,21 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 
 def _run_chattool_setup_workspace(args: list[str]):
+    repo_root = Path(__file__).resolve().parents[2]
+    env = os.environ.copy()
+    src_dir = str(repo_root / "src")
+    existing = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = src_dir if not existing else f"{src_dir}:{existing}"
     return subprocess.run(
         [sys.executable, "-m", "chattool.client.main", "setup", "workspace", *args],
         text=True,
         capture_output=True,
         check=False,
+        env=env,
     )
 
 
