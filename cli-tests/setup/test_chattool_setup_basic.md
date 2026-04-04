@@ -1,6 +1,6 @@
 # test_chattool_setup_basic
 
-测试 `chattool setup` 的基础链路，覆盖 alias/chrome/frp/nodejs/cc-connect/codex/claude/opencode/playground/workspace 等子命令入口。
+测试 `chattool setup` 的基础链路，覆盖 alias/chrome/docker/frp/nodejs/cc-connect/codex/claude/opencode/playground/workspace 等子命令入口。
 
 ## 元信息
 
@@ -43,7 +43,7 @@ chattool setup --help
 chattool setup alias --dry-run
 ```
 
-## 用例 3：chrome/frp/nodejs
+## 用例 3：chrome/docker/frp/nodejs
 
 - 初始环境准备：
   - 确保可安装依赖。
@@ -52,13 +52,15 @@ chattool setup alias --dry-run
 
 预期过程和结果：
   1. 执行 `chattool setup chrome -i`，预期进入交互式安装流程。
-  2. 执行 `chattool setup frp -i`，预期进入交互式安装流程。
-  3. 执行 `chattool setup nodejs -i`，预期进入交互式安装流程，并在缺少 `~/.nvm/nvm.sh` 时直接写入内置的 `nvm.sh`。
+  2. 执行 `chattool setup docker -i`，预期进入 Docker 环境检查流程；若检测到 Docker / Docker Compose / docker 组缺失，应先提示建议命令，并仅在用户明确确认后执行需要 sudo 的安装步骤。
+  3. 执行 `chattool setup frp -i`，预期进入交互式安装流程。
+  4. 执行 `chattool setup nodejs -i`，预期进入交互式安装流程，并在缺少 `~/.nvm/nvm.sh` 时直接写入内置的 `nvm.sh`。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool setup chrome -i
+chattool setup docker -i
 chattool setup frp -i
 chattool setup nodejs -i
 ```

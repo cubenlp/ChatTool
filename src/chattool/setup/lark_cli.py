@@ -21,6 +21,7 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
+from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -190,7 +191,9 @@ def _write_lark_cli_file_secret_config(
     return secret_path
 
 
-def _run_lark_cli_command(args: list[str], input_text: str | None = None) -> subprocess.CompletedProcess[str]:
+def _run_lark_cli_command(
+    args: list[str], input_text: str | None = None
+) -> subprocess.CompletedProcess[str]:
     runtime = _detect_nodejs_runtime()
     if runtime.get("source") == "nvm":
         quoted = " ".join(shlex.quote(str(arg)) for arg in ["lark-cli", *args])
@@ -214,11 +217,17 @@ def _run_lark_cli_command(args: list[str], input_text: str | None = None) -> sub
     )
 
 
-def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, interactive=None):
+def setup_lark_cli(
+    app_id=None, app_secret=None, brand=None, env_ref=None, interactive=None
+):
     config_dir = _get_lark_cli_config_dir()
     config_path = _get_lark_cli_config_path()
     existing = _load_existing_lark_cli_config(config_path)
-    current_feishu = _snapshot_feishu_values()
+    env_values, typed_env_values = split_config_sources(
+        FeishuConfig,
+        CHATTOOL_ENV_DIR,
+        legacy_env_file=CHATTOOL_ENV_FILE,
+    )
     env_config = _load_feishu_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start lark-cli setup")
 
@@ -229,15 +238,28 @@ def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, inter
     if isinstance(brand, str):
         brand = brand.strip().lower() or None
 
-    app_id = app_id or env_config.get("app_id") or current_feishu.get("app_id") or existing.get("app_id")
-    app_secret = app_secret or env_config.get("app_secret") or current_feishu.get("app_secret")
+    app_id = (
+        app_id
+        or env_config.get("app_id")
+        or existing.get("app_id")
+        or env_values.get("FEISHU_APP_ID")
+        or typed_env_values.get("FEISHU_APP_ID")
+    )
+    app_secret = (
+        app_secret
+        or env_config.get("app_secret")
+        or env_values.get("FEISHU_APP_SECRET")
+        or typed_env_values.get("FEISHU_APP_SECRET")
+    )
     if not brand:
         if env_config.get("api_base"):
             brand = _infer_brand(env_config.get("api_base"))
-        elif current_feishu.get("api_base"):
-            brand = _infer_brand(current_feishu.get("api_base"))
         elif existing.get("brand"):
             brand = existing.get("brand")
+        elif env_values.get("FEISHU_API_BASE"):
+            brand = _infer_brand(env_values.get("FEISHU_API_BASE"))
+        elif typed_env_values.get("FEISHU_API_BASE"):
+            brand = _infer_brand(typed_env_values.get("FEISHU_API_BASE"))
         else:
             brand = "feishu"
 
@@ -247,9 +269,11 @@ def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, inter
         "Usage: chattool setup lark-cli [--app-id <value>] [--app-secret <value>] "
         "[--brand feishu|lark] [-e <feishu-env>] [-i|-I]"
     )
-    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=(missing_required or has_existing_config),
+    interactive, can_prompt, force_interactive, _, need_prompt = (
+        resolve_interactive_mode(
+            interactive=interactive,
+            auto_prompt_condition=(missing_required or has_existing_config),
+        )
     )
 
     try:
@@ -333,14 +357,18 @@ def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, inter
         stdout_text = (init_result.stdout or "").strip()
         combined_output = "\n".join(part for part in [stderr_text, stdout_text] if part)
         if "keychain unavailable" in combined_output:
-            logger.warning("lark-cli keychain unavailable, falling back to file secret reference")
+            logger.warning(
+                "lark-cli keychain unavailable, falling back to file secret reference"
+            )
             secret_path = _write_lark_cli_file_secret_config(
                 config_path=config_path,
                 app_id=str(app_id),
                 app_secret=str(app_secret),
                 brand=str(brand),
             )
-            click.echo("lark-cli keychain unavailable; wrote config with file secret reference.")
+            click.echo(
+                "lark-cli keychain unavailable; wrote config with file secret reference."
+            )
             click.echo(f"Secret file: {secret_path}")
         else:
             logger.error("Failed to initialize lark-cli config")
@@ -354,7 +382,9 @@ def setup_lark_cli(app_id=None, app_secret=None, brand=None, env_ref=None, inter
     click.echo("lark-cli setup completed.")
     click.echo(f"Config dir: {config_dir}")
     click.echo(f"Config file: {config_path}")
-    click.echo(f"ChatTool Feishu env: {CHATTOOL_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}")
+    click.echo(
+        f"ChatTool Feishu env: {CHATTOOL_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}"
+    )
     if env_ref:
         click.echo(f"Reused ChatTool Feishu config: {env_ref}")
     else:

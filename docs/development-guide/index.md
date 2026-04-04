@@ -19,8 +19,8 @@
 ### 2) `config/`（env 管理）
 
 - 统一管理环境变量与默认值加载。
-- 统一解析顺序：默认是 `CLI / 调用方显式参数 > typed env file > environment variable > default value`。
-- 对支持 `-e/--env` 这类显式 env 覆盖源的命令，统一解析顺序是 `CLI / 调用方显式参数 > -e/显式 env > typed env file > environment variable > default value`。
+- 统一解析顺序：默认是 `CLI / 调用方显式参数 > tool config file > environment variable > typed env file > default value`。
+- 对支持 `-e/--env` 这类显式 env 覆盖源的命令，统一解析顺序是 `CLI / 调用方显式参数 > -e/显式 env > tool config file > environment variable > typed env file > default value`。
 - `typed env file` 指 `envs/<Config>/.env`；profile 固定放在 `envs/<Config>/<profile>.env`。
 - 以模块化配置对象组织，支持按功能扩展。
 - 凡是已经注册到 `src/chattool/config/` 的配置项，业务代码与 CLI 默认值读取都应优先走配置对象（如 `OpenAIConfig.OPENAI_API_KEY.value`），不能只直接读取 `os.environ`。
@@ -50,6 +50,7 @@
 - 负责环境安装与配置初始化。
 - 关键阶段必须可观测：开始、依赖检测、安装执行、配置写入、失败原因。
 - 涉及 sudo 的操作默认输出可审阅指令，保持安全可回溯。
+- 当 setup 命令需要同时合并显式参数、`-e`、已有工具配置和 ChatTool 配置对象时，已有工具配置优先于系统环境变量与 typed `.env`，避免已有工具配置被当前 shell 默认值意外覆盖。
 
 ### 6) `docker/`
 

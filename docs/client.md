@@ -15,7 +15,7 @@ CLI按功能分为几个命令组：
 - **`lark`**: 保留的飞书最小调试命令（`info` / `send` / `chat`）。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
@@ -83,9 +83,10 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 
 1. 显式参数：`--pam`（OpenAI API key）、`--base-url`、`--model`
 2. `-e/--env` 指定的 OpenAI 配置
-3. 当前 `oai/openai` 生效配置
-4. 现有 `~/.codex/` 配置
-5. 内置默认值
+3. 现有 `~/.codex/` 配置
+4. 当前 shell 的系统环境变量
+5. `envs/OpenAI/.env` 的 typed 默认值
+6. 内置默认值
 
 可选覆盖 `base_url` 和默认模型：
 
@@ -138,6 +139,15 @@ chattool setup opencode -e work
 chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 ```
 
+解析顺序为：
+
+1. 显式参数：`--base-url`、`--api-key`、`--model`
+2. `-e/--env` 指定的 OpenAI 配置
+3. 现有 `~/.config/opencode/opencode.json` 配置
+4. 当前 shell 的系统环境变量
+5. `envs/OpenAI/.env` 的 typed 默认值
+6. 默认值
+
 ### 0.4 Lark CLI (`setup lark-cli`)
 
 安装官方 `lark-cli`，并把 ChatTool 当前生效的 Feishu 配置复用过去：
@@ -176,7 +186,21 @@ chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
 lark-cli auth login --recommend
 ```
 
-### 0.5 Playground (`setup playground`)
+### 0.5 Docker (`setup docker`)
+
+检查 Docker、Docker Compose 和当前用户的 docker 组状态：
+
+```bash
+chattool setup docker
+```
+
+默认只打印建议命令，不会直接执行 `sudo`。如需允许命令在确认后直接执行，显式传入：
+
+```bash
+chattool setup docker --sudo -i
+```
+
+### 0.6 Playground (`setup playground`)
 
 把一个目录快速初始化或更新为工作区：
 

@@ -11,19 +11,21 @@ ChatTool 从 v5.0.0 开始引入了全新的集中式配置管理系统，支持
 3. **系统环境变量**：操作系统层面的环境变量（如 `export OPENAI_API_KEY=...`）。
 4. **默认值**：代码中定义的默认值。
 
-对于支持 `-e/--env` 一类显式 env 覆盖源的命令，优先级进一步细化为：
+对于支持 `-e/--env` 一类显式 env 覆盖源，且同时会读取工具自身默认配置位置（例如 `~/.codex/`、`~/.config/opencode/`、`~/.lark-cli/`）的 setup 命令，优先级进一步细化为：
 
 1. **CLI / 调用方显式指定**
 2. **显式 env 引用**：例如 `chattool lark -e work` 或 `chattool lark -e /path/to/file.env`
-3. **按类型拆分的内置 env 文件**：例如 `envs/Feishu/.env`
+3. **工具默认配置位置**：例如 `~/.codex/config.toml`、`~/.config/opencode/opencode.json`
 4. **系统环境变量**
-5. **默认值**
+5. **按类型拆分的内置 env 文件**：例如 `envs/Feishu/.env`
+6. **默认值**
 
 说明：
 
 - 该优先级对应 `BaseEnvConfig.load_from_dict()` / `load_all()` 的真实实现：已注册配置项会优先读取当前激活的 typed env 文件，其次才回退到 `os.environ`。
 - 当命令显式传入 `-e/--env` 时，会走 `BaseEnvConfig.load_all_with_override()`：先读取类型内置 `.env`，再在其上叠加显式 env；若显式 env 未提供某字段，才继续回退到系统环境变量与默认值。
 - 这样 `chatenv init` 或 `chatenv use` 更新 active `.env` 后，会立刻成为当前生效配置，不会被已有 shell 环境变量意外盖掉。
+- 但对于 `setup codex` / `setup opencode` / `setup lark-cli` 这类还会读取工具自身默认配置文件的命令，现行策略是优先保留已有工具配置，再回退到系统环境变量与 typed `.env`，避免单纯因为当前 shell 里存在 OpenAI / Feishu 默认值就把已有工具配置覆盖掉。
 - `BaseEnvConfig.set()` 是运行时覆盖手段，只修改当前进程内的值；它不属于上面的“默认加载顺序”，也不会自动回写 `.env` 或同步系统环境变量。
 - 对于已经注册到 `src/chattool/config/` 的配置项，CLI 与业务代码应优先读取配置对象的 `.value`，不要只直接读取 `os.environ`，否则会绕过 `chatenv` 管理的默认值。
 - 例如 `chattool setup playground` 在补 GitHub 鉴权时，会优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，从而复用 `chatenv` 当前生效的 GitHub 配置。

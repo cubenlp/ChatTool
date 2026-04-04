@@ -1,4 +1,26 @@
-# Docker 模板生成（chattool docker）
+# Docker 模板生成与环境检查
+
+## `chattool setup docker`
+
+`chattool setup docker` 用于检查本机 Docker / Docker Compose / docker 组状态。
+
+默认模式下只打印建议命令，不直接执行 `sudo`。
+
+```bash
+chattool setup docker
+```
+
+如果你希望在交互确认后直接执行建议的 `sudo` 命令，需要显式传入 `--sudo`：
+
+```bash
+chattool setup docker --sudo -i
+```
+
+当前命令不会自动修改共享目录权限或所有权；这类权限操作需要用户自行管理。
+
+---
+
+# `chattool docker` 模板生成
 
 `chattool docker` 用于快速生成浏览器相关 Docker 模板文件。
 

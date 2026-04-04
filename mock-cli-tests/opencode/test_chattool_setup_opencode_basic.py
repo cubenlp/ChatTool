@@ -32,8 +32,14 @@ def test_setup_opencode_reuses_openai_profile(tmp_path, monkeypatch, runner):
     monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
     monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.setup.opencode.ensure_nodejs_requirement", lambda interactive, can_prompt: None)
-    monkeypatch.setattr("chattool.setup.opencode.should_install_global_npm_package", lambda *args, **kwargs: False)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt: None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
 
     result = runner.invoke(cli, ["setup", "opencode", "-I", "-e", "work"])
 
@@ -46,3 +52,113 @@ def test_setup_opencode_reuses_openai_profile(tmp_path, monkeypatch, runner):
     assert provider["options"]["baseURL"] == "https://example.com/v1"
     assert provider["options"]["apiKey"] == "sk-work-key"
     assert payload["model"] == "opencode/gpt-4.1-mini"
+
+
+def test_setup_opencode_prefers_existing_config_over_current_env(
+    tmp_path, monkeypatch, runner
+):
+    home_dir = tmp_path / "home"
+    config_dir = home_dir / ".config" / "opencode"
+    config_dir.mkdir(parents=True)
+    (config_dir / "opencode.json").write_text(
+        json.dumps(
+            {
+                "$schema": "https://opencode.ai/config.json",
+                "model": "opencode/existing-model",
+                "provider": {
+                    "opencode": {
+                        "options": {
+                            "baseURL": "https://existing.example/v1",
+                            "apiKey": "sk-existing",
+                        },
+                        "models": {"existing-model": {"name": "existing-model"}},
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setenv("OPENAI_API_BASE", "https://env.example/v1")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
+    monkeypatch.setenv("OPENAI_API_MODEL", "env-model")
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt: None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(cli, ["setup", "opencode", "-I"])
+
+    assert result.exit_code == 0
+    payload = json.loads((config_dir / "opencode.json").read_text(encoding="utf-8"))
+    provider = payload["provider"]["opencode"]
+    assert provider["options"]["baseURL"] == "https://existing.example/v1"
+    assert provider["options"]["apiKey"] == "sk-existing"
+    assert payload["model"] == "opencode/existing-model"
+
+
+def test_setup_opencode_explicit_args_override_env_ref(tmp_path, monkeypatch, runner):
+    home_dir = tmp_path / "home"
+    env_dir = tmp_path / "envs"
+    env_file = tmp_path / ".env"
+    profile_dir = env_dir / "OpenAI"
+    profile_dir.mkdir(parents=True)
+    (profile_dir / "work.env").write_text(
+        "\n".join(
+            [
+                "OPENAI_API_BASE='https://profile.example/v1'",
+                "OPENAI_API_KEY='sk-profile'",
+                "OPENAI_API_MODEL='profile-model'",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    env_file.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt: None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "opencode",
+            "-I",
+            "-e",
+            "work",
+            "--base-url",
+            "https://explicit.example/v1",
+            "--api-key",
+            "sk-explicit",
+            "--model",
+            "explicit-model",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(
+        (home_dir / ".config" / "opencode" / "opencode.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    provider = payload["provider"]["opencode"]
+    assert provider["options"]["baseURL"] == "https://explicit.example/v1"
+    assert provider["options"]["apiKey"] == "sk-explicit"
+    assert payload["model"] == "opencode/explicit-model"
