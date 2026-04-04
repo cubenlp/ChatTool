@@ -74,20 +74,33 @@ def test_setup_alias_dry_run_does_not_write(tmp_path, monkeypatch, capsys):
 
 
 def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
-    monkeypatch.setattr("chattool.setup.alias.ask_select", lambda *args, **kwargs: "Custom")
-
     captured = {}
 
-    def fake_ask_checkbox(message, choices, style=None, instruction=None):
+    def fake_ask_checkbox_with_controls(
+        message,
+        choices,
+        default_values=None,
+        style=None,
+        instruction=None,
+        select_all_label=None,
+    ):
         captured["message"] = message
         captured["choices"] = choices
+        captured["default_values"] = default_values
+        captured["instruction"] = instruction
+        captured["select_all_label"] = select_all_label
         return ["chatgh"]
 
-    monkeypatch.setattr("chattool.setup.alias.ask_checkbox", fake_ask_checkbox)
+    monkeypatch.setattr(
+        "chattool.setup.alias.ask_checkbox_with_controls",
+        fake_ask_checkbox_with_controls,
+    )
     selected = select_aliases_interactively(["chatenv", "chatgh"])
 
     assert selected == ["chatgh"]
-    assert captured["message"] == "Select aliases (Space to toggle, A select/unselect all)"
+    assert captured["message"] == "Select aliases"
+    assert captured["default_values"] == ["chatenv", "chatgh"]
+    assert captured["select_all_label"] == "Select all aliases"
     checked = {choice.value: choice.checked for choice in captured["choices"]}
     assert checked["chatenv"] is True
     assert checked["chatgh"] is True

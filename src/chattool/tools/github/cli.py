@@ -579,24 +579,51 @@ def _resolve_token(token: Optional[str]) -> Optional[str]:
 
 def _resolve_repo_from_git_remote() -> str:
     try:
-        result = subprocess.run(
-            ["git", "remote", "get-url", "origin"],
+        remotes_result = subprocess.run(
+            ["git", "remote"],
             check=True,
             capture_output=True,
             text=True,
         )
     except subprocess.CalledProcessError as exc:
         raise click.ClickException(
-            "Current directory is not a git repository with an `origin` remote."
+            "Current directory is not a git repository with any configured remote."
         ) from exc
 
-    remote_url = (result.stdout or "").strip()
-    repo = _parse_github_repo_from_remote(remote_url)
-    if not repo:
+    remote_names = [
+        name.strip()
+        for name in (remotes_result.stdout or "").splitlines()
+        if name.strip()
+    ]
+    if not remote_names:
         raise click.ClickException(
-            "Current repository origin is not a recognizable GitHub remote."
+            "Current directory is not a git repository with any configured remote."
         )
-    return repo
+
+    ordered_remotes = ["origin", *[name for name in remote_names if name != "origin"]]
+    checked_remotes = []
+    for remote_name in ordered_remotes:
+        if remote_name in checked_remotes:
+            continue
+        checked_remotes.append(remote_name)
+        try:
+            result = subprocess.run(
+                ["git", "remote", "get-url", remote_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError:
+            continue
+
+        remote_url = (result.stdout or "").strip()
+        repo = _parse_github_repo_from_remote(remote_url)
+        if repo:
+            return repo
+
+    raise click.ClickException(
+        "Current repository does not have a recognizable GitHub remote."
+    )
 
 
 def _parse_github_repo_from_remote(remote_url: str) -> Optional[str]:

@@ -205,6 +205,8 @@ def test_chattool_gh_set_token_configures_repo_scoped_https_credential(
                 self.stdout = stdout
                 self.stderr = ""
 
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\n")
         if command == ["git", "remote", "get-url", "origin"]:
             return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
         return Result()
@@ -242,6 +244,8 @@ def test_chattool_gh_set_token_save_env_updates_github_env(
                 self.stdout = stdout
                 self.stderr = ""
 
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\n")
         if command == ["git", "remote", "get-url", "origin"]:
             return Result(stdout="https://github.com/CubeNLP/ChatTool.git\n")
         return Result()
@@ -269,6 +273,8 @@ def test_chattool_gh_set_token_rejects_non_github_remote(monkeypatch, runner):
                 self.stdout = stdout
                 self.stderr = ""
 
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\n")
         if command == ["git", "remote", "get-url", "origin"]:
             return Result(stdout="git@gitlab.com:CubeNLP/ChatTool.git\n")
         return Result()
@@ -279,6 +285,41 @@ def test_chattool_gh_set_token_rejects_non_github_remote(monkeypatch, runner):
 
     assert result.exit_code != 0
     assert (
-        "Current repository origin is not a recognizable GitHub remote."
+        "Current repository does not have a recognizable GitHub remote."
         in result.output
     )
+
+
+def test_chattool_gh_set_token_falls_back_to_other_github_remote(monkeypatch, runner):
+    commands = []
+    inputs = []
+
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        commands.append(command)
+        inputs.append(input)
+
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\nupstream\n")
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="git@gitlab.com:CubeNLP/ChatTool.git\n")
+        if command == ["git", "remote", "get-url", "upstream"]:
+            return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
+        return Result()
+
+    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+
+    result = runner.invoke(
+        cli,
+        ["gh", "set-token", "--token", "ghp_test_token"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "Configured Git HTTPS token for CubeNLP/ChatTool." in result.output
+    approve_input = inputs[commands.index(["git", "credential", "approve"])]
+    assert "path=CubeNLP/ChatTool.git" in approve_input

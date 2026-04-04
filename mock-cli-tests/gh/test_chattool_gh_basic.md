@@ -103,6 +103,27 @@ run chattool gh set-token --token ghp_xxx
 assert command fails with non-github remote message
 ```
 
+## 用例 6：`origin` 不是 GitHub，但其它 remote 是 GitHub 时应自动回退
+
+- 初始环境准备：
+  - 在临时目录初始化一个 git 仓库。
+  - `origin` 指向非 GitHub remote。
+  - 另一个 remote（例如 `upstream`）指向 GitHub。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh set-token --token <pat>`。
+  2. CLI 应跳过非 GitHub 的 `origin`，并自动使用可识别的 GitHub remote。
+
+参考执行脚本（伪代码）：
+
+```sh
+init temp git repo with gitlab origin and github upstream
+run chattool gh set-token --token ghp_xxx
+assert credential path uses upstream github repo
+```
+
 ## 清理 / 回滚
 
 - 无需额外操作。
