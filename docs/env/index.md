@@ -32,6 +32,17 @@ chattool setup opencode
 
 详细文档：[opencode.md](opencode.md)
 
+### Happy Coder Bootstrap
+
+使用 `setup happy` 安装 Happy CLI，并准备一套围绕 OpenAI-compatible relay、workspace 和 coding agent 的 happy-coder 配置建议。
+
+```bash
+chattool setup happy
+chattool setup happy --write-env
+```
+
+详细文档：[happy.md](happy.md)
+
 ### Docker 环境检查
 
 使用 `setup docker` 检查 Docker / Docker Compose / docker 组状态。

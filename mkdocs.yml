@@ -149,6 +149,7 @@ nav:
     - 概览: env/index.md
     - Chrome 环境: env/chrome.md
     - Codex 配置: env/codex.md
+    - Happy 配置: env/happy.md
     - Lark CLI 配置: env/lark-cli.md
     - OpenCode 配置: env/opencode.md
     - Workspace 协作脚手架: env/workspace.md
@@ -172,6 +173,7 @@ nav:
     - Agent CLI 系列:
       - Codex CLI 教程: blog/agent-cli/codex-cli-guide.md
       - OpenCode CLI 教程: blog/agent-cli/opencode-cli-guide.md
+      - Happy Coder 调研: blog/agent-cli/happy-coder-relay-guide.md
       - Claude Code CLI 教程: blog/agent-cli/claude-cli-guide.md
       - Lark CLI 教程: blog/agent-cli/lark-cli-guide.md
       - cc-connect 教程: blog/agent-cli/cc-connect-guide.md
