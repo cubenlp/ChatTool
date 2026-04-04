@@ -55,6 +55,15 @@ def _snapshot_openai_values() -> dict[str, str | None]:
     }
 
 
+def _load_saved_openai_values() -> dict[str, str | None]:
+    current_values = _snapshot_openai_values()
+    try:
+        BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+        return _snapshot_openai_values()
+    finally:
+        _restore_openai_values(current_values)
+
+
 def _restore_openai_values(values: dict[str, str | None]) -> None:
     OpenAIConfig.OPENAI_API_KEY.value = values.get("api_key")
     OpenAIConfig.OPENAI_API_BASE.value = values.get("base_url")
@@ -113,7 +122,9 @@ def _load_existing_opencode_config(config_path, provider_id):
             if isinstance(provider_entry, dict):
                 options = provider_entry.get("options")
                 if isinstance(options, dict):
-                    existing["base_url"] = options.get("baseURL") or options.get("baseUrl")
+                    existing["base_url"] = options.get("baseURL") or options.get(
+                        "baseUrl"
+                    )
                     existing["api_key"] = options.get("apiKey")
 
                 if not existing["model"]:
@@ -124,11 +135,14 @@ def _load_existing_opencode_config(config_path, provider_id):
     return existing, config_data
 
 
-def setup_opencode(base_url=None, api_key=None, model=None, env_ref=None, interactive=None):
+def setup_opencode(
+    base_url=None, api_key=None, model=None, env_ref=None, interactive=None
+):
     config_dir = Path.home() / ".config" / "opencode"
     config_path = config_dir / "opencode.json"
     provider_id = DEFAULT_PROVIDER_ID
     existing, config_data = _load_existing_opencode_config(config_path, provider_id)
+    saved_openai = _load_saved_openai_values()
     current_openai = _snapshot_openai_values()
     env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start opencode setup")
@@ -143,18 +157,21 @@ def setup_opencode(base_url=None, api_key=None, model=None, env_ref=None, intera
     base_url = (
         base_url
         or env_config.get("base_url")
+        or saved_openai.get("base_url")
         or current_openai.get("base_url")
         or existing.get("base_url")
     )
     api_key = (
         api_key
         or env_config.get("api_key")
+        or saved_openai.get("api_key")
         or current_openai.get("api_key")
         or existing.get("api_key")
     )
     model = (
         model
         or env_config.get("model")
+        or saved_openai.get("model")
         or current_openai.get("model")
         or existing.get("model")
     )
@@ -165,9 +182,11 @@ def setup_opencode(base_url=None, api_key=None, model=None, env_ref=None, intera
         "Usage: chattool setup opencode [--base-url <value>] [--api-key <value>] "
         "[--model <value>] [-e <openai-env>] [-i|-I]"
     )
-    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=(missing_required or has_existing_config),
+    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = (
+        resolve_interactive_mode(
+            interactive=interactive,
+            auto_prompt_condition=(missing_required or has_existing_config),
+        )
     )
 
     try:
@@ -198,7 +217,9 @@ def setup_opencode(base_url=None, api_key=None, model=None, env_ref=None, intera
 
         api_key_label = "api_key"
         if api_key:
-            api_key_label = f"{api_key_label} (current: {_mask_secret(api_key)}, enter to keep)"
+            api_key_label = (
+                f"{api_key_label} (current: {_mask_secret(api_key)}, enter to keep)"
+            )
         api_key_input = ask_text(api_key_label, password=True)
         if api_key_input == BACK_VALUE:
             return

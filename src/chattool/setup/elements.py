@@ -92,10 +92,11 @@ def lark_cli_setup(app_id, app_secret, brand, env, interactive):
     )
 
 
-def playground_setup(workspace_dir, chattool_source, interactive, force):
+def playground_setup(workspace_dir, chattool_source, language, interactive, force):
     setup_playground(
         workspace_dir=workspace_dir,
         chattool_source=chattool_source,
+        language=language,
         interactive=interactive,
         force=force,
     )
@@ -120,11 +121,18 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("-s", "--shell"),
-                kwargs={"default": None, "type": click.Choice(["zsh", "bash"]), "help": "Target shell: zsh or bash. Defaults to $SHELL."},
+                kwargs={
+                    "default": None,
+                    "type": click.Choice(["zsh", "bash"]),
+                    "help": "Target shell: zsh or bash. Defaults to $SHELL.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--dry-run",),
-                kwargs={"is_flag": True, "help": "Preview alias changes without writing to shell rc file."},
+                kwargs={
+                    "is_flag": True,
+                    "help": "Preview alias changes without writing to shell rc file.",
+                },
             ),
         ),
     ),
@@ -135,7 +143,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
         ),
     ),
@@ -146,7 +157,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--auth-token", "--token"),
@@ -158,7 +172,10 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("--small-fast-model", "--sfm"),
-                kwargs={"default": None, "help": "Optional ANTHROPIC_SMALL_FAST_MODEL value."},
+                kwargs={
+                    "default": None,
+                    "help": "Optional ANTHROPIC_SMALL_FAST_MODEL value.",
+                },
             ),
         ),
     ),
@@ -169,7 +186,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
         ),
     ),
@@ -180,7 +200,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
         ),
     ),
@@ -191,7 +214,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
         ),
     ),
@@ -202,15 +228,24 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--preferred-auth-method", "--pam"),
-                kwargs={"default": None, "help": "OpenAI API key to write into Codex auth.json; config.toml will use preferred_auth_method = \"apikey\"."},
+                kwargs={
+                    "default": None,
+                    "help": 'OpenAI API key to write into Codex auth.json; config.toml will use preferred_auth_method = "apikey".',
+                },
             ),
             SetupOptionElement(
                 param_decls=("--base-url", "--url"),
-                kwargs={"default": None, "help": "Optional base_url for model provider."},
+                kwargs={
+                    "default": None,
+                    "help": "Optional base_url for model provider.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--model",),
@@ -218,7 +253,10 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("-e", "--env"),
-                kwargs={"default": None, "help": "Load OpenAI config from a .env file path or saved OpenAI profile name."},
+                kwargs={
+                    "default": None,
+                    "help": "Load OpenAI config from a .env file path or saved OpenAI profile name.",
+                },
             ),
         ),
     ),
@@ -229,7 +267,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--base-url", "--url"),
@@ -245,7 +286,10 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("-e", "--env"),
-                kwargs={"default": None, "help": "Load OpenAI config from a .env file path or saved OpenAI profile name."},
+                kwargs={
+                    "default": None,
+                    "help": "Load OpenAI config from a .env file path or saved OpenAI profile name.",
+                },
             ),
         ),
     ),
@@ -256,7 +300,10 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--app-id",),
@@ -268,11 +315,18 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("--brand",),
-                kwargs={"default": None, "type": click.Choice(["feishu", "lark"]), "help": "Official brand value written to lark-cli config."},
+                kwargs={
+                    "default": None,
+                    "type": click.Choice(["feishu", "lark"]),
+                    "help": "Official brand value written to lark-cli config.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("-e", "--env"),
-                kwargs={"default": None, "help": "Load Feishu config from a .env file path or saved Feishu profile name."},
+                kwargs={
+                    "default": None,
+                    "help": "Load Feishu config from a .env file path or saved Feishu profile name.",
+                },
             ),
         ),
     ),
@@ -283,19 +337,40 @@ SETUP_COMMAND_ELEMENTS = (
         options=(
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--workspace-dir", "--dir"),
-                kwargs={"default": None, "help": "Workspace root directory. Defaults to current directory."},
+                kwargs={
+                    "default": None,
+                    "help": "Workspace root directory. Defaults to current directory.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--chattool-source", "--source"),
-                kwargs={"default": None, "help": "Git URL or local ChatTool repo path used for cloning/updating workspace/ChatTool."},
+                kwargs={
+                    "default": None,
+                    "help": "Git URL or local ChatTool repo path used for cloning/updating workspace/ChatTool.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--language",),
+                kwargs={
+                    "default": "zh",
+                    "type": click.Choice(["zh", "en"]),
+                    "show_default": True,
+                    "help": "Template language for generated playground files.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--force",),
-                kwargs={"is_flag": True, "help": "Allow overwriting generated files and replace a broken non-git ChatTool directory when rerunning."},
+                kwargs={
+                    "is_flag": True,
+                    "help": "Allow overwriting generated files and replace a broken non-git ChatTool directory when rerunning.",
+                },
             ),
         ),
     ),
@@ -314,19 +389,33 @@ SETUP_COMMAND_ELEMENTS = (
             ),
             SetupOptionElement(
                 param_decls=("--language",),
-                kwargs={"default": "zh", "type": click.Choice(["zh", "en"]), "show_default": True, "help": "Template language for generated workspace files."},
+                kwargs={
+                    "default": "zh",
+                    "type": click.Choice(["zh", "en"]),
+                    "show_default": True,
+                    "help": "Template language for generated workspace files.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={"default": None, "help": "Auto prompt on missing args, -i forces interactive, -I disables it."},
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--force", "-f"),
-                kwargs={"is_flag": True, "help": "Overwrite existing generated files except completed setup.md."},
+                kwargs={
+                    "is_flag": True,
+                    "help": "Overwrite existing generated files except completed setup.md.",
+                },
             ),
             SetupOptionElement(
                 param_decls=("--dry-run",),
-                kwargs={"is_flag": True, "help": "Print planned workspace files and directories without writing anything."},
+                kwargs={
+                    "is_flag": True,
+                    "help": "Print planned workspace files and directories without writing anything.",
+                },
             ),
         ),
     ),

@@ -72,7 +72,9 @@ def _load_existing_codex_config(codex_dir):
             key, value = line.split("=", 1)
             key = key.strip()
             value = value.strip()
-            if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+            if (value.startswith('"') and value.endswith('"')) or (
+                value.startswith("'") and value.endswith("'")
+            ):
                 value = value[1:-1]
             values[(section, key)] = value
 
@@ -80,10 +82,16 @@ def _load_existing_codex_config(codex_dir):
         existing["model"] = values.get((None, "model"))
         provider_name = values.get((None, "model_provider"))
         if provider_name:
-            existing["base_url"] = values.get((f"model_providers.{provider_name}", "base_url"))
+            existing["base_url"] = values.get(
+                (f"model_providers.{provider_name}", "base_url")
+            )
         if not existing["base_url"]:
             for (section_name, key), value in values.items():
-                if key == "base_url" and section_name and section_name.startswith("model_providers."):
+                if (
+                    key == "base_url"
+                    and section_name
+                    and section_name.startswith("model_providers.")
+                ):
                     existing["base_url"] = value
                     break
 
@@ -96,6 +104,15 @@ def _snapshot_openai_values() -> dict[str, str | None]:
         "base_url": OpenAIConfig.OPENAI_API_BASE.value,
         "model": OpenAIConfig.OPENAI_API_MODEL.value,
     }
+
+
+def _load_saved_openai_values() -> dict[str, str | None]:
+    current_values = _snapshot_openai_values()
+    try:
+        BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+        return _snapshot_openai_values()
+    finally:
+        _restore_openai_values(current_values)
 
 
 def _restore_openai_values(values: dict[str, str | None]) -> None:
@@ -132,9 +149,16 @@ def _load_openai_values_from_env_ref(env_ref: str) -> dict[str, str | None]:
         _restore_openai_values(current_values)
 
 
-def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=None, interactive=None):
+def setup_codex(
+    preferred_auth_method=None,
+    base_url=None,
+    model=None,
+    env_ref=None,
+    interactive=None,
+):
     codex_dir = Path.home() / ".codex"
     existing = _load_existing_codex_config(codex_dir)
+    saved_openai = _load_saved_openai_values()
     current_openai = _snapshot_openai_values()
     env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
     existing_api_key = existing.get("openai_api_key")
@@ -148,6 +172,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
     api_key = (
         preferred_auth_method
         or env_config.get("openai_api_key")
+        or saved_openai.get("openai_api_key")
         or current_openai.get("openai_api_key")
         or existing_api_key
     )
@@ -156,9 +181,11 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         value for key, value in existing.items() if key != "openai_api_key"
     ) or bool(existing.get("openai_api_key"))
     usage = "Usage: chattool setup codex [--preferred-auth-method <openai-api-key>] [--base-url <value>] [--model <value>] [-e <openai-env>] [-i|-I]"
-    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=(missing_required or has_existing_config),
+    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = (
+        resolve_interactive_mode(
+            interactive=interactive,
+            auto_prompt_condition=(missing_required or has_existing_config),
+        )
     )
 
     try:
@@ -195,6 +222,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         base_url_default = (
             base_url
             or env_config.get("base_url")
+            or saved_openai.get("base_url")
             or current_openai.get("base_url")
             or existing.get("base_url")
             or DEFAULT_BASE_URL
@@ -206,6 +234,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         model_default = (
             model
             or env_config.get("model")
+            or saved_openai.get("model")
             or current_openai.get("model")
             or existing.get("model")
             or DEFAULT_MODEL
@@ -237,6 +266,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
     base_url = (
         base_url
         or env_config.get("base_url")
+        or saved_openai.get("base_url")
         or current_openai.get("base_url")
         or existing.get("base_url")
         or DEFAULT_BASE_URL
@@ -244,6 +274,7 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
     model = (
         model
         or env_config.get("model")
+        or saved_openai.get("model")
         or current_openai.get("model")
         or existing.get("model")
         or DEFAULT_MODEL
@@ -255,13 +286,13 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
         'model_provider = "crs"\n'
         f'model = "{model}"\n'
         'model_reasoning_effort = "high"\n'
-        'disable_response_storage = true\n'
+        "disable_response_storage = true\n"
         f'preferred_auth_method = "{DEFAULT_AUTH_METHOD}"\n\n'
-        '[model_providers.crs]\n'
+        "[model_providers.crs]\n"
         'name = "crs"\n'
         f'base_url = "{base_url}"\n'
         'wire_api = "responses"\n'
-        'requires_openai_auth = true\n'
+        "requires_openai_auth = true\n"
     )
     config_path = codex_dir / "config.toml"
     config_path.write_text(config_toml, encoding="utf-8")
@@ -270,7 +301,9 @@ def setup_codex(preferred_auth_method=None, base_url=None, model=None, env_ref=N
 
     auth_json = {"OPENAI_API_KEY": api_key}
     auth_path = codex_dir / "auth.json"
-    auth_path.write_text(json.dumps(auth_json, ensure_ascii=False, indent=2), encoding="utf-8")
+    auth_path.write_text(
+        json.dumps(auth_json, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     auth_path.chmod(0o600)
     logger.info(f"Wrote auth file: {auth_path}")
 
