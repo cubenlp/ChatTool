@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chatenv init` / `chatenv new` 更新 active typed env 后，`chatenv cat` 与运行时配置加载现在会优先读取 `envs/<Config>/.env`，不再被已有 shell 环境变量意外覆盖，避免交互里刚保存的新值看起来“没有生效”
 - `chatenv new` 现在收紧为纯 profile 创建语义：无论直接传 profile 名还是交互式补参，都只写入 `envs/<Config>/<profile>.env`，不再顺手覆盖当前 active `.env`
 - `chatskill install` / `chattool skill install` 现在在交互终端里缺少 skill 名时会进入选择页，而不是直接因缺参数中断；非交互环境仍保持显式报错
+- `Publish Package` workflow 现在会用内联 Python 读取 `src/chattool/__init__.py` 中的 `__version__`，避免 release tag 校验被单引号/双引号差异误判
 
 ### Added
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退

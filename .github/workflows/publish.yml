@@ -13,7 +13,21 @@ jobs:
       - name: Verify tag matches package version
         run: |
           tag_name="${GITHUB_REF_NAME#v}"
-          package_version="$(grep "__version__" src/chattool/__init__.py | cut -d"'" -f2)"
+          package_version="$(python3 - <<'PY'
+          import ast
+          from pathlib import Path
+
+          module = ast.parse(Path("src/chattool/__init__.py").read_text(encoding="utf-8"))
+          for stmt in module.body:
+              if not isinstance(stmt, ast.Assign):
+                  continue
+              if any(isinstance(target, ast.Name) and target.id == "__version__" for target in stmt.targets):
+                  print(ast.literal_eval(stmt.value))
+                  break
+          else:
+              raise SystemExit("__version__ not found in src/chattool/__init__.py")
+          PY
+          )"
 
           if [[ "$tag_name" != "$package_version" ]]; then
             echo "Tag $GITHUB_REF_NAME does not match package version $package_version"
