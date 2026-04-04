@@ -25,6 +25,7 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert (workspace_dir / "reports" / "README.md").exists()
     assert (workspace_dir / "playgrounds" / "README.md").exists()
     assert (workspace_dir / "knowledge" / "README.md").exists()
+    assert not (workspace_dir / "knowledge" / "report").exists()
 
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")

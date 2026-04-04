@@ -59,7 +59,6 @@ BASE_DIRS = [
     "knowledge/memory/status",
     "knowledge/skills",
     "knowledge/tools",
-    "knowledge/report",
 ]
 
 
