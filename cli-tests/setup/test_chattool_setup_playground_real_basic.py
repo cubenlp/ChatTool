@@ -54,7 +54,7 @@ def test_setup_playground_creates_workspace_style_scaffold(tmp_path: Path):
     memory_md = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
     assert "## 概览" in agents
     assert "reports/MM-DD-<task-name>/" in agents
-    assert "reports/task-sets/<set-name>/" in agents
+    assert "reports/MM-DD-<set-name>/" in agents
     assert "knowledge/skills/" in agents
     assert "ChatTool Workspace 指南" in chattool_md
     assert "长期笔记目录" in memory_md

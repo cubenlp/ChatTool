@@ -10,16 +10,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chatenv init` / `chatenv new` 更新 active typed env 后，`chatenv cat` 与运行时配置加载现在会优先读取 `envs/<Config>/.env`，不再被已有 shell 环境变量意外覆盖，避免交互里刚保存的新值看起来“没有生效”
 - `chatenv new` 现在收紧为纯 profile 创建语义：无论直接传 profile 名还是交互式补参，都只写入 `envs/<Config>/<profile>.env`，不再顺手覆盖当前 active `.env`
 - `chatskill install` / `chattool skill install` 现在在交互终端里缺少 skill 名时会进入选择页，而不是直接因缺参数中断；非交互环境仍保持显式报错
+- `chattool skill install` 现在支持 `opencode` 平台，默认安装到 `~/.config/opencode/skills/`；`claude` 平台名同步收口为 `claude`，不再继续暴露 `claude-code`
+- `chattool skill install` 覆盖已存在 skill 时，交互提示现在支持输入 `a` 一次允许本轮后续全部覆盖，避免 `--all` 时逐个确认
+- `chattool skill install` 在交互终端里省略 `-p/--platform` 时，现会先进入平台选择页，并把 `codex` 作为默认候选放在首位；非交互环境仍默认回退到 `codex`
+- `chattool skill install` 交互式缺少 skill 名时，现改为共享的多选控制页；顶部提供一个可联动的“全选”项，支持在同一页切换全选/清空，不再只支持单个 skill 或单独的 “Install all skills” 入口
+- `chattool setup alias` 的交互式 alias 选择现改为与 `skill install` 一致的共享多选控制页；去掉单独 preset 页，改为在同一页通过顶部“全选”项切换全选/清空
+- `chattool setup codex` / `chattool setup opencode` / `chattool setup lark-cli` 现在统一修正为 `显式参数 > -e/--env > 工具默认配置位置 > 系统环境变量 > typed .env > 默认值`，避免已有工具配置被当前 shell 中的 OpenAI / Feishu 默认值意外覆盖
 - `Publish Package` workflow 现在会用内联 Python 读取 `src/chattool/__init__.py` 中的 `__version__`，避免 release tag 校验被单引号/双引号差异误判
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
+- `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖
+- 新增 `chattool setup docker`，用于检查 Docker / Docker Compose / docker 组状态；涉及 `sudo` 的建议命令默认只打印，显式传入 `--sudo` 后才允许在确认后执行
 - `chattool setup playground` 现支持 `--language zh|en`；默认生成中文的 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md` 和相关 README，也可显式切到英文模板
 
 ### Changed
-- `chattool setup workspace` 默认生成的 workspace scaffold 现改为按任务隔离的多任务协作约定：去掉单一 `task.md`，默认使用 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；对于长期系列工作，可升级为 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/` 并维护任务集级进展
+- `chattool setup workspace` / `chattool setup playground` 的任务集汇报结构现统一为 `reports/MM-DD-<set-name>/`：集合目录下直接维护 `TASKSET.md`、`progress.md` 与各子任务目录，不再额外套一层 `task-sets/` 或 `tasks/`
 - `chattool setup playground` 的外层工作区结构现对齐 `setup workspace`：默认使用 `reports/`、`playgrounds/`、`knowledge/`，并把工作区 skills 副本收口到 `knowledge/skills/`；同时继续保留 `ChatTool/` 仓库和 skills 同步逻辑
 - `chattool setup workspace` 与 `chattool setup playground` 现移除全局 `thoughts/` 面，避免并发任务时出现一个共享的“当前关注点”入口；相关角色统一收口到各任务或任务集的 `reports/` 结构
 

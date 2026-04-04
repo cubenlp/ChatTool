@@ -38,7 +38,7 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert "## 架构" in agents
     assert "## 知识写入规则" in agents
     assert "reports/MM-DD-<task-name>/" in agents
-    assert "reports/task-sets/<set-name>/" in agents
+    assert "reports/MM-DD-<set-name>/" in agents
     assert "playgrounds/<task-name>/" in agents
     assert "playgrounds/task-sets/<set-name>/" in agents
     assert "knowledge/memory/YYYY-MM-DD-status.md" in agents

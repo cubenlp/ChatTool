@@ -49,9 +49,9 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 
 1. 显式参数：`--pam`（OpenAI API key）、`--base-url`、`--model`
 2. `-e/--env` 指定的 OpenAI 配置
-3. 当前保存的 `oai/openai` typed env 配置
-4. shell 环境变量
-5. 现有 `~/.codex/` 配置
+3. 现有 `~/.codex/` 配置
+4. 当前 shell 的系统环境变量（如 `OPENAI_API_BASE`）
+5. `envs/OpenAI/.env` 中的 typed 默认值
 6. 内置默认值
 
 可选覆盖 `base_url` 和默认模型：

@@ -21,6 +21,7 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
+from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -231,8 +232,11 @@ def setup_lark_cli(
     config_dir = _get_lark_cli_config_dir()
     config_path = _get_lark_cli_config_path()
     existing = _load_existing_lark_cli_config(config_path)
-    saved_feishu = _load_saved_feishu_values()
-    current_feishu = _snapshot_feishu_values()
+    env_values, typed_env_values = split_config_sources(
+        FeishuConfig,
+        CHATTOOL_ENV_DIR,
+        legacy_env_file=CHATTOOL_ENV_FILE,
+    )
     env_config = _load_feishu_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start lark-cli setup")
 
@@ -246,25 +250,25 @@ def setup_lark_cli(
     app_id = (
         app_id
         or env_config.get("app_id")
-        or saved_feishu.get("app_id")
-        or current_feishu.get("app_id")
         or existing.get("app_id")
+        or env_values.get("FEISHU_APP_ID")
+        or typed_env_values.get("FEISHU_APP_ID")
     )
     app_secret = (
         app_secret
         or env_config.get("app_secret")
-        or saved_feishu.get("app_secret")
-        or current_feishu.get("app_secret")
+        or env_values.get("FEISHU_APP_SECRET")
+        or typed_env_values.get("FEISHU_APP_SECRET")
     )
     if not brand:
         if env_config.get("api_base"):
             brand = _infer_brand(env_config.get("api_base"))
-        elif saved_feishu.get("api_base"):
-            brand = _infer_brand(saved_feishu.get("api_base"))
-        elif current_feishu.get("api_base"):
-            brand = _infer_brand(current_feishu.get("api_base"))
         elif existing.get("brand"):
             brand = existing.get("brand")
+        elif env_values.get("FEISHU_API_BASE"):
+            brand = _infer_brand(env_values.get("FEISHU_API_BASE"))
+        elif typed_env_values.get("FEISHU_API_BASE"):
+            brand = _infer_brand(typed_env_values.get("FEISHU_API_BASE"))
         else:
             brand = "feishu"
 

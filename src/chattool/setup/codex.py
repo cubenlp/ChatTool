@@ -16,6 +16,7 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
+from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -158,8 +159,11 @@ def setup_codex(
 ):
     codex_dir = Path.home() / ".codex"
     existing = _load_existing_codex_config(codex_dir)
-    saved_openai = _load_saved_openai_values()
-    current_openai = _snapshot_openai_values()
+    env_values, typed_env_values = split_config_sources(
+        OpenAIConfig,
+        CHATTOOL_ENV_DIR,
+        legacy_env_file=CHATTOOL_ENV_FILE,
+    )
     env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
     existing_api_key = existing.get("openai_api_key")
     logger.info("Start codex setup")
@@ -172,9 +176,9 @@ def setup_codex(
     api_key = (
         preferred_auth_method
         or env_config.get("openai_api_key")
-        or saved_openai.get("openai_api_key")
-        or current_openai.get("openai_api_key")
         or existing_api_key
+        or env_values.get("OPENAI_API_KEY")
+        or typed_env_values.get("OPENAI_API_KEY")
     )
     missing_required = not api_key
     has_existing_config = any(
@@ -222,9 +226,9 @@ def setup_codex(
         base_url_default = (
             base_url
             or env_config.get("base_url")
-            or saved_openai.get("base_url")
-            or current_openai.get("base_url")
             or existing.get("base_url")
+            or env_values.get("OPENAI_API_BASE")
+            or typed_env_values.get("OPENAI_API_BASE")
             or DEFAULT_BASE_URL
         )
         base_url = ask_text("base_url (optional)", default=base_url_default)
@@ -234,9 +238,9 @@ def setup_codex(
         model_default = (
             model
             or env_config.get("model")
-            or saved_openai.get("model")
-            or current_openai.get("model")
             or existing.get("model")
+            or env_values.get("OPENAI_API_MODEL")
+            or typed_env_values.get("OPENAI_API_MODEL")
             or DEFAULT_MODEL
         )
         model = ask_text("default model (optional)", default=model_default)
@@ -266,17 +270,17 @@ def setup_codex(
     base_url = (
         base_url
         or env_config.get("base_url")
-        or saved_openai.get("base_url")
-        or current_openai.get("base_url")
         or existing.get("base_url")
+        or env_values.get("OPENAI_API_BASE")
+        or typed_env_values.get("OPENAI_API_BASE")
         or DEFAULT_BASE_URL
     )
     model = (
         model
         or env_config.get("model")
-        or saved_openai.get("model")
-        or current_openai.get("model")
         or existing.get("model")
+        or env_values.get("OPENAI_API_MODEL")
+        or typed_env_values.get("OPENAI_API_MODEL")
         or DEFAULT_MODEL
     )
 

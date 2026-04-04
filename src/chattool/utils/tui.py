@@ -110,18 +110,20 @@ def _normalize_choice(choice):
 
 
 def _questionary_select_style(questionary):
-    return questionary.Style([
-        ("qmark", ""),
-        ("question", ""),
-        ("answer", ""),
-        ("pointer", ""),
-        ("highlighted", "noreverse"),
-        ("selected", "noreverse"),
-        ("separator", "dim"),
-        ("instruction", "dim"),
-        ("text", ""),
-        ("disabled", "italic"),
-    ])
+    return questionary.Style(
+        [
+            ("qmark", ""),
+            ("question", ""),
+            ("answer", ""),
+            ("pointer", ""),
+            ("highlighted", "noreverse"),
+            ("selected", "noreverse"),
+            ("separator", "dim"),
+            ("instruction", "dim"),
+            ("text", ""),
+            ("disabled", "italic"),
+        ]
+    )
 
 
 def _render_numbered_choices(message, normalized):
@@ -222,7 +224,9 @@ def ask_checkbox(message, choices, default_values=None, style=None, instruction=
             if choice["checked"] or (choice["value"] in default_set)
         ]
         for index, choice in enumerate(selectable, start=1):
-            marker = "x" if (choice["checked"] or (choice["value"] in default_set)) else " "
+            marker = (
+                "x" if (choice["checked"] or (choice["value"] in default_set)) else " "
+            )
             click.echo(f"  {index}. [{marker}] {choice['title']}", err=True)
         raw_value = click.prompt(
             "Choice numbers",
@@ -264,6 +268,274 @@ def ask_checkbox(message, choices, default_values=None, style=None, instruction=
             use_jk_keys=True,
             instruction=instruction or "",
         ).ask()
+    if selected is None:
+        raise click.Abort()
+    return selected
+
+
+def ask_checkbox_with_controls(
+    message,
+    choices,
+    default_values=None,
+    style=None,
+    instruction=None,
+    select_all_label="Select all",
+):
+    """Ask for checkbox selections with a live select-all control item."""
+    normalized = [_normalize_choice(choice) for choice in choices]
+    selectable = [choice for choice in normalized if not choice["separator"]]
+    if not selectable:
+        return []
+
+    default_set = set(default_values or [])
+    initial_values = [
+        choice["value"]
+        for choice in selectable
+        if choice["checked"] or (choice["value"] in default_set)
+    ]
+
+    control_value = "__all__"
+    inline_choices = [
+        create_choice(
+            title=select_all_label,
+            value=control_value,
+            checked=len(initial_values) == len(selectable),
+        ),
+        get_separator(),
+        *choices,
+    ]
+
+    try:
+        from prompt_toolkit.application import Application
+        from prompt_toolkit.key_binding import KeyBindings
+        from prompt_toolkit.keys import Keys
+        from prompt_toolkit.styles import Style
+
+        from questionary import utils
+        from questionary.constants import DEFAULT_QUESTION_PREFIX
+        from questionary.constants import DEFAULT_SELECTED_POINTER
+        from questionary.prompts import common
+        from questionary.prompts.common import InquirerControl
+        from questionary.prompts.common import Separator
+        from questionary.question import Question
+        from questionary.styles import merge_styles_default
+    except ImportError:
+        selected = ask_checkbox(
+            message,
+            choices=inline_choices,
+            default_values=initial_values,
+            style=style,
+            instruction=instruction,
+        )
+        if selected == BACK_VALUE:
+            return BACK_VALUE
+        filtered = [value for value in selected if value != control_value]
+        if control_value in selected:
+            if len(filtered) == len(selectable):
+                return []
+            return [choice["value"] for choice in selectable]
+        return filtered
+
+    merged_style = merge_styles_default(
+        [Style([("bottom-toolbar", "noreverse")]), style]
+    )
+    questionary_choices = [
+        create_choice(
+            title=select_all_label,
+            value=control_value,
+            checked=len(initial_values) == len(selectable),
+        ),
+        Separator(),
+        *choices,
+    ]
+
+    class CheckboxControl(InquirerControl):
+        def _get_choice_tokens(self):
+            tokens = []
+
+            def append(index, choice):
+                selected = choice.value in self.selected_options
+
+                if index == self.pointed_at:
+                    if self.pointer is not None:
+                        tokens.append(("class:pointer", f" {self.pointer} "))
+                    else:
+                        tokens.append(("class:text", " " * 3))
+                    tokens.append(("[SetCursorPosition]", ""))
+                else:
+                    pointer_length = (
+                        len(self.pointer) if self.pointer is not None else 1
+                    )
+                    tokens.append(("class:text", " " * (2 + pointer_length)))
+
+                if isinstance(choice, Separator):
+                    tokens.append(("class:separator", f"{choice.title}"))
+                    tokens.append(("", "\n"))
+                    return
+
+                indicator = (
+                    CHECKBOX_SELECTED_INDICATOR
+                    if selected
+                    else CHECKBOX_UNSELECTED_INDICATOR
+                )
+                tokens.append(("class:text", f"{indicator} "))
+                title = (
+                    choice.title
+                    if isinstance(choice.title, str)
+                    else choice.title[0][1]
+                )
+                tokens.append(("class:text", f"{title}"))
+                tokens.append(("", "\n"))
+
+            for i, c in enumerate(self.filtered_choices):
+                append(i, c)
+
+            if tokens:
+                tokens.pop()
+            return tokens
+
+    ic = CheckboxControl(
+        questionary_choices,
+        None,
+        pointer=DEFAULT_SELECTED_POINTER,
+        initial_choice=None,
+        show_description=True,
+    )
+
+    regular_values = [choice["value"] for choice in selectable]
+    ic.selected_options = list(initial_values)
+
+    def _sync_select_all() -> None:
+        all_selected = all(value in ic.selected_options for value in regular_values)
+        if all_selected:
+            if control_value not in ic.selected_options:
+                ic.selected_options.append(control_value)
+        elif control_value in ic.selected_options:
+            ic.selected_options.remove(control_value)
+
+    _sync_select_all()
+
+    def get_selected_values():
+        return [value for value in ic.selected_options if value != control_value]
+
+    def perform_validation(selected_values):
+        ic.error_message = None
+        return True
+
+    def get_prompt_tokens():
+        tokens = []
+        tokens.append(("class:qmark", DEFAULT_QUESTION_PREFIX))
+        tokens.append(("class:question", f" {message}"))
+        if ic.is_answered:
+            nbr_selected = len(get_selected_values())
+            if nbr_selected == 0:
+                tokens.append(("class:answer", "done"))
+            elif nbr_selected == 1:
+                current = next(
+                    choice
+                    for choice in selectable
+                    if choice["value"] == get_selected_values()[0]
+                )
+                tokens.append(("class:answer", f"[{current['title']}]"))
+            else:
+                tokens.append(("class:answer", f"done ({nbr_selected} selections)"))
+        else:
+            tokens.append(("class:instruction", instruction or ""))
+        return tokens
+
+    layout = common.create_inquirer_layout(ic, get_prompt_tokens)
+    bindings = KeyBindings()
+
+    @bindings.add(Keys.ControlQ, eager=True)
+    @bindings.add(Keys.ControlC, eager=True)
+    def _(event):
+        event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+
+    @bindings.add(" ", eager=True)
+    def toggle(_event):
+        pointed_choice = ic.get_pointed_at().value
+        if pointed_choice == control_value:
+            if all(value in ic.selected_options for value in regular_values):
+                ic.selected_options = [
+                    value
+                    for value in ic.selected_options
+                    if value not in regular_values and value != control_value
+                ]
+            else:
+                ic.selected_options = list(
+                    dict.fromkeys([*regular_values, control_value])
+                )
+        else:
+            if pointed_choice in ic.selected_options:
+                ic.selected_options.remove(pointed_choice)
+            else:
+                ic.selected_options.append(pointed_choice)
+            _sync_select_all()
+
+        perform_validation(get_selected_values())
+
+    @bindings.add("i", eager=True)
+    def invert(_event):
+        inverted_selection = [
+            c.value
+            for c in ic.choices
+            if not isinstance(c, Separator)
+            and c.value != control_value
+            and c.value not in ic.selected_options
+            and not c.disabled
+        ]
+        ic.selected_options = inverted_selection
+        _sync_select_all()
+        perform_validation(get_selected_values())
+
+    @bindings.add("a", eager=True)
+    def all_toggle(_event):
+        if all(value in ic.selected_options for value in regular_values):
+            ic.selected_options = []
+        else:
+            ic.selected_options = list(regular_values)
+        _sync_select_all()
+        perform_validation(get_selected_values())
+
+    def move_cursor_down(event):
+        ic.select_next()
+        while not ic.is_selection_valid():
+            ic.select_next()
+
+    def move_cursor_up(event):
+        ic.select_previous()
+        while not ic.is_selection_valid():
+            ic.select_previous()
+
+    bindings.add(Keys.Down, eager=True)(move_cursor_down)
+    bindings.add(Keys.Up, eager=True)(move_cursor_up)
+    bindings.add("j", eager=True)(move_cursor_down)
+    bindings.add("k", eager=True)(move_cursor_up)
+    bindings.add(Keys.ControlN, eager=True)(move_cursor_down)
+    bindings.add(Keys.ControlP, eager=True)(move_cursor_up)
+
+    @bindings.add(Keys.ControlM, eager=True)
+    def set_answer(event):
+        selected_values = get_selected_values()
+        ic.submission_attempted = True
+        if perform_validation(selected_values):
+            ic.is_answered = True
+            event.app.exit(result=selected_values)
+
+    @bindings.add(Keys.Any)
+    def other(_event):
+        """Disallow inserting other text."""
+
+    with checkbox_indicator_style():
+        question = Question(
+            Application(
+                layout=layout,
+                key_bindings=bindings,
+                style=merged_style,
+                **utils.used_kwargs({}, Application.__init__),
+            )
+        )
+        selected = question.ask()
     if selected is None:
         raise click.Abort()
     return selected

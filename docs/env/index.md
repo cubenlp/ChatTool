@@ -32,6 +32,17 @@ chattool setup opencode
 
 详细文档：[opencode.md](opencode.md)
 
+### Docker 环境检查
+
+使用 `setup docker` 检查 Docker / Docker Compose / docker 组状态。
+
+```bash
+chattool setup docker
+chattool setup docker --sudo -i
+```
+
+详细文档：[docker.md](docker.md)
+
 ### Workspace 协作脚手架
 
 使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架，默认采用常规任务模式，并支持在长期系列工作中切换到 `task-sets` 结构。

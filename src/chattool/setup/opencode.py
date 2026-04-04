@@ -16,6 +16,7 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
+from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_text
 
@@ -142,8 +143,11 @@ def setup_opencode(
     config_path = config_dir / "opencode.json"
     provider_id = DEFAULT_PROVIDER_ID
     existing, config_data = _load_existing_opencode_config(config_path, provider_id)
-    saved_openai = _load_saved_openai_values()
-    current_openai = _snapshot_openai_values()
+    env_values, typed_env_values = split_config_sources(
+        OpenAIConfig,
+        CHATTOOL_ENV_DIR,
+        legacy_env_file=CHATTOOL_ENV_FILE,
+    )
     env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start opencode setup")
 
@@ -157,23 +161,23 @@ def setup_opencode(
     base_url = (
         base_url
         or env_config.get("base_url")
-        or saved_openai.get("base_url")
-        or current_openai.get("base_url")
         or existing.get("base_url")
+        or env_values.get("OPENAI_API_BASE")
+        or typed_env_values.get("OPENAI_API_BASE")
     )
     api_key = (
         api_key
         or env_config.get("api_key")
-        or saved_openai.get("api_key")
-        or current_openai.get("api_key")
         or existing.get("api_key")
+        or env_values.get("OPENAI_API_KEY")
+        or typed_env_values.get("OPENAI_API_KEY")
     )
     model = (
         model
         or env_config.get("model")
-        or saved_openai.get("model")
-        or current_openai.get("model")
         or existing.get("model")
+        or env_values.get("OPENAI_API_MODEL")
+        or typed_env_values.get("OPENAI_API_MODEL")
     )
 
     missing_required = not (base_url and api_key and model)

@@ -41,6 +41,18 @@ TEMPLATES = {
       SE_NODE_MAX_SESSIONS: ${SE_NODE_MAX_SESSIONS}
       SE_VNC_NO_PASSWORD: ${SE_VNC_NO_PASSWORD}
 """,
+    "nas": """services:
+  fileserver:
+    image: ${IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    volumes:
+      - "${RESOURCE_DIR}:/web"
+    ports:
+      - "${BIND_IP}:${PORT}:8080"
+    environment:
+      URL_PREFIX: ${URL_PREFIX}
+""",
 }
 
 ENV_DEFAULTS = {
@@ -75,15 +87,25 @@ ENV_DEFAULTS = {
         "SE_NODE_MAX_SESSIONS": "1",
         "SE_VNC_NO_PASSWORD": "1",
     },
+    "nas": {
+        "IMAGE": "",
+        "CONTAINER_NAME": "",
+        "RESTART_POLICY": "",
+        "RESOURCE_DIR": "",
+        "BIND_IP": "",
+        "PORT": "",
+        "URL_PREFIX": "",
+    },
 }
 
 ALIASES = {
     "chrominum": "chromium",
     "chromedriver": "headless-chromedriver",
     "headless-chromdriver": "headless-chromedriver",
+    "fileserver": "nas",
 }
 
-USAGE = "chattool docker <chromium|playwright|headless-chromedriver> <output_dir>"
+USAGE = "chattool docker <chromium|playwright|headless-chromedriver|nas> <output_dir>"
 
 
 def resolve_template(name):
@@ -98,7 +120,9 @@ def parse_set_values(items):
     values = {}
     for item in items:
         if "=" not in item:
-            raise click.ClickException(f"Invalid --set format: {item}, expected KEY=VALUE")
+            raise click.ClickException(
+                f"Invalid --set format: {item}, expected KEY=VALUE"
+            )
         key, value = item.split("=", 1)
         values[key.strip()] = value
     return values

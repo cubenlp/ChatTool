@@ -4,7 +4,12 @@ from pathlib import Path
 import click
 
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_checkbox, ask_select, create_choice, is_interactive_available
+from chattool.utils.tui import (
+    BACK_VALUE,
+    ask_checkbox_with_controls,
+    create_choice,
+    is_interactive_available,
+)
 
 logger = setup_logger("setup_alias")
 
@@ -64,7 +69,7 @@ def apply_alias_block(rc_path, block):
     end_idx = content.find(BLOCK_END)
     if begin_idx != -1 and end_idx != -1 and end_idx >= begin_idx:
         end_idx = end_idx + len(BLOCK_END)
-        if end_idx < len(content) and content[end_idx:end_idx + 1] == "\n":
+        if end_idx < len(content) and content[end_idx : end_idx + 1] == "\n":
             end_idx += 1
         content = content[:begin_idx] + content[end_idx:]
     content = content.rstrip("\n")
@@ -78,17 +83,6 @@ def apply_alias_block(rc_path, block):
 
 
 def select_aliases_interactively(default_selected):
-    preset = ask_select(
-        "Alias preset",
-        choices=["Select all", "Unselect all", "Custom"],
-    )
-    if preset == BACK_VALUE:
-        return BACK_VALUE
-    if preset == "Select all":
-        return list(ALIAS_MAP.keys())
-    if preset == "Unselect all":
-        return []
-
     choices = [
         create_choice(
             title=f"{name} => {cmd}",
@@ -97,10 +91,12 @@ def select_aliases_interactively(default_selected):
         )
         for name, cmd in ALIAS_MAP.items()
     ]
-    selected = ask_checkbox(
-        "Select aliases (Space to toggle, A select/unselect all)",
+    selected = ask_checkbox_with_controls(
+        "Select aliases",
         choices=choices,
-        instruction="",
+        default_values=default_selected,
+        instruction="(Use arrow keys to move, <space> to toggle, <a> to toggle all, <enter> to confirm)",
+        select_all_label="Select all aliases",
     )
     if selected == BACK_VALUE:
         return BACK_VALUE

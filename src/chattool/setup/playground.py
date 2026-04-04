@@ -116,9 +116,10 @@ def _render_agents_md(
             "- Workspace skills: `knowledge/skills/`\n\n"
             "## Core Principles\n\n"
             "- Default to regular-task mode. Use `reports/MM-DD-<task-name>/` and `playgrounds/<task-name>/`.\n"
-            "- When work belongs to a long-running series, switch to task-set mode under `reports/task-sets/<set-name>/` and `playgrounds/task-sets/<set-name>/`.\n"
+            "- When work belongs to a long-running series, switch to task-set mode under `reports/MM-DD-<set-name>/` and `playgrounds/task-sets/<set-name>/`.\n"
             "- Each regular task report directory should at least contain `TASK.md`, `progress.md`, and `SUMMARY.md`.\n"
             "- Task sets may keep a shared `progress.md` so the next task can continue directly.\n"
+            "- For each follow-up task inside a task set, it is recommended to put acceptance requirements at the top of that task's `TASK.md`, including whether unmet conditions require human review or may still be decided by the model. Keep this on the successor side so predecessor work stays undisturbed.\n"
             "- Multiple active tasks must stay isolated from one another.\n"
             f"- Skill practice logs live under `knowledge/skills/<name>/experience/` and use `{EXPERIENCE_LOG_FORMAT}`.\n"
             "- While executing a task, stay focused on that task only; only during wrap-up should you update shared progress and bridge to the next task.\n\n"
@@ -145,7 +146,7 @@ def _render_agents_md(
             "1. Read `AGENTS.md`, `MEMORY.md`, `CHATTOOL.md`, and the current task or task-set report.\n"
             "2. Default to regular-task mode unless the work is clearly one series of related tasks.\n"
             "3. For a regular task, work in `playgrounds/<task-name>/` and report in `reports/MM-DD-<task-name>/`.\n"
-            "4. For a task set, work in `playgrounds/task-sets/<set-name>/` and report in `reports/task-sets/<set-name>/tasks/MM-DD-<task-name>/`.\n"
+            "4. For a task set, work in `playgrounds/task-sets/<set-name>/` and report in `reports/MM-DD-<set-name>/<task-name>/`.\n"
             "5. During task execution, stay focused on the current task itself.\n"
             "6. During wrap-up, finish the current task report first; if it belongs to a task set, then update the task-set `progress.md` and connect to the next task.\n"
             "7. Update `knowledge/memory/`, `knowledge/skills/`, and ChatTool code or skills when durable improvements emerge.\n\n"
@@ -169,9 +170,10 @@ def _render_agents_md(
         "- 工作区 skills：`knowledge/skills/`\n\n"
         "## 核心原则\n\n"
         "- 默认使用常规任务模式，目录约定为 `reports/MM-DD-<task-name>/` 和 `playgrounds/<task-name>/`。\n"
-        "- 如果工作明显属于同一长期系列任务，则切到任务集模式，放在 `reports/task-sets/<set-name>/` 和 `playgrounds/task-sets/<set-name>/`。\n"
+        "- 如果工作明显属于同一长期系列任务，则切到任务集模式，放在 `reports/MM-DD-<set-name>/` 和 `playgrounds/task-sets/<set-name>/`。\n"
         "- 每个常规任务目录至少包含 `TASK.md`、`progress.md` 和 `SUMMARY.md`。\n"
         "- 任务集可以维护一个共享 `progress.md`，方便下一个任务直接衔接。\n"
+        "- 任务集中的每个后继任务，建议在该任务自己的 `TASK.md` 开头写清验收需求，并说明不满足时是否需要人类 review，还是允许模型自行决断。这个信息只放在后继任务侧，对前置任务透明，不干扰执行期。\n"
         "- 多个活跃任务之间必须保持隔离。\n"
         f"- Skill 练习日志放在 `knowledge/skills/<name>/experience/`，文件名使用 `{EXPERIENCE_LOG_FORMAT}`。\n"
         "- 执行任务时只专注当前任务；只有在收尾阶段才更新共享进展并衔接下一个任务。\n\n"
@@ -198,7 +200,7 @@ def _render_agents_md(
         "1. 先读 `AGENTS.md`、`MEMORY.md`、`CHATTOOL.md` 和当前任务或任务集报告。\n"
         "2. 默认使用常规任务模式；只有明确是一串相关任务时才切到任务集模式。\n"
         "3. 常规任务在 `playgrounds/<task-name>/` 工作，并在 `reports/MM-DD-<task-name>/` 汇报。\n"
-        "4. 任务集任务在 `playgrounds/task-sets/<set-name>/` 工作，并在 `reports/task-sets/<set-name>/tasks/MM-DD-<task-name>/` 汇报。\n"
+        "4. 任务集任务在 `playgrounds/task-sets/<set-name>/` 工作，并在 `reports/MM-DD-<set-name>/<task-name>/` 汇报。\n"
         "5. 任务执行中只专注当前任务本身。\n"
         "6. 收尾时先完成当前任务报告；如果它属于任务集，再更新任务集 `progress.md` 并衔接下一个任务。\n"
         "7. 当出现长期有效的改进时，更新 `knowledge/memory/`、`knowledge/skills/` 以及 ChatTool 代码或 skills。\n\n"
@@ -278,11 +280,11 @@ def _render_reports_readme(language: str) -> str:
     if language == "en":
         return (
             "# Reports\n\n"
-            "Default to regular-task mode: create one directory per task under `reports/MM-DD-<task-name>/`. For long-running initiatives, use `reports/task-sets/<set-name>/` with `TASKSET.md`, a shared `progress.md`, and task-specific directories under `tasks/`.\n"
+            "Default to regular-task mode: create one directory per task under `reports/MM-DD-<task-name>/`. For long-running initiatives, use `reports/MM-DD-<set-name>/` with `TASKSET.md`, a shared `progress.md`, and per-task subdirectories directly under the set directory.\n"
         )
     return (
         "# Reports\n\n"
-        "默认使用常规任务模式：按任务在 `reports/MM-DD-<task-name>/` 下建立目录。若是一组持续推进的大任务，则使用 `reports/task-sets/<set-name>/`，并维护 `TASKSET.md`、共享 `progress.md` 和 `tasks/` 下的子任务目录。\n"
+        "默认使用常规任务模式：按任务在 `reports/MM-DD-<task-name>/` 下建立目录。若是一组持续推进的大任务，则使用 `reports/MM-DD-<set-name>/`，并维护 `TASKSET.md`、共享 `progress.md` 和该目录下直接展开的子任务目录。\n"
     )
 
 
@@ -771,6 +773,14 @@ def _get_default_github_token() -> str | None:
     return None
 
 
+def _default_github_credential_path() -> str:
+    url = DEFAULT_CHATTOOL_REPO_URL
+    prefix = "https://github.com/"
+    if url.startswith(prefix):
+        return url[len(prefix) :]
+    return "cubenlp/ChatTool.git"
+
+
 def _configure_github_https_auth(token: str) -> None:
     logger.info("Configuring Git credential store for github.com")
     subprocess.run(
@@ -782,6 +792,7 @@ def _configure_github_https_auth(token: str) -> None:
     credential_input = (
         "protocol=https\n"
         "host=github.com\n"
+        f"path={_default_github_credential_path()}\n"
         "username=x-access-token\n"
         f"password={token}\n\n"
     )
@@ -829,8 +840,8 @@ def _maybe_setup_github_auth(interactive, can_prompt) -> bool:
             click.echo(stderr, err=True)
         raise click.Abort() from exc
 
-    logger.info("Configured GitHub HTTPS auth for github.com")
-    click.echo("Configured Git HTTPS auth for github.com.")
+    logger.info("Configured GitHub HTTPS auth for ChatTool repo")
+    click.echo("Configured Git HTTPS auth for the default ChatTool repo.")
     return True
 
 

@@ -15,7 +15,7 @@ CLI按功能分为几个命令组：
 - **`lark`**: 保留的飞书最小调试命令（`info` / `send` / `chat`）。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
@@ -83,9 +83,9 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 
 1. 显式参数：`--pam`（OpenAI API key）、`--base-url`、`--model`
 2. `-e/--env` 指定的 OpenAI 配置
-3. 当前保存的 `oai/openai` typed env 配置
-4. shell 环境变量
-5. 现有 `~/.codex/` 配置
+3. 现有 `~/.codex/` 配置
+4. 当前 shell 的系统环境变量
+5. `envs/OpenAI/.env` 的 typed 默认值
 6. 内置默认值
 
 可选覆盖 `base_url` 和默认模型：
@@ -139,6 +139,15 @@ chattool setup opencode -e work
 chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 ```
 
+解析顺序为：
+
+1. 显式参数：`--base-url`、`--api-key`、`--model`
+2. `-e/--env` 指定的 OpenAI 配置
+3. 现有 `~/.config/opencode/opencode.json` 配置
+4. 当前 shell 的系统环境变量
+5. `envs/OpenAI/.env` 的 typed 默认值
+6. 默认值
+
 ### 0.4 Lark CLI (`setup lark-cli`)
 
 安装官方 `lark-cli`，并把 ChatTool 当前保存的 Feishu 配置复用过去：
@@ -178,7 +187,21 @@ chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
 lark-cli auth login --recommend
 ```
 
-### 0.5 Playground (`setup playground`)
+### 0.5 Docker (`setup docker`)
+
+检查 Docker、Docker Compose 和当前用户的 docker 组状态：
+
+```bash
+chattool setup docker
+```
+
+默认只打印建议命令，不会直接执行 `sudo`。如需允许命令在确认后直接执行，显式传入：
+
+```bash
+chattool setup docker --sudo -i
+```
+
+### 0.6 Playground (`setup playground`)
 
 把一个目录快速初始化或更新为工作区：
 
@@ -203,7 +226,7 @@ lark-cli auth login --recommend
 - 优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，也就是 `chatenv cat -t gh` 对应的当前配置值
 - 交互模式下会提示是否配置，并允许输入新的 token；直接回车则保留当前配置值
 - 非交互模式下如果当前 `chatenv` 里已有 `GITHUB_ACCESS_TOKEN`，会自动写入 `git credential store`
-- 该步骤会执行 `git config --global credential.helper store`，并为 `https://github.com` 写入一份 PAT 凭据，方便后续 `git push` / `git fetch`
+- 该步骤会执行 `git config --global credential.helper store`，并为默认的 ChatTool GitHub 仓库写入一条 repo 级 PAT 凭据，方便后续 clone / push / fetch
 
 在目标空目录里直接执行：
 
@@ -267,7 +290,7 @@ chattool setup workspace ~/workspace/demo --language en
 - `playgrounds/`：默认按任务隔离的工作目录，也支持任务集共享工作根
 - `knowledge/`：长期知识沉淀
 
-默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。
+默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。对于后继 task，建议在它自己的 `TASK.md` 开头写清验收需求，并说明不满足时是否需要人类 review，还是允许模型自行决断。
 
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 
@@ -481,7 +504,31 @@ chattool gh pr-merge --number 123 --method squash --confirm --check
 
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
+
+# 为当前 GitHub 仓库配置 repo 级 HTTPS token
+chattool gh set-token --token github_pat_xxx
+
+# 如需顺手保存到 ChatTool GitHub 配置
+chattool gh set-token --token github_pat_xxx --save-env
+
+# 查看当前 token 对仓库的权限列表
+chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 ```
+
+`set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
+
+默认情况下，`set-token` 不会改写 `GITHUB_ACCESS_TOKEN`。只有显式传 `--save-env`，才会把 token 写入 `chatenv gh` 对应的 GitHub 配置。
+
+这里的 `ghp_xxx` / `github_pat_xxx` 都是 GitHub 的 Personal Access Token。来源是：
+
+1. GitHub `Settings`
+2. `Developer settings`
+3. `Personal access tokens`
+4. 创建 classic token，或 fine-grained token
+
+如果只是 clone / fetch / push 某个仓库，通常至少需要该仓库的 contents 读写权限；更细的 issue / PR / Actions 操作，再按需补权限。
+
+如果你想直接验证 token 对某个仓库的权限，可用 `repo-perms` 查看 GitHub 返回的 `permissions` 字段，例如 `pull` / `push` / `admin`。
 
 `pr-view` 和 `pr-check` 现在都会直接展示 PR 相对 base 分支的可合并状态：
 
@@ -696,8 +743,11 @@ chattool skill list
 # 安装单个 skill 到 Codex
 chattool skill install cert-manager -p codex
 
-# 安装到 Claude Code（可显式指定目标目录）
-chattool skill install cert-manager -p claude-code -d ~/.claude-code/skills
+# 安装到 Claude（可显式指定目标目录）
+chattool skill install cert-manager -p claude -d ~/.claude/skills
+
+# 安装到 OpenCode
+chattool skill install cert-manager -p opencode
 
 # 安装全部 skills
 chattool skill install -a -p codex
@@ -707,11 +757,16 @@ chattool skill install cert-manager -p codex --prefix
 ```
 
 **选项说明 (`install`):**
-- `-p/--platform`: 目标平台（`codex` / `claude-code`）。
+- `-p/--platform`: 目标平台（`codex` / `claude` / `opencode`）。
 - `-s/--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
 - `-d/--dest`: 目标目录（可覆盖平台默认目录）。
 - `--prefix`: 安装时为 skill 名称添加 `chattool-` 前缀（默认不加）。
-- `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖）。
+- `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖，输入 `a` 可允许后续全部覆盖）。
+
+交互模式下：
+- 省略 `-p` 时会先进入平台选择页
+- 省略 skill 名时会进入 skills 多选页
+- 多选页顶部提供一个可联动的“全选”项；在它上面按空格可切换全选/清空
 
 安装前会校验源 skill 的 `SKILL.md`。当前要求：
 - 文件开头必须包含 `---` 包裹的 YAML frontmatter

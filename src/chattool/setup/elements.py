@@ -6,6 +6,7 @@ from chattool.setup.chrome import setup_chrome_driver
 from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
 from chattool.setup.cc_connect import setup_cc_connect
+from chattool.setup.docker import setup_docker
 from chattool.setup.frp import setup_frp
 from chattool.setup.lark_cli import setup_lark_cli
 from chattool.setup.opencode import setup_opencode
@@ -43,6 +44,10 @@ def frp_setup(interactive):
 
 def nodejs_setup(interactive):
     setup_nodejs(interactive=interactive)
+
+
+def docker_setup(sudo, interactive):
+    setup_docker(interactive=interactive, use_sudo=sudo)
 
 
 def alias_setup(shell, dry_run):
@@ -142,6 +147,13 @@ SETUP_COMMAND_ELEMENTS = (
         callback=cc_connect_setup,
         options=(
             SetupOptionElement(
+                param_decls=("--sudo",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Allow setup docker to execute suggested sudo commands after confirmation.",
+                },
+            ),
+            SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
@@ -184,6 +196,27 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup Chrome and Chromedriver.",
         callback=chrome_setup,
         options=(
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="docker",
+        help="Check Docker environment and optionally run suggested sudo commands.",
+        callback=docker_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--sudo",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Allow setup docker to execute suggested sudo commands after confirmation.",
+                },
+            ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={

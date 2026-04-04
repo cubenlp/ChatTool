@@ -37,13 +37,14 @@ chattool docker --help
 
 预期过程和结果：
   1. 执行 `chattool docker <template> <output_dir>`，预期生成 compose 与 env 文件。
-  2. `template` 可选值为 `chromium`、`playwright`、`headless-chromedriver`。
+  2. `template` 可选值为 `chromium`、`playwright`、`headless-chromedriver`、`nas`。
   3. 当未提供参数且可交互时，预期进入交互式选择。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool docker chromium /tmp/docker-demo
+chattool docker nas /tmp/docker-nas
 chattool docker -i
 ```
 

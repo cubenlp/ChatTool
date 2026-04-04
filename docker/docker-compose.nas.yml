@@ -1,0 +1,11 @@
+services:
+  fileserver:
+    image: ${IMAGE}
+    container_name: ${CONTAINER_NAME}
+    restart: ${RESTART_POLICY}
+    volumes:
+      - "${RESOURCE_DIR}:/web"
+    ports:
+      - "${BIND_IP}:${PORT}:8080"
+    environment:
+      URL_PREFIX: ${URL_PREFIX}
