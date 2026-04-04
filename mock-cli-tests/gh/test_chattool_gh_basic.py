@@ -190,6 +190,31 @@ def test_chattool_gh_pr_merge_check_basic(monkeypatch, runner):
     assert not merge_calls
 
 
+def test_chattool_gh_repo_perms_basic(monkeypatch, runner):
+    monkeypatch.setattr(
+        gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool"
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "_github_api_get_json",
+        lambda repo, path, token, params=None: {
+            "full_name": "CubeNLP/ChatTool",
+            "private": True,
+            "visibility": "private",
+            "permissions": {"pull": True, "push": False, "admin": False},
+        },
+    )
+
+    result = runner.invoke(cli, ["gh", "repo-perms", "--repo", "CubeNLP/ChatTool"])
+
+    assert result.exit_code == 0
+    assert "Repo: CubeNLP/ChatTool" in result.output
+    assert "Permissions:" in result.output
+    assert "  - admin: False" in result.output
+    assert "  - pull: True" in result.output
+    assert "  - push: False" in result.output
+
+
 def test_chattool_gh_set_token_configures_repo_scoped_https_credential(
     tmp_path, monkeypatch, runner
 ):
@@ -290,6 +315,42 @@ def test_chattool_gh_set_token_rejects_non_github_remote(monkeypatch, runner):
     )
 
 
+def test_chattool_gh_set_token_prompts_for_missing_token_in_tty(monkeypatch, runner):
+    commands = []
+    inputs = []
+
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        commands.append(command)
+        inputs.append(input)
+
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\n")
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
+        return Result()
+
+    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.delenv("GITHUB_ACCESS_TOKEN", raising=False)
+    monkeypatch.setattr(gh_cli.GitHubConfig.GITHUB_ACCESS_TOKEN, "value", None)
+    monkeypatch.setattr(gh_cli, "is_interactive_available", lambda: True)
+    monkeypatch.setattr(
+        gh_cli,
+        "ask_text",
+        lambda message, default="", password=False, style=None: "ghp_prompted_token",
+    )
+
+    result = runner.invoke(cli, ["gh", "set-token"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    approve_input = inputs[commands.index(["git", "credential", "approve"])]
+    assert "password=ghp_prompted_token" in approve_input
+
+
 def test_chattool_gh_set_token_falls_back_to_other_github_remote(monkeypatch, runner):
     commands = []
     inputs = []
@@ -323,3 +384,37 @@ def test_chattool_gh_set_token_falls_back_to_other_github_remote(monkeypatch, ru
     assert "Configured Git HTTPS token for CubeNLP/ChatTool." in result.output
     approve_input = inputs[commands.index(["git", "credential", "approve"])]
     assert "path=CubeNLP/ChatTool.git" in approve_input
+
+
+def test_chattool_gh_set_token_keeps_remote_path_without_git_suffix(
+    monkeypatch, runner
+):
+    commands = []
+    inputs = []
+
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        commands.append(command)
+        inputs.append(input)
+
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\n")
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="https://github.com/Lean-zh/LeanUp\n")
+        return Result()
+
+    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+
+    result = runner.invoke(
+        cli,
+        ["gh", "set-token", "--token", "ghp_test_token"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    approve_input = inputs[commands.index(["git", "credential", "approve"])]
+    assert "path=Lean-zh/LeanUp\n" in approve_input

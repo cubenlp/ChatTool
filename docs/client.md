@@ -226,7 +226,7 @@ chattool setup docker --sudo -i
 - 优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，也就是 `chatenv cat -t gh` 对应的当前配置值
 - 交互模式下会提示是否配置，并允许输入新的 token；直接回车则保留当前配置值
 - 非交互模式下如果当前 `chatenv` 里已有 `GITHUB_ACCESS_TOKEN`，会自动写入 `git credential store`
-- 该步骤会执行 `git config --global credential.helper store`，并为 `https://github.com` 写入一份 PAT 凭据，方便后续 `git push` / `git fetch`
+- 该步骤会执行 `git config --global credential.helper store`，并为默认的 ChatTool GitHub 仓库写入一条 repo 级 PAT 凭据，方便后续 clone / push / fetch
 
 在目标空目录里直接执行：
 
@@ -510,6 +510,9 @@ chattool gh set-token --token github_pat_xxx
 
 # 如需顺手保存到 ChatTool GitHub 配置
 chattool gh set-token --token github_pat_xxx --save-env
+
+# 查看当前 token 对仓库的权限列表
+chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 ```
 
 `set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
@@ -524,6 +527,8 @@ chattool gh set-token --token github_pat_xxx --save-env
 4. 创建 classic token，或 fine-grained token
 
 如果只是 clone / fetch / push 某个仓库，通常至少需要该仓库的 contents 读写权限；更细的 issue / PR / Actions 操作，再按需补权限。
+
+如果你想直接验证 token 对某个仓库的权限，可用 `repo-perms` 查看 GitHub 返回的 `permissions` 字段，例如 `pull` / `push` / `admin`。
 
 `pr-view` 和 `pr-check` 现在都会直接展示 PR 相对 base 分支的可合并状态：
 

@@ -7,6 +7,7 @@ from typing import Optional
 
 from chattool.const import CHATTOOL_ENV_DIR
 from chattool.config.github import GitHubConfig
+from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
 
 _ENV_LOADED = False
 
@@ -522,6 +523,43 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
     click.echo(f"PR updated: {pr.html_url}")
 
 
+@cli.command(name="repo-perms")
+@click.option(
+    "--repo",
+    required=False,
+    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option(
+    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+)
+def repo_perms(repo, json_output, token):
+    """Show repository permissions for the current token."""
+    repo = _resolve_repo(repo)
+    payload = _github_api_get_json(repo, "", token)
+    result = {
+        "repo": payload.get("full_name") or repo,
+        "private": payload.get("private"),
+        "visibility": payload.get("visibility"),
+        "permissions": payload.get("permissions") or {},
+    }
+
+    if json_output:
+        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
+    click.echo(f"Repo: {result['repo']}")
+    click.echo(f"Private: {_format_optional(result['private'])}")
+    click.echo(f"Visibility: {_format_optional(result['visibility'])}")
+    click.echo("Permissions:")
+    permissions = result["permissions"]
+    if not permissions:
+        click.echo("  - none returned")
+        return
+    for key in sorted(permissions):
+        click.echo(f"  - {key}: {permissions[key]}")
+
+
 @cli.command(name="set-token")
 @click.option(
     "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
@@ -534,13 +572,18 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 def set_token(token, save_env):
     """Configure HTTPS credentials for the current GitHub repository."""
     resolved_token = _resolve_token(token)
+    if not resolved_token and is_interactive_available():
+        token_input = ask_text("github_token", password=True)
+        if token_input == BACK_VALUE:
+            raise click.Abort()
+        resolved_token = str(token_input).strip() or None
     if not resolved_token:
         raise click.ClickException(
             "Missing token. Provide --token, set GITHUB_ACCESS_TOKEN, or initialize it with `chatenv init -t gh`."
         )
 
-    repo = _resolve_repo_from_git_remote()
-    _configure_repo_https_token(repo, resolved_token)
+    repo, credential_path = _resolve_repo_from_git_remote()
+    _configure_github_https_token(credential_path, resolved_token)
     if save_env:
         _save_github_token_to_env(resolved_token)
     click.echo(f"Configured Git HTTPS token for {repo}.")
@@ -577,7 +620,7 @@ def _resolve_token(token: Optional[str]) -> Optional[str]:
     return token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
 
 
-def _resolve_repo_from_git_remote() -> str:
+def _resolve_repo_from_git_remote() -> tuple[str, str]:
     try:
         remotes_result = subprocess.run(
             ["git", "remote"],
@@ -617,16 +660,16 @@ def _resolve_repo_from_git_remote() -> str:
             continue
 
         remote_url = (result.stdout or "").strip()
-        repo = _parse_github_repo_from_remote(remote_url)
-        if repo:
-            return repo
+        parsed = _parse_github_repo_from_remote(remote_url)
+        if parsed:
+            return parsed
 
     raise click.ClickException(
         "Current repository does not have a recognizable GitHub remote."
     )
 
 
-def _parse_github_repo_from_remote(remote_url: str) -> Optional[str]:
+def _parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, str]]:
     url = (remote_url or "").strip()
     if not url:
         return None
@@ -640,16 +683,15 @@ def _parse_github_repo_from_remote(remote_url: str) -> Optional[str]:
     for prefix in prefixes:
         if url.startswith(prefix):
             path = url[len(prefix) :]
-            if path.endswith(".git"):
-                path = path[:-4]
+            normalized_path = path[:-4] if path.endswith(".git") else path
             parts = [part for part in path.split("/") if part]
             if len(parts) >= 2:
-                return f"{parts[0]}/{parts[1]}"
+                normalized_parts = [part for part in normalized_path.split("/") if part]
+                return f"{normalized_parts[0]}/{normalized_parts[1]}", path
     return None
 
 
-def _configure_repo_https_token(repo: str, token: str) -> None:
-    owner, name = _split_repo(repo)
+def _configure_github_https_token(path: str, token: str) -> None:
     try:
         subprocess.run(
             ["git", "config", "--global", "credential.helper", "store"],
@@ -666,7 +708,7 @@ def _configure_repo_https_token(repo: str, token: str) -> None:
         credential_input = (
             "protocol=https\n"
             "host=github.com\n"
-            f"path={owner}/{name}.git\n"
+            f"path={path}\n"
             "username=x-access-token\n"
             f"password={token}\n\n"
         )
@@ -680,7 +722,7 @@ def _configure_repo_https_token(repo: str, token: str) -> None:
     except subprocess.CalledProcessError as exc:
         stderr = (exc.stderr or "").strip()
         raise click.ClickException(
-            f"Failed to configure GitHub token for {repo}: {stderr or 'git credential command failed'}"
+            f"Failed to configure GitHub token for {path}: {stderr or 'git credential command failed'}"
         ) from exc
 
 

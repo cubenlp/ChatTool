@@ -124,6 +124,48 @@ run chattool gh set-token --token ghp_xxx
 assert credential path uses upstream github repo
 ```
 
+## 用例 7：TTY 下缺少 token 时应允许临时输入
+
+- 初始环境准备：
+  - 当前 git 仓库存在 GitHub remote。
+  - 不传 `--token`，也不设置 `GITHUB_ACCESS_TOKEN`。
+  - mock 交互输入一个临时 token。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh set-token`。
+  2. 如果当前终端可交互，CLI 应提示输入 token，而不是直接报错退出。
+  3. 输入后应继续完成当前仓库的 HTTPS credential 配置。
+
+参考执行脚本（伪代码）：
+
+```sh
+mock github remote and interactive token prompt
+run chattool gh set-token
+enter ghp_xxx
+assert git credential approve uses prompted token
+```
+
+## 用例 8：查看 token 对仓库的权限列表
+
+- 初始环境准备：
+  - fake GitHub repo API 返回固定的 `permissions` 字段。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh repo-perms --repo owner/repo --token <pat>`。
+  2. CLI 应输出该仓库的 `permissions` 字段，至少包括 `pull`、`push`、`admin`。
+
+参考执行脚本（伪代码）：
+
+```sh
+mock GET /repos/owner/repo payload with permissions
+run chattool gh repo-perms --repo owner/repo --token ghp_xxx
+assert output contains pull push admin permissions
+```
+
 ## 清理 / 回滚
 
 - 无需额外操作。

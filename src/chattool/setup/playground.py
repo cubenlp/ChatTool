@@ -771,6 +771,14 @@ def _get_default_github_token() -> str | None:
     return None
 
 
+def _default_github_credential_path() -> str:
+    url = DEFAULT_CHATTOOL_REPO_URL
+    prefix = "https://github.com/"
+    if url.startswith(prefix):
+        return url[len(prefix) :]
+    return "cubenlp/ChatTool.git"
+
+
 def _configure_github_https_auth(token: str) -> None:
     logger.info("Configuring Git credential store for github.com")
     subprocess.run(
@@ -782,6 +790,7 @@ def _configure_github_https_auth(token: str) -> None:
     credential_input = (
         "protocol=https\n"
         "host=github.com\n"
+        f"path={_default_github_credential_path()}\n"
         "username=x-access-token\n"
         f"password={token}\n\n"
     )
@@ -829,8 +838,8 @@ def _maybe_setup_github_auth(interactive, can_prompt) -> bool:
             click.echo(stderr, err=True)
         raise click.Abort() from exc
 
-    logger.info("Configured GitHub HTTPS auth for github.com")
-    click.echo("Configured Git HTTPS auth for github.com.")
+    logger.info("Configured GitHub HTTPS auth for ChatTool repo")
+    click.echo("Configured Git HTTPS auth for the default ChatTool repo.")
     return True
 
 
