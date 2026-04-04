@@ -5,7 +5,7 @@
 它不会把协议文件和知识沉淀塞进核心项目仓库里，而是在项目外围建立一层独立 workspace，用来承载：
 
 - 人类当前意图与阶段目标
-- 模型当前任务面
+- 多个任务并发时的任务隔离与汇报面
 - 跨 session 记忆
 - 任务产物
 - 可复用知识、报告与工具笔记
@@ -40,13 +40,12 @@ workspace/
 ├── AGENTS.md
 ├── MEMORY.md
 ├── setup.md
-├── task.md
 ├── thoughts/
 │   ├── README.md
 │   └── current.md
-├── tasks/
+├── reports/
 │   └── README.md
-├── playground/
+├── playgrounds/
 │   └── README.md
 └── knowledge/
     ├── README.md
@@ -54,8 +53,6 @@ workspace/
     ├── design/
     ├── memory/
     │   └── status/
-    ├── report/
-    │   └── README.md
     ├── skills/
     └── tools/
 ```
@@ -63,9 +60,16 @@ workspace/
 其中：
 
 - `thoughts/current.md`：人类当前阶段关注点
-- `task.md`：模型实时工作面
+- `reports/`：面向人的任务汇报区，按任务目录组织
+- `playgrounds/`：模型的任务隔离工作区，按任务目录组织
 - `MEMORY.md`：跨 session 记忆
-- `knowledge/report/`：主要的人类 review 界面
+- `knowledge/`：长期可复用知识沉淀区
+
+默认模板参考了仓库内 `workspace/agents.md` 的协作方式：
+
+- 对人的汇报统一进入 `reports/<task-name>/`
+- 每个任务目录至少包含 `TASK.md`、`progress.md`、`SUMMARY.md`
+- 多个任务并发时，在 `playgrounds/<task-name>/` 下各自隔离草稿、实验和中间产物
 
 ## 3. Profile
 

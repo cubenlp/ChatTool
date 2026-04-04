@@ -113,6 +113,8 @@ chattool setup workspace
 chattool setup workspace ~/workspace/demo
 ```
 
+默认生成的 workspace 采用按任务隔离的并发结构：人的汇报进入 `reports/<task-name>/`，模型工作落在 `playgrounds/<task-name>/`。
+
 ## 板块说明
 
 | 层次 | 板块 | 说明 |

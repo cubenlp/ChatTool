@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 
+### Changed
+- `chattool setup workspace` 默认生成的 workspace scaffold 现对齐仓库内 `workspace/agents.md` 的多任务协作约定：去掉单一 `task.md`，改为按任务隔离的 `reports/` 与 `playgrounds/` 结构，便于多个支持任务并发推进
+
 ## [6.5.0] - 2026-03-31
 
 ### Changed

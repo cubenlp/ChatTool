@@ -34,7 +34,7 @@ chattool setup opencode
 
 ### Workspace 协作脚手架
 
-使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架。
+使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架，默认采用 `reports/<task-name>/` 与 `playgrounds/<task-name>/` 的多任务并发结构。
 
 ```bash
 chattool setup workspace

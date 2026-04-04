@@ -110,7 +110,7 @@ chattool setup lark-cli -i
   5. 预期创建 `Memory/`、`skills/`、`scratch/`。
   6. 预期从 `ChatTool/skills/` 复制或更新 skills 到工作区 `skills/`，并给每个 skill 创建 `experience/` 目录。
   7. 预期 skills 同步只替换常规文件，不修改已有 `experience/` 内容。
-  8. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `AGENTS.md`、`MEMORY.md`、`setup.md`、`task.md`、`thoughts/`、`tasks/`、`playground/`、`knowledge/`。
+  8. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `AGENTS.md`、`MEMORY.md`、`setup.md`、`thoughts/`、`reports/`、`playgrounds/`、`knowledge/`，并默认采用按任务隔离的并发协作结构。
   9. 执行 `chattool setup workspace <workspace> --dry-run -I`，预期仅打印将创建的目录与文件，不实际写入。
 
 参考执行脚本（伪代码）：

@@ -238,7 +238,7 @@ my-playground/
 
 ### 0.6 Workspace (`setup workspace`)
 
-如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 任务面 + 知识沉淀”工作区，可以用：
+如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 多任务并发面 + 知识沉淀”工作区，可以用：
 
 ```bash
 chattool setup workspace
@@ -251,8 +251,10 @@ chattool setup workspace ~/workspace/demo --language en
 - `AGENTS.md`：模型主协议
 - `MEMORY.md`：跨 session 记忆
 - `setup.md`：后续 onboarding 入口
-- `task.md`：模型工作面
-- `thoughts/`、`tasks/`、`playground/`、`knowledge/`
+- `thoughts/`：人类当前关注点
+- `reports/`：按任务隔离的人类汇报目录
+- `playgrounds/`：按任务隔离的工作目录
+- `knowledge/`：长期知识沉淀
 
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 
