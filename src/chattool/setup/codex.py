@@ -107,6 +107,15 @@ def _snapshot_openai_values() -> dict[str, str | None]:
     }
 
 
+def _load_saved_openai_values() -> dict[str, str | None]:
+    current_values = _snapshot_openai_values()
+    try:
+        BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+        return _snapshot_openai_values()
+    finally:
+        _restore_openai_values(current_values)
+
+
 def _restore_openai_values(values: dict[str, str | None]) -> None:
     OpenAIConfig.OPENAI_API_KEY.value = values.get("openai_api_key")
     OpenAIConfig.OPENAI_API_BASE.value = values.get("base_url")

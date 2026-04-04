@@ -50,12 +50,44 @@ def test_setup_playground_creates_workspace_style_scaffold(tmp_path: Path):
     assert not (workspace_dir / "scratch").exists()
 
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    chattool_md = (workspace_dir / "CHATTOOL.md").read_text(encoding="utf-8")
     memory_md = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    assert "## 概览" in agents
     assert "reports/MM-DD-<task-name>/" in agents
     assert "reports/task-sets/<set-name>/" in agents
     assert "knowledge/skills/" in agents
-    assert "knowledge/memory/" in memory_md
+    assert "ChatTool Workspace 指南" in chattool_md
+    assert "长期笔记目录" in memory_md
 
     copied_skill = workspace_dir / "knowledge" / "skills" / "practice-make-perfact"
     assert copied_skill.exists()
     assert (copied_skill / "experience" / "README.md").exists()
+
+
+def test_setup_playground_english_language_creates_english_templates(tmp_path: Path):
+    workspace_dir = tmp_path / "playground-en"
+    source_dir = Path(__file__).resolve().parents[2]
+
+    result = _run_chattool_setup_playground(
+        [
+            "--workspace-dir",
+            str(workspace_dir),
+            "--chattool-source",
+            str(source_dir),
+            "--language",
+            "en",
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    chattool_md = (workspace_dir / "CHATTOOL.md").read_text(encoding="utf-8")
+    memory_md = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    assert "## Overview" in agents
+    assert "## 概览" not in agents
+    assert "# ChatTool Workspace Guide" in chattool_md
+    assert "# ChatTool Workspace 指南" not in chattool_md
+    assert "## Must-Read Notes" in memory_md
+    assert "## 必读事项" not in memory_md
+    assert "Language: en" in result.stdout

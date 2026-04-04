@@ -97,10 +97,11 @@ def lark_cli_setup(app_id, app_secret, brand, env, interactive):
     )
 
 
-def playground_setup(workspace_dir, chattool_source, interactive, force):
+def playground_setup(workspace_dir, chattool_source, language, interactive, force):
     setup_playground(
         workspace_dir=workspace_dir,
         chattool_source=chattool_source,
+        language=language,
         interactive=interactive,
         force=force,
     )
@@ -386,6 +387,15 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "default": None,
                     "help": "Git URL or local ChatTool repo path used for cloning/updating workspace/ChatTool.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--language",),
+                kwargs={
+                    "default": "zh",
+                    "type": click.Choice(["zh", "en"]),
+                    "show_default": True,
+                    "help": "Template language for generated playground files.",
                 },
             ),
             SetupOptionElement(

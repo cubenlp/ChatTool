@@ -58,6 +58,15 @@ def _snapshot_feishu_values() -> dict[str, str | None]:
     }
 
 
+def _load_saved_feishu_values() -> dict[str, str | None]:
+    current_values = _snapshot_feishu_values()
+    try:
+        BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+        return _snapshot_feishu_values()
+    finally:
+        _restore_feishu_values(current_values)
+
+
 def _restore_feishu_values(values: dict[str, str | None]) -> None:
     FeishuConfig.FEISHU_APP_ID.value = values.get("app_id")
     FeishuConfig.FEISHU_APP_SECRET.value = values.get("app_secret")
@@ -388,6 +397,6 @@ def setup_lark_cli(
     if env_ref:
         click.echo(f"Reused ChatTool Feishu config: {env_ref}")
     else:
-        click.echo("Reused ChatTool Feishu config: current effective Feishu settings")
+        click.echo("Reused ChatTool Feishu config: saved active Feishu config")
     click.echo("Next step: lark-cli auth login --recommend")
     click.echo("Optional Skills install: npx skills add larksuite/cli -y -g")

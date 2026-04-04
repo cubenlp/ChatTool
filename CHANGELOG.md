@@ -16,12 +16,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool skill install` 交互式缺少 skill 名时，现改为共享的多选控制页；顶部提供一个可联动的“全选”项，支持在同一页切换全选/清空，不再只支持单个 skill 或单独的 “Install all skills” 入口
 - `chattool setup alias` 的交互式 alias 选择现改为与 `skill install` 一致的共享多选控制页；去掉单独 preset 页，改为在同一页通过顶部“全选”项切换全选/清空
 - `chattool setup codex` / `chattool setup opencode` / `chattool setup lark-cli` 现在统一修正为 `显式参数 > -e/--env > 工具默认配置位置 > 系统环境变量 > typed .env > 默认值`，避免已有工具配置被当前 shell 中的 OpenAI / Feishu 默认值意外覆盖
+- `Publish Package` workflow 现在会用内联 Python 读取 `src/chattool/__init__.py` 中的 `__version__`，避免 release tag 校验被单引号/双引号差异误判
+- `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 - `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖
 - 新增 `chattool setup docker`，用于检查 Docker / Docker Compose / docker 组状态；涉及 `sudo` 的建议命令默认只打印，显式传入 `--sudo` 后才允许在确认后执行
+- `chattool setup playground` 现支持 `--language zh|en`；默认生成中文的 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md` 和相关 README，也可显式切到英文模板
 
 ### Changed
 - `chattool setup workspace` 默认生成的 workspace scaffold 现改为按任务隔离的多任务协作约定：去掉单一 `task.md`，默认使用 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；对于长期系列工作，可升级为 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/` 并维护任务集级进展

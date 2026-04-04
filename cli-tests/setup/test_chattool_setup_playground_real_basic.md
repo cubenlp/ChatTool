@@ -19,11 +19,22 @@
 
 预期过程和结果：
   1. 执行 `chattool setup playground --workspace-dir <workspace-dir> --chattool-source <repo-dir> -I`，预期命令成功。
-  2. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`、`reports/README.md`、`playgrounds/README.md`、`knowledge/README.md`。
+  2. 预期默认生成中文的 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`、`reports/README.md`、`playgrounds/README.md`、`knowledge/README.md`。
   3. 预期在目标目录下 clone `ChatTool/`。
   4. 预期 `knowledge/memory/`、`knowledge/skills/`、`playgrounds/scratch/` 存在。
   5. 预期 skills 从 clone 出来的 `ChatTool/skills/` 同步到 `knowledge/skills/`，并给每个 skill 创建 `experience/README.md`。
   6. 预期不再创建旧的顶层 `Memory/`、`skills/`、`scratch/`。
+
+## 用例 2：显式英文语言生成英文模板
+
+- 初始环境准备：
+  - 创建空临时目录作为 workspace 根目录。
+  - 使用当前本地 ChatTool 仓库作为 `--chattool-source`。
+
+预期过程和结果：
+  1. 执行 `chattool setup playground --workspace-dir <workspace-dir> --chattool-source <repo-dir> --language en -I`，预期命令成功。
+  2. 预期 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md` 为英文模板。
+  3. 预期命令输出里带有 `Language: en`。
 
 参考执行脚本（伪代码）：
 
@@ -33,4 +44,8 @@ assert new scaffold files exist
 assert ChatTool repo exists
 assert knowledge/skills contains copied skills with experience readmes
 assert legacy top-level Memory/ skills/ scratch/ do not exist
+
+chattool setup playground --workspace-dir /tmp/my-playground-en --chattool-source /path/to/ChatTool --language en -I
+assert AGENTS.md CHATTOOL.md MEMORY.md are English
+assert output contains Language: en
 ```
