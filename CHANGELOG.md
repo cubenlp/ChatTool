@@ -27,7 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup playground` 现支持 `--language zh|en`；默认生成中文的 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md` 和相关 README，也可显式切到英文模板
 
 ### Changed
-- `chattool setup workspace` 默认生成的 workspace scaffold 现改为按任务隔离的多任务协作约定：去掉单一 `task.md`，默认使用 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；对于长期系列工作，可升级为 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/` 并维护任务集级进展
+- `chattool setup workspace` / `chattool setup playground` 的任务集汇报结构现统一为 `reports/MM-DD-<set-name>/`：集合目录下直接维护 `TASKSET.md`、`progress.md` 与各子任务目录，不再额外套一层 `task-sets/` 或 `tasks/`
 - `chattool setup playground` 的外层工作区结构现对齐 `setup workspace`：默认使用 `reports/`、`playgrounds/`、`knowledge/`，并把工作区 skills 副本收口到 `knowledge/skills/`；同时继续保留 `ChatTool/` 仓库和 skills 同步逻辑
 - `chattool setup workspace` 与 `chattool setup playground` 现移除全局 `thoughts/` 面，避免并发任务时出现一个共享的“当前关注点”入口；相关角色统一收口到各任务或任务集的 `reports/` 结构
 

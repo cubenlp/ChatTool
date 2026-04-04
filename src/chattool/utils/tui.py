@@ -378,8 +378,7 @@ def ask_checkbox_with_controls(
                     if selected
                     else CHECKBOX_UNSELECTED_INDICATOR
                 )
-                indicator_style = "class:selected" if selected else "class:text"
-                tokens.append((indicator_style, f"{indicator} "))
+                tokens.append(("class:text", f"{indicator} "))
                 title = (
                     choice.title
                     if isinstance(choice.title, str)

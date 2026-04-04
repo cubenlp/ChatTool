@@ -290,7 +290,7 @@ chattool setup workspace ~/workspace/demo --language en
 - `playgrounds/`：默认按任务隔离的工作目录，也支持任务集共享工作根
 - `knowledge/`：长期知识沉淀
 
-默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。
+默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。对于后继 task，建议在它自己的 `TASK.md` 开头写清验收需求，并说明不满足时是否需要人类 review，还是允许模型自行决断。
 
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 

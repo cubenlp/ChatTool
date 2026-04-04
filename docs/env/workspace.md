@@ -64,8 +64,9 @@ workspace/
 默认模板采用按任务隔离的并发协作方式：
 
 - 默认先使用常规任务模式：对人的汇报进入 `reports/MM-DD-<task-name>/`，工作目录使用 `playgrounds/<task-name>/`
-- 如果是一组围绕同一目标持续推进的大任务，则使用任务集：`reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/`
-- 任务集可维护全局 `progress.md`，并在 `tasks/` 下拆分多个具体任务
+- 如果是一组围绕同一目标持续推进的大任务，则使用任务集：`reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`
+- 任务集可维护全局 `progress.md`，并在该目录下直接拆分多个具体任务子目录
+- 对于任务集中的每个后继任务，建议在该任务自己的 `TASK.md` 开头写明验收需求，并说明验收不符合时是否需要人类 review，还是允许模型自行决断；这类信息只放在后继任务侧，不干扰前置任务执行
 - 任务执行过程中只专注当前任务；每次收尾后，若属于任务集，再更新任务集进展并衔接下一个任务
 
 ## 3. Profile

@@ -19,7 +19,7 @@
 预期过程和结果：
   1. 执行 `chattool setup workspace <workspace-dir> -I`，预期命令成功。
   2. 预期生成 `AGENTS.md`、`MEMORY.md`、`setup.md`、`reports/README.md`、`playgrounds/README.md`、`knowledge/README.md`。
-  3. `AGENTS.md` 默认应包含中文的多任务协作架构，并同时说明常规任务 `reports/MM-DD-<task-name>/` / `playgrounds/<task-name>/` 与任务集 `reports/task-sets/<set-name>/` / `playgrounds/task-sets/<set-name>/` 规则。
+  3. `AGENTS.md` 默认应包含中文的多任务协作架构，并同时说明常规任务 `reports/MM-DD-<task-name>/` / `playgrounds/<task-name>/` 与任务集 `reports/MM-DD-<set-name>/` / `playgrounds/task-sets/<set-name>/` 规则；对后继任务，应建议在其 `TASK.md` 顶部写清验收需求与 review 策略。
   4. `setup.md` 应包含 Discover / Ask / Adapt / Initialise / Create first task lanes / Done 六步清单，并明确默认先创建常规任务，只有长期系列任务才改用任务集。
 
 参考执行脚本（伪代码）：
