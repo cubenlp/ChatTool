@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chatenv init` / `chatenv new` 更新 active typed env 后，`chatenv cat` 与运行时配置加载现在会优先读取 `envs/<Config>/.env`，不再被已有 shell 环境变量意外覆盖，避免交互里刚保存的新值看起来“没有生效”
 - `chatenv new` 现在收紧为纯 profile 创建语义：无论直接传 profile 名还是交互式补参，都只写入 `envs/<Config>/<profile>.env`，不再顺手覆盖当前 active `.env`
 - `chatskill install` / `chattool skill install` 现在在交互终端里缺少 skill 名时会进入选择页，而不是直接因缺参数中断；非交互环境仍保持显式报错
+- `chattool skill install` 现在支持 `opencode` 平台，默认安装到 `~/.config/opencode/skills/`；`claude` 平台名同步收口为 `claude`，不再继续暴露 `claude-code`
+- `chattool skill install` 覆盖已存在 skill 时，交互提示现在支持输入 `a` 一次允许本轮后续全部覆盖，避免 `--all` 时逐个确认
+- `chattool skill install` 在交互终端里省略 `-p/--platform` 时，现会先进入平台选择页，并把 `codex` 作为默认候选放在首位；非交互环境仍默认回退到 `codex`
+- `chattool skill install` 交互式缺少 skill 名时，现改为共享的多选控制页；顶部提供一个可联动的“全选”项，支持在同一页切换全选/清空，不再只支持单个 skill 或单独的 “Install all skills” 入口
+- `chattool setup alias` 的交互式 alias 选择现改为与 `skill install` 一致的共享多选控制页；去掉单独 preset 页，改为在同一页通过顶部“全选”项切换全选/清空
 
 ### Added
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退

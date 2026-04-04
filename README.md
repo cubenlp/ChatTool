@@ -135,7 +135,7 @@ chattool explore arxiv get 1706.03762 -v
 | 环境安装 | `chattool setup codex/claude/lark-cli` | 安装 Codex / Claude Code / 官方 lark-cli 并写入配置 |
 | Playground | `chattool setup playground` | 初始化带 `ChatTool/` 仓库的协作工作区，外层结构对齐 `reports/`、`playgrounds/`、`knowledge/`，并可复用 GitHub token 配置 Git HTTPS 鉴权 |
 | Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架，默认采用 `reports/` 和 `playgrounds/` 的多任务并发结构 |
-| Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude Code |
+| Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
 
 ## 文档

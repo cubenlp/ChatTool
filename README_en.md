@@ -168,7 +168,7 @@ chattool image siliconflow generate "a cute dog" -o dog.png
 | Setup | `chattool setup codex` | Install Codex CLI and write config (supports `--base-url` / `--model`) |
 | Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with task-isolated `reports/` and `playgrounds/` directories |
 | Playground | `chattool setup playground` | Create a ChatTool-centered collaboration workspace with `ChatTool/`, `reports/`, `playgrounds/`, and `knowledge/skills/` |
-| Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude Code |
+| Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 
 ## License

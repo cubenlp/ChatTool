@@ -686,8 +686,11 @@ chattool skill list
 # 安装单个 skill 到 Codex
 chattool skill install cert-manager -p codex
 
-# 安装到 Claude Code（可显式指定目标目录）
-chattool skill install cert-manager -p claude-code -d ~/.claude-code/skills
+# 安装到 Claude（可显式指定目标目录）
+chattool skill install cert-manager -p claude -d ~/.claude/skills
+
+# 安装到 OpenCode
+chattool skill install cert-manager -p opencode
 
 # 安装全部 skills
 chattool skill install -a -p codex
@@ -697,11 +700,16 @@ chattool skill install cert-manager -p codex --prefix
 ```
 
 **选项说明 (`install`):**
-- `-p/--platform`: 目标平台（`codex` / `claude-code`）。
+- `-p/--platform`: 目标平台（`codex` / `claude` / `opencode`）。
 - `-s/--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
 - `-d/--dest`: 目标目录（可覆盖平台默认目录）。
 - `--prefix`: 安装时为 skill 名称添加 `chattool-` 前缀（默认不加）。
-- `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖）。
+- `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖，输入 `a` 可允许后续全部覆盖）。
+
+交互模式下：
+- 省略 `-p` 时会先进入平台选择页
+- 省略 skill 名时会进入 skills 多选页
+- 多选页顶部提供一个可联动的“全选”项；在它上面按空格可切换全选/清空
 
 安装前会校验源 skill 的 `SKILL.md`。当前要求：
 - 文件开头必须包含 `---` 包裹的 YAML frontmatter

@@ -10,7 +10,13 @@ from pathlib import Path
 import click
 
 from chattool.cli_warnings import install_cli_warning_filters
-from chattool.utils.tui import BACK_VALUE, ask_select, create_choice, is_interactive_available
+from chattool.utils.tui import (
+    BACK_VALUE,
+    ask_checkbox_with_controls,
+    ask_select,
+    create_choice,
+    is_interactive_available,
+)
 
 install_cli_warning_filters()
 
@@ -34,18 +40,26 @@ def _build_platforms() -> dict[str, PlatformSpec]:
             skills_subdir="skills",
             allow_create_if_missing=True,
         ),
-        "claude-code": PlatformSpec(
-            name="claude-code",
-            home_env_vars=("CLAUDE_CODE_HOME", "CLAUDE_HOME"),
-            default_homes=(home / ".claude-code", home / ".claude"),
+        "claude": PlatformSpec(
+            name="claude",
+            home_env_vars=("CLAUDE_HOME",),
+            default_homes=(home / ".claude",),
             skills_subdir="skills",
             allow_create_if_missing=False,
+        ),
+        "opencode": PlatformSpec(
+            name="opencode",
+            home_env_vars=("OPENCODE_HOME",),
+            default_homes=(home / ".config" / "opencode",),
+            skills_subdir="skills",
+            allow_create_if_missing=True,
         ),
     }
 
 
 PLATFORMS = _build_platforms()
 REQUIRED_FRONTMATTER_KEYS = ("name", "description")
+PLATFORM_CHOICES = tuple(sorted(PLATFORMS.keys()))
 
 
 def _find_repo_skills_dir() -> Path | None:
@@ -80,7 +94,9 @@ def _resolve_platform(name: str | None) -> PlatformSpec:
     platform_name = (name or os.getenv("CHATTOOL_SKILL_PLATFORM") or "codex").strip()
     if platform_name not in PLATFORMS:
         supported = ", ".join(sorted(PLATFORMS))
-        raise click.UsageError(f"Unknown platform: {platform_name}. Supported: {supported}")
+        raise click.UsageError(
+            f"Unknown platform: {platform_name}. Supported: {supported}"
+        )
     return PLATFORMS[platform_name]
 
 
@@ -105,7 +121,9 @@ def _resolve_dest_dir(platform: PlatformSpec, dest: str | None) -> Path:
         env_list = ", ".join(platform.home_env_vars)
         click.echo(f"Could not determine {platform.name} home directory.", err=True)
         if env_list:
-            click.echo(f"Set {env_list} or pass --dest to specify a skills folder.", err=True)
+            click.echo(
+                f"Set {env_list} or pass --dest to specify a skills folder.", err=True
+            )
         else:
             click.echo("Pass --dest to specify a skills folder.", err=True)
         raise click.Abort()
@@ -171,17 +189,51 @@ def _validate_skill_dir(skill_dir: Path) -> list[str]:
     return []
 
 
-def _prompt_install_target(available: list[str]) -> tuple[str | None, bool]:
+def _prompt_install_targets(available: list[str]) -> list[str] | str:
     choices = [
-        create_choice(title="Install all skills", value="__all__"),
-        *[create_choice(title=skill_name, value=skill_name) for skill_name in available],
+        create_choice(title=skill_name, value=skill_name) for skill_name in available
     ]
-    selected = ask_select("Select a skill to install:", choices=choices)
+    selected = ask_checkbox_with_controls(
+        "Select skills to install",
+        choices=choices,
+        default_values=available,
+        instruction="(Use arrow keys to move, <space> to toggle, <a> to toggle all, <enter> to confirm)",
+        select_all_label="Select all skills",
+    )
+    if selected == BACK_VALUE:
+        return BACK_VALUE
+    return list(selected)
+
+
+def _prompt_platform() -> str:
+    choices = [
+        create_choice(title="codex", value="codex"),
+        create_choice(title="claude", value="claude"),
+        create_choice(title="opencode", value="opencode"),
+    ]
+    selected = ask_select("Select a platform (default: codex):", choices=choices)
     if selected == BACK_VALUE:
         raise click.Abort()
-    if selected == "__all__":
-        return None, True
-    return str(selected), False
+    return str(selected)
+
+
+def _prompt_overwrite_action(skill_name: str) -> str:
+    while True:
+        answer = click.prompt(
+            f"Skill already exists: {skill_name}. Overwrite? [y/N/a]",
+            default="",
+            show_default=False,
+            prompt_suffix=" ",
+            err=True,
+        )
+        normalized = answer.strip().lower()
+        if normalized in {"", "n", "no"}:
+            return "skip"
+        if normalized in {"y", "yes"}:
+            return "overwrite"
+        if normalized == "a":
+            return "all"
+        click.echo("Please enter y, n, or a.", err=True)
 
 
 @click.group(name="skill")
@@ -192,21 +244,42 @@ def skill_cli():
 
 @skill_cli.command(name="install")
 @click.argument("name", required=False)
-@click.option("-a", "--all", "install_all", is_flag=True, help="Install all skills from source directory.")
+@click.option(
+    "-a",
+    "--all",
+    "install_all",
+    is_flag=True,
+    help="Install all skills from source directory.",
+)
 @click.option(
     "-p",
     "--platform",
     "platform_name",
-    type=click.Choice(sorted(PLATFORMS.keys())),
-    default=os.getenv("CHATTOOL_SKILL_PLATFORM", "codex"),
-    show_default=True,
-    help="Target platform for skill installation.",
+    type=click.Choice(PLATFORM_CHOICES),
+    default=None,
+    help="Target platform for skill installation (codex / claude / opencode). Omit in TTY to choose interactively; non-interactive mode defaults to codex.",
 )
-@click.option("-s", "--source", "source_dir", type=click.Path(file_okay=False, dir_okay=True), help="Source skills directory.")
-@click.option("-d", "--dest", "dest_dir", type=click.Path(file_okay=False, dir_okay=True), help="Destination skills directory.")
-@click.option("--prefix", is_flag=True, help="Prefix installed skill names with chattool-.")
+@click.option(
+    "-s",
+    "--source",
+    "source_dir",
+    type=click.Path(file_okay=False, dir_okay=True),
+    help="Source skills directory.",
+)
+@click.option(
+    "-d",
+    "--dest",
+    "dest_dir",
+    type=click.Path(file_okay=False, dir_okay=True),
+    help="Destination skills directory.",
+)
+@click.option(
+    "--prefix", is_flag=True, help="Prefix installed skill names with chattool-."
+)
 @click.option("-f", "--force", is_flag=True, help="Overwrite existing skills.")
-def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix, force):
+def install_skill(
+    name, install_all, platform_name, source_dir, dest_dir, prefix, force
+):
     if name and install_all:
         click.echo("Cannot use a skill name together with --all.", err=True)
         raise click.Abort()
@@ -214,7 +287,10 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
     source = _resolve_source_dir(source_dir)
     if not source or not source.exists():
         click.echo("Skills source directory not found.", err=True)
-        click.echo("Use --source or set CHATTOOL_SKILLS_DIR to point at the skills folder.", err=True)
+        click.echo(
+            "Use --source or set CHATTOOL_SKILLS_DIR to point at the skills folder.",
+            err=True,
+        )
         raise click.Abort()
 
     available = _list_skill_dirs(source)
@@ -222,14 +298,25 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
         click.echo(f"No skills found in {source}", err=True)
         raise click.Abort()
 
+    if not platform_name:
+        env_platform = os.getenv("CHATTOOL_SKILL_PLATFORM")
+        if env_platform:
+            platform_name = env_platform
+        elif is_interactive_available():
+            platform_name = _prompt_platform()
+        else:
+            platform_name = "codex"
+
     if not name and not install_all:
         if is_interactive_available():
-            name, install_all = _prompt_install_target(available)
+            selected_targets = _prompt_install_targets(available)
+            if selected_targets == BACK_VALUE:
+                raise click.Abort()
+            targets = list(selected_targets)
         else:
             click.echo("Missing skill name. Use --all to install all skills.", err=True)
             raise click.Abort()
-
-    if install_all:
+    elif install_all:
         targets = available
     else:
         if name not in available:
@@ -239,6 +326,10 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
                 click.echo(f"  - {item}", err=True)
             raise click.Abort()
         targets = [name]
+
+    if not targets:
+        click.echo("No skills selected.", err=True)
+        raise click.Abort()
 
     invalid_targets = []
     for skill_name in targets:
@@ -260,15 +351,23 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
 
     installed = []
     skipped = []
+    overwrite_all = force
     for skill_name in targets:
         src_path = source / skill_name
         dest_name = f"chattool-{skill_name}" if prefix else skill_name
         dest_path = dest / dest_name
         if dest_path.exists():
-            if not force:
-                if sys.stdin.isatty() and sys.stdout.isatty():
-                    if not click.confirm(f"Skill already exists: {dest_name}. Overwrite?", default=False):
+            if not overwrite_all:
+                if is_interactive_available():
+                    action = _prompt_overwrite_action(dest_name)
+                    if action == "skip":
                         skipped.append(dest_name)
+                        continue
+                    if action == "all":
+                        overwrite_all = True
+                        shutil.rmtree(dest_path)
+                        shutil.copytree(src_path, dest_path)
+                        installed.append(dest_name)
                         continue
                 else:
                     skipped.append(dest_name)
@@ -288,12 +387,20 @@ def install_skill(name, install_all, platform_name, source_dir, dest_dir, prefix
 
 
 @skill_cli.command(name="list")
-@click.option("--source", "source_dir", type=click.Path(file_okay=False, dir_okay=True), help="Source skills directory.")
+@click.option(
+    "--source",
+    "source_dir",
+    type=click.Path(file_okay=False, dir_okay=True),
+    help="Source skills directory.",
+)
 def list_skills(source_dir):
     source = _resolve_source_dir(source_dir)
     if not source or not source.exists():
         click.echo("Skills source directory not found.", err=True)
-        click.echo("Use --source or set CHATTOOL_SKILLS_DIR to point at the skills folder.", err=True)
+        click.echo(
+            "Use --source or set CHATTOOL_SKILLS_DIR to point at the skills folder.",
+            err=True,
+        )
         raise click.Abort()
 
     skills = _list_skill_dirs(source)
