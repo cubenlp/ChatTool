@@ -132,7 +132,7 @@ chattool explore arxiv get 1706.03762 -v
 | 网络扫描 | `chattool network` | 扫描局域网主机和端口 |
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
-| 环境安装 | `chattool setup codex/claude/opencode/happy/lark-cli/docker` | 安装或检查常用 CLI / Docker 环境，并在确认后执行建议的系统命令 |
+| 环境安装 | `chattool setup codex/claude/opencode/happy/lark-cli/docker` | 安装或检查常用 CLI / Docker 环境；其中 `setup happy` 是 Happy CLI + relay/workspace 的 bootstrap，而不是内置 Happy server |
 | Playground | `chattool setup playground` | 初始化带 `ChatTool/` 仓库的协作工作区，默认生成中文外层模板，外层结构对齐 `reports/`、`playgrounds/`、`knowledge/`，支持 `--language en`，并可复用 GitHub token 配置 Git HTTPS 鉴权 |
 | Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架，默认采用 `reports/` 和 `playgrounds/` 的多任务并发结构 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |

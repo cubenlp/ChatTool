@@ -218,6 +218,11 @@ chattool setup happy --write-env
 - 准备 OpenAI-compatible relay 的 `base_url/api_key/model`
 - 输出后续推荐命令：`setup codex`、`setup opencode`、`setup workspace`、`happy auth login`
 
+支持两种接入方式：
+
+- 官方模式：沿用 Happy 官方 `server/webapp`
+- 自建模式：显式传 `--server-url` / `--webapp-url`，并可同时配置你自己的 OpenAI-compatible relay
+
 ### 0.7 Playground (`setup playground`)
 
 把一个目录快速初始化或更新为工作区：
