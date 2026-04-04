@@ -32,11 +32,14 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert "## 架构" in agents
     assert "## 知识写入规则" in agents
     assert "reports/MM-DD-<task-name>/" in agents
+    assert "reports/task-sets/<set-name>/" in agents
     assert "playgrounds/<task-name>/" in agents
+    assert "playgrounds/task-sets/<set-name>/" in agents
     assert "knowledge/memory/YYYY-MM-DD-status.md" in agents
     assert "1. **Discover**" in setup_md
     assert "6. **Done**" in setup_md
     assert "Create first task lanes" in setup_md
+    assert "默认创建一个常规任务" in setup_md
 
 
 def test_setup_workspace_english_language_creates_english_templates(tmp_path: Path):

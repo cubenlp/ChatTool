@@ -252,9 +252,11 @@ chattool setup workspace ~/workspace/demo --language en
 - `MEMORY.md`：跨 session 记忆
 - `setup.md`：后续 onboarding 入口
 - `thoughts/`：人类当前关注点
-- `reports/`：按任务隔离的人类汇报目录
-- `playgrounds/`：按任务隔离的工作目录
+- `reports/`：默认按任务隔离的人类汇报目录，也支持任务集目录
+- `playgrounds/`：默认按任务隔离的工作目录，也支持任务集共享工作根
 - `knowledge/`：长期知识沉淀
+
+默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。
 
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 

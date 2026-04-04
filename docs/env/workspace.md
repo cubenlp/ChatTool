@@ -60,16 +60,17 @@ workspace/
 其中：
 
 - `thoughts/current.md`：人类当前阶段关注点
-- `reports/`：面向人的任务汇报区，按任务目录组织
-- `playgrounds/`：模型的任务隔离工作区，按任务目录组织
+- `reports/`：面向人的任务汇报区，默认按常规任务目录组织，也支持任务集
+- `playgrounds/`：模型的任务隔离工作区，默认按任务目录组织，也支持任务集共享工作根
 - `MEMORY.md`：跨 session 记忆
 - `knowledge/`：长期可复用知识沉淀区
 
 默认模板采用按任务隔离的并发协作方式：
 
-- 对人的汇报统一进入 `reports/MM-DD-<task-name>/`
-- 每个任务目录至少包含 `TASK.md`、`progress.md`、`SUMMARY.md`
-- 多个任务并发时，在 `playgrounds/<task-name>/` 下各自隔离草稿、实验和中间产物
+- 默认先使用常规任务模式：对人的汇报进入 `reports/MM-DD-<task-name>/`，工作目录使用 `playgrounds/<task-name>/`
+- 如果是一组围绕同一目标持续推进的大任务，则使用任务集：`reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/`
+- 任务集可维护全局 `progress.md`，并在 `tasks/` 下拆分多个具体任务
+- 任务执行过程中只专注当前任务；每次收尾后，若属于任务集，再更新任务集进展并衔接下一个任务
 
 ## 3. Profile
 
