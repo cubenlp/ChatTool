@@ -190,6 +190,8 @@ BaseEnvConfig.print_config()
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 - **GitHub**: `GITHUB_ACCESS_TOKEN`, `GITHUB_DEFAULT_REPO`
 
+说明：`GITHUB_ACCESS_TOKEN` 是 ChatTool 的 GitHub 全局默认 token；如果你只想给当前 git 仓库配置独立的 HTTPS token，优先使用 `chattool gh set-token`，它会按仓库路径写入本地 git credential，而不是覆盖全局默认 token。
+
 其中飞书相关有两个额外约定：
 
 - `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` 提供默认用户发送目标。

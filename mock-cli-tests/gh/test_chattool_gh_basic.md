@@ -61,6 +61,48 @@ chattool gh pr-check --number 1
 chattool gh pr-merge --number 1 --method merge --confirm --check
 ```
 
+## 用例 4：为当前 GitHub 仓库配置 HTTPS token
+
+- 初始环境准备：
+  - 在临时目录初始化一个 git 仓库。
+  - `origin` 指向一个 GitHub 仓库 URL。
+  - mock 掉 `git config --global credential.helper store` 与 `git credential approve`。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh set-token --token <pat>`。
+  2. CLI 应从当前仓库 remote 自动解析出 `owner/name`。
+  3. 应以带 path 的 GitHub HTTPS 凭据形式写入该仓库的 token，仅针对当前仓库。
+
+参考执行脚本（伪代码）：
+
+```sh
+init temp git repo with github origin
+run chattool gh set-token --token ghp_xxx
+assert git credential approve receives protocol/host/path/username/password
+```
+
+## 用例 5：当前仓库不是 GitHub remote 时拒绝配置
+
+- 初始环境准备：
+  - 在临时目录初始化一个 git 仓库。
+  - `origin` 指向非 GitHub URL。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh set-token --token <pat>`。
+  2. CLI 应报错说明当前仓库没有可识别的 GitHub remote。
+
+参考执行脚本（伪代码）：
+
+```sh
+init temp git repo with non-github origin
+run chattool gh set-token --token ghp_xxx
+assert command fails with non-github remote message
+```
+
 ## 清理 / 回滚
 
 - 无需额外操作。

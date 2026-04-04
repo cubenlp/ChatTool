@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -83,8 +84,12 @@ def _install_fake_client(monkeypatch):
     )
     client = SimpleNamespace(get_repo=lambda repo: repo_obj)
 
-    monkeypatch.setattr(gh_cli, "_get_client", lambda token, require_token=False: client)
-    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
+    monkeypatch.setattr(
+        gh_cli, "_get_client", lambda token, require_token=False: client
+    )
+    monkeypatch.setattr(
+        gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool"
+    )
 
 
 def _install_fake_merge_client(monkeypatch):
@@ -97,7 +102,9 @@ def _install_fake_merge_client(monkeypatch):
 
     pr.merge = merge
     commit = SimpleNamespace(
-        get_combined_status=lambda: SimpleNamespace(state="pending", sha="abc123def456", total_count=0, statuses=[]),
+        get_combined_status=lambda: SimpleNamespace(
+            state="pending", sha="abc123def456", total_count=0, statuses=[]
+        ),
         get_check_runs=lambda: iter(
             [
                 SimpleNamespace(
@@ -137,8 +144,12 @@ def _install_fake_merge_client(monkeypatch):
     )
     client = SimpleNamespace(get_repo=lambda repo: repo_obj)
 
-    monkeypatch.setattr(gh_cli, "_get_client", lambda token, require_token=False: client)
-    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
+    monkeypatch.setattr(
+        gh_cli, "_get_client", lambda token, require_token=False: client
+    )
+    monkeypatch.setattr(
+        gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool"
+    )
     return merge_calls
 
 
@@ -169,9 +180,105 @@ def test_chattool_gh_pr_check_basic(monkeypatch, runner):
 def test_chattool_gh_pr_merge_check_basic(monkeypatch, runner):
     merge_calls = _install_fake_merge_client(monkeypatch)
 
-    result = runner.invoke(cli, ["gh", "pr-merge", "--number", "138", "--confirm", "--check"])
+    result = runner.invoke(
+        cli, ["gh", "pr-merge", "--number", "138", "--confirm", "--check"]
+    )
 
     assert result.exit_code != 0
     assert "Refusing to merge because CI checks are not green" in result.output
     assert "workflow Python Package concluded failure" in result.output
     assert not merge_calls
+
+
+def test_chattool_gh_set_token_configures_repo_scoped_https_credential(
+    tmp_path, monkeypatch, runner
+):
+    commands = []
+    inputs = []
+
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        commands.append(command)
+        inputs.append(input)
+
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
+        return Result()
+
+    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+
+    result = runner.invoke(
+        cli,
+        ["gh", "set-token", "--token", "ghp_test_token"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "Configured Git HTTPS token for CubeNLP/ChatTool." in result.output
+    assert ["git", "config", "--global", "credential.helper", "store"] in commands
+    assert ["git", "config", "--global", "credential.useHttpPath", "true"] in commands
+    assert ["git", "credential", "approve"] in commands
+    approve_input = inputs[commands.index(["git", "credential", "approve"])]
+    assert "protocol=https" in approve_input
+    assert "host=github.com" in approve_input
+    assert "path=CubeNLP/ChatTool.git" in approve_input
+    assert "username=x-access-token" in approve_input
+    assert "password=ghp_test_token" in approve_input
+
+
+def test_chattool_gh_set_token_save_env_updates_github_env(
+    tmp_path, monkeypatch, runner
+):
+    env_root = tmp_path / "envs"
+    monkeypatch.setattr(gh_cli, "CHATTOOL_ENV_DIR", env_root)
+
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="https://github.com/CubeNLP/ChatTool.git\n")
+        return Result()
+
+    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+
+    result = runner.invoke(
+        cli,
+        ["gh", "set-token", "--token", "ghp_saved_token", "--save-env"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    env_file = Path(env_root) / "GitHub" / ".env"
+    assert env_file.exists()
+    assert "GITHUB_ACCESS_TOKEN='ghp_saved_token'" in env_file.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_chattool_gh_set_token_rejects_non_github_remote(monkeypatch, runner):
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="git@gitlab.com:CubeNLP/ChatTool.git\n")
+        return Result()
+
+    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+
+    result = runner.invoke(cli, ["gh", "set-token", "--token", "ghp_test_token"])
+
+    assert result.exit_code != 0
+    assert (
+        "Current repository origin is not a recognizable GitHub remote."
+        in result.output
+    )

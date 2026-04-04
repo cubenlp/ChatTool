@@ -504,7 +504,26 @@ chattool gh pr-merge --number 123 --method squash --confirm --check
 
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"
+
+# 为当前 GitHub 仓库配置 repo 级 HTTPS token
+chattool gh set-token --token github_pat_xxx
+
+# 如需顺手保存到 ChatTool GitHub 配置
+chattool gh set-token --token github_pat_xxx --save-env
 ```
+
+`set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
+
+默认情况下，`set-token` 不会改写 `GITHUB_ACCESS_TOKEN`。只有显式传 `--save-env`，才会把 token 写入 `chatenv gh` 对应的 GitHub 配置。
+
+这里的 `ghp_xxx` / `github_pat_xxx` 都是 GitHub 的 Personal Access Token。来源是：
+
+1. GitHub `Settings`
+2. `Developer settings`
+3. `Personal access tokens`
+4. 创建 classic token，或 fine-grained token
+
+如果只是 clone / fetch / push 某个仓库，通常至少需要该仓库的 contents 读写权限；更细的 issue / PR / Actions 操作，再按需补权限。
 
 `pr-view` 和 `pr-check` 现在都会直接展示 PR 相对 base 分支的可合并状态：
 
