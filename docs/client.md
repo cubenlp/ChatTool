@@ -83,9 +83,10 @@ chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
 
 1. 显式参数：`--pam`（OpenAI API key）、`--base-url`、`--model`
 2. `-e/--env` 指定的 OpenAI 配置
-3. 当前 `oai/openai` 生效配置
-4. 现有 `~/.codex/` 配置
-5. 内置默认值
+3. 当前保存的 `oai/openai` typed env 配置
+4. shell 环境变量
+5. 现有 `~/.codex/` 配置
+6. 内置默认值
 
 可选覆盖 `base_url` 和默认模型：
 
@@ -140,7 +141,7 @@ chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 
 ### 0.4 Lark CLI (`setup lark-cli`)
 
-安装官方 `lark-cli`，并把 ChatTool 当前生效的 Feishu 配置复用过去：
+安装官方 `lark-cli`，并把 ChatTool 当前保存的 Feishu 配置复用过去：
 
 ```bash
 chattool setup lark-cli
@@ -164,9 +165,10 @@ chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
 
 1. 显式参数：`--app-id`、`--app-secret`、`--brand`
 2. `-e/--env` 指定的 Feishu 配置
-3. 当前 `feishu/lark` 生效配置
-4. 现有 `~/.lark-cli/config.json` 中的 app 元信息
-5. 默认品牌值 `feishu`
+3. 当前保存的 `feishu/lark` typed env 配置
+4. shell 环境变量
+5. 现有 `~/.lark-cli/config.json` 中的 app 元信息
+6. 默认品牌值 `feishu`
 
 默认情况下，官方 `lark-cli` 配置写到 `~/.lark-cli/config.json`；若设置了 `LARKSUITE_CLI_CONFIG_DIR`，则改写到该目录下的 `config.json`。
 
@@ -209,6 +211,8 @@ lark-cli auth login --recommend
 chattool setup playground
 ```
 
+默认模板语言是中文。
+
 或显式指定工作区目录：
 
 ```bash
@@ -221,6 +225,12 @@ chattool setup playground --workspace-dir ~/workspace/my-playground
 chattool setup playground \
   --workspace-dir ~/workspace/my-playground \
   --chattool-source https://github.com/cubenlp/ChatTool.git
+```
+
+如果你希望生成英文版的外层协作文件，可以显式传：
+
+```bash
+chattool setup playground --workspace-dir ~/workspace/my-playground --language en
 ```
 
 生成后的结构大致为：

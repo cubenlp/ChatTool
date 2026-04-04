@@ -1,6 +1,6 @@
 # Lark CLI 配置（setup 命令）
 
-`chattool setup lark-cli` 用来安装官方 `lark-cli`，并把 ChatTool 当前生效的 Feishu 配置迁过去。
+`chattool setup lark-cli` 用来安装官方 `lark-cli`，并把 ChatTool 当前保存的 Feishu 配置迁过去。
 
 ## 先看默认配置位置
 
@@ -32,7 +32,7 @@ $CHATTOOL_CONFIG_DIR/envs/Feishu/.env
 
 ## 基本用法
 
-直接复用当前生效的 Feishu 配置：
+直接复用当前保存的 Feishu 配置：
 
 ```bash
 chattool setup lark-cli
@@ -60,9 +60,10 @@ chattool setup lark-cli \
 
 1. 显式参数：`--app-id`、`--app-secret`、`--brand`
 2. `-e/--env` 指定的 Feishu 配置
-3. 当前 `feishu/lark` 生效配置
-4. 现有 `~/.lark-cli/config.json` 中已有的 app 元信息
-5. 默认品牌值 `feishu`
+3. 当前保存的 `feishu/lark` typed env 配置
+4. shell 环境变量
+5. 现有 `~/.lark-cli/config.json` 中已有的 app 元信息
+6. 默认品牌值 `feishu`
 
 其中 `-e/--env` 支持两种形式：
 

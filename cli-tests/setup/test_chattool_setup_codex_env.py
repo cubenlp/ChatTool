@@ -5,7 +5,9 @@ import sys
 from pathlib import Path
 
 
-def _run_python(code: str, *, config_dir: Path, extra_env: dict[str, str] | None = None):
+def _run_python(
+    code: str, *, config_dir: Path, extra_env: dict[str, str] | None = None
+):
     env = os.environ.copy()
     env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
     env.pop("OPENAI_API_KEY", None)
@@ -52,12 +54,8 @@ def test_setup_codex_env_ref_uses_openai_profile_priority(tmp_path: Path):
         "\n".join(
             [
                 "import json",
-                "from chattool.setup.codex import _load_openai_values_from_env_ref, _snapshot_openai_values",
-                "payload = {",
-                "    'env_ref': _load_openai_values_from_env_ref('work'),",
-                "    'current': _snapshot_openai_values(),",
-                "}",
-                "print(json.dumps(payload, ensure_ascii=False))",
+                "from chattool.setup.codex import _load_openai_values_from_env_ref",
+                "print(json.dumps(_load_openai_values_from_env_ref('work'), ensure_ascii=False))",
             ]
         ),
         config_dir=config_dir,
@@ -69,9 +67,45 @@ def test_setup_codex_env_ref_uses_openai_profile_priority(tmp_path: Path):
     )
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout.strip())
-    assert payload["env_ref"]["openai_api_key"] == "from_profile"
-    assert payload["env_ref"]["base_url"] == "https://os.example/v1"
-    assert payload["env_ref"]["model"] == "profile-model"
-    assert payload["current"]["openai_api_key"] == "from_os"
-    assert payload["current"]["base_url"] == "https://os.example/v1"
-    assert payload["current"]["model"] == "os-model"
+    assert payload["openai_api_key"] == "from_profile"
+    assert payload["base_url"] == "https://builtin.example/v1"
+    assert payload["model"] == "profile-model"
+
+
+def test_setup_codex_saved_openai_values_prefer_env_file_over_os_env(tmp_path: Path):
+    config_dir = tmp_path / "config"
+    openai_dir = config_dir / "envs" / "OpenAI"
+    openai_dir.mkdir(parents=True, exist_ok=True)
+    (openai_dir / ".env").write_text(
+        "\n".join(
+            [
+                "OPENAI_API_KEY='from_saved'",
+                "OPENAI_API_BASE='https://saved.example/v1'",
+                "OPENAI_API_MODEL='saved-model'",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = _run_python(
+        "\n".join(
+            [
+                "import json",
+                "from chattool.setup.codex import _load_saved_openai_values",
+                "print(json.dumps(_load_saved_openai_values(), ensure_ascii=False))",
+            ]
+        ),
+        config_dir=config_dir,
+        extra_env={
+            "OPENAI_API_KEY": "from_os",
+            "OPENAI_API_BASE": "https://os.example/v1",
+            "OPENAI_API_MODEL": "os-model",
+        },
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout.strip())
+    assert payload["openai_api_key"] == "from_saved"
+    assert payload["base_url"] == "https://saved.example/v1"
+    assert payload["model"] == "saved-model"
