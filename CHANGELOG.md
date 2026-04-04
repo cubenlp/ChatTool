@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Added
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
+- `chattool docker nas` 新增 NAS 静态文件服务模板，默认生成 `halverneus/static-file-server` 的 compose 与 env 示例，预置 `/nas/resources -> /web`、`9080:8080` 与 `URL_PREFIX=/cubenlp`
 
 ### Changed
 - `chattool setup workspace` 默认生成的 workspace scaffold 现改为按任务隔离的多任务协作约定：去掉单一 `task.md`，默认使用 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；对于长期系列工作，可升级为 `reports/task-sets/<set-name>/` 与 `playgrounds/task-sets/<set-name>/` 并维护任务集级进展

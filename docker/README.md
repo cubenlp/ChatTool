@@ -5,10 +5,12 @@
 - `docker-compose.chromium.yml`
 - `docker-compose.playwright.yml`
 - `docker-compose.headless-chromedriver.yml`
+- `docker-compose.nas.yml`
 - `../Dockerfile.playground`
 - `chromium.env.example`
 - `playwright.env.example`
 - `headless-chromedriver.env.example`
+- `nas.env.example`
 
 CLI 生成方式：
 
@@ -16,6 +18,7 @@ CLI 生成方式：
 chattool docker chromium /path/to
 chattool docker playwright /path/to
 chattool docker headless-chromedriver /path/to
+chattool docker nas /path/to
 ```
 
 会在目标目录生成：
@@ -66,6 +69,7 @@ chattool docker -I
 chattool docker chromium /path/to --set PORT=3100 --set BIND_IP=0.0.0.0
 chattool docker playwright /path/to --set VOLUME=/data/project --set COMMAND="npm test"
 chattool docker headless-chromedriver /path/to --set WEBDRIVER_PORT=5555
+chattool docker nas /path/to --set RESOURCE_DIR=/nas/resources --set URL_PREFIX=/cubenlp
 ```
 
 自定义文件名：
