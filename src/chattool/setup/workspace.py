@@ -49,7 +49,6 @@ PROFILES: dict[str, WorkspaceProfile] = {
 }
 
 BASE_DIRS = [
-    "thoughts",
     "reports",
     "playgrounds",
     "knowledge",
@@ -117,7 +116,7 @@ def _render_agents_md(
             "## Architecture\n\n"
             "```text\n"
             "Human\n"
-            "  -> thoughts/current.md · MEMORY.md\n"
+            "  -> MEMORY.md\n"
             "       -> reports/\n"
             "       -> playgrounds/\n"
             "       -> knowledge/\n\n"
@@ -126,7 +125,6 @@ def _render_agents_md(
             "```\n\n"
             "This workspace sits around a core project. Collaboration traces stay in the outer workspace so the core project remains clean.\n\n"
             "## Key File Roles\n\n"
-            "- `thoughts/current.md`: human planning surface. Read this first to understand current intent and constraints.\n"
             "- `MEMORY.md`: cross-session state. Read it every session before doing substantive work.\n"
             "- `reports/`: human-facing reporting area. Regular tasks use one directory per task; large efforts may use a task-set directory with shared progress.\n"
             "- `playgrounds/`: task-isolated work roots. Regular tasks work in `playgrounds/<task-name>/`; task sets may use `playgrounds/task-sets/<set-name>/`.\n"
@@ -153,7 +151,7 @@ def _render_agents_md(
             "- `TASKSET.md`: long-running initiative goal, boundaries, and task breakdown.\n"
             "- Task-set `progress.md`: shared cross-task status so the next task can continue smoothly.\n\n"
             "## Workflow\n\n"
-            "1. Read `thoughts/current.md` to understand the human's current focus.\n"
+            "1. Read `MEMORY.md` to load cross-session context and active constraints.\n"
             "2. Default to regular-task mode unless the work is clearly a long-running task series.\n"
             "3. For a regular task, work inside `playgrounds/<task-name>/` and report in `reports/MM-DD-<task-name>/`.\n"
             "4. For a task set, work inside `playgrounds/task-sets/<set-name>/` and report under `reports/task-sets/<set-name>/tasks/MM-DD-<task-name>/`.\n"
@@ -199,7 +197,7 @@ def _render_agents_md(
         "## 架构\n\n"
         "```text\n"
         "Human\n"
-        "  -> thoughts/current.md · MEMORY.md\n"
+        "  -> MEMORY.md\n"
         "       -> reports/\n"
         "       -> playgrounds/\n"
         "       -> knowledge/\n\n"
@@ -208,7 +206,6 @@ def _render_agents_md(
         "```\n\n"
         "这个 workspace 是包裹核心项目的一层协作脚手架。协作痕迹尽量都留在外层 workspace，核心项目保持干净。\n\n"
         "## 关键文件职责\n\n"
-        "- `thoughts/current.md`：人的当前规划面。开工前先读，理解目标、约束和问题。\n"
         "- `MEMORY.md`：跨 session 记忆。每次进入工作前都先读。\n"
         "- `reports/`：面向人的汇报区。常规任务按任务目录组织；大任务可以使用任务集目录，并维护共享进展。\n"
         "- `playgrounds/`：模型的工作区根目录。常规任务在 `playgrounds/<task-name>/` 下隔离工作；任务集可以使用 `playgrounds/task-sets/<set-name>/`。\n"
@@ -235,7 +232,7 @@ def _render_agents_md(
         "- `TASKSET.md`：大任务 / 任务集的目标、边界和任务拆分。\n"
         "- 任务集 `progress.md`：跨任务共享的阶段状态，方便下一个任务直接接续。\n\n"
         "## 工作流\n\n"
-        "1. 先读 `thoughts/current.md`，理解当前阶段意图。\n"
+        "1. 先读 `MEMORY.md`，加载跨 session 的背景、约束和当前上下文。\n"
         "2. 默认先判断为常规任务；只有明确是一串围绕同一目标推进的任务，才切换到任务集模式。\n"
         "3. 常规任务在 `playgrounds/<task-name>/` 下工作，并在 `reports/MM-DD-<task-name>/` 下汇报。\n"
         "4. 任务集任务在 `playgrounds/task-sets/<set-name>/` 下工作，并在 `reports/task-sets/<set-name>/tasks/MM-DD-<task-name>/` 下汇报。\n"
@@ -331,32 +328,6 @@ def _render_playgrounds_readme(language: str) -> str:
     )
 
 
-def _render_thoughts_current_md(language: str) -> str:
-    if language == "en":
-        return (
-            "# Current Focus\n\n"
-            "## Current focus\n\n"
-            "- \n\n"
-            "## Goals\n\n"
-            "- \n\n"
-            "## Open questions\n\n"
-            "- \n\n"
-            "## Notes\n\n"
-            "- \n"
-        )
-    return (
-        "# 当前关注点\n\n"
-        "## 当前关注点\n\n"
-        "- \n\n"
-        "## 目标\n\n"
-        "- \n\n"
-        "## 待澄清问题\n\n"
-        "- \n\n"
-        "## 备注\n\n"
-        "- \n"
-    )
-
-
 def _render_setup_md(profile: WorkspaceProfile, language: str) -> str:
     extra_questions = "\n".join(
         f"   - {question}" for question in profile.setup_md_questions()
@@ -372,7 +343,7 @@ def _render_setup_md(profile: WorkspaceProfile, language: str) -> str:
             "   - What is the current top priority?\n"
             "   - Any existing work or state to preserve?"
             f"{extra_block}\n"
-            "3. **Adapt** — rewrite `AGENTS.md`, `MEMORY.md`, and `thoughts/current.md` with concrete project-specific content and replace all placeholders.\n"
+            "3. **Adapt** — rewrite `AGENTS.md` and `MEMORY.md` with concrete project-specific content and replace all placeholders.\n"
             "4. **Initialise** — write `knowledge/memory/YYYY-MM-DD-status.md` with the initial project state.\n"
             "5. **Create first task lanes** — default to one regular task in `reports/MM-DD-<task-name>/` and `playgrounds/<task-name>/`; if this is clearly a long-running series, create a task set under `reports/task-sets/<set-name>/` and `playgrounds/task-sets/<set-name>/` instead.\n"
             "6. **Done** — append `completed: YYYY-MM-DD` to this file.\n"
@@ -386,7 +357,7 @@ def _render_setup_md(profile: WorkspaceProfile, language: str) -> str:
         "   - 当前最优先的事情是什么？\n"
         "   - 有没有需要保留的现有状态或历史工作？"
         f"{extra_block}\n"
-        "3. **Adapt** — 把 `AGENTS.md`、`MEMORY.md`、`thoughts/current.md` 改成项目相关的具体内容，替换掉所有占位文本。\n"
+        "3. **Adapt** — 把 `AGENTS.md`、`MEMORY.md` 改成项目相关的具体内容，替换掉所有占位文本。\n"
         "4. **Initialise** — 在 `knowledge/memory/YYYY-MM-DD-status.md` 里写下项目初始状态。\n"
         "5. **Create first task lanes** — 默认创建一个常规任务：`reports/MM-DD-<task-name>/` 和 `playgrounds/<task-name>/`；如果明确是一串长期推进的大任务，则改建 `reports/task-sets/<set-name>/` 和 `playgrounds/task-sets/<set-name>/`。\n"
         "6. **Done** — 在本文件末尾追加 `completed: YYYY-MM-DD`。\n"
@@ -405,11 +376,6 @@ def _base_file_map(
             "AGENTS.md": _render_agents_md(workspace_dir, profile, language),
             "MEMORY.md": _render_memory_md(workspace_dir, profile, language),
             "setup.md": _render_setup_md(profile, language),
-            "thoughts/README.md": _render_readme(
-                "Thoughts",
-                "Human planning notes live here. `current.md` is the primary human intent surface.",
-            ),
-            "thoughts/current.md": _render_thoughts_current_md(language),
             "reports/README.md": _render_reports_readme(language),
             "playgrounds/README.md": _render_playgrounds_readme(language),
             "knowledge/README.md": _render_readme(
@@ -421,10 +387,6 @@ def _base_file_map(
         "AGENTS.md": _render_agents_md(workspace_dir, profile, language),
         "MEMORY.md": _render_memory_md(workspace_dir, profile, language),
         "setup.md": _render_setup_md(profile, language),
-        "thoughts/README.md": _render_readme(
-            "Thoughts", "人的规划笔记放在这里；`current.md` 是当前意图的主入口。"
-        ),
-        "thoughts/current.md": _render_thoughts_current_md(language),
         "reports/README.md": _render_reports_readme(language),
         "playgrounds/README.md": _render_playgrounds_readme(language),
         "knowledge/README.md": _render_readme(

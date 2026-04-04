@@ -95,7 +95,6 @@ def _render_agents_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         f"- ChatTool repo: `{repo_display}`\n"
         "- Must-read durable memory: `MEMORY.md`\n"
         "- Shared project guide: `CHATTOOL.md`\n"
-        "- Human planning surface: `thoughts/current.md`\n"
         "- Reports root: `reports/`\n"
         "- Task playgrounds root: `playgrounds/`\n"
         "- Durable knowledge root: `knowledge/`\n"
@@ -112,11 +111,10 @@ def _render_agents_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         "- Read this file first when starting work in this workspace.\n"
         "- Read `MEMORY.md` next for high-priority, must-read context.\n"
         "- Read `CHATTOOL.md` for the project purpose, upgrade loop, and development suggestions.\n"
-        "- Read `thoughts/current.md` before starting a new task or continuing a task set.\n"
-        "- Models can explore freely in the workspace, but durable conclusions should be written back into `knowledge/` or skill experience logs.\n\n"
+        "- Read the current task or task-set report before starting or continuing execution work.\n"
+        "- Models can explore freely in the workspace, but durable conclusions should be written back into `reports/`, `knowledge/`, or skill experience logs.\n\n"
         "## Workspace Contents\n\n"
         "- `ChatTool/`: cloned ChatTool repository used as the main upgrade target.\n"
-        "- `thoughts/`: current human intent and planning notes.\n"
         "- `reports/`: human-facing reports for regular tasks and task sets.\n"
         "- `playgrounds/`: task-isolated drafts, experiments, and temporary work.\n"
         "- `knowledge/`: durable memory, skills, tools notes, and reusable conclusions.\n\n"
@@ -129,7 +127,7 @@ def _render_agents_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         f"- Experience logs live under `knowledge/skills/<name>/experience/` and use `{EXPERIENCE_LOG_FORMAT}`.\n"
         "- After a task, update reports, durable memory, relevant skill experience, and then normalize useful improvements back into ChatTool.\n\n"
         "## Workflow\n\n"
-        "1. Read `AGENTS.md`, `MEMORY.md`, `CHATTOOL.md`, and `thoughts/current.md`.\n"
+        "1. Read `AGENTS.md`, `MEMORY.md`, `CHATTOOL.md`, and the current task or task-set report.\n"
         "2. Default to regular-task mode unless the work is clearly one series of related tasks.\n"
         "3. For a regular task, work in `playgrounds/<task-name>/` and report in `reports/MM-DD-<task-name>/`.\n"
         "4. For a task set, work in `playgrounds/task-sets/<set-name>/` and report in `reports/task-sets/<set-name>/tasks/MM-DD-<task-name>/`.\n"
@@ -154,7 +152,6 @@ def _render_chattool_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         f"- ChatTool repo clone: `{repo_display}`\n"
         "- Shared instructions: `AGENTS.md`\n"
         "- Must-read memory summary: `MEMORY.md`\n"
-        "- Human planning surface: `thoughts/current.md`\n"
         "- Reports root: `reports/`\n"
         "- Task playgrounds root: `playgrounds/`\n"
         "- Shared memory root: `knowledge/memory/`\n"
@@ -175,27 +172,6 @@ def _render_chattool_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         "- Put reusable implementation in `ChatTool/src/chattool/`.\n"
         "- Keep task-specific guidance in `knowledge/skills/` or `ChatTool/skills/`, not in random scratch files.\n"
         "- Prefer `chattool gh` for PR and CI workflows once changes are ready.\n"
-    )
-
-
-def _render_thoughts_readme() -> str:
-    return (
-        "# Thoughts\n\n"
-        "Human planning notes live here. `current.md` is the main intent surface for the current phase of work.\n"
-    )
-
-
-def _render_thoughts_current_md() -> str:
-    return (
-        "# Current Focus\n\n"
-        "## Current focus\n\n"
-        "- \n\n"
-        "## Goals\n\n"
-        "- \n\n"
-        "## Open questions\n\n"
-        "- \n\n"
-        "## Notes\n\n"
-        "- \n"
     )
 
 
@@ -239,7 +215,6 @@ def _render_memory_md(workspace_dir: Path, chattool_repo_dir: Path) -> str:
         "Read this file after `AGENTS.md`. It is reserved for high-priority context that should be loaded before ordinary task work.\n\n"
         "## Current Workspace\n\n"
         f"- ChatTool repo clone: `{repo_display}`\n"
-        "- Human planning surface: `thoughts/current.md`\n"
         "- Reports root: `reports/`\n"
         "- Task playgrounds root: `playgrounds/`\n"
         "- Durable notes directory: `knowledge/memory/`\n"
@@ -725,7 +700,6 @@ def setup_playground(
     logger.info(f"Cloned ChatTool repo dir: {repo_path}")
     logger.info(f"Skills source dir: {skills_source}")
 
-    thoughts_dir = workspace_path / "thoughts"
     reports_dir = workspace_path / "reports"
     playgrounds_dir = workspace_path / "playgrounds"
     scratch_dir = playgrounds_dir / "scratch"
@@ -734,7 +708,6 @@ def setup_playground(
     logs_dir = memory_dir / "logs"
     retros_dir = memory_dir / "retros"
     skills_dir = knowledge_dir / "skills"
-    thoughts_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
     playgrounds_dir.mkdir(parents=True, exist_ok=True)
     knowledge_dir.mkdir(parents=True, exist_ok=True)
@@ -759,10 +732,6 @@ def setup_playground(
         workspace_path / "MEMORY.md",
         _render_memory_md(workspace_path, repo_path),
         force=force,
-    )
-    _write_text_file(thoughts_dir / "README.md", _render_thoughts_readme(), force=force)
-    _write_text_file(
-        thoughts_dir / "current.md", _render_thoughts_current_md(), force=force
     )
     _write_text_file(reports_dir / "README.md", _render_reports_readme(), force=force)
     _write_text_file(
@@ -799,7 +768,6 @@ def setup_playground(
     click.echo(f"ChatTool repo: {repo_path}")
     click.echo(f"Repo action: {repo_action}")
     click.echo(f"Memory summary: {workspace_path / 'MEMORY.md'}")
-    click.echo(f"Thoughts: {thoughts_dir}")
     click.echo(f"Reports: {reports_dir}")
     click.echo(f"Playgrounds: {playgrounds_dir}")
     click.echo(f"Knowledge: {knowledge_dir}")

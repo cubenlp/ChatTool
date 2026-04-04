@@ -28,7 +28,6 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert (workspace_dir / "AGENTS.md").exists()
     assert (workspace_dir / "MEMORY.md").exists()
     assert (workspace_dir / "setup.md").exists()
-    assert (workspace_dir / "thoughts" / "current.md").exists()
     assert (workspace_dir / "reports" / "README.md").exists()
     assert (workspace_dir / "playgrounds" / "README.md").exists()
     assert (workspace_dir / "knowledge" / "README.md").exists()

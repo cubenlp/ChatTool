@@ -97,7 +97,6 @@ chattool setup lark-cli -i
   - `<workspace>/AGENTS.md`
   - `<workspace>/CHATTOOL.md`
   - `<workspace>/MEMORY.md`
-  - `<workspace>/thoughts/`
   - `<workspace>/reports/`
   - `<workspace>/playgrounds/`
   - `<workspace>/knowledge/`
@@ -108,10 +107,10 @@ chattool setup lark-cli -i
   2. 若目标目录只是普通非空目录且当前终端可交互，预期先提示是否继续；确认后继续初始化，并保留已有文件。
   3. 若目标目录中已经存在 `ChatTool/`（或历史遗留的 `chattool/`），预期进入更新模式：优先更新仓库，并在交互模式下提示是否同步工作区 `skills/`。
   4. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`。
-  5. 预期创建 `thoughts/`、`reports/`、`playgrounds/`、`knowledge/`。
+  5. 预期创建 `reports/`、`playgrounds/`、`knowledge/`。
   6. 预期从 `ChatTool/skills/` 复制或更新 skills 到工作区 `knowledge/skills/`，并给每个 skill 创建 `experience/` 目录。
   7. 预期 skills 同步只替换常规文件，不修改已有 `experience/` 内容。
-  8. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `AGENTS.md`、`MEMORY.md`、`setup.md`、`thoughts/`、`reports/`、`playgrounds/`、`knowledge/`，并默认采用按任务隔离的并发协作结构。
+  8. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `AGENTS.md`、`MEMORY.md`、`setup.md`、`reports/`、`playgrounds/`、`knowledge/`，并默认采用按任务隔离的并发协作结构。
   9. 执行 `chattool setup workspace <workspace> --dry-run -I`，预期仅打印将创建的目录与文件，不实际写入。
 
 参考执行脚本（伪代码）：

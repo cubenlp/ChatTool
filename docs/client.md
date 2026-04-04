@@ -183,7 +183,7 @@ lark-cli auth login --recommend
 1. clone `ChatTool/`
 2. 运行 `git submodule update --init --recursive`
 3. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
-4. 创建 `thoughts/`、`reports/`、`playgrounds/`、`knowledge/`
+4. 创建 `reports/`、`playgrounds/`、`knowledge/`
 5. 从 clone 出来的 `ChatTool/skills/` 复制 skills 到 `knowledge/skills/`，并为每个 skill 创建 `experience/`
 
 如果目标目录已经是已有工作区，再次执行时会进入更新模式：
@@ -231,7 +231,6 @@ my-playground/
 ├── CHATTOOL.md
 ├── MEMORY.md
 ├── ChatTool/
-├── thoughts/
 ├── reports/
 ├── playgrounds/
 └── knowledge/
@@ -254,7 +253,6 @@ chattool setup workspace ~/workspace/demo --language en
 - `AGENTS.md`：模型主协议
 - `MEMORY.md`：跨 session 记忆
 - `setup.md`：后续 onboarding 入口
-- `thoughts/`：人类当前关注点
 - `reports/`：默认按任务隔离的人类汇报目录，也支持任务集目录
 - `playgrounds/`：默认按任务隔离的工作目录，也支持任务集共享工作根
 - `knowledge/`：长期知识沉淀

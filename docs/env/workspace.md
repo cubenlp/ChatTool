@@ -40,9 +40,6 @@ workspace/
 ├── AGENTS.md
 ├── MEMORY.md
 ├── setup.md
-├── thoughts/
-│   ├── README.md
-│   └── current.md
 ├── reports/
 │   └── README.md
 ├── playgrounds/
@@ -59,7 +56,6 @@ workspace/
 
 其中：
 
-- `thoughts/current.md`：人类当前阶段关注点
 - `reports/`：面向人的任务汇报区，默认按常规任务目录组织，也支持任务集
 - `playgrounds/`：模型的任务隔离工作区，默认按任务目录组织，也支持任务集共享工作根
 - `MEMORY.md`：跨 session 记忆

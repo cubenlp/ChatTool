@@ -19,7 +19,7 @@
 
 预期过程和结果：
   1. 执行 `chattool setup playground --workspace-dir <workspace-dir> --chattool-source <repo-dir> -I`，预期命令成功。
-  2. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`、`thoughts/current.md`、`reports/README.md`、`playgrounds/README.md`、`knowledge/README.md`。
+  2. 预期生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`、`reports/README.md`、`playgrounds/README.md`、`knowledge/README.md`。
   3. 预期在目标目录下 clone `ChatTool/`。
   4. 预期 `knowledge/memory/`、`knowledge/skills/`、`playgrounds/scratch/` 存在。
   5. 预期 skills 从 clone 出来的 `ChatTool/skills/` 同步到 `knowledge/skills/`，并给每个 skill 创建 `experience/README.md`。
