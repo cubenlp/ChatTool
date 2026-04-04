@@ -69,7 +69,7 @@ chattool docker -I
 chattool docker chromium /path/to --set PORT=3100 --set BIND_IP=0.0.0.0
 chattool docker playwright /path/to --set VOLUME=/data/project --set COMMAND="npm test"
 chattool docker headless-chromedriver /path/to --set WEBDRIVER_PORT=5555
-chattool docker nas /path/to --set RESOURCE_DIR=/nas/resources --set URL_PREFIX=/cubenlp
+chattool docker nas /path/to --set IMAGE=halverneus/static-file-server:latest --set RESOURCE_DIR=/path/to/resources --set PORT=9080 --set URL_PREFIX=/prefix
 ```
 
 自定义文件名：

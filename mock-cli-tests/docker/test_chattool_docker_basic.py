@@ -30,6 +30,7 @@ def test_docker_nas_generates_compose_and_env(tmp_path):
     assert '- "${BIND_IP}:${PORT}:8080"' in compose_text
     assert "URL_PREFIX: ${URL_PREFIX}" in compose_text
 
-    assert "RESOURCE_DIR=/nas/resources" in env_text
-    assert "PORT=9080" in env_text
-    assert "URL_PREFIX=/cubenlp" in env_text
+    assert "IMAGE=" in env_text
+    assert "RESOURCE_DIR=" in env_text
+    assert "PORT=" in env_text
+    assert "URL_PREFIX=" in env_text

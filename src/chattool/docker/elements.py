@@ -88,13 +88,13 @@ ENV_DEFAULTS = {
         "SE_VNC_NO_PASSWORD": "1",
     },
     "nas": {
-        "IMAGE": "halverneus/static-file-server:latest",
-        "CONTAINER_NAME": "NasServer",
-        "RESTART_POLICY": "always",
-        "RESOURCE_DIR": "/nas/resources",
-        "BIND_IP": "0.0.0.0",
-        "PORT": "9080",
-        "URL_PREFIX": "/cubenlp",
+        "IMAGE": "",
+        "CONTAINER_NAME": "",
+        "RESTART_POLICY": "",
+        "RESOURCE_DIR": "",
+        "BIND_IP": "",
+        "PORT": "",
+        "URL_PREFIX": "",
     },
 }
 

@@ -13,12 +13,12 @@
 - 执行 `chattool docker nas <output_dir>`。
 - 应生成 `docker-compose.yaml` 与 `nas.env.example`。
 - compose 内容应包含 `fileserver` 服务、`${RESOURCE_DIR}:/web` 挂载、`${BIND_IP}:${PORT}:8080` 端口映射。
-- env 示例应包含 `RESOURCE_DIR=/nas/resources`、`PORT=9080`、`URL_PREFIX=/cubenlp`。
+- env 示例应保留 `IMAGE`、`RESOURCE_DIR`、`PORT`、`URL_PREFIX` 等键，但默认值为空，等待用户自行填写。
 
 ### 参考执行脚本（伪代码）
 
 ```sh
 run chattool docker nas /tmp/docker-nas
 assert docker-compose.yaml contains fileserver static-file-server volume and port mapping
-assert nas.env.example contains RESOURCE_DIR PORT URL_PREFIX defaults
+assert nas.env.example keeps required keys with empty defaults
 ```
