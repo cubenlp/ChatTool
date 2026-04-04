@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 
 ### Changed
-- `chattool setup workspace` 默认生成的 workspace scaffold 现对齐仓库内 `workspace/agents.md` 的多任务协作约定：去掉单一 `task.md`，改为按任务隔离的 `reports/` 与 `playgrounds/` 结构，便于多个支持任务并发推进
+- `chattool setup workspace` 默认生成的 workspace scaffold 现改为按任务隔离的多任务协作约定：去掉单一 `task.md`，改为 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/` 结构，便于多个支持任务并发推进
 
 ## [6.5.0] - 2026-03-31
 

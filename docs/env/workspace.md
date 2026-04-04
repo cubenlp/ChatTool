@@ -65,9 +65,9 @@ workspace/
 - `MEMORY.md`：跨 session 记忆
 - `knowledge/`：长期可复用知识沉淀区
 
-默认模板参考了仓库内 `workspace/agents.md` 的协作方式：
+默认模板采用按任务隔离的并发协作方式：
 
-- 对人的汇报统一进入 `reports/<task-name>/`
+- 对人的汇报统一进入 `reports/MM-DD-<task-name>/`
 - 每个任务目录至少包含 `TASK.md`、`progress.md`、`SUMMARY.md`
 - 多个任务并发时，在 `playgrounds/<task-name>/` 下各自隔离草稿、实验和中间产物
 

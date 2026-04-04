@@ -56,7 +56,6 @@ BASE_DIRS = [
     "knowledge/blog",
     "knowledge/design",
     "knowledge/memory",
-    "knowledge/memory/status",
     "knowledge/skills",
     "knowledge/tools",
 ]
@@ -107,7 +106,7 @@ def _render_agents_md(
             "`AGENTS.md` is the entry point for models working in this workspace.\n\n"
             "## Core Principles\n\n"
             "- Progress and results should be reported in `reports/`.\n"
-            "- Reports should be organised per task, for example `reports/<task-name>/`.\n"
+            "- Reports should be organised per task, for example `reports/MM-DD-<task-name>/`.\n"
             "- Each task report directory should at least contain `TASK.md`, `progress.md`, and `SUMMARY.md`.\n"
             "- When multiple tasks run in parallel, both `reports/` and `playgrounds/` must stay task-isolated.\n"
             "- Each task should work inside its own `playgrounds/<task-name>/`.\n"
@@ -131,7 +130,7 @@ def _render_agents_md(
             "- `knowledge/`: durable, reusable findings that should accumulate outside the core project.\n\n"
             "## Reports Structure\n\n"
             "```text\n"
-            "reports/<task-name>/\n"
+            "reports/MM-DD-<task-name>/\n"
             "  TASK.md\n"
             "  progress.md\n"
             "  SUMMARY.md\n"
@@ -142,17 +141,17 @@ def _render_agents_md(
             "## Workflow\n\n"
             "1. Read `thoughts/current.md` to understand the human's current focus.\n"
             "2. Start or pick a task-specific directory under `playgrounds/<task-name>/` before doing execution work.\n"
-            "3. Keep human-facing updates in `reports/<task-name>/` while keeping drafts and experiments in the matching playground.\n"
+            "3. Keep human-facing updates in `reports/MM-DD-<task-name>/` while keeping drafts and experiments in the matching playground.\n"
             "4. Write durable findings into `knowledge/` so they accumulate outside the core project.\n"
             "5. Update `MEMORY.md` before ending the session so key context survives.\n\n"
             "## Knowledge Write Rules\n\n"
             "| Situation | Write to |\n"
             "|-----------|----------|\n"
             "| Draft / experiment / temporary work note | `playgrounds/<task-name>/` |\n"
-            "| Human-facing task report | `reports/<task-name>/` |\n"
+            "| Human-facing task report | `reports/MM-DD-<task-name>/` |\n"
             "| Phase summary / exploration | `knowledge/blog/YYYY-MM-DD-topic.md` |\n"
             "| Architecture decision | `knowledge/design/NNN-title.md` |\n"
-            "| Status snapshot | `knowledge/memory/status/YYYY-MM-DD-status.md` |\n"
+            "| Status snapshot | `knowledge/memory/YYYY-MM-DD-status.md` |\n"
             "| Tool usage discovery | `knowledge/tools/<toolname>/` |\n"
             "| Reusable technique | `knowledge/skills/` |\n"
             "| Unsure | `knowledge/blog/` first, reorganise later |\n\n"
@@ -169,7 +168,7 @@ def _render_agents_md(
         "`AGENTS.md` 是模型进入这个 workspace 后的入口说明。\n\n"
         "## 核心原则\n\n"
         "- 模型的进展和结果，统一在 `reports/` 中汇报。\n"
-        "- 报告按任务文件夹整理，例如 `reports/<task-name>/`。\n"
+        "- 报告按任务文件夹整理，例如 `reports/MM-DD-<task-name>/`。\n"
         "- 每个任务目录至少包含 `TASK.md`、`progress.md` 和 `SUMMARY.md`。\n"
         "- 多个任务并行时，`reports/` 和 `playgrounds/` 都按任务隔离。\n"
         "- 每个任务在自己的 `playgrounds/<task-name>/` 里工作。\n"
@@ -193,7 +192,7 @@ def _render_agents_md(
         "- `knowledge/`：可复用知识沉淀区。放研究、设计、经验和说明。\n\n"
         "## Reports 结构\n\n"
         "```text\n"
-        "reports/<task-name>/\n"
+        "reports/MM-DD-<task-name>/\n"
         "  TASK.md\n"
         "  progress.md\n"
         "  SUMMARY.md\n"
@@ -204,17 +203,17 @@ def _render_agents_md(
         "## 工作流\n\n"
         "1. 先读 `thoughts/current.md`，理解当前阶段意图。\n"
         "2. 开始任务时，先在 `playgrounds/<task-name>/` 下建立任务隔离工作区。\n"
-        "3. 对人同步进展时，在 `reports/<task-name>/` 下更新任务定义、阶段进展或最终总结。\n"
+        "3. 对人同步进展时，在 `reports/MM-DD-<task-name>/` 下更新任务定义、阶段进展或最终总结。\n"
         "4. 把可复用结论写入 `knowledge/`，让知识沉淀留在项目外层。\n"
         "5. 结束前更新 `MEMORY.md`，保留下一次继续工作的必要上下文。\n\n"
         "## 知识写入规则\n\n"
         "| 情况 | 写入位置 |\n"
         "|-----------|----------|\n"
         "| 草稿 / 实验 / 临时工作文档 | `playgrounds/<task-name>/` |\n"
-        "| 给人的任务汇报 | `reports/<task-name>/` |\n"
+        "| 给人的任务汇报 | `reports/MM-DD-<task-name>/` |\n"
         "| 阶段总结 / 探索记录 | `knowledge/blog/YYYY-MM-DD-topic.md` |\n"
         "| 架构决策 | `knowledge/design/NNN-title.md` |\n"
-        "| 状态快照 | `knowledge/memory/status/YYYY-MM-DD-status.md` |\n"
+        "| 状态快照 | `knowledge/memory/YYYY-MM-DD-status.md` |\n"
         "| 工具使用发现 | `knowledge/tools/<toolname>/` |\n"
         "| 可复用技巧 | `knowledge/skills/` |\n"
         "| 暂时不确定 | 先写到 `knowledge/blog/`，之后再整理 |\n\n"
@@ -272,11 +271,11 @@ def _render_reports_readme(language: str) -> str:
     if language == "en":
         return (
             "# Reports\n\n"
-            "Create one directory per task under `reports/<task-name>/`. Each task directory should include `TASK.md`, `progress.md`, and `SUMMARY.md`.\n"
+            "Create one directory per task under `reports/MM-DD-<task-name>/`. Each task directory should include `TASK.md`, `progress.md`, and `SUMMARY.md`.\n"
         )
     return (
         "# Reports\n\n"
-        "按任务在 `reports/<task-name>/` 下建立目录。每个任务目录至少包含 `TASK.md`、`progress.md` 和 `SUMMARY.md`。\n"
+        "按任务在 `reports/MM-DD-<task-name>/` 下建立目录。每个任务目录至少包含 `TASK.md`、`progress.md` 和 `SUMMARY.md`。\n"
     )
 
 
@@ -334,8 +333,8 @@ def _render_setup_md(profile: WorkspaceProfile, language: str) -> str:
             "   - Any existing work or state to preserve?"
             f"{extra_block}\n"
             "3. **Adapt** — rewrite `AGENTS.md`, `MEMORY.md`, and `thoughts/current.md` with concrete project-specific content and replace all placeholders.\n"
-            "4. **Initialise** — write `knowledge/memory/status/YYYY-MM-DD-status.md` with the initial project state.\n"
-            "5. **Create first task lanes** — create `reports/<task-name>/` and `playgrounds/<task-name>/`, then write the first task into `reports/<task-name>/TASK.md`.\n"
+            "4. **Initialise** — write `knowledge/memory/YYYY-MM-DD-status.md` with the initial project state.\n"
+            "5. **Create first task lanes** — create `reports/MM-DD-<task-name>/` and `playgrounds/<task-name>/`, then write the first task into `reports/MM-DD-<task-name>/TASK.md`.\n"
             "6. **Done** — append `completed: YYYY-MM-DD` to this file.\n"
         )
     return (
@@ -348,8 +347,8 @@ def _render_setup_md(profile: WorkspaceProfile, language: str) -> str:
         "   - 有没有需要保留的现有状态或历史工作？"
         f"{extra_block}\n"
         "3. **Adapt** — 把 `AGENTS.md`、`MEMORY.md`、`thoughts/current.md` 改成项目相关的具体内容，替换掉所有占位文本。\n"
-        "4. **Initialise** — 在 `knowledge/memory/status/YYYY-MM-DD-status.md` 里写下项目初始状态。\n"
-        "5. **Create first task lanes** — 创建 `reports/<task-name>/` 和 `playgrounds/<task-name>/`，并把第一个具体任务写进 `reports/<task-name>/TASK.md`。\n"
+        "4. **Initialise** — 在 `knowledge/memory/YYYY-MM-DD-status.md` 里写下项目初始状态。\n"
+        "5. **Create first task lanes** — 创建 `reports/MM-DD-<task-name>/` 和 `playgrounds/<task-name>/`，并把第一个具体任务写进 `reports/MM-DD-<task-name>/TASK.md`。\n"
         "6. **Done** — 在本文件末尾追加 `completed: YYYY-MM-DD`。\n"
     )
 
