@@ -113,6 +113,8 @@ chattool setup workspace
 chattool setup workspace ~/workspace/demo
 ```
 
+默认生成的 workspace 采用按任务隔离的并发结构：常规任务进入 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；长期系列任务可升级为 `task-sets` 结构。
+
 ## 板块说明
 
 | 层次 | 板块 | 说明 |

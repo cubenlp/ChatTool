@@ -1,11 +1,11 @@
 # test_chattool_setup_workspace_real_basic
 
-验证 `chattool setup workspace` 在真实 CLI 下的基础落盘、默认中文模板、显式英文模板、`--dry-run` 与 `setup.md` 保护语义。
+验证 `chattool setup workspace` 在真实 CLI 下的基础落盘、支持“默认常规任务 + 可选任务集”的并发 workspace 模板、显式英文模板、`--dry-run` 与 `setup.md` 保护语义。
 
 ## 元信息
 
 - 命令：`chattool setup workspace`
-- 目的：验证 workspace 骨架目录、关键模板文件、语言选项，以及 `--force` / `--dry-run` 的真实行为。
+- 目的：验证 workspace 骨架目录、默认常规任务与任务集并存的 `reports/` / `playgrounds/` 模板、语言选项，以及 `--force` / `--dry-run` 的真实行为。
 - 标签：`cli`
 - 前置条件：无
 - 环境准备：使用临时目录作为 workspace 根目录，不污染仓库。
@@ -18,16 +18,16 @@
 
 预期过程和结果：
   1. 执行 `chattool setup workspace <workspace-dir> -I`，预期命令成功。
-  2. 预期生成 `AGENTS.md`、`MEMORY.md`、`setup.md`、`task.md`、`thoughts/current.md`、`tasks/README.md`、`playground/README.md`、`knowledge/README.md`。
-  3. `AGENTS.md` 默认应包含中文的 5 层协作架构和知识写入规则。
-  4. `setup.md` 应包含 Discover / Ask / Adapt / Initialise / Set first task / Done 六步清单。
+  2. 预期生成 `AGENTS.md`、`MEMORY.md`、`setup.md`、`reports/README.md`、`playgrounds/README.md`、`knowledge/README.md`。
+  3. `AGENTS.md` 默认应包含中文的多任务协作架构，并同时说明常规任务 `reports/MM-DD-<task-name>/` / `playgrounds/<task-name>/` 与任务集 `reports/task-sets/<set-name>/` / `playgrounds/task-sets/<set-name>/` 规则。
+  4. `setup.md` 应包含 Discover / Ask / Adapt / Initialise / Create first task lanes / Done 六步清单，并明确默认先创建常规任务，只有长期系列任务才改用任务集。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool setup workspace /tmp/demo-workspace -I
 assert workspace files exist
-assert AGENTS.md contains architecture and write rules
+assert AGENTS.md contains reports/playgrounds task isolation rules
 assert setup.md contains six-step checklist
 ```
 

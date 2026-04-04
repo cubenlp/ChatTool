@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -9,6 +10,12 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from dotenv import dotenv_values
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from chattool.client.main import cli
 from chattool.config import BaseEnvConfig, FeishuConfig
@@ -90,7 +97,9 @@ def lark_testkit(tmp_path: Path):
             output=create.output,
         )
 
-    def wait_doc_raw_contains(document_id: str, text: str, *, attempts: int = 5, delay: float = 1.0):
+    def wait_doc_raw_contains(
+        document_id: str, text: str, *, attempts: int = 5, delay: float = 1.0
+    ):
         last_output = ""
         for _ in range(attempts):
             raw = invoke("lark", "doc", "raw", document_id)
@@ -98,7 +107,9 @@ def lark_testkit(tmp_path: Path):
             if text in last_output:
                 return raw
             time.sleep(delay)
-        raise AssertionError(f"{text!r} not found in document raw output:\n{last_output}")
+        raise AssertionError(
+            f"{text!r} not found in document raw output:\n{last_output}"
+        )
 
     return SimpleNamespace(
         tmp_path=tmp_path,

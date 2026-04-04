@@ -3,22 +3,34 @@
 import importlib
 
 __author__ = """Rex Wang"""
-__email__ = '1073853456@qq.com'
-__version__ = '6.5.1'
+__email__ = "1073853456@qq.com"
+__version__ = "6.5.2"
 
 from dotenv import load_dotenv
 
 from .llm import Chat, AzureChat, ChatResponse
 from .utils import (
-    debug_log, load_envs, mask_secret,
-    create_env_file, setup_logger, setup_jupyter_async,
-    HTTPClient, HTTPConfig
+    debug_log,
+    load_envs,
+    mask_secret,
+    create_env_file,
+    setup_logger,
+    setup_jupyter_async,
+    HTTPClient,
+    HTTPConfig,
 )
 from .const import CHATTOOL_REPO_DIR, CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
-from .config import OpenAIConfig, AzureConfig, AliyunConfig, TencentConfig, ZulipConfig, BaseEnvConfig
+from .config import (
+    OpenAIConfig,
+    AzureConfig,
+    AliyunConfig,
+    TencentConfig,
+    ZulipConfig,
+    BaseEnvConfig,
+)
 
 setup_jupyter_async()
-load_dotenv(CHATTOOL_REPO_DIR / '.env')
+load_dotenv(CHATTOOL_REPO_DIR / ".env")
 
 BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
 
