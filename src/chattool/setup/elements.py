@@ -119,17 +119,11 @@ def workspace_setup(profile, workspace_dir, language, interactive, force, dry_ru
     )
 
 
-def happy_setup(
-    server_url, webapp_url, home_dir, base_url, api_key, model, write_env, interactive
-):
+def happy_setup(server_url, webapp_url, home_dir, interactive):
     setup_happy(
         server_url=server_url,
         webapp_url=webapp_url,
         home_dir=home_dir,
-        base_url=base_url,
-        api_key=api_key,
-        model=model,
-        write_env=write_env,
         interactive=interactive,
     )
 
@@ -244,7 +238,7 @@ SETUP_COMMAND_ELEMENTS = (
     ),
     SetupCommandElement(
         name="happy",
-        help="Install happy CLI and prepare a happy-coder relay/profile bootstrap.",
+        help="Install happy CLI and optionally save Happy server/webapp config.",
         callback=happy_setup,
         options=(
             SetupOptionElement(
@@ -258,34 +252,6 @@ SETUP_COMMAND_ELEMENTS = (
             SetupOptionElement(
                 param_decls=("--home-dir",),
                 kwargs={"default": None, "help": "Happy home directory."},
-            ),
-            SetupOptionElement(
-                param_decls=("--base-url",),
-                kwargs={
-                    "default": None,
-                    "help": "OpenAI-compatible relay URL used together with happy.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--api-key",),
-                kwargs={
-                    "default": None,
-                    "help": "API key for the OpenAI-compatible relay.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--model",),
-                kwargs={
-                    "default": None,
-                    "help": "Default model for the relay-backed happy setup.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--write-env",),
-                kwargs={
-                    "is_flag": True,
-                    "help": "Save dedicated happy profiles into ChatTool env storage.",
-                },
             ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),

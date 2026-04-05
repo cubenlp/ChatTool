@@ -204,24 +204,23 @@ chattool setup docker --sudo -i
 
 ### 0.6 Happy (`setup happy`)
 
-安装 Happy CLI，并把一套 happy-coder 推荐链路收口为现有 ChatTool 配置：
+安装 Happy CLI，并把 Happy 自己的 server/webapp/home 配置收口为现有 ChatTool 配置：
 
 ```bash
 chattool setup happy
-chattool setup happy --write-env
+chattool setup happy --server-url https://happy.example/api --webapp-url https://happy.example/app
 ```
 
-这个命令不会声称 ChatTool 已经内置 Happy server。它更像一条 bootstrap 路线：
+这个命令不会声称 ChatTool 已经内置 Happy server。它的边界是：
 
 - 安装 `happy` CLI
-- 准备 Happy 的 `server/webapp/home` 配置
-- 准备 OpenAI-compatible relay 的 `base_url/api_key/model`
-- 输出后续推荐命令：`setup codex`、`setup opencode`、`setup workspace`、`happy auth login`
+- 可选保存 Happy 的 `server/webapp/home` 配置
+- 输出后续推荐命令：`chatenv cat -t happy`、`happy auth login`
 
 支持两种接入方式：
 
 - 官方模式：沿用 Happy 官方 `server/webapp`
-- 自建模式：显式传 `--server-url` / `--webapp-url`，并可同时配置你自己的 OpenAI-compatible relay
+- 自建模式：显式传 `--server-url` / `--webapp-url`，让 CLI 指向你自己的 Happy server / webapp
 
 ### 0.7 Playground (`setup playground`)
 

@@ -8,12 +8,10 @@ class HappyConfig(BaseEnvConfig):
 
     HAPPY_SERVER_URL = EnvField(
         "HAPPY_SERVER_URL",
-        default="https://api.cluster-fluster.com",
         desc="Happy server URL.",
     )
     HAPPY_WEBAPP_URL = EnvField(
         "HAPPY_WEBAPP_URL",
-        default="https://app.happy.engineering",
         desc="Happy web app URL.",
     )
     HAPPY_HOME_DIR = EnvField(

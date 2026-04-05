@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
-- 新增 `chattool setup happy`，用于安装 Happy CLI，并基于现有 OpenAI-compatible relay / workspace / coding agent setup 流程输出一套 happy-coder bootstrap 建议；支持可选写入 dedicated `happy` profile
+- 新增 `chattool setup happy`，用于安装 Happy CLI，并可选保存 Happy 自身的 `server/webapp/home` 配置，分别支持官方 hosted 模式与自建 Happy server 模式
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 - `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖
