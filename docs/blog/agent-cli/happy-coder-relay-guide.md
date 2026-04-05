@@ -1,113 +1,206 @@
-# Happy 调研：上游 `slopus/happy` 项目怎么工作，以及怎么自建 Happy server
+# Happy 官方用法速查：怎么登录、怎么启动、怎么看状态，以及什么时候需要自建 server
 
-这篇文章讨论上游项目 **[`slopus/happy`](https://github.com/slopus/happy)** 本身。
+这篇文章只基于上游项目 **[`slopus/happy`](https://github.com/slopus/happy)** 的公开资料来写，不夹带别的体系。
 
-重点有两件事：
-
-1. Happy 这个项目到底解决什么问题
-2. 如果你不想依赖官方托管服务，怎么自己部署 Happy server
+先讲清楚官方用法，再讲自建 `happy-server`。
 
 ## 1. Happy 是什么
 
-上游 README 对 Happy 的定义很明确：
+上游 README 的定义是：
 
 > Mobile and Web Client for Claude Code & Codex
 
-它不是一个新的模型提供商，也不是一个 OpenAI-compatible relay。它的定位是：
+Happy 不是一个新的模型提供商，也不是 OpenAI-compatible relay。它主要解决的是：
 
-- 把 Claude Code / Codex / Gemini 这类 coding agent 的会话接到手机、网页和另一台终端
-- 让你可以远程观察、接管、恢复、通知这些会话
-- 全程做端到端加密
+- 让你从手机、网页或另一台终端远程观察和接管 coding agent
+- 在本地 agent 与远端界面之间做会话同步
+- 所有会话内容在离开设备前就完成端到端加密
 
-换句话说，Happy 主要解决的是 **remote control / session sync**，不是模型 API 转发。
+你可以把它理解成：
 
-## 2. 上游项目的组成
+- 本地跑 agent：Claude Code / Codex / Gemini / 其它 ACP-compatible agent
+- Happy 负责 remote control + sync + auth + daemon
 
-从 `slopus/happy` 的 README 可以看出它是一个 monorepo，核心有四块：
+## 2. 先装什么
 
-- `happy-cli`
-- `happy-app`
-- `happy-agent`
-- `happy-server`
-
-它们分别承担不同角色：
-
-- **happy-cli**：你本机上实际运行的 CLI wrapper
-- **happy-app / web**：远端控制界面
-- **happy-agent**：远程控制 CLI / agent 协议层
-- **happy-server**：后端同步与认证服务
-
-## 3. Happy CLI 是怎么工作的
-
-从上游 `happy-cli` 的入口和 README，可以看出 Happy CLI 的典型使用是：
+上游文档给出的安装方式很直接：
 
 ```bash
-happy
-happy claude
-happy codex
-happy gemini
+npm install -g happy
 ```
 
-它不是简单启动一个本地子进程就结束，而是围绕这几件事组织工作流：
+安装后先确认命令是对的：
 
-- 启动本地 agent 会话
-- 在本机建立 daemon
-- 通过 Happy server 注册 machine / session
-- 把状态同步到手机和 Web
-- 在本地和远端之间切换控制权
+```bash
+which happy
+happy --help
+```
 
-所以 Happy 的关键能力不在 prompt，而在 **daemon + server + app + encryption** 这条链路。
+如果是官方 Happy CLI，你应该至少能看到这些命令：
 
-## 4. Happy 自带的官方模式
+- `happy`
+- `happy claude`
+- `happy codex`
+- `happy auth login`
+- `happy daemon ...`
+- `happy doctor`
 
-Happy CLI 读取这些环境变量：
+## 3. 官方用法：先用 hosted 模式跑通
 
-- `HAPPY_SERVER_URL`
-- `HAPPY_WEBAPP_URL`
-- `HAPPY_HOME_DIR`
-
-如果你不设置它们，上游项目自己的默认值是：
+官方 hosted 模式下，不需要先自建 server。Happy CLI 自己有默认值：
 
 - `HAPPY_SERVER_URL=https://api.cluster-fluster.com`
 - `HAPPY_WEBAPP_URL=https://app.happy.engineering`
 - `HAPPY_HOME_DIR=~/.happy`
 
-这就是官方 hosted 模式。
+所以第一步最推荐的流程是：
 
-对应的典型流程是：
+```bash
+happy auth login
+```
+
+### 这一步在做什么
+
+根据上游 `happy-cli` 的 auth 实现，它会：
+
+1. 生成本地密钥对
+2. 向 Happy server 发起认证请求
+3. 通过手机或网页完成授权
+4. 把凭据和本地 machine 信息保存到 `~/.happy`
+
+也就是说，Happy 不是拿 GitHub token 直接登录，而是走它自己的认证体系。
+
+## 4. 登录后怎么用
+
+### 4.1 Claude Code（默认）
+
+上游 README 里给的默认用法是：
+
+```bash
+happy
+# 或
+happy claude
+```
+
+这会：
+
+1. 启动 Claude Code 会话
+2. 显示二维码或提供网页连接入口
+3. 允许你从手机/网页远程查看和控制当前会话
+
+### 4.2 Codex
+
+```bash
+happy codex
+```
+
+### 4.3 Gemini / 其它 agent
+
+上游 README 也写了：
+
+```bash
+happy gemini
+happy openclaw
+
+# 或任意 ACP-compatible CLI
+happy acp opencode
+happy acp -- custom-agent --flag
+```
+
+## 5. daemon 是做什么的
+
+Happy 不是一个“开完终端就算了”的 wrapper。它有 daemon。
+
+上游文档说明 daemon 的作用是：
+
+- 常驻本机
+- 管理后台会话
+- 接收远端请求
+- 让你在没有打开终端窗口时，也能从手机/网页启动或恢复 session
+
+常用命令：
+
+```bash
+happy daemon start
+happy daemon stop
+happy daemon status
+happy daemon list
+```
+
+不过上游也明确说了：
+
+> The daemon starts automatically when you run `happy`
+
+所以多数情况下你不需要先手动起 daemon。
+
+## 6. `happy doctor` 能看什么
+
+如果你觉得状态不对，先跑：
+
+```bash
+happy doctor
+```
+
+从上游 `doctor` 输出逻辑看，它至少会显示：
+
+- `HAPPY_HOME_DIR`
+- `HAPPY_SERVER_URL`
+- 本地配置目录
+- 认证状态
+- daemon 状态
+- settings / logs / daemon state 信息
+
+所以 Happy 的官方排查第一步，应该就是 `happy doctor`，而不是直接猜。
+
+## 7. 常见的官方流程
+
+如果只用官方 hosted 服务，最短路径就是：
 
 ```bash
 npm install -g happy
 happy auth login
-happy claude
+happy
 ```
 
-## 5. 自建时要部署什么
+如果你是 Codex 用户：
 
-如果你要自建，不是只配一个 `base_url` 就够了。
+```bash
+npm install -g happy
+happy auth login
+happy codex
+```
 
-Happy 自建的核心是：
+如果你想看诊断：
 
-- 你自己的 **happy-server**
-- 你自己的 **webapp**（如果你要完整替代官方 web 入口）
-- 客户端把 `HAPPY_SERVER_URL` / `HAPPY_WEBAPP_URL` 指向你的部署
+```bash
+happy doctor
+```
 
-这里最重要的是区分开：
+如果你想看认证状态：
 
-- **Happy server**：远程控制与同步平面
-- **模型 relay**：模型请求转发平面
+```bash
+happy auth status
+```
 
-它们不是同一个东西。
+## 8. 什么时候才需要自建 server
 
-## 6. 上游 happy-server 的自建方式
+如果你只是想先用 Happy，根本不需要一开始就自建。
 
-这部分可以直接从上游 `packages/happy-server/README.md` 读出来。
+上游 `happy-server` README 也明确说了：
 
-上游已经给了一个很明确的自建路径：
+> You don't need to self-host!
 
-### 6.1 Docker 单容器模式
+所以自建通常是出于这些原因：
 
-Happy server 支持单容器运行，不依赖外部 Postgres / Redis / S3：
+- 你不想依赖官方 hosted 服务
+- 你想完全掌控 server 部署与数据位置
+- 你想把 Happy 接到自己的域名和基础设施
+
+## 9. 自建 `happy-server` 的最小路径
+
+上游 `packages/happy-server/README.md` 给了一个最小 Docker 路径。
+
+在上游 Happy monorepo 根目录里：
 
 ```bash
 docker build -t happy-server -f Dockerfile .
@@ -118,62 +211,49 @@ docker run -p 3005:3005 \
   happy-server
 ```
 
-这个模式下它使用：
+这个模式下：
 
-- PGlite 作为嵌入式数据库
-- 本地文件系统存上传文件
-- 内存事件总线
+- 使用嵌入式 PGlite
+- 使用本地文件系统
+- 不需要额外 Postgres / Redis / S3
 
-所以如果你的目标是“先搭起来”，这已经是最小可行路径。
+对于“先搭起来看看”来说，这是最轻的一条路。
 
-### 6.2 最关键的环境变量
+## 10. 自建后，CLI 怎么指向你的 server
 
-根据上游 README，最少关注这些：
+Happy CLI 本身就支持：
 
-- `HANDY_MASTER_SECRET`：必需
-- `PUBLIC_URL`
-- `PORT`
-- `DATA_DIR`
-- `PGLITE_DIR`
+- `HAPPY_SERVER_URL`
+- `HAPPY_WEBAPP_URL`
 
-如果你想换成外部基础设施，还可以再接：
-
-- `DATABASE_URL`
-- `REDIS_URL`
-- `S3_HOST` 等对象存储配置
-
-## 7. ChatTool 这里最适合做什么
-
-基于上游 Happy 项目本身，ChatTool 最适合做的不是“假装自己也实现了 Happy server”，而是：
-
-- 安装 Happy CLI
-- 帮你保存 `HAPPY_SERVER_URL` / `HAPPY_WEBAPP_URL` / `HAPPY_HOME_DIR`
-- 给出官方模式和自建模式的使用说明
-- 把自建 server 的入口文档整理好
-
-所以 `chattool setup happy` 最合理的边界应该是：
-
-1. 安装 `happy`
-2. 可选写入 Happy 自己的配置项
-3. 引导你执行：
+所以自建后，你要做的是让 CLI 指向自己的部署：
 
 ```bash
-happy auth login
-happy claude
-```
-
-或者如果你是自建：
-
-```bash
-chattool setup happy \
-  --server-url https://happy.example/api \
-  --webapp-url https://happy.example/app
-
+export HAPPY_SERVER_URL=https://happy.example/api
+export HAPPY_WEBAPP_URL=https://happy.example/app
 happy auth login
 ```
 
-## 8. 一句话总结
+如果你想把这些变量保存下来，再用 ChatTool 去管理，就可以用：
 
-如果只从上游 `slopus/happy` 项目本身出发，最关键的认识是：
+```bash
+chattool setup happy --server-url https://happy.example/api --webapp-url https://happy.example/app
+chatenv cat -t happy
+```
 
-> Happy 解决的是 coding agent 的远程控制和加密同步问题；自建时，重点是部署 `happy-server` 并让 CLI 指向你自己的 server/webapp，而不是先把它和模型 relay 混成一个系统。
+这里 ChatTool 做的只是：
+
+- 安装 `happy`
+- 保存 Happy 自己的配置项
+
+它不负责实现 Happy server 本身。
+
+## 11. 最后一句
+
+如果你只是第一次接触 Happy，正确顺序应该是：
+
+1. 先按官方 hosted 模式跑通
+2. 用 `happy doctor` 看清本机状态
+3. 再决定要不要自建 `happy-server`
+
+不要一开始就把“官方用法、模型 relay、自建 server、ChatTool 集成”混在一起。先把官方链路跑通，后面的判断才有依据。
