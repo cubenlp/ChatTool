@@ -20,10 +20,16 @@
 
 ## 2. 第一步：安装 CLI
 
-官方安装命令：
+上游 README 目前写的是：
 
 ```bash
 npm install -g happy
+```
+
+但按这台机器的实测，`npm install -g happy` 会装到一个同名错误包。当前可用的安装方式是：
+
+```bash
+npm install -g happy-coder
 ```
 
 装完先确认命令是对的：
@@ -149,7 +155,7 @@ happy daemon list
 ### Claude 用户
 
 ```bash
-npm install -g happy
+npm install -g happy-coder
 happy auth login
 happy
 ```
@@ -157,7 +163,7 @@ happy
 ### Codex 用户
 
 ```bash
-npm install -g happy
+npm install -g happy-coder
 happy auth login
 happy codex
 ```
@@ -235,7 +241,7 @@ chatenv cat -t happy
 如果你现在只是要“把 Happy 用起来”，最值得照着做的其实只有这三步：
 
 ```bash
-npm install -g happy
+npm install -g happy-coder
 happy auth login
 happy
 ```
