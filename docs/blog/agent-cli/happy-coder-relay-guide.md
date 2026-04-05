@@ -1,6 +1,6 @@
 # Happy 调研：上游 `slopus/happy` 项目怎么工作，以及怎么自建 Happy server
 
-这篇文章只讨论上游项目 **[`slopus/happy`](https://github.com/slopus/happy)** 本身。
+这篇文章讨论上游项目 **[`slopus/happy`](https://github.com/slopus/happy)** 本身。
 
 重点有两件事：
 
