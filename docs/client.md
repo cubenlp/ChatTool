@@ -16,6 +16,7 @@ CLI按功能分为几个命令组：
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
 - **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / Happy / lark-cli / Docker / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
@@ -201,7 +202,27 @@ chattool setup docker
 chattool setup docker --sudo -i
 ```
 
-### 0.6 Playground (`setup playground`)
+### 0.6 Happy (`setup happy`)
+
+安装 Happy CLI，并把 Happy 自己的 server/webapp/home 配置收口为现有 ChatTool 配置：
+
+```bash
+chattool setup happy
+chattool setup happy --server-url https://happy.example/api --webapp-url https://happy.example/app
+```
+
+这个命令不会声称 ChatTool 已经内置 Happy server。它的边界是：
+
+- 安装 `happy` CLI
+- 可选保存 Happy 的 `server/webapp/home` 配置
+- 输出后续推荐命令：`chatenv cat -t happy`、`happy auth login`
+
+支持两种接入方式：
+
+- 官方模式：沿用 Happy 官方 `server/webapp`
+- 自建模式：显式传 `--server-url` / `--webapp-url`，让 CLI 指向你自己的 Happy server / webapp
+
+### 0.7 Playground (`setup playground`)
 
 把一个目录快速初始化或更新为工作区：
 

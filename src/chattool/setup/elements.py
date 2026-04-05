@@ -13,6 +13,7 @@ from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
 from chattool.setup.playground import setup_playground
+from chattool.setup.happy import setup_happy
 from chattool.setup.workspace import setup_workspace
 
 
@@ -118,6 +119,15 @@ def workspace_setup(profile, workspace_dir, language, interactive, force, dry_ru
     )
 
 
+def happy_setup(server_url, webapp_url, home_dir, interactive):
+    setup_happy(
+        server_url=server_url,
+        webapp_url=webapp_url,
+        home_dir=home_dir,
+        interactive=interactive,
+    )
+
+
 SETUP_COMMAND_ELEMENTS = (
     SetupCommandElement(
         name="alias",
@@ -216,6 +226,32 @@ SETUP_COMMAND_ELEMENTS = (
                     "is_flag": True,
                     "help": "Allow setup docker to execute suggested sudo commands after confirmation.",
                 },
+            ),
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="happy",
+        help="Install happy CLI and optionally save Happy server/webapp config.",
+        callback=happy_setup,
+        options=(
+            SetupOptionElement(
+                param_decls=("--server-url",),
+                kwargs={"default": None, "help": "Happy server URL."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webapp-url",),
+                kwargs={"default": None, "help": "Happy web app URL."},
+            ),
+            SetupOptionElement(
+                param_decls=("--home-dir",),
+                kwargs={"default": None, "help": "Happy home directory."},
             ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),

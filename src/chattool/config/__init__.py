@@ -1,10 +1,21 @@
 from .elements import EnvField, BaseEnvConfig
 from .main import (
-    AzureConfig, OpenAIConfig, ZulipConfig, AliyunConfig, TencentConfig, FeishuConfig,
-    TongyiConfig, HuggingFaceConfig, PollinationsConfig, LiblibConfig, SiliconFlowConfig ,
-    TPLinkConfig, SkillsConfig
+    AzureConfig,
+    OpenAIConfig,
+    ZulipConfig,
+    AliyunConfig,
+    TencentConfig,
+    FeishuConfig,
+    TongyiConfig,
+    HuggingFaceConfig,
+    PollinationsConfig,
+    LiblibConfig,
+    SiliconFlowConfig,
+    TPLinkConfig,
+    SkillsConfig,
 )
 from .github import GitHubConfig
+from .happy import HappyConfig
 from .browser import BrowserConfig
 
 __all__ = [
@@ -22,6 +33,7 @@ __all__ = [
     "LiblibConfig",
     "SiliconFlowConfig",
     "GitHubConfig",
+    "HappyConfig",
     "BrowserConfig",
     "TPLinkConfig",
     "SkillsConfig",
