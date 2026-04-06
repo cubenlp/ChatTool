@@ -1,6 +1,6 @@
 # 工具箱
 
-ChatTool 提供的各类工具，包括 DNS 管理、AI 绘图、网络扫描、内网穿透、飞书机器人等。
+ChatTool 提供的各类工具，包括 DNS 管理、AI 绘图、网络扫描、Nginx 配置生成、内网穿透、飞书机器人等。
 
 ## 工具规范
 
@@ -14,6 +14,7 @@ ChatTool 提供的各类工具，包括 DNS 管理、AI 绘图、网络扫描、
 - [AI 绘图](image.md)
 - [FRP 内网穿透](frp.md)
 - [网络扫描](network/index.md)
+- [Nginx 配置生成](nginx/index.md)
 - [SVG 转 GIF](svg2gif.md)
 - [TP-Link 路由器](tplogin.md)
 - [CC-Connect 管理](cc/index.md)

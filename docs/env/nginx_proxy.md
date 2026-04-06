@@ -2,6 +2,17 @@
 
 在生产环境中，直接暴露 Chrome 远程调试端口 (CDP) 或 WebDriver 端口是不安全的。推荐使用 Nginx 进行反向代理，并配置适当的访问控制。
 
+如果你想先快速得到一个可编辑模板，可以直接使用：
+
+```bash
+chattool nginx --list
+chattool nginx proxy-pass --set SERVER_NAME=app.example.com --set PROXY_PASS=http://127.0.0.1:8080
+chattool nginx websocket-proxy ./websocket.conf --set SERVER_NAME=ws.example.com --set PROXY_PASS=http://127.0.0.1:3000
+chattool nginx -i
+```
+
+`chattool nginx` 当前会把常见场景整理成模板，并支持交互式逐项填写；下面这份文档继续保留原理说明和手写示例。
+
 ## 1. WebDriver (HTTP) 代理
 
 WebDriver (如 Chromedriver) 主要使用 HTTP 协议进行通信。以下配置示例展示了如何代理 WebDriver 请求。

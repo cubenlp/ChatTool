@@ -157,11 +157,21 @@ chattool image siliconflow list-models
 chattool image siliconflow generate "a cute dog" -o dog.png
 ```
 
-### 6. Other Tools
+### 6. Nginx Config Generation (`chattool nginx`)
+
+```bash
+chattool nginx --list
+chattool nginx proxy-pass --set SERVER_NAME=app.example.com --set PROXY_PASS=http://127.0.0.1:8080
+chattool nginx websocket-proxy ./websocket.conf --set SERVER_NAME=ws.example.com --set PROXY_PASS=http://127.0.0.1:3000
+chattool nginx -i
+```
+
+### 7. Other Tools
 
 | Tool | Command | Description |
 |------|---------|-------------|
 | Network Scan | `chattool network scan` | Scan LAN for active hosts and SSH ports |
+| Nginx Config | `chattool nginx` | Generate template-based reverse proxy and static site configs |
 | MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |

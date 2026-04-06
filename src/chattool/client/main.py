@@ -88,6 +88,7 @@ cli._lazy_commands.update(
         "serve": _build_serve_group,
         "client": _build_client_group,
         "network": lambda: _load_attr("chattool.tools.network.cli", "cli"),
+        "nginx": lambda: _load_attr("chattool.tools.nginx.cli", "cli"),
         "mcp": lambda: _load_attr("chattool.mcp.cli", "cli"),
         "lark": lambda: _load_attr("chattool.tools.lark.cli", "cli"),
         "image": lambda: _load_attr("chattool.tools.image.cli", "cli"),

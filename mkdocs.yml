@@ -138,6 +138,7 @@ nav:
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
     - 网络扫描: tools/network/index.md
+    - Nginx 配置生成: tools/nginx/index.md
     - SVG 转 GIF: tools/svg2gif.md
     - TP-Link 路由器: tools/tplogin.md
     - CC-Connect 管理: tools/cc/index.md

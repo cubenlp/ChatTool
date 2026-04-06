@@ -15,7 +15,7 @@ src/chattool/
 ├── client/     # 统一 CLI 主入口（chattool）
 ├── llm/        # LLM 路由、Chat 对象
 ├── config/     # 环境变量管理（chatenv）
-├── tools/      # 工具箱（dns、lark、image、network 等）
+├── tools/      # 工具箱（dns、lark、image、network、nginx 等）
 ├── mcp/        # MCP 入口与编排（工具实现下放到 tools/*/mcp.py）
 ├── setup/      # 环境安装脚本
 ├── serve/      # 服务端（截图、证书分发等）
