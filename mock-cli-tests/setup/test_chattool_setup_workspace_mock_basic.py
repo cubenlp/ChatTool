@@ -8,7 +8,9 @@ from chattool.client.main import cli
 pytestmark = pytest.mark.mock_cli
 
 
-def test_setup_workspace_prompts_for_missing_profile_and_dir(tmp_path, monkeypatch, runner):
+def test_setup_workspace_prompts_for_missing_profile_and_dir(
+    tmp_path, monkeypatch, runner
+):
     selected: dict[str, str | None] = {"workspace": None}
 
     def fake_text(label, default=None, **kwargs):
@@ -16,13 +18,24 @@ def test_setup_workspace_prompts_for_missing_profile_and_dir(tmp_path, monkeypat
         return selected["workspace"]
 
     monkeypatch.setattr("chattool.setup.workspace.ask_text", fake_text)
-    monkeypatch.setattr("chattool.setup.workspace.resolve_interactive_mode", lambda interactive, auto_prompt_condition: (interactive, True, False, True, True))
+    monkeypatch.setattr(
+        "chattool.setup.workspace.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (
+            interactive,
+            True,
+            False,
+            True,
+            True,
+        ),
+    )
 
     result = runner.invoke(cli, ["setup", "workspace"])
 
     assert result.exit_code == 0
     assert selected["workspace"] is not None
-    assert (tmp_path / "workspace" / "setup.md").exists()
+    assert (tmp_path / "workspace" / "core").exists()
+    assert (tmp_path / "workspace" / "reference").exists()
+    assert (tmp_path / "workspace" / "docs" / "skills").exists()
     assert "Workspace 初始化完成。" in result.output
 
 

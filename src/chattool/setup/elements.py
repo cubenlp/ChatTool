@@ -12,7 +12,6 @@ from chattool.setup.lark_cli import setup_lark_cli
 from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
 from chattool.setup.nodejs import setup_nodejs
-from chattool.setup.playground import setup_playground
 from chattool.setup.workspace import setup_workspace
 
 
@@ -97,17 +96,16 @@ def lark_cli_setup(app_id, app_secret, brand, env, interactive):
     )
 
 
-def playground_setup(workspace_dir, chattool_source, language, interactive, force):
-    setup_playground(
-        workspace_dir=workspace_dir,
-        chattool_source=chattool_source,
-        language=language,
-        interactive=interactive,
-        force=force,
-    )
-
-
-def workspace_setup(profile, workspace_dir, language, interactive, force, dry_run):
+def workspace_setup(
+    profile,
+    workspace_dir,
+    language,
+    interactive,
+    force,
+    dry_run,
+    with_chattool,
+    chattool_source,
+):
     setup_workspace(
         profile_name=profile,
         workspace_dir=workspace_dir,
@@ -115,6 +113,8 @@ def workspace_setup(profile, workspace_dir, language, interactive, force, dry_ru
         interactive=interactive,
         force=force,
         dry_run=dry_run,
+        with_chattool=with_chattool,
+        chattool_source=chattool_source,
     )
 
 
@@ -364,50 +364,6 @@ SETUP_COMMAND_ELEMENTS = (
         ),
     ),
     SetupCommandElement(
-        name="playground",
-        help="Bootstrap or update a workspace with a ChatTool clone, memory files, and workspace skills.",
-        callback=playground_setup,
-        options=(
-            SetupOptionElement(
-                param_decls=("--interactive/--no-interactive", "-i/-I"),
-                kwargs={
-                    "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--workspace-dir", "--dir"),
-                kwargs={
-                    "default": None,
-                    "help": "Workspace root directory. Defaults to current directory.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--chattool-source", "--source"),
-                kwargs={
-                    "default": None,
-                    "help": "Git URL or local ChatTool repo path used for cloning/updating workspace/ChatTool.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--language",),
-                kwargs={
-                    "default": "zh",
-                    "type": click.Choice(["zh", "en"]),
-                    "show_default": True,
-                    "help": "Template language for generated playground files.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--force",),
-                kwargs={
-                    "is_flag": True,
-                    "help": "Allow overwriting generated files and replace a broken non-git ChatTool directory when rerunning.",
-                },
-            ),
-        ),
-    ),
-    SetupCommandElement(
         name="workspace",
         help="Initialize a human-AI collaboration workspace scaffold.",
         callback=workspace_setup,
@@ -440,7 +396,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--force", "-f"),
                 kwargs={
                     "is_flag": True,
-                    "help": "Overwrite existing generated files except completed setup.md.",
+                    "help": "Overwrite existing generated files.",
                 },
             ),
             SetupOptionElement(
@@ -448,6 +404,20 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "is_flag": True,
                     "help": "Print planned workspace files and directories without writing anything.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--with-chattool/--no-chattool",),
+                kwargs={
+                    "default": False,
+                    "help": "Optionally clone/update ChatTool in the workspace root and sync its skills into docs/skills/.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--chattool-source", "--source"),
+                kwargs={
+                    "default": None,
+                    "help": "Git URL or local ChatTool repo path used when --with-chattool is enabled.",
                 },
             ),
         ),
