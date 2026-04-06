@@ -38,7 +38,7 @@ Core idea: finish the task first, then explicitly enter a cleanup and extraction
    - Review the actual diff, not the whole repo by default.
    - Check minimum import / lazy import.
    - Check missing-arg auto interactive behavior and `-i/-I`.
-   - Check new prompts use `utils/tui.py` where appropriate.
+    - Check new prompts use `src/chattool/interaction/` where appropriate.
    - Check tests, docs, `README.md`, `CHANGELOG.md`, and `cli-tests` moved with the change.
    - Always call `$chattool-dev-review` for this pass unless the user explicitly asks not to.
 

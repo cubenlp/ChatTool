@@ -238,39 +238,6 @@ chattool setup playground
 
 或显式指定工作区目录：
 
-```bash
-chattool setup playground --workspace-dir ~/workspace/my-playground
-```
-
-默认会优先 clone 当前本地 ChatTool 仓库；也可以指定远端或本地源：
-
-```bash
-chattool setup playground \
-  --workspace-dir ~/workspace/my-playground \
-  --chattool-source https://github.com/cubenlp/ChatTool.git
-```
-
-如果你希望生成英文版的外层协作文件，可以显式传：
-
-```bash
-chattool setup playground --workspace-dir ~/workspace/my-playground --language en
-```
-
-生成后的结构大致为：
-
-```text
-my-playground/
-├── AGENTS.md
-├── CHATTOOL.md
-├── MEMORY.md
-├── ChatTool/
-├── reports/
-├── playgrounds/
-└── knowledge/
-```
-
-其中外层协作逻辑与 `setup workspace` 类似：默认用常规任务目录，必要时再切到 task set；只是 playground 会额外保留 `ChatTool/` 仓库和同步过来的 `knowledge/skills/`。
-
 ### 0.6 Workspace (`setup workspace`)
 
 如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 多任务并发面 + 知识沉淀”工作区，可以用：
@@ -285,10 +252,12 @@ chattool setup workspace ~/workspace/demo --language en
 
 - `AGENTS.md`：模型主协议
 - `MEMORY.md`：跨 session 记忆
-- `setup.md`：后续 onboarding 入口
 - `reports/`：默认按任务隔离的人类汇报目录，也支持任务集目录
 - `playgrounds/`：默认按任务隔离的工作目录，也支持任务集共享工作根
-- `knowledge/`：长期知识沉淀
+- `docs/`：长期文档沉淀
+- `core/`：源码仓库目录
+- `skills/`：共享 skills 目录
+- `public/`：公开网站和发布目录
 
 默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。对于后继 task，建议在它自己的 `TASK.md` 开头写清验收需求，并说明不满足时是否需要人类 review，还是允许模型自行决断。
 
@@ -299,6 +268,11 @@ chattool setup workspace ~/workspace/demo --language en
 ```bash
 chattool setup workspace ~/workspace/demo --dry-run -I
 ```
+
+交互模式下还可以额外勾选模块，例如：
+
+- `ChatTool`：下载到 `core/ChatTool/`，并把相关 skills 同步到 `./skills/`
+- `RexBlog`：下载到 `core/RexBlog/`，并把 `source/_posts` 链接到 `./public/hexo_blog`
 
 ## 1. DNS 管理 (`dns`)
 
@@ -464,16 +438,16 @@ chattool network services
 ## 4. GitHub 工具 (`gh`)
 
 ### 4.1 配置
-环境变量（推荐用 `chatenv` 管理）：
-- `GITHUB_ACCESS_TOKEN`: GitHub Personal Access Token（建议使用）
-- `GITHUB_DEFAULT_REPO`: 默认仓库（`owner/name`）
+默认行为：
+
+- `repo`：优先从当前 git remote 推断
+- `token`：优先从当前仓库对应的 git credential 读取，再回退 `GITHUB_ACCESS_TOKEN`
 
 ### 4.2 常用命令
 ```bash
 chatenv cat -t gh
 
 export GITHUB_ACCESS_TOKEN="..."
-export GITHUB_DEFAULT_REPO="CubeNLP/ChatTool"
 
 # 列出 PR
 chattool gh pr-list --state open --limit 20
@@ -499,8 +473,8 @@ chattool gh pr-create --base vibe/master --head feature-branch --title "Title" -
 chattool gh pr-comment --number 123 --body "Looks good"
 
 # 合并 PR
-chattool gh pr-merge --number 123 --method squash --confirm
-chattool gh pr-merge --number 123 --method squash --confirm --check
+chattool gh pr-merge --number 123 --method squash
+chattool gh pr-merge --number 123 --method squash --check
 
 # 更新 PR（标题/正文/状态/基线分支）
 chattool gh pr-update --number 123 --title "New title" --body "Updated body"

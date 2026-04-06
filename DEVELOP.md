@@ -14,7 +14,7 @@
 
 - 新能力先落 `tools/<name>/`，再接入 `client/mcp/serve`。
 - CLI 统一 `-i/-I` 与缺参自动交互规则。
-- 所有 CLI 交互统一走 `utils/tui.py`。
+- 所有 CLI 交互统一走 `src/chattool/interaction/`。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致，敏感值默认脱敏。
 - setup 命令必须记录关键阶段日志。
@@ -30,8 +30,8 @@
 
 ## 配置机制
 
-- 默认优先级统一为：`显式参数 > environment variable > envs/<Config>/.env > default`
-- 对支持 `-e/--env` 的命令，统一为：`显式参数 > -e/显式 env > environment variable > envs/<Config>/.env > default`
+- 默认优先级统一为：`显式参数 > 配置（若存在） > environment variable > ChatTool .env > default`
+- 对支持 `-e/--env` 的命令，统一为：`显式参数 > -e/显式 env > 配置（若存在） > environment variable > ChatTool .env > default`
 - profile 固定保存在 `envs/<Config>/<profile>.env`
 - 新命令需要临时切换配置时，优先复用 `-e/--env`，不要再新增一套临时环境变量语义
 

@@ -2,13 +2,23 @@
 
 `chattool setup workspace` 用来初始化一个围绕核心项目的“人类-AI 协作工作区”。
 
-它不会把协议文件和知识沉淀塞进核心项目仓库里，而是在项目外围建立一层独立 workspace，用来承载：
+当前版本采用“基础 workspace + 可选配置项”的结构。
 
-- 人类当前意图与阶段目标
-- 多个任务并发时的任务隔离与汇报面
-- 跨 session 记忆
-- 任务产物
-- 可复用知识、报告与工具笔记
+基础目录固定生成：
+
+- `reports/`
+- `playgrounds/`
+- `docs/`
+- `core/`
+- `reference/`
+- `skills/`
+- `public/`
+
+其中：
+
+- `core/`：集中放需要加入 workspace 的源码仓库
+- `skills/`：共享 skills 目录，默认放在 workspace 根目录
+- `public/`：用于部署公开网站和相关发布内容
 
 ## 1. 基本用法
 
@@ -27,60 +37,47 @@ chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--force] 
 - `PROFILE`：可选，当前仅支持 `base`
 - `WORKSPACE_DIR`：可选，默认当前目录
 - `--language`：模板语言，默认 `zh`，也可显式传 `en`
-- `--force`：覆盖已生成文件，但如果 `setup.md` 已包含 `completed:`，仍不会覆盖它
+- `--force`：覆盖已生成文件
 - `--dry-run`：只打印将创建的目录与文件，不写入磁盘
 - `-i / -I`：强制交互 / 禁止交互
 
-## 2. 生成结构
-
-基础 workspace 结构如下：
+## 2. 基础结构
 
 ```text
 workspace/
+├── README.md
 ├── AGENTS.md
 ├── MEMORY.md
-├── setup.md
+├── TODO.md
 ├── reports/
-│   └── README.md
 ├── playgrounds/
-│   └── README.md
-└── knowledge/
-    ├── README.md
-    ├── blog/
-    ├── design/
-    ├── memory/
-    │   └── status/
-    ├── skills/
-    └── tools/
+├── docs/
+├── core/
+├── reference/
+├── skills/
+└── public/
 ```
 
-其中：
+## 3. 可选配置项
 
-- `reports/`：面向人的任务汇报区，默认按常规任务目录组织，也支持任务集
-- `playgrounds/`：模型的任务隔离工作区，默认按任务目录组织，也支持任务集共享工作根
-- `MEMORY.md`：跨 session 记忆
-- `knowledge/`：长期可复用知识沉淀区
+交互模式下可以追加额外模块。
 
-默认模板采用按任务隔离的并发协作方式：
+### ChatTool
 
-- 默认先使用常规任务模式：对人的汇报进入 `reports/MM-DD-<task-name>/`，工作目录使用 `playgrounds/<task-name>/`
-- 如果是一组围绕同一目标持续推进的大任务，则使用任务集：`reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`
-- 任务集可维护全局 `progress.md`，并在该目录下直接拆分多个具体任务子目录
-- 对于任务集中的每个后继任务，建议在该任务自己的 `TASK.md` 开头写明验收需求，并说明验收不符合时是否需要人类 review，还是允许模型自行决断；这类信息只放在后继任务侧，不干扰前置任务执行
-- 任务执行过程中只专注当前任务；每次收尾后，若属于任务集，再更新任务集进展并衔接下一个任务
+- 仓库放到 `core/ChatTool/`
+- 从仓库内 `skills/` 同步到 workspace 根目录 `./skills/`
 
-## 3. Profile
+### RexBlog
 
-当前只保留 `base`，用于生成通用协作骨架。
+- 仓库放到 `core/RexBlog/`
+- 把 `source/_posts` 链接到 `./public/hexo_blog`
+- `public/` 根目录默认附带 `README.md`，说明这里用于部署公开网站
 
-## 4. 语言
+## 4. 设计原则
 
-- 默认语言是中文，适合当前仓库和常见使用场景
-- 如果你希望生成英文协议和模板，可以显式传：
-
-```bash
-chattool setup workspace ~/workspace/demo --language en
-```
+- `workspace` 是基础模型
+- 额外仓库和发布能力通过“可选配置项”叠加
+- 不再为每个场景分叉新的 workspace 命令
 
 ## 5. dry-run
 
@@ -92,17 +89,4 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 
 - 将创建哪些目录
 - 将写哪些文件
-- 生成骨架是否符合预期
-
-## 6. force 与 setup.md 保护
-
-```bash
-chattool setup workspace ~/workspace/demo --force
-```
-
-`--force` 会覆盖多数生成文件，但有一个特例：
-
-- 如果 `setup.md` 已包含 `completed:`，说明该 onboarding 已被后续模型消费并完成
-- 这种情况下，即使传 `--force`，也不会覆盖 `setup.md`
-
-这样可以避免把已经完成的项目适配清单误恢复成模板。
+- 将启用哪些可选配置项
