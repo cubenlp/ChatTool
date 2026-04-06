@@ -11,10 +11,12 @@ class LazyGroup(click.Group):
         self,
         *args,
         lazy_commands: dict[str, Callable[[], click.Command]] | None = None,
+        lazy_command_help: dict[str, str] | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._lazy_commands = dict(lazy_commands or {})
+        self._lazy_command_help = dict(lazy_command_help or {})
 
     def list_commands(self, ctx: click.Context) -> list[str]:
         commands = set(self.commands)
@@ -37,7 +39,7 @@ class LazyGroup(click.Group):
                     continue
                 help_text = cmd.get_short_help_str()
             else:
-                help_text = ""
+                help_text = self._lazy_command_help.get(subcommand, "")
             rows.append((subcommand, help_text))
 
         if rows:
@@ -70,6 +72,10 @@ def _build_client_group() -> click.Command:
             "svg2gif": lambda: _load_attr(
                 "chattool.client.svg2gif_client", "svg2gif_client"
             ),
+        },
+        lazy_command_help={
+            "cert": "Manage certificates through the remote cert service.",
+            "svg2gif": "Convert SVG to GIF through the remote svg2gif service.",
         },
     )
 

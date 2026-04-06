@@ -14,19 +14,14 @@ from chattool.interaction import (
     get_separator,
     is_interactive_available,
 )
-from chattool.tools.nginx.templates import (
-    CATEGORY_LABELS,
-    TEMPLATE_SPECS,
-    USAGE,
-    build_template_values,
-    list_templates_by_category,
-    parse_set_values,
-    render_template,
-    resolve_template,
-)
 
 
 def _select_template_interactively() -> str:
+    from chattool.tools.nginx.templates import (
+        CATEGORY_LABELS,
+        list_templates_by_category,
+    )
+
     category_choices = [
         create_choice(CATEGORY_LABELS[category], category)
         for category, _ in list_templates_by_category()
@@ -54,6 +49,8 @@ def _select_template_interactively() -> str:
 def _prompt_template_values(
     template_name: str, current_values: dict[str, str]
 ) -> dict[str, str]:
+    from chattool.tools.nginx.templates import TEMPLATE_SPECS
+
     spec = TEMPLATE_SPECS[template_name]
     values = dict(current_values)
     fields_by_key = {field.key: field for field in spec.fields}
@@ -114,6 +111,16 @@ def cli(
     list_templates: bool,
 ) -> None:
     """Generate nginx config templates for common deployment scenarios."""
+
+    from chattool.tools.nginx.templates import (
+        CATEGORY_LABELS,
+        USAGE,
+        build_template_values,
+        list_templates_by_category,
+        parse_set_values,
+        render_template,
+        resolve_template,
+    )
 
     if list_templates:
         for category, specs in list_templates_by_category():

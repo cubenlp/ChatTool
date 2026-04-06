@@ -104,8 +104,9 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
 
     assert result.exit_code == 0
     assert "Enabled options: chattool, rexblog" in result.output
-    assert any("ChatTool github_token (current:" in item for item in prompts)
-    assert any("RexBlog github_token (current:" in item for item in prompts)
+    assert any("ChatTool github_token" in item for item in prompts)
+    assert any("RexBlog github_token" in item for item in prompts)
+    assert any(("当前" in item) or ("current" in item) for item in prompts)
 
 
 def test_setup_workspace_interactive_configures_repo_tokens(

@@ -69,6 +69,7 @@ def skill_cli():
 def install_skill(
     name, install_all, platform_name, source_dir, dest_dir, prefix, force
 ):
+    """Install one or more skills to a target platform directory."""
     if name and install_all:
         click.echo("Cannot use a skill name together with --all.", err=True)
         raise click.Abort()
@@ -183,6 +184,7 @@ def install_skill(
     help="Source skills directory.",
 )
 def list_skills(source_dir):
+    """List available skills from the source skills directory."""
     source = resolve_source_dir(source_dir)
     if not source or not source.exists():
         click.echo("Skills source directory not found.", err=True)

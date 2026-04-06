@@ -139,9 +139,23 @@ def _prompt_repo_github_token(
 
     prompt_label = f"{module_name} github_token"
     if default_token:
-        prompt_label += f" (current: {mask_secret(default_token)}, enter to keep; `chatgh set-token` later is also ok)"
+        if language == "en":
+            prompt_label += (
+                f" (current: {mask_secret(default_token)}, enter to keep; "
+                "`chatgh set-token` later is also ok)"
+            )
+        else:
+            prompt_label += (
+                f"（当前: {mask_secret(default_token)}，回车保留；"
+                "之后也可执行 `chatgh set-token`）"
+            )
     else:
-        prompt_label += " (`chatgh set-token` later is also ok; leave empty to skip)"
+        if language == "en":
+            prompt_label += (
+                " (`chatgh set-token` later is also ok; leave empty to skip)"
+            )
+        else:
+            prompt_label += "（之后也可执行 `chatgh set-token`；留空跳过）"
     token_input = ask_text(prompt_label, default=default_token or "", password=True)
     token_value = str(token_input).strip() if token_input is not None else ""
     return token_value or default_token or None
