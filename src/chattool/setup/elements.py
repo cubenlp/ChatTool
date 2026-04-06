@@ -33,8 +33,8 @@ class SetupCommandElement:
     options: Sequence[SetupOptionElement] = field(default_factory=tuple)
 
 
-def chrome_setup(interactive):
-    setup_chrome_driver(interactive=interactive)
+def chrome_setup(update, interactive):
+    setup_chrome_driver(interactive=interactive, update=update)
 
 
 def frp_setup(interactive):
@@ -196,6 +196,13 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup Chrome and Chromedriver.",
         callback=chrome_setup,
         options=(
+            SetupOptionElement(
+                param_decls=("--update",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Update existing Chromedriver installation instead of exiting when already installed.",
+                },
+            ),
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={

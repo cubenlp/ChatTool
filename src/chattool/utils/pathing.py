@@ -4,7 +4,7 @@ from pathlib import Path
 
 from chattool.utils.custom_logger import setup_logger
 
-logger = setup_logger("setup_common")
+logger = setup_logger("pathing")
 
 
 def normalize_path(value) -> Path | None:

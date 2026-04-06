@@ -7,7 +7,6 @@ import subprocess
 
 import click
 
-from chattool.setup.common import display_path, resolve_workspace_dir, write_text_file
 from chattool.interaction import (
     BACK_VALUE,
     abort_if_force_without_tty,
@@ -17,6 +16,7 @@ from chattool.interaction import (
     create_choice,
     resolve_interactive_mode,
 )
+from chattool.utils.pathing import display_path, resolve_workspace_dir, write_text_file
 from chattool.utils import mask_secret
 from chattool.utils.custom_logger import setup_logger
 

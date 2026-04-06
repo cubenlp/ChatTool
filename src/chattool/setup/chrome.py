@@ -130,9 +130,9 @@ def install_chromedriver(url, target_dir):
         raise
 
 
-def setup_chrome_driver(interactive=None):
+def setup_chrome_driver(interactive=None, update=False):
     """Main setup function."""
-    usage = "Usage: chattool setup chrome [-i|-I]"
+    usage = "Usage: chattool setup chrome [--update] [-i|-I]"
     interactive, can_prompt, force_interactive, _, need_prompt = (
         resolve_interactive_mode(
             interactive=interactive,
@@ -145,13 +145,16 @@ def setup_chrome_driver(interactive=None):
     existing_path = shutil.which("chromedriver")
     if existing_path:
         click.echo(f"Chromedriver is already installed at {existing_path}")
-        if not need_prompt:
+        target_dir = Path(existing_path).parent
+        if update:
             click.echo("Updating existing installation...")
-            target_dir = Path(existing_path).parent
-        else:
-            if not click.confirm("Do you want to update/reinstall?", default=True):
+        elif need_prompt:
+            if not click.confirm("Do you want to update/reinstall?", default=False):
                 return
-            target_dir = Path(existing_path).parent
+            click.echo("Updating existing installation...")
+        else:
+            click.echo("Use --update to refresh the existing installation.")
+            return
     else:
         target_dir = Path.home() / ".local" / "bin"
 

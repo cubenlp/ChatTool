@@ -9,6 +9,7 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, FeishuConfig
+from chattool.config.source_chain import split_config_sources
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 from chattool.interaction import (
     BACK_VALUE,
@@ -25,7 +26,6 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
-from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_lark_cli")
@@ -235,6 +235,7 @@ def setup_lark_cli(
     config_dir = _get_lark_cli_config_dir()
     config_path = _get_lark_cli_config_path()
     existing = _load_existing_lark_cli_config(config_path)
+    saved_feishu = _load_saved_feishu_values()
     env_values, typed_env_values = split_config_sources(
         FeishuConfig,
         CHATTOOL_ENV_DIR,
@@ -253,6 +254,7 @@ def setup_lark_cli(
     app_id = resolve_value(
         app_id,
         env_config.get("app_id"),
+        saved_feishu.get("app_id"),
         existing.get("app_id"),
         env_values.get("FEISHU_APP_ID"),
         typed_env_values.get("FEISHU_APP_ID"),
@@ -260,12 +262,15 @@ def setup_lark_cli(
     app_secret = resolve_value(
         app_secret,
         env_config.get("app_secret"),
+        saved_feishu.get("app_secret"),
         env_values.get("FEISHU_APP_SECRET"),
         typed_env_values.get("FEISHU_APP_SECRET"),
     )
     if not brand:
         if env_config.get("api_base"):
             brand = _infer_brand(env_config.get("api_base"))
+        elif saved_feishu.get("api_base"):
+            brand = _infer_brand(saved_feishu.get("api_base"))
         elif existing.get("brand"):
             brand = existing.get("brand")
         elif env_values.get("FEISHU_API_BASE"):

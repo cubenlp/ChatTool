@@ -4,6 +4,7 @@ from pathlib import Path
 DEFAULT_BASE_URL = "https://api.anthropic.com/v1"
 DEFAULT_SMALL_FAST_MODEL = "claude-opus-4-6"
 
+
 def _mask_secret(value):
     if not value:
         return ""
@@ -54,11 +55,10 @@ def _load_existing_claude_config(claude_dir):
 def setup_claude(
     auth_token=None, base_url=None, small_fast_model=None, interactive=None
 ):
-    
-
     import click
 
     from chattool.interaction import (
+        abort_if_missing_without_tty,
         abort_if_force_without_tty,
         prompt_sensitive_value,
         prompt_text_value,
@@ -104,6 +104,18 @@ def setup_claude(
         abort_if_force_without_tty(force_interactive, can_prompt, usage)
     except click.Abort:
         logger.error("Interactive mode requested but no TTY is available")
+        raise
+
+    try:
+        abort_if_missing_without_tty(
+            missing_required=missing_required,
+            interactive=interactive,
+            can_prompt=can_prompt,
+            message="Missing required arguments and no TTY is available for interactive prompts.",
+            usage=usage,
+        )
+    except click.Abort:
+        logger.error("Missing required arguments and no TTY available")
         raise
 
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)

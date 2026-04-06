@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, OpenAIConfig
+from chattool.config.source_chain import split_config_sources
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 from chattool.interaction import (
     BACK_VALUE,
@@ -20,7 +21,6 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
-from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
 
 DEFAULT_MODEL = "gpt-5.4"
