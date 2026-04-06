@@ -13,7 +13,7 @@ from pathlib import Path
 
 import click
 
-from chattool.cli_warnings import install_cli_warning_filters
+from chattool.interaction import install_cli_warning_filters
 from chattool.config import BaseEnvConfig, FeishuConfig
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 
@@ -103,7 +103,13 @@ def _create_chat_session(*, system: str = "", max_history: int | None = None):
 
 
 @cli.command()
-@click.option("--env", "-e", "env_ref", default=None, help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option(
+    "--env",
+    "-e",
+    "env_ref",
+    default=None,
+    help="从指定 .env 文件或已保存 profile 读取配置",
+)
 def info(env_ref):
     """获取机器人基本信息（验证凭证）"""
     _load_runtime_env(env_ref)
@@ -125,7 +131,13 @@ def info(env_ref):
 @cli.command()
 @click.argument("receiver", required=False)
 @click.argument("text", required=False, default="")
-@click.option("--env", "-e", "env_ref", default=None, help="从指定 .env 文件或已保存 profile 读取配置")
+@click.option(
+    "--env",
+    "-e",
+    "env_ref",
+    default=None,
+    help="从指定 .env 文件或已保存 profile 读取配置",
+)
 @click.option(
     "--type",
     "-t",
@@ -155,7 +167,9 @@ def send(receiver, text, env_ref, id_type):
         )
         return
     if not receiver:
-        click.secho(f"请指定接收者，或先配置 {default_target_env} 作为默认发送目标", fg="red")
+        click.secho(
+            f"请指定接收者，或先配置 {default_target_env} 作为默认发送目标", fg="red"
+        )
         return
     if not text:
         click.secho("请提供文本消息内容", fg="red")
@@ -163,7 +177,9 @@ def send(receiver, text, env_ref, id_type):
 
     resp = bot.send_text(receiver, id_type, text)
     if resp.success():
-        click.secho(f"✅ 文本消息发送成功  message_id={resp.data.message_id}", fg="green")
+        click.secho(
+            f"✅ 文本消息发送成功  message_id={resp.data.message_id}", fg="green"
+        )
         return
 
     click.secho(f"❌ 发送失败: code={resp.code}  msg={resp.msg}", fg="red")
@@ -172,10 +188,25 @@ def send(receiver, text, env_ref, id_type):
 
 
 @cli.command()
-@click.option("--env", "-e", "env_ref", default=None, help="从指定 .env 文件或已保存 profile 读取配置")
-@click.option("--system", "-s", default="你是一个工作助手，回答简洁专业。", help="System Prompt")
-@click.option("--max-history", "-n", default=10, type=int, help="最多保留的对话轮数 (默认 10)")
-@click.option("--user", "-u", default="cli_user", help="虚拟 user_id，用于会话隔离 (默认 cli_user)")
+@click.option(
+    "--env",
+    "-e",
+    "env_ref",
+    default=None,
+    help="从指定 .env 文件或已保存 profile 读取配置",
+)
+@click.option(
+    "--system", "-s", default="你是一个工作助手，回答简洁专业。", help="System Prompt"
+)
+@click.option(
+    "--max-history", "-n", default=10, type=int, help="最多保留的对话轮数 (默认 10)"
+)
+@click.option(
+    "--user",
+    "-u",
+    default="cli_user",
+    help="虚拟 user_id，用于会话隔离 (默认 cli_user)",
+)
 def chat(env_ref, system, max_history, user):
     """在终端启动交互式 AI 对话。"""
     _load_runtime_env(env_ref)

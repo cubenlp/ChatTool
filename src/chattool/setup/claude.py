@@ -27,7 +27,9 @@ def _load_existing_claude_config(claude_dir):
     if settings_path.exists():
         try:
             settings_data = json.loads(settings_path.read_text(encoding="utf-8"))
-            env = settings_data.get("env", {}) if isinstance(settings_data, dict) else {}
+            env = (
+                settings_data.get("env", {}) if isinstance(settings_data, dict) else {}
+            )
             if isinstance(env, dict):
                 existing["auth_token"] = env.get("ANTHROPIC_AUTH_TOKEN")
                 existing["base_url"] = env.get("ANTHROPIC_BASE_URL")
@@ -47,13 +49,15 @@ def _load_existing_claude_config(claude_dir):
     return existing
 
 
-def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interactive=None):
+def setup_claude(
+    auth_token=None, base_url=None, small_fast_model=None, interactive=None
+):
     import json
     from pathlib import Path
 
     import click
 
-    from chattool.setup.interactive import (
+    from chattool.interaction import (
         abort_if_force_without_tty,
         resolve_interactive_mode,
     )
@@ -63,7 +67,7 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         should_install_global_npm_package,
     )
     from chattool.utils.custom_logger import setup_logger
-    from chattool.utils.tui import BACK_VALUE, ask_text
+    from chattool.interaction import BACK_VALUE, ask_text
 
     logger = setup_logger("setup_claude")
     claude_dir = Path.home() / ".claude"
@@ -85,9 +89,11 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         "Usage: chattool setup claude [--auth-token <value>] [--base-url <value>] "
         "[--small-fast-model <value>] [-i|-I]"
     )
-    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=(missing_required or has_existing_config),
+    interactive, can_prompt, force_interactive, auto_interactive, need_prompt = (
+        resolve_interactive_mode(
+            interactive=interactive,
+            auto_prompt_condition=(missing_required or has_existing_config),
+        )
     )
 
     try:
@@ -114,8 +120,14 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         if base_url == BACK_VALUE:
             return
 
-        model_default = small_fast_model or existing.get("small_fast_model") or DEFAULT_SMALL_FAST_MODEL
-        small_fast_model = ask_text("ANTHROPIC_SMALL_FAST_MODEL (optional)", default=model_default)
+        model_default = (
+            small_fast_model
+            or existing.get("small_fast_model")
+            or DEFAULT_SMALL_FAST_MODEL
+        )
+        small_fast_model = ask_text(
+            "ANTHROPIC_SMALL_FAST_MODEL (optional)", default=model_default
+        )
         if small_fast_model == BACK_VALUE:
             return
 
@@ -140,7 +152,9 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
             raise click.Abort()
 
     base_url = base_url or existing.get("base_url") or DEFAULT_BASE_URL
-    small_fast_model = small_fast_model or existing.get("small_fast_model") or DEFAULT_SMALL_FAST_MODEL
+    small_fast_model = (
+        small_fast_model or existing.get("small_fast_model") or DEFAULT_SMALL_FAST_MODEL
+    )
     primary_api_key = existing.get("primary_api_key") or "1"
 
     claude_dir.mkdir(parents=True, exist_ok=True)
@@ -153,13 +167,17 @@ def setup_claude(auth_token=None, base_url=None, small_fast_model=None, interact
         }
     }
     settings_path = claude_dir / "settings.json"
-    settings_path.write_text(json.dumps(settings_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    settings_path.write_text(
+        json.dumps(settings_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     settings_path.chmod(0o600)
     logger.info(f"Wrote settings file: {settings_path}")
 
     config_json = {"primaryApiKey": primary_api_key}
     config_path = claude_dir / "config.json"
-    config_path.write_text(json.dumps(config_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    config_path.write_text(
+        json.dumps(config_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     config_path.chmod(0o600)
     logger.info(f"Wrote config file: {config_path}")
 

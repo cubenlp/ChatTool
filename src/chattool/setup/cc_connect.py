@@ -1,6 +1,9 @@
 import click
 
-from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
+from chattool.interaction import (
+    abort_if_force_without_tty,
+    resolve_interactive_mode,
+)
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
     run_npm_command,

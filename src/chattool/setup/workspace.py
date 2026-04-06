@@ -6,8 +6,13 @@ from pathlib import Path
 import click
 
 from chattool.setup.common import display_path, resolve_workspace_dir, write_text_file
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
+    ask_confirm,
+    ask_select,
+    ask_text,
+    create_choice,
     resolve_interactive_mode,
 )
 from chattool.setup.playground import (
@@ -20,13 +25,6 @@ from chattool.setup.playground import (
     _workspace_skills_source,
 )
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import (
-    BACK_VALUE,
-    ask_confirm,
-    ask_select,
-    ask_text,
-    create_choice,
-)
 
 logger = setup_logger("setup_workspace")
 

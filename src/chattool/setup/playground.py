@@ -9,13 +9,15 @@ import click
 from chattool.setup.common import display_path as _display_path
 from chattool.setup.common import resolve_workspace_dir as _resolve_workspace_dir
 from chattool.setup.common import write_text_file as _write_text_file
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
+    ask_confirm,
+    ask_text,
     resolve_interactive_mode,
 )
 from chattool.utils import mask_secret
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_confirm, ask_text
 
 logger = setup_logger("setup_playground")
 

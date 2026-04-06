@@ -2,18 +2,18 @@ from pathlib import Path
 
 import click
 
+from chattool.interaction import (
+    BACK_VALUE,
+    ask_path,
+    ask_select,
+    is_interactive_available,
+)
 from chattool.docker.elements import (
     TEMPLATES,
     USAGE,
     parse_set_values,
     render_env_example,
     resolve_template,
-)
-from chattool.utils.tui import (
-    BACK_VALUE,
-    ask_path,
-    ask_select,
-    is_interactive_available,
 )
 
 

@@ -1,129 +1,28 @@
+"""Prompt primitives for ChatTool CLI interaction."""
+
 import getpass
 import sys
 from contextlib import contextmanager
 
 import click
 
-
-BACK_VALUE = "__BACK__"
-CHECKBOX_SELECTED_INDICATOR = "[x]"
-CHECKBOX_UNSELECTED_INDICATOR = "[ ]"
-
-
-def get_style():
-    """Compatibility shim for older questionary-based callers."""
-    return None
-
-
-def _get_console():
-    try:
-        from rich.console import Console
-    except ImportError:  # pragma: no cover - optional dependency fallback
-        return None
-    return Console(stderr=True)
-
-
-def _render_heading(title, subtitle=None):
-    console = _get_console()
-    if not console:
-        if subtitle:
-            click.echo(f"\n{title}\n{subtitle}", err=True)
-        else:
-            click.echo(f"\n{title}", err=True)
-        return
-
-    try:
-        from rich.panel import Panel
-    except ImportError:  # pragma: no cover - optional dependency fallback
-        if subtitle:
-            click.echo(f"\n{title}\n{subtitle}", err=True)
-        else:
-            click.echo(f"\n{title}", err=True)
-        return
-
-    console.print(
-        Panel.fit(
-            subtitle or "",
-            title=f"[bold cyan]{title}[/bold cyan]",
-            border_style="cyan",
-            padding=(0, 1),
-        )
-    )
-
-
-def _render_note(message):
-    console = _get_console()
-    if not console:
-        click.echo(message, err=True)
-        return
-    console.print(f"[dim]{message}[/dim]")
+from .choice import (
+    _normalize_choice,
+    _questionary_select_style,
+    create_choice,
+    get_separator,
+)
+from .render import _render_heading, _render_note, get_style
+from .types import (
+    BACK_VALUE,
+    CHECKBOX_SELECTED_INDICATOR,
+    CHECKBOX_UNSELECTED_INDICATOR,
+)
 
 
 def is_interactive_available():
     """Check if interactive mode is available."""
     return bool(sys.stdin.isatty() and sys.stdout.isatty())
-
-
-def get_separator():
-    """Return a logical separator for select prompts."""
-    return {"separator": True}
-
-
-def create_choice(title, value, checked=False):
-    """Return a choice object for select/checkbox prompts."""
-    try:
-        import questionary
-    except ImportError:
-        return {"title": title, "value": value, "checked": checked}
-
-    return questionary.Choice(title=title, value=value, checked=checked)
-
-
-def _normalize_choice(choice):
-    if isinstance(choice, dict):
-        if choice.get("separator"):
-            return {"separator": True}
-        return {
-            "title": str(choice.get("title", choice.get("value", ""))),
-            "value": choice.get("value"),
-            "checked": bool(choice.get("checked", False)),
-            "separator": False,
-        }
-
-    if isinstance(choice, str):
-        return {
-            "title": choice,
-            "value": choice,
-            "checked": False,
-            "separator": False,
-        }
-
-    title = getattr(choice, "title", choice)
-    value = getattr(choice, "value", choice)
-    checked = bool(getattr(choice, "checked", False))
-    return {
-        "title": str(title),
-        "value": value,
-        "checked": checked,
-        "separator": False,
-    }
-
-
-def _questionary_select_style(questionary):
-    return questionary.Style(
-        [
-            ("qmark", ""),
-            ("question", ""),
-            ("answer", ""),
-            ("pointer", ""),
-            ("highlighted", "noreverse"),
-            ("selected", "noreverse"),
-            ("separator", "dim"),
-            ("instruction", "dim"),
-            ("text", ""),
-            ("disabled", "italic"),
-        ]
-    )
 
 
 def _render_numbered_choices(message, normalized):
@@ -592,3 +491,15 @@ def ask_confirm(message, default=True, style=None):
         return click.confirm("Continue", default=default, prompt_suffix=" ", err=True)
 
     return _prompt()
+
+
+__all__ = [
+    "ask_checkbox",
+    "ask_checkbox_with_controls",
+    "ask_confirm",
+    "ask_path",
+    "ask_select",
+    "ask_text",
+    "get_style",
+    "is_interactive_available",
+]

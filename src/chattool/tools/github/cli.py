@@ -5,9 +5,9 @@ import subprocess
 import time
 from typing import Optional
 
+from chattool.interaction import BACK_VALUE, ask_text, is_interactive_available
 from chattool.const import CHATTOOL_ENV_DIR
 from chattool.config.github import GitHubConfig
-from chattool.utils.tui import BACK_VALUE, ask_text, is_interactive_available
 
 _ENV_LOADED = False
 

@@ -3,6 +3,7 @@ chattool cc - cc-connect 管理工具
 
 提供最小可用的 cc-connect 安装、配置、启动与诊断能力。
 """
+
 from __future__ import annotations
 
 import os
@@ -112,7 +113,9 @@ def _load_existing_defaults(config_path: Path) -> dict[str, object]:
         return {}
 
     agent = project.get("agent", {}) if isinstance(project.get("agent"), dict) else {}
-    agent_opts = agent.get("options", {}) if isinstance(agent.get("options"), dict) else {}
+    agent_opts = (
+        agent.get("options", {}) if isinstance(agent.get("options"), dict) else {}
+    )
 
     platforms = project.get("platforms")
     platform = platforms[0] if isinstance(platforms, list) and platforms else {}
@@ -147,33 +150,43 @@ def _write_config(
     platform_options = platform_options or {}
     lines: list[str] = []
     lines.append("[[projects]]")
-    lines.append(f"name = \"{_toml_string(project_name)}\"")
+    lines.append(f'name = "{_toml_string(project_name)}"')
     if quiet is not None:
         lines.append(f"quiet = {'true' if quiet else 'false'}")
     lines.append("")
     lines.append("[projects.agent]")
-    lines.append(f"type = \"{_toml_string(agent)}\"")
+    lines.append(f'type = "{_toml_string(agent)}"')
     lines.append("")
     lines.append("[projects.agent.options]")
-    lines.append(f"work_dir = \"{_toml_string(work_dir)}\"")
-    lines.append(f"mode = \"{_toml_string(mode)}\"")
+    lines.append(f'work_dir = "{_toml_string(work_dir)}"')
+    lines.append(f'mode = "{_toml_string(mode)}"')
     lines.append("")
     lines.append("[[projects.platforms]]")
-    lines.append(f"type = \"{_toml_string(platform)}\"")
+    lines.append(f'type = "{_toml_string(platform)}"')
     lines.append("")
     lines.append("[projects.platforms.options]")
     if platform_options:
         for key, value in platform_options.items():
-            lines.append(f"{key} = \"{_toml_string(value)}\"")
+            lines.append(f'{key} = "{_toml_string(value)}"')
     else:
         lines.append("# TODO: fill platform credentials here")
     if "proxy" not in platform_options:
-        lines.append("# proxy = \"\"  # optional: forward proxy for API calls if your IP is dynamic")
+        lines.append(
+            '# proxy = ""  # optional: forward proxy for API calls if your IP is dynamic'
+        )
         lines.append("#             # 可选：正向代理，用于 IP 不固定的场景")
-        lines.append("#             # e.g. \"http://your-vps-ip:8888\" — the VPS IP goes into trusted IP list")
-        lines.append("#             # 示例：\"http://你的VPS-IP:8888\" — 将 VPS IP 加入可信 IP 列表")
-        lines.append("# proxy_username = \"\"  # optional: proxy authentication username / 代理认证用户名")
-        lines.append("# proxy_password = \"\"  # optional: proxy authentication password / 代理认证密码")
+        lines.append(
+            '#             # e.g. "http://your-vps-ip:8888" — the VPS IP goes into trusted IP list'
+        )
+        lines.append(
+            '#             # 示例："http://你的VPS-IP:8888" — 将 VPS IP 加入可信 IP 列表'
+        )
+        lines.append(
+            '# proxy_username = ""  # optional: proxy authentication username / 代理认证用户名'
+        )
+        lines.append(
+            '# proxy_password = ""  # optional: proxy authentication password / 代理认证密码'
+        )
     lines.append("")
 
     _ensure_parent(config_path)
@@ -205,7 +218,9 @@ def _prompt_secret_with_optional_default(label: str, default: str = "") -> str:
             hide_input=True,
         )
         return entered or default
-    return click.prompt(label, confirmation_prompt=True, hide_input=True, show_default=False)
+    return click.prompt(
+        label, confirmation_prompt=True, hide_input=True, show_default=False
+    )
 
 
 def _get_feishu_candidate_options() -> dict[str, str]:
@@ -219,7 +234,9 @@ def _get_feishu_candidate_options() -> dict[str, str]:
     return candidates
 
 
-def _prompt_platform_credentials(platform: str, existing: dict[str, str] | None) -> dict[str, str]:
+def _prompt_platform_credentials(
+    platform: str, existing: dict[str, str] | None
+) -> dict[str, str]:
     existing = existing or {}
     if platform == "feishu":
         prompt_defaults = dict(_get_feishu_candidate_options())
@@ -234,13 +251,16 @@ def _prompt_platform_credentials(platform: str, existing: dict[str, str] | None)
         app_id_default = prompt_defaults.get("app_id") or ""
         app_id = click.prompt("app_id", default=app_id_default)
         app_secret_default = prompt_defaults.get("app_secret") or ""
-        app_secret = _prompt_secret_with_optional_default("app_secret", app_secret_default)
+        app_secret = _prompt_secret_with_optional_default(
+            "app_secret", app_secret_default
+        )
         return {"app_id": app_id, "app_secret": app_secret}
     if platform == "telegram":
         token_default = existing.get("token") or ""
         token = _prompt_secret_with_optional_default("token", token_default)
         return {"token": token}
     return _prompt_platform_options()
+
 
 def _mask_proxy_options(options: dict[str, str]) -> dict[str, str]:
     masked = {}
@@ -251,7 +271,9 @@ def _mask_proxy_options(options: dict[str, str]) -> dict[str, str]:
     return masked
 
 
-def _prompt_proxy_options(existing_options: dict[str, str], current_options: dict[str, str]) -> dict[str, str]:
+def _prompt_proxy_options(
+    existing_options: dict[str, str], current_options: dict[str, str]
+) -> dict[str, str]:
     proxy_keys = {"proxy", "proxy_username", "proxy_password"}
     existing_proxy = existing_options.get("proxy") or ""
     existing_user = existing_options.get("proxy_username") or ""
@@ -266,13 +288,17 @@ def _prompt_proxy_options(existing_options: dict[str, str], current_options: dic
         if not click.confirm("是否配置代理?", default=False):
             return current_options
 
-    proxy = click.prompt("proxy", default=existing_proxy, show_default=bool(existing_proxy))
+    proxy = click.prompt(
+        "proxy", default=existing_proxy, show_default=bool(existing_proxy)
+    )
     if not proxy:
         return current_options
     current_options["proxy"] = proxy
 
     if click.confirm("代理是否需要认证?", default=bool(existing_user)):
-        proxy_user = click.prompt("proxy_username", default=existing_user, show_default=bool(existing_user))
+        proxy_user = click.prompt(
+            "proxy_username", default=existing_user, show_default=bool(existing_user)
+        )
         if proxy_user:
             current_options["proxy_username"] = proxy_user
             current_options["proxy_password"] = _prompt_secret_with_optional_default(
@@ -297,7 +323,9 @@ def _format_check(label: str, ok: bool, detail: str | None = None) -> str:
 def _is_process_running() -> bool | None:
     if shutil.which("pgrep") is None:
         return None
-    result = subprocess.run(["pgrep", "-f", "cc-connect"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["pgrep", "-f", "cc-connect"], capture_output=True, text=True
+    )
     return result.returncode == 0
 
 
@@ -339,13 +367,29 @@ def setup(interactive: bool | None) -> None:
 
 
 @cli.command()
-@click.option("--project", default=None, help="Project name (defaults to work dir name).")
-@click.option("--agent", default=None, type=click.Choice(AGENT_CHOICES), help="Agent type.")
-@click.option("--platform", default=None, type=click.Choice(PLATFORM_CHOICES), help="Platform type.")
-@click.option("--work-dir", default=None, type=click.Path(file_okay=False, dir_okay=True), help="Agent work dir.")
+@click.option(
+    "--project", default=None, help="Project name (defaults to work dir name)."
+)
+@click.option(
+    "--agent", default=None, type=click.Choice(AGENT_CHOICES), help="Agent type."
+)
+@click.option(
+    "--platform",
+    default=None,
+    type=click.Choice(PLATFORM_CHOICES),
+    help="Platform type.",
+)
+@click.option(
+    "--work-dir",
+    default=None,
+    type=click.Path(file_okay=False, dir_okay=True),
+    help="Agent work dir.",
+)
 @click.option("--mode", default=None, help="Agent mode (depends on agent type).")
 @click.option("--quiet/--no-quiet", default=None, help="Project default quiet mode.")
-@click.option("--full-options", is_flag=True, help="Prompt advanced options (e.g. proxy).")
+@click.option(
+    "--full-options", is_flag=True, help="Prompt advanced options (e.g. proxy)."
+)
 @click.option("--config", "-c", default=None, help="Config file path.")
 @click.option(
     "--interactive/--no-interactive",
@@ -365,7 +409,7 @@ def init(
     interactive: bool | None,
 ) -> None:
     """初始化最小可用配置。"""
-    from chattool.setup.interactive import (
+    from chattool.interaction import (
         abort_if_force_without_tty,
         abort_if_missing_without_tty,
         resolve_interactive_mode,
@@ -390,9 +434,11 @@ def init(
     if not platform_from_cli:
         missing.append("platform")
     usage = "Usage: chattool cc init [--agent TYPE] [--platform TYPE] [--work-dir PATH] [--project NAME]"
-    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=not (platform_from_cli and agent_from_cli),
+    interactive, can_prompt, force_interactive, _, need_prompt = (
+        resolve_interactive_mode(
+            interactive=interactive,
+            auto_prompt_condition=not (platform_from_cli and agent_from_cli),
+        )
     )
     abort_if_force_without_tty(force_interactive, can_prompt, usage)
     abort_if_missing_without_tty(
@@ -408,7 +454,9 @@ def init(
             click.echo(f"配置文件已存在: {config_path}", err=True)
             click.echo("请手动删除后重试，或使用交互模式确认覆盖。", err=True)
             raise click.Abort()
-        if not click.confirm(f"配置文件已存在: {config_path}，是否覆盖?", default=False):
+        if not click.confirm(
+            f"配置文件已存在: {config_path}，是否覆盖?", default=False
+        ):
             click.echo("已取消")
             return
 
@@ -428,7 +476,9 @@ def init(
         if not mode:
             mode_choices = AGENT_MODE_CHOICES.get(agent or "")
             if mode_choices:
-                mode_default = default_mode or AGENT_MODE_DEFAULTS.get(agent or "", "default")
+                mode_default = default_mode or AGENT_MODE_DEFAULTS.get(
+                    agent or "", "default"
+                )
                 mode = click.prompt(
                     "选择权限模式",
                     type=click.Choice(mode_choices),
@@ -452,15 +502,26 @@ def init(
     platform_options: dict[str, str] = {}
     should_prompt_credentials = (need_prompt or force_interactive) and can_prompt
     if should_prompt_credentials:
-        existing_options = defaults.get("platform_options") if isinstance(defaults.get("platform_options"), dict) else {}
+        existing_options = (
+            defaults.get("platform_options")
+            if isinstance(defaults.get("platform_options"), dict)
+            else {}
+        )
         if existing_options:
-            masked = {k: (_mask_value(v) if _is_sensitive_key(k) else v) for k, v in existing_options.items()}
+            masked = {
+                k: (_mask_value(v) if _is_sensitive_key(k) else v)
+                for k, v in existing_options.items()
+            }
             click.echo(f"检测到已有平台配置: {masked}")
             platform_options = dict(existing_options)
             if click.confirm("是否填写平台鉴权信息?", default=True):
-                platform_options = _prompt_platform_credentials(platform or "feishu", existing_options)
+                platform_options = _prompt_platform_credentials(
+                    platform or "feishu", existing_options
+                )
         elif click.confirm("是否填写平台鉴权信息?", default=True):
-            platform_options = _prompt_platform_credentials(platform or "feishu", existing_options)
+            platform_options = _prompt_platform_credentials(
+                platform or "feishu", existing_options
+            )
         if full_options:
             platform_options = _prompt_proxy_options(existing_options, platform_options)
 
@@ -479,7 +540,10 @@ def init(
 
     click.secho(f"配置已生成: {config_path}", fg="green")
     if platform_options:
-        masked = {k: (_mask_value(v) if _is_sensitive_key(k) else v) for k, v in platform_options.items()}
+        masked = {
+            k: (_mask_value(v) if _is_sensitive_key(k) else v)
+            for k, v in platform_options.items()
+        }
         click.echo(f"平台配置: {masked}")
     click.echo("下一步: chattool cc start")
 
@@ -518,7 +582,9 @@ def status() -> None:
     checks.append(_format_check("node", bool(node_path), node_path))
     checks.append(_format_check("npm", bool(npm_path), npm_path))
     checks.append(_format_check("cc-connect", bool(cc_path), cc_path))
-    checks.append(_format_check("config", DEFAULT_CONFIG_FILE.exists(), str(DEFAULT_CONFIG_FILE)))
+    checks.append(
+        _format_check("config", DEFAULT_CONFIG_FILE.exists(), str(DEFAULT_CONFIG_FILE))
+    )
 
     running = _is_process_running()
     if running is None:
@@ -566,7 +632,9 @@ def doctor() -> None:
     results.append(_format_check("node", bool(node_path), node_path))
     results.append(_format_check("npm", bool(npm_path), npm_path))
     results.append(_format_check("cc-connect", bool(cc_path), cc_path))
-    results.append(_format_check("config", DEFAULT_CONFIG_FILE.exists(), str(DEFAULT_CONFIG_FILE)))
+    results.append(
+        _format_check("config", DEFAULT_CONFIG_FILE.exists(), str(DEFAULT_CONFIG_FILE))
+    )
 
     config_ok = False
     if DEFAULT_CONFIG_FILE.exists():

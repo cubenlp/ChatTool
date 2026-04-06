@@ -6,9 +6,11 @@ import click
 
 from chattool.config import BaseEnvConfig, OpenAIConfig
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    ask_text,
     resolve_interactive_mode,
 )
 from chattool.setup.nodejs import (
@@ -18,7 +20,6 @@ from chattool.setup.nodejs import (
 )
 from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_text
 
 DEFAULT_MODEL = "gpt-5.4"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"

@@ -9,14 +9,14 @@ from pathlib import Path
 
 import click
 
-from chattool.cli_warnings import install_cli_warning_filters
-from chattool.utils.tui import (
+from chattool.interaction import (
     BACK_VALUE,
     ask_checkbox_with_controls,
     ask_select,
     create_choice,
     is_interactive_available,
 )
+from chattool.interaction import install_cli_warning_filters
 
 install_cli_warning_filters()
 
