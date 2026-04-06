@@ -66,12 +66,14 @@ workspace/
 
 - 仓库放到 `core/ChatTool/`
 - 从仓库内 `skills/` 同步到 workspace 根目录 `./skills/`
+- 交互模式下会额外提示是否为该仓库配置 GitHub HTTPS token；默认值优先从当前仓库对应的 `.git-credential` / `.git-credentials` 读取，并以 mask 形式展示
 
 ### RexBlog
 
 - 仓库放到 `core/RexBlog/`
 - 把 `source/_posts` 链接到 `./public/hexo_blog`
 - `public/` 根目录默认附带 `README.md`，说明这里用于部署公开网站
+- 交互模式下同样会分别提示 GitHub token，可直接复用当前仓库 token，也可稍后进入目标仓库执行 `chatgh set-token`
 
 ## 4. 设计原则
 

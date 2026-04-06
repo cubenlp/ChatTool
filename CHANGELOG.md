@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Fixed
 - `chattool setup` 中通过 npm 执行安装或检查时，现会先打印真实的 `npm ...` 命令，方便用户确认当前实际在执行什么
 - `chattool pypi init` 在交互终端里省略包名时，现会自动进入交互式补参；显式 `-I` 关闭交互时才保持缺参报错
+- `chattool setup workspace` 在交互式启用 ChatTool / RexBlog 模块时，现会分别提示是否配置 GitHub token；默认值优先读取当前仓库 git credential，并以 mask 形式展示，便于直接复用到目标仓库
 - `chatenv init` / `chatenv new` 更新 active typed env 后，`chatenv cat` 与运行时配置加载现在会优先读取 `envs/<Config>/.env`，不再被已有 shell 环境变量意外覆盖，避免交互里刚保存的新值看起来“没有生效”
 - `chatenv new` 现在收紧为纯 profile 创建语义：无论直接传 profile 名还是交互式补参，都只写入 `envs/<Config>/<profile>.env`，不再顺手覆盖当前 active `.env`
 - `chatskill install` / `chattool skill install` 现在在交互终端里缺少 skill 名时会进入选择页，而不是直接因缺参数中断；非交互环境仍保持显式报错

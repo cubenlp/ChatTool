@@ -156,6 +156,7 @@ def setup_workspace(
                 option_settings["chattool"]["source"],
                 interactive,
                 can_prompt,
+                option_settings["chattool"].get("github_token"),
             )
         )
     if option_settings["rexblog"]["enabled"]:
@@ -165,6 +166,7 @@ def setup_workspace(
                 option_settings["rexblog"]["source"],
                 interactive,
                 can_prompt,
+                option_settings["rexblog"].get("github_token"),
             )
         )
 

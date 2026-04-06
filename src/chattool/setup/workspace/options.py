@@ -11,8 +11,10 @@ from chattool.interaction import (
     BACK_VALUE,
     ask_checkbox_with_controls,
     ask_confirm,
+    ask_text,
     create_choice,
 )
+from chattool.utils import mask_secret
 from chattool.utils.pathing import write_text_file
 
 
@@ -84,10 +86,85 @@ def _copy_skill_tree(src: Path, dst: Path) -> list[str]:
     return copied
 
 
+def _credential_path_from_source(repo_source: str) -> str | None:
+    from chattool.tools.github.api import parse_github_repo_from_remote
+
+    parsed = parse_github_repo_from_remote(repo_source)
+    if not parsed:
+        return None
+    _, credential_path = parsed
+    return credential_path
+
+
+def _read_current_repo_github_token() -> str | None:
+    from chattool.tools.github.api import (
+        read_github_token_from_credentials,
+        resolve_repo_from_git_remote,
+    )
+
+    credential_path = None
+    try:
+        _, credential_path = resolve_repo_from_git_remote()
+    except click.ClickException:
+        credential_path = None
+
+    return (
+        read_github_token_from_credentials(credential_path)
+        or read_github_token_from_credentials()
+    )
+
+
+def _maybe_configure_repo_github_token(repo_source: str, token: str | None) -> None:
+    if not token:
+        return
+
+    from chattool.tools.github.api import configure_github_https_token
+
+    credential_path = _credential_path_from_source(repo_source)
+    if not credential_path:
+        return
+    configure_github_https_token(credential_path, token)
+
+
+def _prompt_repo_github_token(
+    *,
+    language: str,
+    module_name: str,
+    repo_source: str,
+    default_token: str | None,
+) -> str | None:
+    credential_path = _credential_path_from_source(repo_source)
+    if not credential_path:
+        return None
+
+    confirm_message = (
+        f"Configure GitHub token for {module_name} now? You can also run `chatgh set-token` later inside that repo."
+        if language == "en"
+        else f"是否现在为 {module_name} 配置 GitHub token？也可以稍后进入对应仓库执行 `chatgh set-token`。"
+    )
+    configure_now = ask_confirm(confirm_message, default=bool(default_token))
+    if configure_now == BACK_VALUE:
+        raise click.Abort()
+    if not configure_now:
+        return None
+
+    prompt_label = f"{module_name} github_token"
+    if default_token:
+        prompt_label += f" (current: {mask_secret(default_token)}, enter to keep)"
+    token_input = ask_text(prompt_label, default=default_token or "", password=True)
+    token_value = str(token_input).strip() if token_input is not None else ""
+    return token_value or default_token
+
+
 def apply_chattool_option(
-    workspace_dir: Path, source: str, interactive, can_prompt: bool
+    workspace_dir: Path,
+    source: str,
+    interactive,
+    can_prompt: bool,
+    github_token: str | None = None,
 ) -> dict:
     repo_dir = workspace_dir / "core" / "ChatTool"
+    _maybe_configure_repo_github_token(source, github_token)
     repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
     skills_source = repo_dir / "skills"
     if not skills_source.exists():
@@ -114,9 +191,14 @@ def _ensure_symlink(source: Path, target: Path) -> None:
 
 
 def apply_rexblog_option(
-    workspace_dir: Path, source: str, interactive, can_prompt: bool
+    workspace_dir: Path,
+    source: str,
+    interactive,
+    can_prompt: bool,
+    github_token: str | None = None,
 ) -> dict:
     repo_dir = workspace_dir / "core" / "RexBlog"
+    _maybe_configure_repo_github_token(source, github_token)
     repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
     posts_dir = repo_dir / "source" / "_posts"
     if not posts_dir.exists():
@@ -135,8 +217,16 @@ def apply_rexblog_option(
 
 def prompt_optional_modules(language: str) -> dict[str, dict]:
     results = {
-        "chattool": {"enabled": False, "source": CHATTOOL_REPO_URL},
-        "rexblog": {"enabled": False, "source": REXBLOG_REPO_URL},
+        "chattool": {
+            "enabled": False,
+            "source": CHATTOOL_REPO_URL,
+            "github_token": None,
+        },
+        "rexblog": {
+            "enabled": False,
+            "source": REXBLOG_REPO_URL,
+            "github_token": None,
+        },
     }
 
     enable_extras = ask_confirm(
@@ -164,7 +254,23 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
     )
     if selected == BACK_VALUE:
         raise click.Abort()
+
+    default_token = _read_current_repo_github_token()
     for key in selected:
         if key in results:
             results[key]["enabled"] = True
+    if results["chattool"]["enabled"]:
+        results["chattool"]["github_token"] = _prompt_repo_github_token(
+            language=language,
+            module_name="ChatTool",
+            repo_source=results["chattool"]["source"],
+            default_token=default_token,
+        )
+    if results["rexblog"]["enabled"]:
+        results["rexblog"]["github_token"] = _prompt_repo_github_token(
+            language=language,
+            module_name="RexBlog",
+            repo_source=results["rexblog"]["source"],
+            default_token=default_token,
+        )
     return results
