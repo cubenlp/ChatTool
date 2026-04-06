@@ -7,7 +7,12 @@ import click
 
 
 class LazyGroup(click.Group):
-    def __init__(self, *args, lazy_commands: dict[str, Callable[[], click.Command]] | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        lazy_commands: dict[str, Callable[[], click.Command]] | None = None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self._lazy_commands = dict(lazy_commands or {})
 
@@ -21,7 +26,9 @@ class LazyGroup(click.Group):
             self.commands[name] = self._lazy_commands.pop(name)()
         return super().get_command(ctx, name)
 
-    def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+    def format_commands(
+        self, ctx: click.Context, formatter: click.HelpFormatter
+    ) -> None:
         rows = []
         for subcommand in self.list_commands(ctx):
             if subcommand in self.commands:
@@ -60,7 +67,9 @@ def _build_client_group() -> click.Command:
         help="Remote client tools.",
         lazy_commands={
             "cert": lambda: _load_attr("chattool.client.cert_client", "cert_client"),
-            "svg2gif": lambda: _load_attr("chattool.client.svg2gif_client", "svg2gif_client"),
+            "svg2gif": lambda: _load_attr(
+                "chattool.client.svg2gif_client", "svg2gif_client"
+            ),
         },
     )
 
@@ -71,26 +80,28 @@ def cli():
     pass
 
 
-cli._lazy_commands.update({
-    "env": lambda: _load_attr("chattool.config.cli", "cli"),
-    "dns": _load_dns_group,
-    "pypi": lambda: _load_attr("chattool.tools.pypi.cli", "cli"),
-    "serve": _build_serve_group,
-    "client": _build_client_group,
-    "network": lambda: _load_attr("chattool.tools.network.cli", "network"),
-    "mcp": lambda: _load_attr("chattool.mcp.cli", "cli"),
-    "lark": lambda: _load_attr("chattool.tools.lark.cli", "cli"),
-    "image": lambda: _load_attr("chattool.tools.image.cli", "cli"),
-    "tplogin": lambda: _load_attr("chattool.tools.tplogin_cli", "cli"),
-    "gh": lambda: _load_attr("chattool.tools.github.cli", "cli"),
-    "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
-    "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
-    "skill": lambda: _load_attr("chattool.skill.cli", "skill_cli"),
-    "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
-    "cc": lambda: _load_attr("chattool.tools.cc.cli", "cli"),
-    "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
-    "explore": lambda: _load_attr("chattool.explore.cli", "explore_cli"),
-})
+cli._lazy_commands.update(
+    {
+        "env": lambda: _load_attr("chattool.config.cli", "cli"),
+        "dns": _load_dns_group,
+        "pypi": lambda: _load_attr("chattool.tools.pypi.cli", "cli"),
+        "serve": _build_serve_group,
+        "client": _build_client_group,
+        "network": lambda: _load_attr("chattool.tools.network.cli", "cli"),
+        "mcp": lambda: _load_attr("chattool.mcp.cli", "cli"),
+        "lark": lambda: _load_attr("chattool.tools.lark.cli", "cli"),
+        "image": lambda: _load_attr("chattool.tools.image.cli", "cli"),
+        "tplogin": lambda: _load_attr("chattool.tools.tplogin_cli", "cli"),
+        "gh": lambda: _load_attr("chattool.tools.github.cli", "cli"),
+        "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
+        "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
+        "skill": lambda: _load_attr("chattool.skill.cli", "skill_cli"),
+        "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
+        "cc": lambda: _load_attr("chattool.tools.cc.cli", "cli"),
+        "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
+        "explore": lambda: _load_attr("chattool.explore.cli", "explore_cli"),
+    }
+)
 
 
 def main():
