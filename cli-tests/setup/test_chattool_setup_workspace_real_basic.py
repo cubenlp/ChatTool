@@ -27,25 +27,33 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert result.returncode == 0, result.stderr
     assert (workspace_dir / "AGENTS.md").exists()
     assert (workspace_dir / "MEMORY.md").exists()
-    assert (workspace_dir / "setup.md").exists()
+    assert (workspace_dir / "core").exists()
+    assert (workspace_dir / "reference").exists()
     assert (workspace_dir / "reports" / "README.md").exists()
     assert (workspace_dir / "playgrounds" / "README.md").exists()
-    assert (workspace_dir / "knowledge" / "README.md").exists()
-    assert not (workspace_dir / "knowledge" / "report").exists()
+    assert (workspace_dir / "docs" / "README.md").exists()
+    assert (workspace_dir / "docs" / "memory" / "README.md").exists()
+    assert (workspace_dir / "docs" / "skills" / "README.md").exists()
+    assert (workspace_dir / "docs" / "tools" / "README.md").exists()
 
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
+    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
-    assert "## 知识写入规则" in agents
+    assert "## 写入规则" in agents
+    assert "- 任务分为两类：`task` 和 `taskset`。" in agents
     assert "reports/MM-DD-<task-name>/" in agents
     assert "reports/MM-DD-<set-name>/" in agents
     assert "playgrounds/<task-name>/" in agents
     assert "playgrounds/task-sets/<set-name>/" in agents
-    assert "knowledge/memory/YYYY-MM-DD-status.md" in agents
-    assert "1. **Discover**" in setup_md
-    assert "6. **Done**" in setup_md
-    assert "Create first task lanes" in setup_md
-    assert "默认创建一个常规任务" in setup_md
+    assert "docs/memory/YYYY-MM-DD-status.md" in agents
+    assert "core/" in agents
+    assert "reference/" in agents
+    assert "docs/" in agents
+    assert "## 当前 Workspace" in memory
+    assert "- 核心仓库目录：`core/`" in memory
+    assert "- 参考资料目录：`reference/`" in memory
+    assert "- 持久状态记录目录：`docs/memory/`" in memory
+    assert "- 技能沉淀目录：`docs/skills/`" in memory
 
 
 def test_setup_workspace_english_language_creates_english_templates(tmp_path: Path):
@@ -57,22 +65,50 @@ def test_setup_workspace_english_language_creates_english_templates(tmp_path: Pa
 
     assert result.returncode == 0, result.stderr
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
+    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
     assert "## Architecture" in agents
     assert "## 架构" not in agents
-    assert "# Workspace Setup Checklist" in setup_md
+    assert "## Current Workspace" in memory
 
 
-def test_setup_workspace_force_does_not_overwrite_completed_setup_md(tmp_path: Path):
+def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
+    workspace_dir = tmp_path / "workspace"
+    source_dir = Path(__file__).resolve().parents[2]
+
+    result = _run_chattool_setup_workspace(
+        [
+            str(workspace_dir),
+            "--with-chattool",
+            "--chattool-source",
+            str(source_dir),
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "ChatTool").exists()
+    assert (workspace_dir / "CHATTOOL.md").exists()
+    assert (workspace_dir / "docs" / "skills" / "practice-make-perfact").exists()
+    assert (
+        workspace_dir
+        / "docs"
+        / "skills"
+        / "practice-make-perfact"
+        / "experience"
+        / "README.md"
+    ).exists()
+    assert "With ChatTool: True" in result.stdout
+
+
+def test_setup_workspace_force_overwrites_generated_files(tmp_path: Path):
     workspace_dir = tmp_path / "workspace"
 
     first = _run_chattool_setup_workspace([str(workspace_dir), "-I"])
     assert first.returncode == 0, first.stderr
 
-    setup_path = workspace_dir / "setup.md"
-    original = setup_path.read_text(encoding="utf-8") + "\ncompleted: 2026-04-01\n"
-    setup_path.write_text(original, encoding="utf-8")
+    reports_readme = workspace_dir / "reports" / "README.md"
+    reports_readme.write_text("custom reports readme\n", encoding="utf-8")
 
     second = _run_chattool_setup_workspace([str(workspace_dir), "--force", "-I"])
     assert second.returncode == 0, second.stderr
-    assert setup_path.read_text(encoding="utf-8") == original
+    assert reports_readme.read_text(encoding="utf-8") != "custom reports readme\n"
