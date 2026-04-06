@@ -254,14 +254,15 @@ def setup_lark_cli(
     app_id = resolve_value(
         app_id,
         env_config.get("app_id"),
-        saved_feishu.get("app_id"),
         existing.get("app_id"),
+        saved_feishu.get("app_id"),
         env_values.get("FEISHU_APP_ID"),
         typed_env_values.get("FEISHU_APP_ID"),
     )
     app_secret = resolve_value(
         app_secret,
         env_config.get("app_secret"),
+        existing.get("app_secret"),
         saved_feishu.get("app_secret"),
         env_values.get("FEISHU_APP_SECRET"),
         typed_env_values.get("FEISHU_APP_SECRET"),
@@ -269,10 +270,10 @@ def setup_lark_cli(
     if not brand:
         if env_config.get("api_base"):
             brand = _infer_brand(env_config.get("api_base"))
-        elif saved_feishu.get("api_base"):
-            brand = _infer_brand(saved_feishu.get("api_base"))
         elif existing.get("brand"):
             brand = existing.get("brand")
+        elif saved_feishu.get("api_base"):
+            brand = _infer_brand(saved_feishu.get("api_base"))
         elif env_values.get("FEISHU_API_BASE"):
             brand = _infer_brand(env_values.get("FEISHU_API_BASE"))
         elif typed_env_values.get("FEISHU_API_BASE"):

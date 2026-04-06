@@ -111,8 +111,16 @@ def _install_fake_client(monkeypatch):
     )
     client = SimpleNamespace(get_repo=lambda repo: repo_obj)
 
-    monkeypatch.setattr(gh_cli, "_get_client", lambda token, require_token=False: client)
-    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
+    monkeypatch.setattr(
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: client,
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
 
 
 def _install_fake_actions_api(monkeypatch):
@@ -185,13 +193,26 @@ def _install_fake_actions_api(monkeypatch):
             return logs_text
         raise AssertionError(f"Unexpected text path: {path}")
 
-    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
-    monkeypatch.setattr(gh_cli, "_resolve_token", lambda token: token or "ghp_test")
-    monkeypatch.setattr(gh_cli, "_github_api_get_json", fake_json)
-    monkeypatch.setattr(gh_cli, "_github_api_get_text", fake_text)
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+    monkeypatch.setattr(
+        gh_cli, "resolve_token", lambda token, credential_path=None: token or "ghp_test"
+    )
+    monkeypatch.setattr(gh_cli, "github_api_get_json", fake_json)
+    monkeypatch.setattr(gh_cli, "github_api_get_text", fake_text)
 
 
-def _install_fake_merge_client(monkeypatch, *, check_status="completed", check_conclusion="success", workflow_status="completed", workflow_conclusion="success"):
+def _install_fake_merge_client(
+    monkeypatch,
+    *,
+    check_status="completed",
+    check_conclusion="success",
+    workflow_status="completed",
+    workflow_conclusion="success",
+):
     merge_calls = []
 
     pr = _fake_pr()
@@ -203,45 +224,63 @@ def _install_fake_merge_client(monkeypatch, *, check_status="completed", check_c
     pr.merge = merge
 
     commit = SimpleNamespace(
-        get_combined_status=lambda: SimpleNamespace(state="pending", sha="abc123def456", total_count=0, statuses=[]),
-        get_check_runs=lambda: iter([
-            SimpleNamespace(
-                name="build",
-                status=check_status,
-                conclusion=check_conclusion if check_status == "completed" else None,
-                details_url=None,
-                html_url=None,
-                app=SimpleNamespace(name="GitHub Actions"),
-                started_at=None,
-                completed_at=None,
-            )
-        ]),
+        get_combined_status=lambda: SimpleNamespace(
+            state="pending", sha="abc123def456", total_count=0, statuses=[]
+        ),
+        get_check_runs=lambda: iter(
+            [
+                SimpleNamespace(
+                    name="build",
+                    status=check_status,
+                    conclusion=check_conclusion
+                    if check_status == "completed"
+                    else None,
+                    details_url=None,
+                    html_url=None,
+                    app=SimpleNamespace(name="GitHub Actions"),
+                    started_at=None,
+                    completed_at=None,
+                )
+            ]
+        ),
     )
 
     repo_obj = SimpleNamespace(
         get_pull=lambda number: pr,
         get_commit=lambda sha: commit,
-        get_workflow_runs=lambda head_sha=None: iter([
-            SimpleNamespace(
-                name="Python Package",
-                display_title="Python Package",
-                event="pull_request",
-                status=workflow_status,
-                conclusion=workflow_conclusion if workflow_status == "completed" else None,
-                html_url="https://github.com/CubeNLP/ChatTool/actions/runs/1",
-                created_at=None,
-                updated_at=None,
-                run_started_at=None,
-                head_branch="rex/setup",
-                head_sha="abc123def456",
-                run_number=501,
-            )
-        ]),
+        get_workflow_runs=lambda head_sha=None: iter(
+            [
+                SimpleNamespace(
+                    name="Python Package",
+                    display_title="Python Package",
+                    event="pull_request",
+                    status=workflow_status,
+                    conclusion=workflow_conclusion
+                    if workflow_status == "completed"
+                    else None,
+                    html_url="https://github.com/CubeNLP/ChatTool/actions/runs/1",
+                    created_at=None,
+                    updated_at=None,
+                    run_started_at=None,
+                    head_branch="rex/setup",
+                    head_sha="abc123def456",
+                    run_number=501,
+                )
+            ]
+        ),
     )
     client = SimpleNamespace(get_repo=lambda repo: repo_obj)
 
-    monkeypatch.setattr(gh_cli, "_get_client", lambda token, require_token=False: client)
-    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
+    monkeypatch.setattr(
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: client,
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
     return merge_calls
 
 
@@ -323,7 +362,10 @@ def test_run_view_command_renders_jobs(monkeypatch):
     assert result.exit_code == 0
     assert "Run #151 (id=23494900414): completed/failure" in result.output
     assert "Jobs (1/1 shown):" in result.output
-    assert "build (3.10, ubuntu-latest) (id=68373094563): completed/failure" in result.output
+    assert (
+        "build (3.10, ubuntu-latest) (id=68373094563): completed/failure"
+        in result.output
+    )
     assert "[9] Check test results: completed/failure" in result.output
 
 
@@ -331,7 +373,9 @@ def test_run_view_command_supports_json_output(monkeypatch):
     runner = CliRunner()
     _install_fake_actions_api(monkeypatch)
 
-    result = runner.invoke(gh_cli.cli, ["run-view", "--run-id", "23494900414", "--json-output"])
+    result = runner.invoke(
+        gh_cli.cli, ["run-view", "--run-id", "23494900414", "--json-output"]
+    )
 
     assert result.exit_code == 0
     assert '"id": 23494900414' in result.output
@@ -343,11 +387,19 @@ def test_job_logs_command_renders_tail(monkeypatch):
     runner = CliRunner()
     _install_fake_actions_api(monkeypatch)
 
-    result = runner.invoke(gh_cli.cli, ["job-logs", "--job-id", "68373094563", "--tail", "2"])
+    result = runner.invoke(
+        gh_cli.cli, ["job-logs", "--job-id", "68373094563", "--tail", "2"]
+    )
 
     assert result.exit_code == 0
-    assert "build (3.10, ubuntu-latest) (id=68373094563): completed/failure" in result.output
-    assert "FAILED tests/skills/test_skill_assets.py::test_all_skills_have_chinese_variant" in result.output
+    assert (
+        "build (3.10, ubuntu-latest) (id=68373094563): completed/failure"
+        in result.output
+    )
+    assert (
+        "FAILED tests/skills/test_skill_assets.py::test_all_skills_have_chinese_variant"
+        in result.output
+    )
     assert "short test summary info" not in result.output
 
 
@@ -358,7 +410,15 @@ def test_job_logs_command_writes_output(monkeypatch):
     with runner.isolated_filesystem():
         result = runner.invoke(
             gh_cli.cli,
-            ["job-logs", "--job-id", "68373094563", "--output", "job.log", "--tail", "1"],
+            [
+                "job-logs",
+                "--job-id",
+                "68373094563",
+                "--output",
+                "job.log",
+                "--tail",
+                "1",
+            ],
         )
 
         assert result.exit_code == 0
@@ -371,12 +431,16 @@ def test_job_logs_command_supports_json_output(monkeypatch):
     runner = CliRunner()
     _install_fake_actions_api(monkeypatch)
 
-    result = runner.invoke(gh_cli.cli, ["job-logs", "--job-id", "68373094563", "--json-output"])
+    result = runner.invoke(
+        gh_cli.cli, ["job-logs", "--job-id", "68373094563", "--json-output"]
+    )
 
     assert result.exit_code == 0
     assert '"output_path": null' in result.output
     assert '"tail": 200' in result.output
-    assert '"log": "=========================== short test summary info' in result.output
+    assert (
+        '"log": "=========================== short test summary info' in result.output
+    )
 
 
 def test_pr_merge_check_blocks_failed_ci(monkeypatch):
@@ -389,7 +453,7 @@ def test_pr_merge_check_blocks_failed_ci(monkeypatch):
         workflow_conclusion="failure",
     )
 
-    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--confirm", "--check"])
+    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--check"])
 
     assert result.exit_code != 0
     assert "Refusing to merge because CI checks are not green" in result.output
@@ -408,11 +472,13 @@ def test_pr_merge_check_blocks_unmergeable_pr(monkeypatch):
         workflow_conclusion="success",
     )
 
-    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--confirm", "--check"])
+    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--check"])
 
     assert result.exit_code != 0
     assert "Refusing to merge because CI checks are not green" in result.output
-    assert "pull request is not mergeable against the current base branch" in result.output
+    assert (
+        "pull request is not mergeable against the current base branch" in result.output
+    )
     assert "pull request merge state is dirty" in result.output
     assert not merge_calls
 
@@ -427,7 +493,7 @@ def test_pr_merge_without_check_keeps_current_behavior(monkeypatch):
         workflow_conclusion="failure",
     )
 
-    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138", "--confirm"])
+    result = runner.invoke(gh_cli.cli, ["pr-merge", "--number", "138"])
 
     assert result.exit_code == 0
     assert "PR merged:" in result.output

@@ -50,34 +50,35 @@ def test_cc_init_non_interactive(tmp_path):
     assert config_path.exists()
     content = config_path.read_text(encoding="utf-8")
     assert "[[projects]]" in content
-    assert "name = \"demo\"" in content
+    assert 'name = "demo"' in content
     assert "quiet = true" in content
 
 
 def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
     runner = CliRunner()
-    import chattool.setup.interactive as interactive_policy
+    import chattool.interaction.policy as interactive_policy
+
     monkeypatch.setattr(interactive_policy, "is_interactive_available", lambda: True)
     config_path = tmp_path / "config.toml"
     config_path.write_text(
         "\n".join(
             [
                 "[[projects]]",
-                "name = \"demo-project\"",
+                'name = "demo-project"',
                 "quiet = true",
                 "",
                 "[projects.agent]",
-                "type = \"opencode\"",
+                'type = "opencode"',
                 "",
                 "[projects.agent.options]",
-                f"work_dir = \"{tmp_path}\"",
-                "mode = \"default\"",
+                f'work_dir = "{tmp_path}"',
+                'mode = "default"',
                 "",
                 "[[projects.platforms]]",
-                "type = \"telegram\"",
+                'type = "telegram"',
                 "",
                 "[projects.platforms.options]",
-                "token = \"test-token\"",
+                'token = "test-token"',
                 "",
             ]
         ),
@@ -110,7 +111,7 @@ def test_cc_init_defaults_from_existing_config(tmp_path, monkeypatch):
 
 def test_cc_init_existing_config_cancelled_before_other_prompts(tmp_path, monkeypatch):
     runner = CliRunner()
-    import chattool.setup.interactive as interactive_policy
+    import chattool.interaction.policy as interactive_policy
 
     monkeypatch.setattr(interactive_policy, "is_interactive_available", lambda: True)
     config_path = tmp_path / "config.toml"
@@ -118,10 +119,10 @@ def test_cc_init_existing_config_cancelled_before_other_prompts(tmp_path, monkey
         "\n".join(
             [
                 "[[projects]]",
-                "name = \"demo-project\"",
+                'name = "demo-project"',
                 "",
                 "[projects.agent]",
-                "type = \"codex\"",
+                'type = "codex"',
             ]
         ),
         encoding="utf-8",
@@ -146,9 +147,11 @@ def test_cc_init_existing_config_cancelled_before_other_prompts(tmp_path, monkey
     assert "选择 Agent 类型" not in result.output
 
 
-def test_cc_init_preserves_existing_platform_config_without_reprompt(tmp_path, monkeypatch):
+def test_cc_init_preserves_existing_platform_config_without_reprompt(
+    tmp_path, monkeypatch
+):
     runner = CliRunner()
-    import chattool.setup.interactive as interactive_policy
+    import chattool.interaction.policy as interactive_policy
 
     monkeypatch.setattr(interactive_policy, "is_interactive_available", lambda: True)
     config_path = tmp_path / "config.toml"
@@ -156,21 +159,21 @@ def test_cc_init_preserves_existing_platform_config_without_reprompt(tmp_path, m
         "\n".join(
             [
                 "[[projects]]",
-                "name = \"demo-project\"",
+                'name = "demo-project"',
                 "quiet = true",
                 "",
                 "[projects.agent]",
-                "type = \"opencode\"",
+                'type = "opencode"',
                 "",
                 "[projects.agent.options]",
-                f"work_dir = \"{tmp_path}\"",
-                "mode = \"default\"",
+                f'work_dir = "{tmp_path}"',
+                'mode = "default"',
                 "",
                 "[[projects.platforms]]",
-                "type = \"telegram\"",
+                'type = "telegram"',
                 "",
                 "[projects.platforms.options]",
-                "token = \"test-token\"",
+                'token = "test-token"',
                 "",
             ]
         ),
@@ -199,7 +202,7 @@ def test_cc_init_preserves_existing_platform_config_without_reprompt(tmp_path, m
 
 def test_cc_init_feishu_uses_chatenv_candidates(tmp_path, monkeypatch):
     runner = CliRunner()
-    import chattool.setup.interactive as interactive_policy
+    import chattool.interaction.policy as interactive_policy
 
     monkeypatch.setattr(interactive_policy, "is_interactive_available", lambda: True)
     monkeypatch.setattr(

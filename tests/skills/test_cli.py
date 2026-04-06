@@ -82,7 +82,15 @@ version: 0.1.0
 
     result = runner.invoke(
         cli,
-        ["skill", "install", "incomplete", "--source", str(source), "--dest", str(dest)],
+        [
+            "skill",
+            "install",
+            "incomplete",
+            "--source",
+            str(source),
+            "--dest",
+            str(dest),
+        ],
     )
 
     assert result.exit_code != 0
@@ -159,7 +167,7 @@ version: 0.1.0
     )
 
     monkeypatch.delenv("CHATTOOL_SKILLS_DIR", raising=False)
-    monkeypatch.setattr(skill_cli_module, "_find_repo_skills_dir", lambda: None)
+    monkeypatch.setattr("chattool.skill.platforms.find_repo_skills_dir", lambda: None)
     monkeypatch.setattr(
         "chattool.config.main.SkillsConfig.CHATTOOL_SKILLS_DIR",
         type("Field", (), {"value": str(source)})(),
@@ -188,7 +196,7 @@ version: 0.1.0
     )
 
     monkeypatch.delenv("CHATTOOL_SKILLS_DIR", raising=False)
-    monkeypatch.setattr(skill_cli_module, "_find_repo_skills_dir", lambda: None)
+    monkeypatch.setattr("chattool.skill.platforms.find_repo_skills_dir", lambda: None)
     monkeypatch.setattr(
         "chattool.config.main.SkillsConfig.CHATTOOL_SKILLS_DIR",
         type("Field", (), {"value": str(source)})(),

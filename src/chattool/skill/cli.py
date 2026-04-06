@@ -8,14 +8,12 @@ import click
 
 from chattool.interaction import (
     BACK_VALUE,
+    ask_checkbox_with_controls,
+    ask_select,
     install_cli_warning_filters,
     is_interactive_available,
 )
-from chattool.skill.interaction import (
-    prompt_install_targets,
-    prompt_overwrite_action,
-    prompt_platform,
-)
+from chattool.skill import interaction as skill_interaction
 from chattool.skill.platforms import (
     PLATFORM_CHOICES,
     resolve_dest_dir,
@@ -94,13 +92,13 @@ def install_skill(
         if env_platform:
             platform_name = env_platform
         elif is_interactive_available():
-            platform_name = prompt_platform()
+            platform_name = skill_interaction.prompt_platform()
         else:
             platform_name = "codex"
 
     if not name and not install_all:
         if is_interactive_available():
-            selected_targets = prompt_install_targets(available)
+            selected_targets = skill_interaction.prompt_install_targets(available)
             if selected_targets == BACK_VALUE:
                 raise click.Abort()
             targets = list(selected_targets)
@@ -150,7 +148,7 @@ def install_skill(
         if dest_path.exists():
             if not overwrite_all:
                 if is_interactive_available():
-                    action = prompt_overwrite_action(dest_name)
+                    action = skill_interaction.prompt_overwrite_action(dest_name)
                     if action == "skip":
                         skipped.append(dest_name)
                         continue
