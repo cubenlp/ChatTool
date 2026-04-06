@@ -7,6 +7,7 @@ from .policy import (
     normalize_interactive,
     resolve_interactive_mode,
 )
+from .patterns import prompt_sensitive_value, prompt_text_value, resolve_value
 from .prompt import (
     ask_checkbox,
     ask_checkbox_with_controls,
@@ -42,5 +43,8 @@ __all__ = [
     "install_cli_warning_filters",
     "is_interactive_available",
     "normalize_interactive",
+    "prompt_sensitive_value",
+    "prompt_text_value",
     "resolve_interactive_mode",
+    "resolve_value",
 ]

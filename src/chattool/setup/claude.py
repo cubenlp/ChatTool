@@ -1,6 +1,8 @@
+import json
+from pathlib import Path
+
 DEFAULT_BASE_URL = "https://api.anthropic.com/v1"
 DEFAULT_SMALL_FAST_MODEL = "claude-opus-4-6"
-
 
 def _mask_secret(value):
     if not value:
@@ -52,14 +54,16 @@ def _load_existing_claude_config(claude_dir):
 def setup_claude(
     auth_token=None, base_url=None, small_fast_model=None, interactive=None
 ):
-    import json
-    from pathlib import Path
+    
 
     import click
 
     from chattool.interaction import (
         abort_if_force_without_tty,
+        prompt_sensitive_value,
+        prompt_text_value,
         resolve_interactive_mode,
+        resolve_value,
     )
     from chattool.setup.nodejs import (
         ensure_nodejs_requirement,
@@ -67,7 +71,7 @@ def setup_claude(
         should_install_global_npm_package,
     )
     from chattool.utils.custom_logger import setup_logger
-    from chattool.interaction import BACK_VALUE, ask_text
+    from chattool.interaction import BACK_VALUE
 
     logger = setup_logger("setup_claude")
     claude_dir = Path.home() / ".claude"
@@ -82,7 +86,7 @@ def setup_claude(
     if isinstance(small_fast_model, str) and not small_fast_model.strip():
         small_fast_model = None
 
-    auth_token = auth_token or existing_auth
+    auth_token = resolve_value(auth_token, existing_auth)
     missing_required = not auth_token
     has_existing_config = any(value for value in existing.values())
     usage = (
@@ -105,28 +109,26 @@ def setup_claude(
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
 
     if need_prompt:
-        auth_for_prompt = auth_token
-        auth_label = "ANTHROPIC_AUTH_TOKEN"
-        if auth_for_prompt:
-            auth_label = f"{auth_label} (current: {_mask_secret(auth_for_prompt)}, enter to keep)"
-        auth_token = ask_text(auth_label, password=True)
+        auth_token = prompt_sensitive_value(
+            "ANTHROPIC_AUTH_TOKEN", auth_token, _mask_secret
+        )
         if auth_token == BACK_VALUE:
             return
-        if not auth_token and auth_for_prompt:
-            auth_token = auth_for_prompt
 
-        base_url_default = base_url or existing.get("base_url") or DEFAULT_BASE_URL
-        base_url = ask_text("ANTHROPIC_BASE_URL (optional)", default=base_url_default)
+        base_url = prompt_text_value(
+            "ANTHROPIC_BASE_URL (optional)",
+            base_url,
+            existing.get("base_url"),
+            fallback=DEFAULT_BASE_URL,
+        )
         if base_url == BACK_VALUE:
             return
 
-        model_default = (
-            small_fast_model
-            or existing.get("small_fast_model")
-            or DEFAULT_SMALL_FAST_MODEL
-        )
-        small_fast_model = ask_text(
-            "ANTHROPIC_SMALL_FAST_MODEL (optional)", default=model_default
+        small_fast_model = prompt_text_value(
+            "ANTHROPIC_SMALL_FAST_MODEL (optional)",
+            small_fast_model,
+            existing.get("small_fast_model"),
+            fallback=DEFAULT_SMALL_FAST_MODEL,
         )
         if small_fast_model == BACK_VALUE:
             return
@@ -151,9 +153,11 @@ def setup_claude(
                 click.echo(result.stderr.strip(), err=True)
             raise click.Abort()
 
-    base_url = base_url or existing.get("base_url") or DEFAULT_BASE_URL
-    small_fast_model = (
-        small_fast_model or existing.get("small_fast_model") or DEFAULT_SMALL_FAST_MODEL
+    base_url = resolve_value(base_url, existing.get("base_url"), DEFAULT_BASE_URL)
+    small_fast_model = resolve_value(
+        small_fast_model,
+        existing.get("small_fast_model"),
+        DEFAULT_SMALL_FAST_MODEL,
     )
     primary_api_key = existing.get("primary_api_key") or "1"
 

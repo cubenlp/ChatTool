@@ -10,8 +10,10 @@ from chattool.interaction import (
     BACK_VALUE,
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
-    ask_text,
+    prompt_sensitive_value,
+    prompt_text_value,
     resolve_interactive_mode,
+    resolve_value,
 )
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
@@ -159,26 +161,26 @@ def setup_opencode(
     if isinstance(model, str) and not model.strip():
         model = None
 
-    base_url = (
-        base_url
-        or env_config.get("base_url")
-        or existing.get("base_url")
-        or env_values.get("OPENAI_API_BASE")
-        or typed_env_values.get("OPENAI_API_BASE")
+    base_url = resolve_value(
+        base_url,
+        env_config.get("base_url"),
+        existing.get("base_url"),
+        env_values.get("OPENAI_API_BASE"),
+        typed_env_values.get("OPENAI_API_BASE"),
     )
-    api_key = (
-        api_key
-        or env_config.get("api_key")
-        or existing.get("api_key")
-        or env_values.get("OPENAI_API_KEY")
-        or typed_env_values.get("OPENAI_API_KEY")
+    api_key = resolve_value(
+        api_key,
+        env_config.get("api_key"),
+        existing.get("api_key"),
+        env_values.get("OPENAI_API_KEY"),
+        typed_env_values.get("OPENAI_API_KEY"),
     )
-    model = (
-        model
-        or env_config.get("model")
-        or existing.get("model")
-        or env_values.get("OPENAI_API_MODEL")
-        or typed_env_values.get("OPENAI_API_MODEL")
+    model = resolve_value(
+        model,
+        env_config.get("model"),
+        existing.get("model"),
+        env_values.get("OPENAI_API_MODEL"),
+        typed_env_values.get("OPENAI_API_MODEL"),
     )
 
     missing_required = not (base_url and api_key and model)
@@ -215,24 +217,15 @@ def setup_opencode(
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
 
     if need_prompt:
-        base_url_default = base_url or DEFAULT_BASE_URL
-        base_url = ask_text("base_url", default=base_url_default)
+        base_url = prompt_text_value("base_url", base_url, fallback=DEFAULT_BASE_URL)
         if base_url == BACK_VALUE:
             return
 
-        api_key_label = "api_key"
-        if api_key:
-            api_key_label = (
-                f"{api_key_label} (current: {_mask_secret(api_key)}, enter to keep)"
-            )
-        api_key_input = ask_text(api_key_label, password=True)
-        if api_key_input == BACK_VALUE:
+        api_key = prompt_sensitive_value("api_key", api_key, _mask_secret)
+        if api_key == BACK_VALUE:
             return
-        if api_key_input:
-            api_key = api_key_input
 
-        model_default = model or ""
-        model = ask_text("model", default=model_default)
+        model = prompt_text_value("model", model)
         if model == BACK_VALUE:
             return
 
