@@ -20,7 +20,13 @@ from chattool.setup.playground import (
     _workspace_skills_source,
 )
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_select, ask_text, create_choice
+from chattool.utils.tui import (
+    BACK_VALUE,
+    ask_confirm,
+    ask_select,
+    ask_text,
+    create_choice,
+)
 
 logger = setup_logger("setup_workspace")
 
@@ -632,11 +638,27 @@ def setup_workspace(
             if workspace_value == BACK_VALUE:
                 return
             workspace_dir = workspace_value
-        if with_chattool and chattool_source is None:
-            source_value = ask_text("chattool_source", default=str(source_default))
-            if source_value == BACK_VALUE:
+        if with_chattool:
+            if chattool_source is None:
+                source_value = ask_text("chattool_source", default=str(source_default))
+                if source_value == BACK_VALUE:
+                    return
+                chattool_source = source_value
+        elif can_prompt:
+            add_chattool = ask_confirm(
+                "Add ChatTool to the workspace root and sync its skills to docs/skills/?"
+                if language == "en"
+                else "是否把 ChatTool 放到 workspace 根目录，并同步其 skills 到 docs/skills/？",
+                default=False,
+            )
+            if add_chattool == BACK_VALUE:
                 return
-            chattool_source = source_value
+            with_chattool = bool(add_chattool)
+            if with_chattool:
+                source_value = ask_text("chattool_source", default=str(source_default))
+                if source_value == BACK_VALUE:
+                    return
+                chattool_source = source_value
 
     profile = _resolve_profile(profile_name)
     workspace_path = resolve_workspace_dir(workspace_dir=workspace_dir)
