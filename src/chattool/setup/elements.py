@@ -53,9 +53,9 @@ def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(preferred_auth_method, base_url, model, env, interactive):
+def codex_setup(api_key, base_url, model, env, interactive):
     setup_codex(
-        preferred_auth_method=preferred_auth_method,
+        api_key=api_key,
         base_url=base_url,
         model=model,
         env_ref=env,
@@ -267,10 +267,10 @@ SETUP_COMMAND_ELEMENTS = (
                 },
             ),
             SetupOptionElement(
-                param_decls=("--preferred-auth-method", "--pam"),
+                param_decls=("--api-key", "--key"),
                 kwargs={
                     "default": None,
-                    "help": 'OpenAI API key to write into Codex auth.json; config.toml will use preferred_auth_method = "apikey".',
+                    "help": "OpenAI API key to write into Codex auth.json.",
                 },
             ),
             SetupOptionElement(

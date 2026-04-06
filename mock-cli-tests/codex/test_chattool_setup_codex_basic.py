@@ -97,7 +97,7 @@ def test_setup_codex_explicit_args_override_env_ref(tmp_path, monkeypatch, runne
             "-I",
             "-e",
             "work",
-            "--pam",
+            "--api-key",
             "sk-explicit",
             "--base-url",
             "https://explicit.example/v1",
