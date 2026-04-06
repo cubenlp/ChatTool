@@ -137,23 +137,14 @@ def _prompt_repo_github_token(
     if not credential_path:
         return None
 
-    confirm_message = (
-        f"Configure GitHub token for {module_name} now? You can also run `chatgh set-token` later inside that repo."
-        if language == "en"
-        else f"是否现在为 {module_name} 配置 GitHub token？也可以稍后进入对应仓库执行 `chatgh set-token`。"
-    )
-    configure_now = ask_confirm(confirm_message, default=bool(default_token))
-    if configure_now == BACK_VALUE:
-        raise click.Abort()
-    if not configure_now:
-        return None
-
     prompt_label = f"{module_name} github_token"
     if default_token:
-        prompt_label += f" (current: {mask_secret(default_token)}, enter to keep)"
+        prompt_label += f" (current: {mask_secret(default_token)}, enter to keep; `chatgh set-token` later is also ok)"
+    else:
+        prompt_label += " (`chatgh set-token` later is also ok; leave empty to skip)"
     token_input = ask_text(prompt_label, default=default_token or "", password=True)
     token_value = str(token_input).strip() if token_input is not None else ""
-    return token_value or default_token
+    return token_value or default_token or None
 
 
 def apply_chattool_option(
