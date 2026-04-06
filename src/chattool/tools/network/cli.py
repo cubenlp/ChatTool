@@ -2,39 +2,56 @@ import click
 import os
 import ipaddress
 import re
-from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
 from pathlib import Path
 from chattool.tools.network.scanner import ping_scan, port_scan
-from chattool.tools.network.link_check import collect_urls, check_urls, check_service_url
+from chattool.tools.network.link_check import (
+    collect_urls,
+    check_urls,
+    check_service_url,
+)
+from chattool.tools.network.service_urls import append_token, ensure_path
 
-@click.group()
-def network():
+
+@click.group(name="network")
+def cli():
     """Network scanning tools."""
     pass
 
-@network.command()
-@click.option('-net', '--network', required=True, help='Network segment to scan (e.g. 192.168.1.0/24)')
-@click.option('-n', '--concurrency', default=50, help='Number of concurrent threads')
-@click.option('-o', '--output', default=None, help='Output file path')
+
+@cli.command()
+@click.option(
+    "-net",
+    "--network",
+    required=True,
+    help="Network segment to scan (e.g. 192.168.1.0/24)",
+)
+@click.option("-n", "--concurrency", default=50, help="Number of concurrent threads")
+@click.option("-o", "--output", default=None, help="Output file path")
 def ping(network, concurrency, output):
     """Scan a network for active hosts using ICMP ping."""
     ping_scan(network_segment=network, concurrency=concurrency, output_path=output)
 
-@network.command()
-@click.option('-i', '--input', required=False, help='Input file containing list of IPs')
-@click.option('-net', '--network', required=False, help='Network segment to scan (e.g. 192.168.1.0/24)')
-@click.option('-p', '--port', default=22, help='Port to scan (default: 22 for SSH)')
-@click.option('-n', '--concurrency', default=50, help='Number of concurrent threads')
-@click.option('-o', '--output', default=None, help='Output file path')
+
+@cli.command()
+@click.option("-i", "--input", required=False, help="Input file containing list of IPs")
+@click.option(
+    "-net",
+    "--network",
+    required=False,
+    help="Network segment to scan (e.g. 192.168.1.0/24)",
+)
+@click.option("-p", "--port", default=22, help="Port to scan (default: 22 for SSH)")
+@click.option("-n", "--concurrency", default=50, help="Number of concurrent threads")
+@click.option("-o", "--output", default=None, help="Output file path")
 def ssh(input, network, port, concurrency, output):
     """Scan IPs for open SSH ports."""
     ip_list = []
-    
+
     if input:
         if not os.path.exists(input):
             click.echo(f"Error: Input file '{input}' not found.")
             return
-        with open(input, 'r') as f:
+        with open(input, "r") as f:
             ip_list = [line.strip() for line in f if line.strip()]
     elif network:
         try:
@@ -50,7 +67,7 @@ def ssh(input, network, port, concurrency, output):
     port_scan(ip_list=ip_list, port=port, concurrency=concurrency, output_path=output)
 
 
-@network.command(name="links")
+@cli.command(name="links")
 @click.option(
     "--path",
     "path_value",
@@ -73,8 +90,12 @@ def ssh(input, network, port, concurrency, output):
     multiple=True,
     help="Explicit URL(s) to check. If provided, scanning is skipped.",
 )
-@click.option("--filter", "filter_regex", default=None, help="Optional regex to filter URLs.")
-@click.option("--timeout", default=6.0, show_default=True, help="Request timeout in seconds.")
+@click.option(
+    "--filter", "filter_regex", default=None, help="Optional regex to filter URLs."
+)
+@click.option(
+    "--timeout", default=6.0, show_default=True, help="Request timeout in seconds."
+)
 def links(path_value, globs, urls, filter_regex, timeout):
     """Check URL validity from a file/directory or explicit list."""
     if urls:
@@ -108,7 +129,7 @@ def links(path_value, globs, urls, filter_regex, timeout):
         raise SystemExit(2)
 
 
-@network.command(name="services")
+@cli.command(name="services")
 @click.option(
     "--chromium-url",
     default=None,
@@ -133,7 +154,9 @@ def links(path_value, globs, urls, filter_regex, timeout):
     show_default=False,
     help="Playwright service URL (or set CHATTOOL_PLAYWRIGHT_URL).",
 )
-@click.option("--timeout", default=6.0, show_default=True, help="Request timeout in seconds.")
+@click.option(
+    "--timeout", default=6.0, show_default=True, help="Request timeout in seconds."
+)
 def services(chromium_url, chromium_token, chromedriver_url, playwright_url, timeout):
     """Check that chromium/chromedriver/playwright URLs respond with expected content."""
     chromium_url = chromium_url or os.getenv("CHATTOOL_CHROMIUM_URL")
@@ -142,11 +165,13 @@ def services(chromium_url, chromium_token, chromedriver_url, playwright_url, tim
     chromium_token = chromium_token or os.getenv("CHATTOOL_CHROMIUM_TOKEN")
 
     missing = [
-        name for name, value in [
+        name
+        for name, value in [
             ("chromium", chromium_url),
             ("chromedriver", chromedriver_url),
             ("playwright", playwright_url),
-        ] if not value
+        ]
+        if not value
     ]
     if missing:
         click.secho(
@@ -157,10 +182,10 @@ def services(chromium_url, chromium_token, chromedriver_url, playwright_url, tim
         )
         raise SystemExit(2)
 
-    chromium_health = _ensure_path(chromium_url, "/json/version")
+    chromium_health = ensure_path(chromium_url, "/json/version")
     if chromium_token:
-        chromium_health = _append_token(chromium_health, chromium_token)
-    chromedriver_health = _ensure_path(chromedriver_url, "/status")
+        chromium_health = append_token(chromium_health, chromium_token)
+    chromedriver_health = ensure_path(chromedriver_url, "/status")
     playwright_health = playwright_url
 
     targets = [
@@ -187,25 +212,5 @@ def services(chromium_url, chromium_token, chromedriver_url, playwright_url, tim
         raise SystemExit(2)
 
 
-def _append_token(url: str, token: str) -> str:
-    parsed = urlparse(url)
-    query = parse_qs(parsed.query, keep_blank_values=True)
-    if "token" in query:
-        return url
-    query["token"] = [token]
-    new_query = urlencode(query, doseq=True)
-    return urlunparse(parsed._replace(query=new_query))
-
-
-def _ensure_path(url: str, suffix: str) -> str:
-    parsed = urlparse(url)
-    path = parsed.path or "/"
-    if path.endswith(suffix):
-        return url
-    if not path.endswith("/"):
-        path = path + "/"
-    new_path = path.rstrip("/") + suffix
-    return urlunparse(parsed._replace(path=new_path))
-
-if __name__ == '__main__':
-    network()
+if __name__ == "__main__":
+    cli()

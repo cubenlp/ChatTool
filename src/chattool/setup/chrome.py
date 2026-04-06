@@ -10,6 +10,8 @@ import stat
 from pathlib import Path
 import click
 from chattool.interaction import (
+    ask_confirm,
+    ask_path,
     abort_if_force_without_tty,
     resolve_interactive_mode,
 )
@@ -149,7 +151,7 @@ def setup_chrome_driver(interactive=None, update=False):
         if update:
             click.echo("Updating existing installation...")
         elif need_prompt:
-            if not click.confirm("Do you want to update/reinstall?", default=False):
+            if not ask_confirm("Do you want to update/reinstall?", default=False):
                 return
             click.echo("Updating existing installation...")
         else:
@@ -178,11 +180,7 @@ def setup_chrome_driver(interactive=None, update=False):
         return
 
     if need_prompt:
-        target_dir = click.prompt(
-            "Install directory",
-            default=str(target_dir),
-            type=click.Path(file_okay=False, dir_okay=True, writable=True),
-        )
+        target_dir = ask_path("Install directory", default=str(target_dir))
 
     target_dir = Path(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)

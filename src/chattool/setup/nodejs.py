@@ -11,6 +11,7 @@ from chattool.interaction import (
     BACK_VALUE,
     abort_if_force_without_tty,
     ask_confirm,
+    ask_text,
     resolve_interactive_mode,
 )
 from chattool.utils.custom_logger import setup_logger
@@ -367,9 +368,7 @@ def setup_nodejs(interactive=None):
 
     version_spec = "lts/*"
     if need_prompt:
-        version_spec = click.prompt(
-            "Node.js version to install via nvm", default="lts/*"
-        )
+        version_spec = ask_text("Node.js version to install via nvm", default="lts/*")
 
     quoted_version = shlex.quote(version_spec)
     logger.info(f"Running nvm install for version target: {version_spec}")

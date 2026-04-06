@@ -1,13 +1,19 @@
 import click
 import json
-from pathlib import Path
-import subprocess
 import time
 from typing import Optional
 
 from chattool.interaction import BACK_VALUE, ask_text, is_interactive_available
-from chattool.const import CHATTOOL_ENV_DIR
-from chattool.config.github import GitHubConfig
+from chattool.tools.github.api import (
+    configure_github_https_token,
+    get_client,
+    github_api_get_json,
+    github_api_get_text,
+    resolve_repo,
+    resolve_repo_from_git_remote,
+    resolve_token,
+    save_github_token_to_env,
+)
 
 _ENV_LOADED = False
 
@@ -49,8 +55,8 @@ def pr_create(repo, base, head, title, body, body_file, token):
         with open(body_file, "r", encoding="utf-8") as handle:
             body = handle.read()
 
-    repo = _resolve_repo(repo)
-    client = _get_client(token, require_token=True)
+    repo = resolve_repo(repo)
+    client = get_client(token, require_token=True)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.create_pull(title=title, body=body, base=base, head=head)
@@ -84,8 +90,8 @@ def pr_list(repo, state, limit, json_output, token):
     from github import Github
     from github.GithubException import GithubException
 
-    client = _get_client(token)
-    repo = _resolve_repo(repo)
+    client = get_client(token)
+    repo = resolve_repo(repo)
     try:
         repo_obj = client.get_repo(repo)
         pulls = repo_obj.get_pulls(state=state, sort="updated", direction="desc")
@@ -140,8 +146,8 @@ def pr_view(repo, number, json_output, token):
     from github import Github
     from github.GithubException import GithubException
 
-    client = _get_client(token)
-    repo = _resolve_repo(repo)
+    client = get_client(token)
+    repo = resolve_repo(repo)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -237,8 +243,8 @@ def pr_check(
     """Show CI/check status for a pull request."""
     from github.GithubException import GithubException
 
-    client = _get_client(token)
-    repo = _resolve_repo(repo)
+    client = get_client(token)
+    repo = resolve_repo(repo)
     try:
         repo_obj = client.get_repo(repo)
         started_at = time.monotonic()
@@ -289,11 +295,11 @@ def pr_check(
 )
 def run_view(repo, run_id, job_limit, json_output, token):
     """Show a workflow run and its jobs."""
-    repo = _resolve_repo(repo)
-    token = _resolve_token(token)
+    repo = resolve_repo(repo)
+    token = resolve_token(token)
 
-    run_payload = _github_api_get_json(repo, f"/actions/runs/{run_id}", token)
-    jobs_payload = _github_api_get_json(
+    run_payload = github_api_get_json(repo, f"/actions/runs/{run_id}", token)
+    jobs_payload = github_api_get_json(
         repo,
         f"/actions/runs/{run_id}/jobs",
         token,
@@ -336,11 +342,11 @@ def run_view(repo, run_id, job_limit, json_output, token):
 )
 def job_logs(repo, job_id, tail, output, json_output, token):
     """Show logs for a workflow job."""
-    repo = _resolve_repo(repo)
-    token = _resolve_token(token)
+    repo = resolve_repo(repo)
+    token = resolve_token(token)
 
-    job_payload = _github_api_get_json(repo, f"/actions/jobs/{job_id}", token)
-    logs_text = _github_api_get_text(repo, f"/actions/jobs/{job_id}/logs", token)
+    job_payload = github_api_get_json(repo, f"/actions/jobs/{job_id}", token)
+    logs_text = github_api_get_text(repo, f"/actions/jobs/{job_id}/logs", token)
     rendered_log = _tail_text(logs_text, tail)
 
     if output:
@@ -381,8 +387,8 @@ def pr_comment(repo, number, body, token):
     from github import Github
     from github.GithubException import GithubException
 
-    client = _get_client(token, require_token=True)
-    repo = _resolve_repo(repo)
+    client = get_client(token, require_token=True)
+    repo = resolve_repo(repo)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -423,8 +429,8 @@ def pr_merge(repo, number, method, title, message, confirm, check_before_merge, 
     from github import Github
     from github.GithubException import GithubException
 
-    client = _get_client(token, require_token=True)
-    repo = _resolve_repo(repo)
+    client = get_client(token, require_token=True)
+    repo = resolve_repo(repo)
     if not confirm and not click.confirm(
         f"Merge PR #{number} in {repo} using {method}?", default=False
     ):
@@ -502,8 +508,8 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
             "No updates provided. Use --title/--body/--state/--base."
         )
 
-    client = _get_client(token, require_token=True)
-    repo = _resolve_repo(repo)
+    client = get_client(token, require_token=True)
+    repo = resolve_repo(repo)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -535,8 +541,8 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 )
 def repo_perms(repo, json_output, token):
     """Show repository permissions for the current token."""
-    repo = _resolve_repo(repo)
-    payload = _github_api_get_json(repo, "", token)
+    repo = resolve_repo(repo)
+    payload = github_api_get_json(repo, "", token)
     result = {
         "repo": payload.get("full_name") or repo,
         "private": payload.get("private"),
@@ -571,7 +577,7 @@ def repo_perms(repo, json_output, token):
 )
 def set_token(token, save_env):
     """Configure HTTPS credentials for the current GitHub repository."""
-    resolved_token = _resolve_token(token)
+    resolved_token = resolve_token(token)
     if not resolved_token and is_interactive_available():
         token_input = ask_text("github_token", password=True)
         if token_input == BACK_VALUE:
@@ -582,173 +588,13 @@ def set_token(token, save_env):
             "Missing token. Provide --token, set GITHUB_ACCESS_TOKEN, or initialize it with `chatenv init -t gh`."
         )
 
-    repo, credential_path = _resolve_repo_from_git_remote()
-    _configure_github_https_token(credential_path, resolved_token)
+    repo, credential_path = resolve_repo_from_git_remote()
+    configure_github_https_token(credential_path, resolved_token)
     if save_env:
-        _save_github_token_to_env(resolved_token)
+        save_github_token_to_env(resolved_token)
     click.echo(f"Configured Git HTTPS token for {repo}.")
     if save_env:
         click.echo("Saved token to ChatTool GitHub env config.")
-
-
-def _get_client(token: Optional[str], require_token: bool = False):
-    from github import Github, Auth
-
-    token = _resolve_token(token)
-    if require_token and not token:
-        raise click.ClickException(
-            "Missing token. Set GITHUB_ACCESS_TOKEN or pass --token."
-        )
-    if not token:
-        click.secho(
-            "Warning: no token provided; GitHub API rate limits may apply.", fg="yellow"
-        )
-        return Github()
-    return Github(auth=Auth.Token(token))
-
-
-def _resolve_repo(repo: Optional[str]) -> str:
-    repo = repo or GitHubConfig.GITHUB_DEFAULT_REPO.value
-    if not repo:
-        raise click.ClickException(
-            "Missing repo. Provide --repo or set GITHUB_DEFAULT_REPO."
-        )
-    return repo
-
-
-def _resolve_token(token: Optional[str]) -> Optional[str]:
-    return token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
-
-
-def _resolve_repo_from_git_remote() -> tuple[str, str]:
-    try:
-        remotes_result = subprocess.run(
-            ["git", "remote"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError as exc:
-        raise click.ClickException(
-            "Current directory is not a git repository with any configured remote."
-        ) from exc
-
-    remote_names = [
-        name.strip()
-        for name in (remotes_result.stdout or "").splitlines()
-        if name.strip()
-    ]
-    if not remote_names:
-        raise click.ClickException(
-            "Current directory is not a git repository with any configured remote."
-        )
-
-    ordered_remotes = ["origin", *[name for name in remote_names if name != "origin"]]
-    checked_remotes = []
-    for remote_name in ordered_remotes:
-        if remote_name in checked_remotes:
-            continue
-        checked_remotes.append(remote_name)
-        try:
-            result = subprocess.run(
-                ["git", "remote", "get-url", remote_name],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError:
-            continue
-
-        remote_url = (result.stdout or "").strip()
-        parsed = _parse_github_repo_from_remote(remote_url)
-        if parsed:
-            return parsed
-
-    raise click.ClickException(
-        "Current repository does not have a recognizable GitHub remote."
-    )
-
-
-def _parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, str]]:
-    url = (remote_url or "").strip()
-    if not url:
-        return None
-
-    prefixes = [
-        "https://github.com/",
-        "http://github.com/",
-        "git@github.com:",
-        "ssh://git@github.com/",
-    ]
-    for prefix in prefixes:
-        if url.startswith(prefix):
-            path = url[len(prefix) :]
-            normalized_path = path[:-4] if path.endswith(".git") else path
-            parts = [part for part in path.split("/") if part]
-            if len(parts) >= 2:
-                normalized_parts = [part for part in normalized_path.split("/") if part]
-                return f"{normalized_parts[0]}/{normalized_parts[1]}", path
-    return None
-
-
-def _configure_github_https_token(path: str, token: str) -> None:
-    try:
-        subprocess.run(
-            ["git", "config", "--global", "credential.helper", "store"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        subprocess.run(
-            ["git", "config", "--global", "credential.useHttpPath", "true"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        credential_input = (
-            "protocol=https\n"
-            "host=github.com\n"
-            f"path={path}\n"
-            "username=x-access-token\n"
-            f"password={token}\n\n"
-        )
-        subprocess.run(
-            ["git", "credential", "approve"],
-            input=credential_input,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError as exc:
-        stderr = (exc.stderr or "").strip()
-        raise click.ClickException(
-            f"Failed to configure GitHub token for {path}: {stderr or 'git credential command failed'}"
-        ) from exc
-
-
-def _save_github_token_to_env(token: str) -> None:
-    env_file = GitHubConfig.get_active_env_file(CHATTOOL_ENV_DIR)
-    env_file.parent.mkdir(parents=True, exist_ok=True)
-
-    lines: list[str] = []
-    if env_file.exists():
-        lines = env_file.read_text(encoding="utf-8").splitlines()
-
-    replaced = False
-    rendered: list[str] = []
-    for line in lines:
-        if line.startswith("GITHUB_ACCESS_TOKEN="):
-            rendered.append(f"GITHUB_ACCESS_TOKEN='{token}'")
-            replaced = True
-        else:
-            rendered.append(line)
-
-    if not replaced:
-        if rendered and rendered[-1] != "":
-            rendered.append("")
-        rendered.append(f"GITHUB_ACCESS_TOKEN='{token}'")
-
-    env_file.write_text("\n".join(rendered).rstrip() + "\n", encoding="utf-8")
 
 
 def _build_pr_check_payload(
@@ -1040,77 +886,6 @@ def _isoformat(value) -> Optional[str]:
 
 def _format_optional(value) -> str:
     return "-" if value is None else str(value)
-
-
-def _github_api_get_json(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
-) -> dict:
-    response = _github_api_request(repo, path, token, params=params)
-    try:
-        return response.json()
-    except ValueError as exc:
-        raise click.ClickException(
-            f"GitHub API returned non-JSON response for {path}"
-        ) from exc
-
-
-def _github_api_get_text(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
-) -> str:
-    response = _github_api_request(repo, path, token, params=params)
-    return response.text
-
-
-def _github_api_request(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
-):
-    import requests
-
-    owner, name = _split_repo(repo)
-    url = f"https://api.github.com/repos/{owner}/{name}{path}"
-    try:
-        response = requests.get(
-            url,
-            headers=_github_api_headers(token),
-            params=params,
-            timeout=30,
-            allow_redirects=True,
-        )
-    except requests.RequestException as exc:
-        raise click.ClickException(
-            f"GitHub API request failed for {path}: {exc}"
-        ) from exc
-    if response.ok:
-        return response
-
-    detail = response.text.strip()
-    try:
-        payload = response.json()
-        if isinstance(payload, dict) and payload.get("message"):
-            detail = payload["message"]
-    except ValueError:
-        pass
-    raise click.ClickException(
-        f"GitHub API error ({response.status_code}) for {path}: {detail}"
-    )
-
-
-def _github_api_headers(token: Optional[str]) -> dict:
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "chattool-gh",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    return headers
-
-
-def _split_repo(repo: str) -> tuple[str, str]:
-    parts = repo.split("/", 1)
-    if len(parts) != 2 or not all(parts):
-        raise click.ClickException("Repo must be in owner/name form.")
-    return parts[0], parts[1]
 
 
 def _tail_text(text: str, tail: int) -> str:

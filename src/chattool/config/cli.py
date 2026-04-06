@@ -239,18 +239,28 @@ def _configure_provider(config_cls):
 def _interactive_config_loop(grouped_configs):
     """Main loop for interactive configuration using shared tui helpers."""
     while True:
-        # Main Menu
         main_choices = []
         for section, configs in grouped_configs.items():
             if configs:
-                main_choices.append(section)
+                main_choices.append(
+                    create_choice(
+                        title=f"{section} ({len(configs)} providers)",
+                        value=section,
+                    )
+                )
 
         main_choices.append(get_separator())
-        main_choices.append("Save & Exit")
-        main_choices.append("Exit without Saving")
+        main_choices.append(create_choice(title="Save & Exit", value="Save & Exit"))
+        main_choices.append(
+            create_choice(
+                title="Exit without Saving",
+                value="Exit without Saving",
+            )
+        )
 
         selected_section = ask_select(
-            "Select a category to configure:", choices=main_choices
+            "Choose a config category",
+            choices=main_choices,
         )
 
         if selected_section == "Save & Exit":
@@ -266,22 +276,31 @@ def _interactive_config_loop(grouped_configs):
         elif selected_section == BACK_VALUE:
             continue
 
-        # Sub Menu
         while True:
             configs = grouped_configs[selected_section]
             sub_choices = []
             for cfg in configs:
                 aliases = getattr(cfg, "_aliases", [])
                 alias_text = f" ({', '.join(aliases)})" if aliases else ""
+                filled_fields = 0
+                total_fields = 0
+                for _, field in cfg.get_fields().items():
+                    total_fields += 1
+                    current = field.value if field.value is not None else field.default
+                    if current not in (None, ""):
+                        filled_fields += 1
                 sub_choices.append(
-                    create_choice(title=f"{cfg._title}{alias_text}", value=cfg)
+                    create_choice(
+                        title=f"{cfg._title}{alias_text} [{filled_fields}/{total_fields}]",
+                        value=cfg,
+                    )
                 )
 
             sub_choices.append(get_separator())
             sub_choices.append(create_choice(title="Back", value="Back"))
 
             selected_config = ask_select(
-                f"[{selected_section}] Select a provider to configure:",
+                f"Choose a provider in {selected_section}",
                 choices=sub_choices,
             )
 
@@ -361,7 +380,10 @@ def save_env(name, config_types):
     name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if target_path.exists():
-        click.confirm(f"Profile '{name}' already exists. Overwrite?", abort=True)
+        if not ask_confirm(
+            f"Profile '{name}' already exists. Overwrite?", default=False
+        ):
+            raise click.Abort()
 
     _reload_runtime_config()
     target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -398,7 +420,10 @@ def new_env(name, config_types):
     name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
     if target_path.exists():
-        click.confirm(f"Profile '{name}' already exists. Overwrite it?", abort=True)
+        if not ask_confirm(
+            f"Profile '{name}' already exists. Overwrite it?", default=False
+        ):
+            raise click.Abort()
 
     _reload_runtime_config()
     if prompt_for_values and not _configure_provider(config_cls):
@@ -527,7 +552,8 @@ def init(interactive, config_types):
                 click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
                 return
 
-        # Fallback for non-interactive-tui environment (pure click)
+        # Fallback for environments without the full select UI, while still
+        # keeping the same prompt primitives as the rest of ChatTool.
         if not config_types:
             grouped = _group_configs(target_configs)
             selected_sections = []
@@ -535,7 +561,7 @@ def init(interactive, config_types):
             for section, configs in grouped.items():
                 if not configs:
                     continue
-                if click.confirm(section, default=section == "Model"):
+                if ask_confirm(section, default=section == "Model"):
                     selected_sections.append(section)
 
             if not selected_sections:
@@ -548,7 +574,7 @@ def init(interactive, config_types):
                 for config_cls in grouped[section]:
                     aliases = getattr(config_cls, "_aliases", [])
                     alias_text = f" ({', '.join(aliases)})" if aliases else ""
-                    if click.confirm(
+                    if ask_confirm(
                         f"Configure {config_cls._title}{alias_text}", default=False
                     ):
                         selected_configs.append(config_cls)
@@ -572,21 +598,13 @@ def init(interactive, config_types):
                     hint = mask_secret(default_val) if default_val else ""
                     if hint:
                         prompt_text += f" [{hint}]"
-                    new_val = click.prompt(
-                        prompt_text,
-                        default="",
-                        show_default=False,
-                        hide_input=True,
-                        type=str,
-                    )
+                    new_val = ask_text(prompt_text, password=True)
                     if new_val:
                         field.value = new_val
                 else:
-                    new_val = click.prompt(
+                    new_val = ask_text(
                         prompt_text,
-                        default=default_val if default_val is not None else "",
-                        show_default=True,
-                        type=str,
+                        default=str(default_val) if default_val is not None else "",
                     )
                     if new_val:
                         field.value = new_val

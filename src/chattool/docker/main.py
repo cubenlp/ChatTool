@@ -4,6 +4,7 @@ import click
 
 from chattool.interaction import (
     BACK_VALUE,
+    ask_confirm,
     ask_path,
     ask_select,
     is_interactive_available,
@@ -69,12 +70,12 @@ def docker_main(
     env_file = target_dir / (env_name or f"{selected_template}.env.example")
 
     if not force:
-        if compose_file.exists() and not click.confirm(
+        if compose_file.exists() and not ask_confirm(
             f"{compose_file} exists, overwrite?", default=False
         ):
             click.echo("Cancelled.")
             return
-        if env_file.exists() and not click.confirm(
+        if env_file.exists() and not ask_confirm(
             f"{env_file} exists, overwrite?", default=False
         ):
             click.echo("Cancelled.")
