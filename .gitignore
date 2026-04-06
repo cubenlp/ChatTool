@@ -1,8 +1,8 @@
 ##### user defined ######
 *.jsonl
-playground/
-Playground/
-workspace/
+/playground/
+/Playground/
+/workspace/
 
 
 ##### seperated line ######

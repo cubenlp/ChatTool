@@ -26,7 +26,7 @@ Boundary: this skill stops at development review. Merge timing, release prep, ta
    - Defaults shown in prompts must match the actual execution defaults.
 
 3. Unified interactive style
-   - New CLI prompts should use [src/chattool/utils/tui.py](src/chattool/utils/tui.py).
+   - New CLI prompts should use [src/chattool/interaction](src/chattool/interaction).
    - Avoid introducing fresh `click.prompt` / `click.confirm` flows for new interactive commands unless there is a strong reason and the behavior is documented.
    - Sensitive values must stay masked in prompts and summaries.
 
@@ -63,7 +63,7 @@ Boundary: this skill stops at development review. Merge timing, release prep, ta
 git diff --stat
 git diff --name-only
 rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
-rg -n "lazy import|utils/tui.py|interactive" docs/development-guide docs README.md
+rg -n "lazy import|src/chattool/interaction|interactive" docs/development-guide docs README.md
 ```
 
 ## Output Rules

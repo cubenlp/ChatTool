@@ -19,9 +19,9 @@
 ### 2) `config/`（env 管理）
 
 - 统一管理环境变量与默认值加载。
-- 统一解析顺序：默认是 `CLI / 调用方显式参数 > tool config file > environment variable > typed env file > default value`。
-- 对支持 `-e/--env` 这类显式 env 覆盖源的命令，统一解析顺序是 `CLI / 调用方显式参数 > -e/显式 env > tool config file > environment variable > typed env file > default value`。
-- `typed env file` 指 `envs/<Config>/.env`；profile 固定放在 `envs/<Config>/<profile>.env`。
+- 统一解析顺序：默认是 `CLI / 调用方显式参数 > tool config file > environment variable > ChatTool .env > default value`。
+- 对支持 `-e/--env` 这类显式 env 覆盖源的命令，统一解析顺序是 `CLI / 调用方显式参数 > -e/显式 env > tool config file > environment variable > ChatTool .env > default value`。
+- `ChatTool .env` 指 `envs/<Config>/.env`；profile 固定放在 `envs/<Config>/<profile>.env`，不是当前工作目录下的 `.env`。
 - 以模块化配置对象组织，支持按功能扩展。
 - 凡是已经注册到 `src/chattool/config/` 的配置项，业务代码与 CLI 默认值读取都应优先走配置对象（如 `OpenAIConfig.OPENAI_API_KEY.value`），不能只直接读取 `os.environ`。
 - 这样才能保证 `chattool ...` 与独立入口（如 `chatskill`）都能正确读取 `chatenv` 管理的 `.env` 默认值。
@@ -36,7 +36,7 @@
   - Python API
   - CLI 命令
   - MCP 工具定义（如需要）
-- CLI 交互体验通过通用策略层与 `utils/tui.py` 统一增强。
+- CLI 交互体验通过通用策略层与 `src/chattool/interaction/` 统一增强。
 
 ### 4) `skills/`
 
@@ -90,7 +90,7 @@
 - 必要参数不完整时，自动触发 interactive。
 - `-i` 强制 interactive，`-I` 强制非 interactive；参数不全时抛错。
 - 参数提示读取默认值并显示脱敏内容（密钥必须 mask）。
-- 所有新的 CLI 交互统一走 `utils/tui.py`。
+- 所有新的 CLI 交互统一走 `src/chattool/interaction/`。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致。
 - `-i` 进入当前命令交互流程，`-I` 完全禁止交互。
