@@ -1,4 +1,4 @@
-"""Shared warning filters for ChatTool CLI entrypoints."""
+"""Warning filters for ChatTool CLI entrypoints."""
 
 from __future__ import annotations
 

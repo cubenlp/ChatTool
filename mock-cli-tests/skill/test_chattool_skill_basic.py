@@ -38,7 +38,7 @@ def test_skill_install_prompts_when_name_missing(tmp_path, monkeypatch):
     monkeypatch.setenv("CHATTOOL_SKILL_PLATFORM", "codex")
     monkeypatch.setattr("chattool.skill.cli.is_interactive_available", lambda: True)
     monkeypatch.setattr(
-        "chattool.skill.cli.ask_checkbox_with_controls",
+        "chattool.skill.interaction.ask_checkbox_with_controls",
         lambda *args, **kwargs: ["alpha"],
     )
 
@@ -63,10 +63,11 @@ def test_skill_install_prompts_for_platform_before_skill(tmp_path, monkeypatch):
 
     selections = iter(["opencode"])
     monkeypatch.setattr(
-        "chattool.skill.cli.ask_select", lambda message, choices: next(selections)
+        "chattool.skill.interaction.ask_select",
+        lambda message, choices: next(selections),
     )
     monkeypatch.setattr(
-        "chattool.skill.cli.ask_checkbox_with_controls",
+        "chattool.skill.interaction.ask_checkbox_with_controls",
         lambda *args, **kwargs: ["alpha"],
     )
 
@@ -130,7 +131,7 @@ def test_skill_install_overwrite_prompt_accepts_all(tmp_path, monkeypatch):
     monkeypatch.setenv("CHATTOOL_SKILL_PLATFORM", "codex")
     monkeypatch.setattr("chattool.skill.cli.is_interactive_available", lambda: True)
     monkeypatch.setattr(
-        "chattool.skill.cli._prompt_overwrite_action", lambda skill_name: "all"
+        "chattool.skill.interaction.prompt_overwrite_action", lambda skill_name: "all"
     )
 
     result = CliRunner().invoke(

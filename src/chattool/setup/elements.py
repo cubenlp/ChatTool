@@ -33,8 +33,8 @@ class SetupCommandElement:
     options: Sequence[SetupOptionElement] = field(default_factory=tuple)
 
 
-def chrome_setup(interactive):
-    setup_chrome_driver(interactive=interactive)
+def chrome_setup(update, interactive):
+    setup_chrome_driver(interactive=interactive, update=update)
 
 
 def frp_setup(interactive):
@@ -53,9 +53,9 @@ def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(preferred_auth_method, base_url, model, env, interactive):
+def codex_setup(api_key, base_url, model, env, interactive):
     setup_codex(
-        preferred_auth_method=preferred_auth_method,
+        api_key=api_key,
         base_url=base_url,
         model=model,
         env_ref=env,
@@ -197,6 +197,13 @@ SETUP_COMMAND_ELEMENTS = (
         callback=chrome_setup,
         options=(
             SetupOptionElement(
+                param_decls=("--update",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Update existing Chromedriver installation instead of exiting when already installed.",
+                },
+            ),
+            SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
@@ -267,10 +274,10 @@ SETUP_COMMAND_ELEMENTS = (
                 },
             ),
             SetupOptionElement(
-                param_decls=("--preferred-auth-method", "--pam"),
+                param_decls=("--api-key", "--key"),
                 kwargs={
                     "default": None,
-                    "help": 'OpenAI API key to write into Codex auth.json; config.toml will use preferred_auth_method = "apikey".',
+                    "help": "OpenAI API key to write into Codex auth.json.",
                 },
             ),
             SetupOptionElement(

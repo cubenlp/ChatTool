@@ -77,10 +77,16 @@ def _install_fake_actions_api(monkeypatch):
             return logs_text
         raise AssertionError(f"Unexpected text path: {path}")
 
-    monkeypatch.setattr(gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool")
-    monkeypatch.setattr(gh_cli, "_resolve_token", lambda token: token or "ghp_test")
-    monkeypatch.setattr(gh_cli, "_github_api_get_json", fake_json)
-    monkeypatch.setattr(gh_cli, "_github_api_get_text", fake_text)
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+    monkeypatch.setattr(
+        gh_cli, "resolve_token", lambda token, credential_path=None: token or "ghp_test"
+    )
+    monkeypatch.setattr(gh_cli, "github_api_get_json", fake_json)
+    monkeypatch.setattr(gh_cli, "github_api_get_text", fake_text)
 
 
 @pytest.fixture
@@ -96,16 +102,27 @@ def test_chattool_gh_run_view_basic(monkeypatch, runner):
     assert result.exit_code == 0
     assert "Run #151 (id=23494900414): completed/failure" in result.output
     assert "Jobs (1/1 shown):" in result.output
-    assert "build (3.10, ubuntu-latest) (id=68373094563): completed/failure" in result.output
+    assert (
+        "build (3.10, ubuntu-latest) (id=68373094563): completed/failure"
+        in result.output
+    )
     assert "[9] Check test results: completed/failure" in result.output
 
 
 def test_chattool_gh_job_logs_basic(monkeypatch, runner):
     _install_fake_actions_api(monkeypatch)
 
-    result = runner.invoke(cli, ["gh", "job-logs", "--job-id", "68373094563", "--tail", "2"])
+    result = runner.invoke(
+        cli, ["gh", "job-logs", "--job-id", "68373094563", "--tail", "2"]
+    )
 
     assert result.exit_code == 0
-    assert "build (3.10, ubuntu-latest) (id=68373094563): completed/failure" in result.output
-    assert "FAILED tests/skills/test_skill_assets.py::test_all_skills_have_chinese_variant" in result.output
+    assert (
+        "build (3.10, ubuntu-latest) (id=68373094563): completed/failure"
+        in result.output
+    )
+    assert (
+        "FAILED tests/skills/test_skill_assets.py::test_all_skills_have_chinese_variant"
+        in result.output
+    )
     assert "short test summary info" not in result.output

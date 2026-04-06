@@ -85,10 +85,14 @@ def _install_fake_client(monkeypatch):
     client = SimpleNamespace(get_repo=lambda repo: repo_obj)
 
     monkeypatch.setattr(
-        gh_cli, "_get_client", lambda token, require_token=False: client
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: client,
     )
     monkeypatch.setattr(
-        gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool"
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
     )
 
 
@@ -145,10 +149,14 @@ def _install_fake_merge_client(monkeypatch):
     client = SimpleNamespace(get_repo=lambda repo: repo_obj)
 
     monkeypatch.setattr(
-        gh_cli, "_get_client", lambda token, require_token=False: client
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: client,
     )
     monkeypatch.setattr(
-        gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool"
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
     )
     return merge_calls
 
@@ -180,9 +188,7 @@ def test_chattool_gh_pr_check_basic(monkeypatch, runner):
 def test_chattool_gh_pr_merge_check_basic(monkeypatch, runner):
     merge_calls = _install_fake_merge_client(monkeypatch)
 
-    result = runner.invoke(
-        cli, ["gh", "pr-merge", "--number", "138", "--confirm", "--check"]
-    )
+    result = runner.invoke(cli, ["gh", "pr-merge", "--number", "138", "--check"])
 
     assert result.exit_code != 0
     assert "Refusing to merge because CI checks are not green" in result.output
@@ -192,11 +198,13 @@ def test_chattool_gh_pr_merge_check_basic(monkeypatch, runner):
 
 def test_chattool_gh_repo_perms_basic(monkeypatch, runner):
     monkeypatch.setattr(
-        gh_cli, "_resolve_repo", lambda repo: repo or "CubeNLP/ChatTool"
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
     )
     monkeypatch.setattr(
         gh_cli,
-        "_github_api_get_json",
+        "github_api_get_json",
         lambda repo, path, token, params=None: {
             "full_name": "CubeNLP/ChatTool",
             "private": True,
@@ -236,7 +244,7 @@ def test_chattool_gh_set_token_configures_repo_scoped_https_credential(
             return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
         return Result()
 
-    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
 
     result = runner.invoke(
         cli,
@@ -261,7 +269,7 @@ def test_chattool_gh_set_token_save_env_updates_github_env(
     tmp_path, monkeypatch, runner
 ):
     env_root = tmp_path / "envs"
-    monkeypatch.setattr(gh_cli, "CHATTOOL_ENV_DIR", env_root)
+    monkeypatch.setattr("chattool.tools.github.api.CHATTOOL_ENV_DIR", env_root)
 
     def fake_run(command, check=True, capture_output=True, text=True, input=None):
         class Result:
@@ -275,7 +283,7 @@ def test_chattool_gh_set_token_save_env_updates_github_env(
             return Result(stdout="https://github.com/CubeNLP/ChatTool.git\n")
         return Result()
 
-    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
 
     result = runner.invoke(
         cli,
@@ -304,7 +312,7 @@ def test_chattool_gh_set_token_rejects_non_github_remote(monkeypatch, runner):
             return Result(stdout="git@gitlab.com:CubeNLP/ChatTool.git\n")
         return Result()
 
-    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
 
     result = runner.invoke(cli, ["gh", "set-token", "--token", "ghp_test_token"])
 
@@ -334,9 +342,11 @@ def test_chattool_gh_set_token_prompts_for_missing_token_in_tty(monkeypatch, run
             return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
         return Result()
 
-    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
     monkeypatch.delenv("GITHUB_ACCESS_TOKEN", raising=False)
-    monkeypatch.setattr(gh_cli.GitHubConfig.GITHUB_ACCESS_TOKEN, "value", None)
+    monkeypatch.setattr(
+        gh_cli, "resolve_token", lambda token, credential_path=None: token
+    )
     monkeypatch.setattr(gh_cli, "is_interactive_available", lambda: True)
     monkeypatch.setattr(
         gh_cli,
@@ -372,7 +382,7 @@ def test_chattool_gh_set_token_falls_back_to_other_github_remote(monkeypatch, ru
             return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
         return Result()
 
-    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
 
     result = runner.invoke(
         cli,
@@ -407,7 +417,7 @@ def test_chattool_gh_set_token_keeps_remote_path_without_git_suffix(
             return Result(stdout="https://github.com/Lean-zh/LeanUp\n")
         return Result()
 
-    monkeypatch.setattr(gh_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
 
     result = runner.invoke(
         cli,

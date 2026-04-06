@@ -9,11 +9,16 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, FeishuConfig
+from chattool.config.source_chain import split_config_sources
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    prompt_sensitive_value,
+    prompt_text_value,
     resolve_interactive_mode,
+    resolve_value,
 )
 from chattool.setup.nodejs import (
     _detect_nodejs_runtime,
@@ -21,9 +26,7 @@ from chattool.setup.nodejs import (
     run_npm_command,
     should_install_global_npm_package,
 )
-from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_text
 
 logger = setup_logger("setup_lark_cli")
 
@@ -232,6 +235,7 @@ def setup_lark_cli(
     config_dir = _get_lark_cli_config_dir()
     config_path = _get_lark_cli_config_path()
     existing = _load_existing_lark_cli_config(config_path)
+    saved_feishu = _load_saved_feishu_values()
     env_values, typed_env_values = split_config_sources(
         FeishuConfig,
         CHATTOOL_ENV_DIR,
@@ -247,24 +251,29 @@ def setup_lark_cli(
     if isinstance(brand, str):
         brand = brand.strip().lower() or None
 
-    app_id = (
-        app_id
-        or env_config.get("app_id")
-        or existing.get("app_id")
-        or env_values.get("FEISHU_APP_ID")
-        or typed_env_values.get("FEISHU_APP_ID")
+    app_id = resolve_value(
+        app_id,
+        env_config.get("app_id"),
+        existing.get("app_id"),
+        saved_feishu.get("app_id"),
+        env_values.get("FEISHU_APP_ID"),
+        typed_env_values.get("FEISHU_APP_ID"),
     )
-    app_secret = (
-        app_secret
-        or env_config.get("app_secret")
-        or env_values.get("FEISHU_APP_SECRET")
-        or typed_env_values.get("FEISHU_APP_SECRET")
+    app_secret = resolve_value(
+        app_secret,
+        env_config.get("app_secret"),
+        existing.get("app_secret"),
+        saved_feishu.get("app_secret"),
+        env_values.get("FEISHU_APP_SECRET"),
+        typed_env_values.get("FEISHU_APP_SECRET"),
     )
     if not brand:
         if env_config.get("api_base"):
             brand = _infer_brand(env_config.get("api_base"))
         elif existing.get("brand"):
             brand = existing.get("brand")
+        elif saved_feishu.get("api_base"):
+            brand = _infer_brand(saved_feishu.get("api_base"))
         elif env_values.get("FEISHU_API_BASE"):
             brand = _infer_brand(env_values.get("FEISHU_API_BASE"))
         elif typed_env_values.get("FEISHU_API_BASE"):
@@ -306,20 +315,19 @@ def setup_lark_cli(
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
 
     if need_prompt:
-        app_id = ask_text("lark-cli app_id", default=app_id or "")
+        app_id = prompt_text_value("lark-cli app_id", app_id)
         if app_id == BACK_VALUE:
             return
 
-        app_secret_label = "lark-cli app_secret"
-        if app_secret:
-            app_secret_label = f"{app_secret_label} (current: {_mask_secret(app_secret)}, enter to keep)"
-        app_secret_input = ask_text(app_secret_label, password=True)
-        if app_secret_input == BACK_VALUE:
+        app_secret = prompt_sensitive_value(
+            "lark-cli app_secret", app_secret, _mask_secret
+        )
+        if app_secret == BACK_VALUE:
             return
-        if app_secret_input:
-            app_secret = app_secret_input
 
-        brand = ask_text("lark-cli brand (feishu/lark)", default=brand or "feishu")
+        brand = prompt_text_value(
+            "lark-cli brand (feishu/lark)", brand, fallback="feishu"
+        )
         if brand == BACK_VALUE:
             return
 

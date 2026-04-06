@@ -7,12 +7,13 @@ import subprocess
 
 import click
 
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
+    ask_confirm,
     resolve_interactive_mode,
 )
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_confirm
 
 logger = setup_logger("setup_docker")
 DOCKER_COMPOSE_VERSION = "v2.22.0"

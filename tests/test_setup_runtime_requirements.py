@@ -7,7 +7,9 @@ import chattool.setup.lark_cli as lark_cli_module
 import chattool.setup.opencode as opencode_module
 
 
-def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp_path, monkeypatch):
+def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(
+    tmp_path, monkeypatch
+):
     events = []
     prompts = []
 
@@ -23,7 +25,9 @@ def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp
     monkeypatch.setattr(
         codex_module,
         "ensure_nodejs_requirement",
-        lambda interactive=None, can_prompt=False: events.append(("nodejs", interactive, can_prompt)),
+        lambda interactive=None, can_prompt=False: events.append(
+            ("nodejs", interactive, can_prompt)
+        ),
     )
 
     def fake_ask_text(message, default="", password=False):
@@ -33,11 +37,30 @@ def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp
             return "cr_test_token"
         return default
 
-    monkeypatch.setattr(codex_module, "ask_text", fake_ask_text)
+    monkeypatch.setattr(
+        codex_module,
+        "prompt_sensitive_value",
+        lambda label, current_value, mask_fn: fake_ask_text(label, password=True),
+    )
+    monkeypatch.setattr(
+        codex_module,
+        "prompt_text_value",
+        lambda label, *candidates, fallback="": fake_ask_text(
+            label,
+            default=(
+                candidates[0] if candidates and candidates[0] is not None else fallback
+            ),
+        ),
+    )
     monkeypatch.setattr(
         codex_module,
         "run_npm_command",
         lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
+    )
+    monkeypatch.setattr(
+        codex_module,
+        "should_install_global_npm_package",
+        lambda *args, **kwargs: False,
     )
 
     codex_module.setup_codex(interactive=None)
@@ -53,18 +76,22 @@ def test_setup_codex_checks_nodejs_before_prompts_and_uses_new_default_model(tmp
     assert '"OPENAI_API_KEY": "cr_test_token"' in auth_text
 
 
-def test_setup_claude_checks_nodejs_before_prompts_and_uses_new_default_model(tmp_path, monkeypatch):
+def test_setup_claude_checks_nodejs_before_prompts_and_uses_new_default_model(
+    tmp_path, monkeypatch
+):
     events = []
     prompts = []
 
     monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(
-        "chattool.setup.interactive.resolve_interactive_mode",
+        "chattool.interaction.resolve_interactive_mode",
         lambda interactive, auto_prompt_condition: (None, True, False, True, True),
     )
     monkeypatch.setattr(
         "chattool.setup.nodejs.ensure_nodejs_requirement",
-        lambda interactive=None, can_prompt=False: events.append(("nodejs", interactive, can_prompt)),
+        lambda interactive=None, can_prompt=False: events.append(
+            ("nodejs", interactive, can_prompt)
+        ),
     )
 
     def fake_ask_text(message, default="", password=False):
@@ -74,17 +101,41 @@ def test_setup_claude_checks_nodejs_before_prompts_and_uses_new_default_model(tm
             return "sk-ant-test"
         return default
 
-    monkeypatch.setattr("chattool.utils.tui.ask_text", fake_ask_text)
+    monkeypatch.setattr(
+        "chattool.interaction.prompt_sensitive_value",
+        lambda label, current_value, mask_fn: fake_ask_text(label, password=True),
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.prompt_text_value",
+        lambda label, *candidates, fallback="": fake_ask_text(
+            label,
+            default=(
+                candidates[0] if candidates and candidates[0] is not None else fallback
+            ),
+        ),
+    )
     monkeypatch.setattr(
         "chattool.setup.nodejs.run_npm_command",
         lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
+    )
+    monkeypatch.setattr(
+        "chattool.setup.nodejs.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
     )
 
     claude_module.setup_claude(interactive=None)
 
     assert events[0] == ("nodejs", None, True)
-    assert prompts[1] == ("ANTHROPIC_BASE_URL (optional)", claude_module.DEFAULT_BASE_URL, False)
-    assert prompts[2] == ("ANTHROPIC_SMALL_FAST_MODEL (optional)", "claude-opus-4-6", False)
+    assert prompts[1] == (
+        "ANTHROPIC_BASE_URL (optional)",
+        claude_module.DEFAULT_BASE_URL,
+        False,
+    )
+    assert prompts[2] == (
+        "ANTHROPIC_SMALL_FAST_MODEL (optional)",
+        "claude-opus-4-6",
+        False,
+    )
     settings_text = (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")
     assert '"ANTHROPIC_SMALL_FAST_MODEL": "claude-opus-4-6"' in settings_text
 
@@ -101,7 +152,9 @@ def test_setup_opencode_checks_nodejs_before_prompts(tmp_path, monkeypatch):
     monkeypatch.setattr(
         opencode_module,
         "ensure_nodejs_requirement",
-        lambda interactive=None, can_prompt=False: events.append(("nodejs", interactive, can_prompt)),
+        lambda interactive=None, can_prompt=False: events.append(
+            ("nodejs", interactive, can_prompt)
+        ),
     )
 
     def fake_ask_text(message, default="", password=False):
@@ -113,22 +166,49 @@ def test_setup_opencode_checks_nodejs_before_prompts(tmp_path, monkeypatch):
         }
         return values[message]
 
-    monkeypatch.setattr(opencode_module, "ask_text", fake_ask_text)
+    monkeypatch.setattr(
+        opencode_module,
+        "prompt_text_value",
+        lambda label, *candidates, fallback="": fake_ask_text(
+            label,
+            default=(
+                candidates[0] if candidates and candidates[0] is not None else fallback
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        opencode_module,
+        "prompt_sensitive_value",
+        lambda label, current_value, mask_fn: fake_ask_text(label, password=True),
+    )
     monkeypatch.setattr(
         opencode_module,
         "run_npm_command",
         lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
     )
+    monkeypatch.setattr(
+        opencode_module,
+        "should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
 
     opencode_module.setup_opencode(interactive=None)
 
     assert events[0] == ("nodejs", None, True)
-    assert events[1:] == [("prompt", "base_url"), ("prompt", "api_key"), ("prompt", "model")]
-    config_text = (tmp_path / ".config" / "opencode" / "opencode.json").read_text(encoding="utf-8")
+    assert events[1:] == [
+        ("prompt", "base_url"),
+        ("prompt", "api_key"),
+        ("prompt", "model"),
+    ]
+    config_text = (tmp_path / ".config" / "opencode" / "opencode.json").read_text(
+        encoding="utf-8"
+    )
     assert '"model": "opencode/gpt-4.1-mini"' in config_text
 
 
-def test_setup_lark_cli_checks_nodejs_before_prompts_and_writes_default_path(tmp_path, monkeypatch):
+def test_setup_lark_cli_checks_nodejs_before_prompts_and_writes_default_path(
+    tmp_path, monkeypatch
+):
     events = []
     prompts = []
 
@@ -141,7 +221,9 @@ def test_setup_lark_cli_checks_nodejs_before_prompts_and_writes_default_path(tmp
     monkeypatch.setattr(
         lark_cli_module,
         "ensure_nodejs_requirement",
-        lambda interactive=None, can_prompt=False: events.append(("nodejs", interactive, can_prompt)),
+        lambda interactive=None, can_prompt=False: events.append(
+            ("nodejs", interactive, can_prompt)
+        ),
     )
 
     def fake_ask_text(message, default="", password=False):
@@ -163,13 +245,29 @@ def test_setup_lark_cli_checks_nodejs_before_prompts_and_writes_default_path(tmp
         events.append(("config-init", args, input_text))
         return SimpleNamespace(returncode=0, stderr="", stdout="")
 
-    monkeypatch.setattr(lark_cli_module, "ask_text", fake_ask_text)
+    monkeypatch.setattr(
+        lark_cli_module,
+        "prompt_text_value",
+        lambda label, *candidates, fallback="": fake_ask_text(
+            label,
+            default=(
+                candidates[0] if candidates and candidates[0] is not None else fallback
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        lark_cli_module,
+        "prompt_sensitive_value",
+        lambda label, current_value, mask_fn: fake_ask_text(label, password=True),
+    )
     monkeypatch.setattr(
         lark_cli_module,
         "run_npm_command",
         lambda args: SimpleNamespace(returncode=0, stderr="", stdout=""),
     )
-    monkeypatch.setattr(lark_cli_module, "_run_lark_cli_command", fake_run_lark_cli_command)
+    monkeypatch.setattr(
+        lark_cli_module, "_run_lark_cli_command", fake_run_lark_cli_command
+    )
 
     lark_cli_module.setup_lark_cli(interactive=None)
 

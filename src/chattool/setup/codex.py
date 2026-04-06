@@ -5,20 +5,23 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, OpenAIConfig
+from chattool.config.source_chain import split_config_sources
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    prompt_sensitive_value,
+    prompt_text_value,
     resolve_interactive_mode,
+    resolve_value,
 )
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
     run_npm_command,
     should_install_global_npm_package,
 )
-from chattool.setup.config_sources import split_config_sources
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import BACK_VALUE, ask_text
 
 DEFAULT_MODEL = "gpt-5.4"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
@@ -151,7 +154,7 @@ def _load_openai_values_from_env_ref(env_ref: str) -> dict[str, str | None]:
 
 
 def setup_codex(
-    preferred_auth_method=None,
+    api_key=None,
     base_url=None,
     model=None,
     env_ref=None,
@@ -173,18 +176,18 @@ def setup_codex(
     if isinstance(model, str) and not model.strip():
         model = None
 
-    api_key = (
-        preferred_auth_method
-        or env_config.get("openai_api_key")
-        or existing_api_key
-        or env_values.get("OPENAI_API_KEY")
-        or typed_env_values.get("OPENAI_API_KEY")
+    api_key = resolve_value(
+        api_key,
+        env_config.get("openai_api_key"),
+        existing_api_key,
+        env_values.get("OPENAI_API_KEY"),
+        typed_env_values.get("OPENAI_API_KEY"),
     )
     missing_required = not api_key
     has_existing_config = any(
         value for key, value in existing.items() if key != "openai_api_key"
     ) or bool(existing.get("openai_api_key"))
-    usage = "Usage: chattool setup codex [--preferred-auth-method <openai-api-key>] [--base-url <value>] [--model <value>] [-e <openai-env>] [-i|-I]"
+    usage = "Usage: chattool setup codex [--api-key <openai-api-key>] [--base-url <value>] [--model <value>] [-e <openai-env>] [-i|-I]"
     interactive, can_prompt, force_interactive, auto_interactive, need_prompt = (
         resolve_interactive_mode(
             interactive=interactive,
@@ -213,37 +216,31 @@ def setup_codex(
     ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
 
     if need_prompt:
-        api_key_for_prompt = api_key
-        api_key_label = "OPENAI_API_KEY"
-        if api_key_for_prompt:
-            api_key_label = f"{api_key_label} (current: {_mask_secret(api_key_for_prompt)}, enter to keep)"
-        api_key = ask_text(api_key_label, password=True)
+        api_key = prompt_sensitive_value("OPENAI_API_KEY", api_key, _mask_secret)
         if api_key == BACK_VALUE:
             return
-        if not api_key and api_key_for_prompt:
-            api_key = api_key_for_prompt
 
-        base_url_default = (
-            base_url
-            or env_config.get("base_url")
-            or existing.get("base_url")
-            or env_values.get("OPENAI_API_BASE")
-            or typed_env_values.get("OPENAI_API_BASE")
-            or DEFAULT_BASE_URL
+        base_url = prompt_text_value(
+            "base_url (optional)",
+            base_url,
+            env_config.get("base_url"),
+            existing.get("base_url"),
+            env_values.get("OPENAI_API_BASE"),
+            typed_env_values.get("OPENAI_API_BASE"),
+            fallback=DEFAULT_BASE_URL,
         )
-        base_url = ask_text("base_url (optional)", default=base_url_default)
         if base_url == BACK_VALUE:
             return
 
-        model_default = (
-            model
-            or env_config.get("model")
-            or existing.get("model")
-            or env_values.get("OPENAI_API_MODEL")
-            or typed_env_values.get("OPENAI_API_MODEL")
-            or DEFAULT_MODEL
+        model = prompt_text_value(
+            "default model (optional)",
+            model,
+            env_config.get("model"),
+            existing.get("model"),
+            env_values.get("OPENAI_API_MODEL"),
+            typed_env_values.get("OPENAI_API_MODEL"),
+            fallback=DEFAULT_MODEL,
         )
-        model = ask_text("default model (optional)", default=model_default)
         if model == BACK_VALUE:
             return
 
@@ -267,21 +264,21 @@ def setup_codex(
                 click.echo(result.stderr.strip(), err=True)
             raise click.Abort()
 
-    base_url = (
-        base_url
-        or env_config.get("base_url")
-        or existing.get("base_url")
-        or env_values.get("OPENAI_API_BASE")
-        or typed_env_values.get("OPENAI_API_BASE")
-        or DEFAULT_BASE_URL
+    base_url = resolve_value(
+        base_url,
+        env_config.get("base_url"),
+        existing.get("base_url"),
+        env_values.get("OPENAI_API_BASE"),
+        typed_env_values.get("OPENAI_API_BASE"),
+        DEFAULT_BASE_URL,
     )
-    model = (
-        model
-        or env_config.get("model")
-        or existing.get("model")
-        or env_values.get("OPENAI_API_MODEL")
-        or typed_env_values.get("OPENAI_API_MODEL")
-        or DEFAULT_MODEL
+    model = resolve_value(
+        model,
+        env_config.get("model"),
+        existing.get("model"),
+        env_values.get("OPENAI_API_MODEL"),
+        typed_env_values.get("OPENAI_API_MODEL"),
+        DEFAULT_MODEL,
     )
 
     codex_dir.mkdir(parents=True, exist_ok=True)

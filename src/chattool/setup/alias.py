@@ -3,13 +3,13 @@ from pathlib import Path
 
 import click
 
-from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import (
+from chattool.interaction import (
     BACK_VALUE,
     ask_checkbox_with_controls,
     create_choice,
     is_interactive_available,
 )
+from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_alias")
 

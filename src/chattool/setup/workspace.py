@@ -2,36 +2,402 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import shutil
+import subprocess
 
 import click
 
-from chattool.setup.common import display_path, resolve_workspace_dir, write_text_file
-from chattool.setup.interactive import (
-    abort_if_force_without_tty,
-    resolve_interactive_mode,
-)
-from chattool.setup.playground import (
-    _copy_skills,
-    _default_chattool_source,
-    _ensure_chattool_repo,
-    _maybe_setup_github_auth,
-    _should_sync_skills,
-    _validate_cloned_repo,
-    _workspace_skills_source,
-)
-from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import (
+from chattool.interaction import (
     BACK_VALUE,
+    abort_if_force_without_tty,
     ask_confirm,
     ask_select,
     ask_text,
     create_choice,
+    resolve_interactive_mode,
 )
+from chattool.utils.pathing import display_path, resolve_workspace_dir, write_text_file
+from chattool.utils import mask_secret
+from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_workspace")
 
 DEFAULT_LANGUAGE = "zh"
 SUPPORTED_LANGUAGES = {"zh", "en"}
+EXPERIENCE_LOG_FORMAT = "date_h_min_标题.log"
+DEFAULT_CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
+DEFAULT_CHATTOOL_REPO_DIRNAME = "ChatTool"
+
+
+def _default_chattool_repo_dir() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _default_chattool_source() -> str:
+    repo_dir = _default_chattool_repo_dir().resolve()
+    if (repo_dir / ".git").exists():
+        return str(repo_dir)
+    return DEFAULT_CHATTOOL_REPO_URL
+
+
+def _workspace_repo_dir(workspace_dir: Path) -> Path:
+    return workspace_dir / DEFAULT_CHATTOOL_REPO_DIRNAME
+
+
+def _workspace_skills_source(chattool_repo_dir: Path) -> Path:
+    return chattool_repo_dir / "skills"
+
+
+def _render_skills_readme(language: str) -> str:
+    if language == "en":
+        return (
+            "# Workspace Skills\n\n"
+            "This directory stores the workspace-local copy of ChatTool skills.\n\n"
+            "- Synced from `ChatTool/skills/` when the workspace is bootstrapped or refreshed.\n"
+            "- Regular files may be updated by future syncs.\n"
+            "- Each skill keeps its own `experience/` folder for local notes and iteration logs.\n"
+        )
+    return (
+        "# Workspace Skills\n\n"
+        "这里存放工作区本地维护的 ChatTool skills 副本。\n\n"
+        "- 在 workspace 初始化或刷新时，从 `ChatTool/skills/` 同步过来。\n"
+        "- 常规文件可能会在后续同步时更新。\n"
+        "- 每个 skill 下保留自己的 `experience/` 目录，用于记录本地经验和迭代过程。\n"
+    )
+
+
+def _render_experience_readme(skill_name: str, language: str) -> str:
+    if language == "en":
+        return (
+            f"# {skill_name} Experience\n\n"
+            "Use this folder to capture concrete lessons from real work:\n\n"
+            "- What worked\n"
+            "- What failed\n"
+            "- Candidate improvements for the skill or the ChatTool repo\n"
+        )
+    return (
+        f"# {skill_name} Experience\n\n"
+        "这里用来沉淀真实任务中的具体经验：\n\n"
+        "- 哪些做法有效\n"
+        "- 哪些做法失败\n"
+        "- 对 skill 或 ChatTool 仓库的候选改进\n"
+    )
+
+
+def _copy_file(src: Path, dst: Path, force: bool) -> str:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists() and not force:
+        logger.info(f"Skip existing skill file: {dst}")
+        return "skipped"
+    action = "updated" if dst.exists() else "created"
+    shutil.copy2(src, dst)
+    logger.info(f"{action.capitalize()} skill file: {dst}")
+    return action
+
+
+def _copy_skill_tree(src: Path, dst: Path, force: bool) -> None:
+    for path in sorted(src.rglob("*")):
+        rel = path.relative_to(src)
+        if "__pycache__" in rel.parts or "experience" in rel.parts:
+            continue
+        target = dst / rel
+        if path.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
+        _copy_file(path, target, force=force)
+
+
+def _copy_skills(
+    skills_source: Path, skills_target: Path, force: bool, language: str
+) -> list[str]:
+    copied = []
+    skills_target.mkdir(parents=True, exist_ok=True)
+    write_text_file(
+        skills_target / "README.md", _render_skills_readme(language), force=force
+    )
+
+    for skill_dir in sorted(skills_source.iterdir()):
+        if not skill_dir.is_dir() or skill_dir.name.startswith("."):
+            continue
+        if not (skill_dir / "SKILL.md").exists():
+            continue
+        target_dir = skills_target / skill_dir.name
+        target_dir.mkdir(parents=True, exist_ok=True)
+        _copy_skill_tree(skill_dir, target_dir, force=force)
+        experience_dir = target_dir / "experience"
+        experience_dir.mkdir(parents=True, exist_ok=True)
+        write_text_file(
+            experience_dir / "README.md",
+            _render_experience_readme(skill_dir.name, language),
+            force=False,
+        )
+        copied.append(skill_dir.name)
+    return copied
+
+
+def _clone_chattool_repo(chattool_source: str, workspace_dir: Path) -> Path:
+    repo_dir = _workspace_repo_dir(workspace_dir)
+    clone_cmd = ["git", "clone", chattool_source, str(repo_dir)]
+    logger.info(f"Cloning ChatTool into workspace: {' '.join(clone_cmd)}")
+    result = subprocess.run(clone_cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.error("Failed to clone ChatTool repository")
+        click.echo("Failed to clone ChatTool repository.", err=True)
+        if result.stderr:
+            click.echo(result.stderr.strip(), err=True)
+        raise click.Abort()
+    return repo_dir
+
+
+def _run_git(repo_dir: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", "-C", str(repo_dir), *args], capture_output=True, text=True
+    )
+
+
+def _is_git_repo(repo_dir: Path) -> bool:
+    return (repo_dir / ".git").exists()
+
+
+def _repo_has_local_changes(repo_dir: Path) -> bool:
+    result = _run_git(repo_dir, ["status", "--porcelain"])
+    if result.returncode != 0:
+        return False
+    return bool(result.stdout.strip())
+
+
+def _update_submodules(repo_dir: Path) -> None:
+    result = _run_git(repo_dir, ["submodule", "update", "--init", "--recursive"])
+    if result.returncode != 0:
+        logger.error(f"Failed to update git submodules under {repo_dir}")
+        click.echo("Failed to update git submodules.", err=True)
+        stderr = (result.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort()
+    logger.info(f"Updated git submodules under {repo_dir}")
+
+
+def _update_chattool_repo(
+    repo_dir: Path,
+    chattool_source: str,
+    interactive=None,
+    can_prompt=False,
+) -> str:
+    if not _is_git_repo(repo_dir):
+        logger.error(f"Existing ChatTool dir is not a git repo: {repo_dir}")
+        click.echo(f"Existing ChatTool dir is not a git repo: {repo_dir}", err=True)
+        raise click.Abort()
+
+    if _repo_has_local_changes(repo_dir):
+        message = (
+            f"ChatTool repo has local changes: {repo_dir}\n"
+            "Skip repository update and keep the current working tree?"
+        )
+        if interactive is not False and can_prompt:
+            skip_update = ask_confirm(message, default=True)
+            if skip_update == BACK_VALUE:
+                raise click.Abort()
+            if not skip_update:
+                click.echo(
+                    "Please commit or stash local changes before rerunning the update.",
+                    err=True,
+                )
+                raise click.Abort()
+        else:
+            logger.info(
+                f"Skipping ChatTool repo update because working tree is dirty: {repo_dir}"
+            )
+            click.echo(
+                f"Skipped ChatTool repo update because local changes were detected: {repo_dir}"
+            )
+        return "skipped"
+
+    fetch_result = _run_git(repo_dir, ["fetch", "--prune", chattool_source])
+    if fetch_result.returncode != 0:
+        logger.error(f"Failed to fetch ChatTool updates from {chattool_source}")
+        click.echo("Failed to fetch ChatTool updates.", err=True)
+        stderr = (fetch_result.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort()
+
+    merge_result = _run_git(repo_dir, ["merge", "--ff-only", "FETCH_HEAD"])
+    if merge_result.returncode != 0:
+        logger.error(f"Failed to fast-forward ChatTool repo: {repo_dir}")
+        click.echo("Failed to fast-forward ChatTool repo.", err=True)
+        stderr = (merge_result.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort()
+
+    _update_submodules(repo_dir)
+    logger.info(f"Updated existing ChatTool repo: {repo_dir}")
+    return "updated"
+
+
+def _ensure_chattool_repo(
+    chattool_source: str,
+    workspace_dir: Path,
+    force: bool,
+    interactive=None,
+    can_prompt=False,
+) -> tuple[Path, bool, str]:
+    repo_dir = _workspace_repo_dir(workspace_dir)
+    repo_preexisted = repo_dir.exists()
+
+    if not repo_preexisted:
+        return _clone_chattool_repo(chattool_source, workspace_dir), False, "cloned"
+
+    if force and not _is_git_repo(repo_dir):
+        logger.info(f"Removing non-git ChatTool dir before reclone: {repo_dir}")
+        shutil.rmtree(repo_dir)
+        return _clone_chattool_repo(chattool_source, workspace_dir), False, "cloned"
+
+    repo_action = _update_chattool_repo(
+        repo_dir,
+        chattool_source=chattool_source,
+        interactive=interactive,
+        can_prompt=can_prompt,
+    )
+    return repo_dir, True, repo_action
+
+
+def _validate_cloned_repo(skills_source: Path) -> None:
+    if not skills_source.exists():
+        logger.error(f"Cloned ChatTool repo does not contain skills/: {skills_source}")
+        click.echo(
+            f"Cloned ChatTool repo does not contain skills/: {skills_source}", err=True
+        )
+        raise click.Abort()
+
+
+def _get_default_github_token() -> str | None:
+    from chattool.config.github import GitHubConfig
+
+    token = GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    if token:
+        return str(token).strip() or None
+    return None
+
+
+def _default_github_credential_path() -> str:
+    url = DEFAULT_CHATTOOL_REPO_URL
+    prefix = "https://github.com/"
+    if url.startswith(prefix):
+        return url[len(prefix) :]
+    return "cubenlp/ChatTool.git"
+
+
+def _configure_github_https_auth(token: str) -> None:
+    logger.info("Configuring Git credential store for github.com")
+    subprocess.run(
+        ["git", "config", "--global", "credential.helper", "store"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    credential_input = (
+        "protocol=https\n"
+        "host=github.com\n"
+        f"path={_default_github_credential_path()}\n"
+        "username=x-access-token\n"
+        f"password={token}\n\n"
+    )
+    subprocess.run(
+        ["git", "credential", "approve"],
+        input=credential_input,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _maybe_setup_github_auth(interactive, can_prompt) -> bool:
+    default_token = _get_default_github_token()
+    token = default_token
+
+    if interactive is not False and can_prompt:
+        token_prompt = "github_token"
+        if default_token:
+            token_prompt += f" [current: {mask_secret(default_token)}] (leave blank to keep current)"
+        else:
+            token_prompt += " (leave blank to skip Git HTTPS auth setup)"
+        token_input = ask_text(token_prompt, password=True)
+        if token_input == BACK_VALUE:
+            return False
+        if token_input:
+            token = token_input.strip()
+    elif not token:
+        logger.info(
+            "Skipping GitHub auth setup because no GITHUB_ACCESS_TOKEN is available"
+        )
+        return False
+
+    if not token:
+        logger.info("Skipping GitHub auth setup because token is empty")
+        return False
+
+    try:
+        _configure_github_https_auth(token)
+    except subprocess.CalledProcessError as exc:
+        logger.error("Failed to configure GitHub HTTPS auth")
+        click.echo("Failed to configure GitHub HTTPS auth.", err=True)
+        stderr = (exc.stderr or "").strip()
+        if stderr:
+            click.echo(stderr, err=True)
+        raise click.Abort() from exc
+
+    logger.info("Configured GitHub HTTPS auth for ChatTool repo")
+    click.echo("Configured Git HTTPS auth for the default ChatTool repo.")
+    return True
+
+
+def _should_sync_skills(existing_repo: bool, interactive, can_prompt) -> bool:
+    if not existing_repo:
+        return True
+    if interactive is not False and can_prompt:
+        sync_skills = ask_confirm(
+            "Update workspace skills from the ChatTool repo? This only replaces regular skill files and keeps experience/ untouched.",
+            default=True,
+        )
+        if sync_skills == BACK_VALUE:
+            raise click.Abort()
+        return bool(sync_skills)
+    return True
+
+
+def _apply_chattool_option(
+    workspace_path: Path,
+    chattool_source: str,
+    language: str,
+    force: bool,
+    interactive,
+    can_prompt: bool,
+) -> tuple[Path, str, list[str]]:
+    repo_path, existing_repo, repo_action = _ensure_chattool_repo(
+        chattool_source,
+        workspace_path,
+        force=force,
+        interactive=interactive,
+        can_prompt=can_prompt,
+    )
+    skills_source = _workspace_skills_source(repo_path)
+    _validate_cloned_repo(skills_source)
+
+    copied_skills = []
+    if _should_sync_skills(
+        existing_repo=existing_repo, interactive=interactive, can_prompt=can_prompt
+    ):
+        copied_skills = _copy_skills(
+            skills_source,
+            workspace_path / "docs" / "skills",
+            force=existing_repo or force,
+            language=language,
+        )
+
+    _maybe_setup_github_auth(interactive=interactive, can_prompt=can_prompt)
+    return repo_path, repo_action, copied_skills
 
 
 @dataclass(frozen=True)
@@ -690,25 +1056,14 @@ def setup_workspace(
     copied_skills = []
     repo_action = None
     if with_chattool:
-        repo_path, existing_repo, repo_action = _ensure_chattool_repo(
-            chattool_source,
-            workspace_path,
+        repo_path, repo_action, copied_skills = _apply_chattool_option(
+            workspace_path=workspace_path,
+            chattool_source=chattool_source,
+            language=language,
             force=force,
             interactive=interactive,
             can_prompt=can_prompt,
         )
-        skills_source = _workspace_skills_source(repo_path)
-        _validate_cloned_repo(skills_source)
-        if _should_sync_skills(
-            existing_repo=existing_repo, interactive=interactive, can_prompt=can_prompt
-        ):
-            copied_skills = _copy_skills(
-                skills_source,
-                workspace_path / "docs" / "skills",
-                force=existing_repo or force,
-                language=language,
-            )
-        _maybe_setup_github_auth(interactive=interactive, can_prompt=can_prompt)
 
     click.echo(
         "Workspace setup completed." if language == "en" else "Workspace 初始化完成。"

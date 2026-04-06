@@ -7,40 +7,46 @@ import subprocess
 import platform
 import click
 from pathlib import Path
-from chattool.setup.interactive import (
+from chattool.interaction import (
+    BACK_VALUE,
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    ask_confirm,
+    ask_path,
+    ask_select,
+    ask_text,
     resolve_interactive_mode,
 )
 from chattool.utils.custom_logger import setup_logger
-from chattool.utils.tui import (
-    ask_select, ask_text, ask_path, ask_confirm, BACK_VALUE
-)
 
 FRP_VERSION_DEFAULT = "0.66.0"
 logger = setup_logger("setup_frp")
 
+
 def get_system_arch():
     arch = platform.machine()
-    if arch == 'x86_64':
-        return 'amd64'
-    elif arch == 'aarch64':
-        return 'arm64'
-    elif arch == 'armv7l':
-        return 'arm'
+    if arch == "x86_64":
+        return "amd64"
+    elif arch == "aarch64":
+        return "arm64"
+    elif arch == "armv7l":
+        return "arm"
     else:
         return arch
 
+
 def download_file(url, dest_path):
     import requests
+
     logger.info(f"Downloading FRP package from: {url}")
     print(f"Downloading from {url}...")
     response = requests.get(url, stream=True)
     response.raise_for_status()
-    with open(dest_path, 'wb') as f:
+    with open(dest_path, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
     print("Download complete.")
+
 
 def extract_frp(archive_path, extract_to, binary_name):
     logger.info(f"Extracting FRP archive: {archive_path}")
@@ -52,17 +58,18 @@ def extract_frp(archive_path, extract_to, binary_name):
             if m.name.endswith(f"/{binary_name}"):
                 member = m
                 break
-        
+
         if not member:
             raise ValueError(f"Could not find {binary_name} in archive")
-        
+
         # Extract only the binary
-        member.name = os.path.basename(member.name) # Extract to current dir structure
+        member.name = os.path.basename(member.name)  # Extract to current dir structure
         tar.extract(member, path=extract_to)
-        
+
     extracted_bin = os.path.join(extract_to, binary_name)
     os.chmod(extracted_bin, 0o755)
     return extracted_bin
+
 
 def setup_frp(interactive=None):
     logger.info("Start frp setup")
@@ -74,7 +81,10 @@ def setup_frp(interactive=None):
     abort_if_force_without_tty(force_interactive, can_prompt, usage)
     if interactive is False:
         logger.error("FRP setup does not support --no-interactive mode")
-        click.echo("FRP setup currently requires interactive prompts. Remove -I and run in interactive terminal.", err=True)
+        click.echo(
+            "FRP setup currently requires interactive prompts. Remove -I and run in interactive terminal.",
+            err=True,
+        )
         raise click.Abort()
     try:
         abort_if_missing_without_tty(
@@ -89,40 +99,38 @@ def setup_frp(interactive=None):
         raise
 
     # 1. Ask Mode
-    mode = ask_select(
-        "Select FRP Mode:",
-        choices=["Client", "Server"]
-    )
-    if mode == BACK_VALUE: return
-    
+    mode = ask_select("Select FRP Mode:", choices=["Client", "Server"])
+    if mode == BACK_VALUE:
+        return
+
     is_server = mode == "Server"
     binary_name = "frps" if is_server else "frpc"
     config_name = "frps.toml" if is_server else "frpc.toml"
 
     # 2. Ask Install Method
     install_method = ask_select(
-        "Select Installation Method:",
-        choices=["Download", "Local File"]
+        "Select Installation Method:", choices=["Download", "Local File"]
     )
-    if install_method == BACK_VALUE: return
+    if install_method == BACK_VALUE:
+        return
 
     work_dir = Path.home() / ".frp"
     work_dir.mkdir(parents=True, exist_ok=True)
-    
+
     final_bin_path = work_dir / binary_name
 
     if install_method == "Download":
-        version = ask_text(
-            "Enter FRP Version:",
-            default=FRP_VERSION_DEFAULT
-        )
-        if version == BACK_VALUE: return
+        version = ask_text("Enter FRP Version:", default=FRP_VERSION_DEFAULT)
+        if version == BACK_VALUE:
+            return
 
         arch = get_system_arch()
         os_name = platform.system().lower()
         filename = f"frp_{version}_{os_name}_{arch}.tar.gz"
-        download_url = f"https://github.com/fatedier/frp/releases/download/v{version}/{filename}"
-        
+        download_url = (
+            f"https://github.com/fatedier/frp/releases/download/v{version}/{filename}"
+        )
+
         with tempfile.TemporaryDirectory() as tmpdir:
             archive_path = os.path.join(tmpdir, filename)
             try:
@@ -134,12 +142,11 @@ def setup_frp(interactive=None):
                 print(f"Error downloading/extracting: {e}")
                 return
 
-    else: # Local File
-        local_path = ask_path(
-            "Enter path to local FRP archive (tar.gz):"
-        )
-        if local_path == BACK_VALUE: return
-        
+    else:  # Local File
+        local_path = ask_path("Enter path to local FRP archive (tar.gz):")
+        if local_path == BACK_VALUE:
+            return
+
         if not os.path.exists(local_path):
             logger.error(f"Local FRP archive not found: {local_path}")
             print("File not found.")
@@ -159,26 +166,33 @@ def setup_frp(interactive=None):
 
     # 3. Configure
     config_content = ""
-    
+
     if is_server:
         bind_port = ask_text("Enter Bind Port:", default="7000")
-        if bind_port == BACK_VALUE: return
-        
+        if bind_port == BACK_VALUE:
+            return
+
         token = ask_text("Enter Authentication Token:")
-        if token == BACK_VALUE: return
-        
-        dashboard_port = ask_text("Enter Dashboard Port (optional, press Enter to skip):", default="7500")
-        if dashboard_port == BACK_VALUE: return
-        
+        if token == BACK_VALUE:
+            return
+
+        dashboard_port = ask_text(
+            "Enter Dashboard Port (optional, press Enter to skip):", default="7500"
+        )
+        if dashboard_port == BACK_VALUE:
+            return
+
         dashboard_user = "admin"
         dashboard_pwd = "admin"
-        
+
         if dashboard_port:
             dashboard_user = ask_text("Enter Dashboard User:", default="admin")
-            if dashboard_user == BACK_VALUE: return
-            
+            if dashboard_user == BACK_VALUE:
+                return
+
             dashboard_pwd = ask_text("Enter Dashboard Password:", default="admin")
-            if dashboard_pwd == BACK_VALUE: return
+            if dashboard_pwd == BACK_VALUE:
+                return
 
         config_content = f"""bindPort = {bind_port}
 auth.token = "{token}"
@@ -192,15 +206,18 @@ webServer.user = "{dashboard_user}"
 webServer.password = "{dashboard_pwd}"
 """
 
-    else: # Client
+    else:  # Client
         server_addr = ask_text("Enter Server IP/Domain:")
-        if server_addr == BACK_VALUE: return
-        
+        if server_addr == BACK_VALUE:
+            return
+
         server_port = ask_text("Enter Server Port:", default="7000")
-        if server_port == BACK_VALUE: return
-        
+        if server_port == BACK_VALUE:
+            return
+
         token = ask_text("Enter Authentication Token:")
-        if token == BACK_VALUE: return
+        if token == BACK_VALUE:
+            return
 
         config_content = f"""serverAddr = "{server_addr}"
 serverPort = {server_port}
@@ -218,7 +235,7 @@ auth.token = "{token}"
     config_path = work_dir / config_name
     with open(config_path, "w") as f:
         f.write(config_content)
-    
+
     logger.info(f"FRP config saved: {config_path}")
     print(f"Configuration saved to: {config_path}")
 
@@ -230,7 +247,7 @@ After=network.target
 
 [Service]
 Type=simple
-User={os.environ.get('USER', 'root')}
+User={os.environ.get("USER", "root")}
 ExecStart={final_bin_path} -c {config_path}
 Restart=on-failure
 RestartSec=5s
@@ -238,24 +255,26 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 """
-    
-    install_service = ask_confirm("Do you want to create a Systemd service?", default=True)
-    
+
+    install_service = ask_confirm(
+        "Do you want to create a Systemd service?", default=True
+    )
+
     if install_service and install_service != BACK_VALUE:
         service_file_path = f"/etc/systemd/system/{service_name}.service"
         local_service_path = work_dir / f"{service_name}.service"
-        
+
         with open(local_service_path, "w") as f:
             f.write(service_content)
         logger.info(f"Generated systemd service file: {local_service_path}")
-            
+
         print("\nTo install the service, run the following commands:")
         print(f"sudo cp {local_service_path} {service_file_path}")
         print("sudo systemctl daemon-reload")
         print(f"sudo systemctl enable {service_name}")
         print(f"sudo systemctl start {service_name}")
         print(f"sudo systemctl status {service_name}")
-        
+
         # Optional: Try to run with sudo if user wants?
         # For now, just printing instructions is safer and requested in prompt "use sudo if needed, or print instructions"
     else:
