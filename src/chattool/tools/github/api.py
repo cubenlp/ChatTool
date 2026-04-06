@@ -1,21 +1,27 @@
 from __future__ import annotations
 
+from pathlib import Path
+from urllib.parse import unquote, urlparse
 import subprocess
 from typing import Optional
 
 import click
 
-from chattool.config.github import GitHubConfig
 from chattool.const import CHATTOOL_ENV_DIR
+from chattool.config.github import GitHubConfig
 
 
-def get_client(token: Optional[str], require_token: bool = False):
+def get_client(
+    token: Optional[str],
+    require_token: bool = False,
+    credential_path: Optional[str] = None,
+):
     from github import Github, Auth
 
-    token = resolve_token(token)
+    token = resolve_token(token, credential_path=credential_path)
     if require_token and not token:
         raise click.ClickException(
-            "Missing token. Set GITHUB_ACCESS_TOKEN or pass --token."
+            "Missing token. Pass --token or configure a GitHub credential for the current repository."
         )
     if not token:
         click.secho(
@@ -26,16 +32,24 @@ def get_client(token: Optional[str], require_token: bool = False):
 
 
 def resolve_repo(repo: Optional[str]) -> str:
-    repo = repo or GitHubConfig.GITHUB_DEFAULT_REPO.value
-    if not repo:
-        raise click.ClickException(
-            "Missing repo. Provide --repo or set GITHUB_DEFAULT_REPO."
-        )
-    return repo
+    if repo:
+        normalized = repo.strip()
+        if not normalized:
+            raise click.ClickException("Repo must be in owner/name form.")
+        return normalized
+    resolved_repo, _ = resolve_repo_from_git_remote()
+    return resolved_repo
 
 
-def resolve_token(token: Optional[str]) -> Optional[str]:
-    return token or GitHubConfig.GITHUB_ACCESS_TOKEN.value
+def resolve_token(
+    token: Optional[str], credential_path: Optional[str] = None
+) -> Optional[str]:
+    if token:
+        return token
+    return (
+        read_github_token_from_credentials(credential_path)
+        or GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    )
 
 
 def resolve_repo_from_git_remote() -> tuple[str, str]:
@@ -107,6 +121,62 @@ def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, str]]:
                 normalized_parts = [part for part in normalized_path.split("/") if part]
                 return f"{normalized_parts[0]}/{normalized_parts[1]}", path
     return None
+
+
+def read_github_token_from_credentials(
+    credential_path: Optional[str] = None,
+) -> Optional[str]:
+    for store_path in _credential_store_candidates():
+        if not store_path.exists():
+            continue
+        token = _read_token_from_store(store_path, credential_path)
+        if token:
+            return token
+    return None
+
+
+def _credential_store_candidates() -> list[Path]:
+    return [Path.home() / ".git-credential", Path.home() / ".git-credentials"]
+
+
+def _read_token_from_store(
+    store_path: Path, credential_path: Optional[str]
+) -> Optional[str]:
+    exact_match = None
+    host_match = None
+
+    for raw_line in store_path.read_text(
+        encoding="utf-8", errors="ignore"
+    ).splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parsed = _parse_credential_url(line)
+        if not parsed:
+            continue
+        host, path, password = parsed
+        if host != "github.com" or not password:
+            continue
+        if credential_path and path == credential_path:
+            exact_match = password
+            break
+        if host_match is None:
+            host_match = password
+
+    return exact_match or host_match
+
+
+def _parse_credential_url(url: str) -> Optional[tuple[str, str, str]]:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+    if parsed.scheme not in {"http", "https"}:
+        return None
+    if not parsed.hostname or not parsed.password:
+        return None
+    path = parsed.path.lstrip("/")
+    return parsed.hostname, unquote(path), unquote(parsed.password)
 
 
 def configure_github_https_token(path: str, token: str) -> None:

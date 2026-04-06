@@ -1,9 +1,10 @@
-import click
 import json
 import time
+import click
 from typing import Optional
 
 from chattool.interaction import BACK_VALUE, ask_text, is_interactive_available
+from chattool.utils import mask_secret
 from chattool.tools.github.api import (
     configure_github_https_token,
     get_client,
@@ -15,7 +16,12 @@ from chattool.tools.github.api import (
     save_github_token_to_env,
 )
 
-_ENV_LOADED = False
+
+def _resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, str]:
+    if repo:
+        normalized = resolve_repo(repo)
+        return normalized, f"{normalized}.git"
+    return resolve_repo_from_git_remote()
 
 
 @click.group(name="gh")
@@ -28,7 +34,7 @@ def cli():
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--base", required=True, help="Base branch (e.g., main, vibe-master).")
 @click.option(
@@ -44,7 +50,7 @@ def cli():
 @click.option(
     "--token",
     default=None,
-    help="GitHub token (or set GITHUB_ACCESS_TOKEN).",
+    help="GitHub token. Defaults to the git credential entry for the current repository.",
 )
 def pr_create(repo, base, head, title, body, body_file, token):
     """Create a GitHub pull request."""
@@ -55,8 +61,8 @@ def pr_create(repo, base, head, title, body, body_file, token):
         with open(body_file, "r", encoding="utf-8") as handle:
             body = handle.read()
 
-    repo = resolve_repo(repo)
-    client = get_client(token, require_token=True)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, require_token=True, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.create_pull(title=title, body=body, base=base, head=head)
@@ -70,7 +76,7 @@ def pr_create(repo, base, head, title, body, body_file, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option(
     "--state",
@@ -83,15 +89,17 @@ def pr_create(repo, base, head, title, body, body_file, token):
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to the git credential entry for the current repository.",
 )
 def pr_list(repo, state, limit, json_output, token):
     """List pull requests."""
     from github import Github
     from github.GithubException import GithubException
 
-    client = get_client(token)
-    repo = resolve_repo(repo)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         pulls = repo_obj.get_pulls(state=state, sort="updated", direction="desc")
@@ -134,20 +142,22 @@ def pr_list(repo, state, limit, json_output, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--number", required=True, type=int, help="Pull request number.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to the git credential entry for the current repository.",
 )
 def pr_view(repo, number, json_output, token):
     """Show pull request details."""
     from github import Github
     from github.GithubException import GithubException
 
-    client = get_client(token)
-    repo = resolve_repo(repo)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -189,7 +199,7 @@ def pr_view(repo, number, json_output, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--number", required=True, type=int, help="Pull request number.")
 @click.option(
@@ -227,7 +237,9 @@ def pr_view(repo, number, json_output, token):
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 def pr_check(
     repo,
@@ -243,8 +255,8 @@ def pr_check(
     """Show CI/check status for a pull request."""
     from github.GithubException import GithubException
 
-    client = get_client(token)
-    repo = resolve_repo(repo)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         started_at = time.monotonic()
@@ -283,7 +295,7 @@ def pr_check(
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--run-id", required=True, type=int, help="Workflow run id.")
 @click.option(
@@ -291,12 +303,14 @@ def pr_check(
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 def run_view(repo, run_id, job_limit, json_output, token):
     """Show a workflow run and its jobs."""
-    repo = resolve_repo(repo)
-    token = resolve_token(token)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    token = resolve_token(token, credential_path=credential_path)
 
     run_payload = github_api_get_json(repo, f"/actions/runs/{run_id}", token)
     jobs_payload = github_api_get_json(
@@ -320,7 +334,7 @@ def run_view(repo, run_id, job_limit, json_output, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--job-id", required=True, type=int, help="Workflow job id.")
 @click.option(
@@ -338,12 +352,14 @@ def run_view(repo, run_id, job_limit, json_output, token):
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 def job_logs(repo, job_id, tail, output, json_output, token):
     """Show logs for a workflow job."""
-    repo = resolve_repo(repo)
-    token = resolve_token(token)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    token = resolve_token(token, credential_path=credential_path)
 
     job_payload = github_api_get_json(repo, f"/actions/jobs/{job_id}", token)
     logs_text = github_api_get_text(repo, f"/actions/jobs/{job_id}/logs", token)
@@ -375,20 +391,22 @@ def job_logs(repo, job_id, tail, output, json_output, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--number", required=True, type=int, help="Pull request number.")
 @click.option("--body", required=True, help="Comment body.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 def pr_comment(repo, number, body, token):
     """Add a comment to a pull request."""
     from github import Github
     from github.GithubException import GithubException
 
-    client = get_client(token, require_token=True)
-    repo = resolve_repo(repo)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, require_token=True, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -403,7 +421,7 @@ def pr_comment(repo, number, body, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--number", required=True, type=int, help="Pull request number.")
 @click.option(
@@ -414,7 +432,6 @@ def pr_comment(repo, number, body, token):
 )
 @click.option("--title", default=None, help="Optional merge title.")
 @click.option("--message", default=None, help="Optional merge message.")
-@click.option("--confirm", is_flag=True, help="Confirm merge without prompt.")
 @click.option(
     "--check",
     "check_before_merge",
@@ -422,21 +439,17 @@ def pr_comment(repo, number, body, token):
     help="Check CI status before merging and abort if checks are not green.",
 )
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def pr_merge(repo, number, method, title, message, confirm, check_before_merge, token):
+def pr_merge(repo, number, method, title, message, check_before_merge, token):
     """Merge a pull request."""
     from github import Github
     from github.GithubException import GithubException
 
-    client = get_client(token, require_token=True)
-    repo = resolve_repo(repo)
-    if not confirm and not click.confirm(
-        f"Merge PR #{number} in {repo} using {method}?", default=False
-    ):
-        click.echo("Cancelled.")
-        return
-
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, require_token=True, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -477,7 +490,7 @@ def pr_merge(repo, number, method, title, message, confirm, check_before_merge, 
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--number", required=True, type=int, help="Pull request number.")
 @click.option("--title", default=None, help="New pull request title.")
@@ -492,7 +505,9 @@ def pr_merge(repo, number, method, title, message, confirm, check_before_merge, 
 )
 @click.option("--base", default=None, help="Change base branch.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 def pr_update(repo, number, title, body, body_file, state, base, token):
     """Update pull request metadata (title/body/state/base)."""
@@ -508,8 +523,8 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
             "No updates provided. Use --title/--body/--state/--base."
         )
 
-    client = get_client(token, require_token=True)
-    repo = resolve_repo(repo)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    client = get_client(token, require_token=True, credential_path=credential_path)
     try:
         repo_obj = client.get_repo(repo)
         pr = repo_obj.get_pull(number)
@@ -533,15 +548,18 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 @click.option(
     "--repo",
     required=False,
-    help="Repository in owner/name form (or set GITHUB_DEFAULT_REPO).",
+    help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 def repo_perms(repo, json_output, token):
     """Show repository permissions for the current token."""
-    repo = resolve_repo(repo)
+    repo, credential_path = _resolve_repo_and_credential_path(repo)
+    token = resolve_token(token, credential_path=credential_path)
     payload = github_api_get_json(repo, "", token)
     result = {
         "repo": payload.get("full_name") or repo,
@@ -568,7 +586,9 @@ def repo_perms(repo, json_output, token):
 
 @cli.command(name="set-token")
 @click.option(
-    "--token", default=None, help="GitHub token (or set GITHUB_ACCESS_TOKEN)."
+    "--token",
+    default=None,
+    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
 @click.option(
     "--save-env",
@@ -577,18 +597,23 @@ def repo_perms(repo, json_output, token):
 )
 def set_token(token, save_env):
     """Configure HTTPS credentials for the current GitHub repository."""
-    resolved_token = resolve_token(token)
-    if not resolved_token and is_interactive_available():
-        token_input = ask_text("github_token", password=True)
+    repo, credential_path = resolve_repo_from_git_remote()
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    if is_interactive_available():
+        prompt_label = "github_token"
+        if resolved_token:
+            prompt_label += f" (current: {mask_secret(resolved_token)}, enter to keep)"
+        token_input = ask_text(prompt_label, password=True)
         if token_input == BACK_VALUE:
             raise click.Abort()
-        resolved_token = str(token_input).strip() or None
+        entered = str(token_input).strip()
+        if entered:
+            resolved_token = entered
     if not resolved_token:
         raise click.ClickException(
-            "Missing token. Provide --token, set GITHUB_ACCESS_TOKEN, or initialize it with `chatenv init -t gh`."
+            "Missing token. Provide --token or configure a GitHub credential for the current repository."
         )
 
-    repo, credential_path = resolve_repo_from_git_remote()
     configure_github_https_token(credential_path, resolved_token)
     if save_env:
         save_github_token_to_env(resolved_token)

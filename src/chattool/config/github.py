@@ -6,8 +6,9 @@ class GitHubConfig(BaseEnvConfig):
     _aliases = ["github", "gh"]
     _storage_dir = "GitHub"
 
-    GITHUB_ACCESS_TOKEN = EnvField("GITHUB_ACCESS_TOKEN", desc="GitHub Personal Access Token", is_sensitive=True)
-    GITHUB_DEFAULT_REPO = EnvField("GITHUB_DEFAULT_REPO", desc="Default repo in owner/name form")
+    GITHUB_ACCESS_TOKEN = EnvField(
+        "GITHUB_ACCESS_TOKEN", desc="GitHub Personal Access Token", is_sensitive=True
+    )
 
     @classmethod
     def test(cls):
