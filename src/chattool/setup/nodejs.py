@@ -7,7 +7,10 @@ import subprocess
 from pathlib import Path
 import click
 
-from chattool.setup.interactive import abort_if_force_without_tty, resolve_interactive_mode
+from chattool.setup.interactive import (
+    abort_if_force_without_tty,
+    resolve_interactive_mode,
+)
 from chattool.utils.custom_logger import setup_logger
 from chattool.utils.tui import BACK_VALUE, ask_confirm
 
@@ -125,7 +128,9 @@ def _nodejs_requirement_message(runtime, min_major):
     node_version = runtime.get("node_version") or "not found"
     npm_version = runtime.get("npm_version") or "not found"
     if not runtime.get("node_bin") or not runtime.get("npm_bin"):
-        return f"Node.js >= {min_major} and npm are required, but node/npm were not found."
+        return (
+            f"Node.js >= {min_major} and npm are required, but node/npm were not found."
+        )
     node_major = runtime.get("node_major")
     if node_major is None:
         return f"Node.js >= {min_major} is required, but the current Node.js version could not be parsed: {node_version}"
@@ -140,10 +145,17 @@ def _nodejs_requirement_message(runtime, min_major):
 def has_required_nodejs(min_major=MIN_NODEJS_MAJOR, runtime=None):
     runtime = runtime or _detect_nodejs_runtime()
     node_major = runtime.get("node_major")
-    return bool(runtime.get("node_bin") and runtime.get("npm_bin") and node_major is not None and node_major >= min_major)
+    return bool(
+        runtime.get("node_bin")
+        and runtime.get("npm_bin")
+        and node_major is not None
+        and node_major >= min_major
+    )
 
 
-def ensure_nodejs_requirement(min_major=MIN_NODEJS_MAJOR, interactive=None, can_prompt=False):
+def ensure_nodejs_requirement(
+    min_major=MIN_NODEJS_MAJOR, interactive=None, can_prompt=False
+):
     runtime = _detect_nodejs_runtime()
     logger.info(f"Checking Node.js runtime requirement (>= {min_major})")
     if has_required_nodejs(min_major=min_major, runtime=runtime):
@@ -177,9 +189,10 @@ def ensure_nodejs_requirement(min_major=MIN_NODEJS_MAJOR, interactive=None, can_
 
 
 def run_npm_command(args):
+    quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)
+    click.echo(f"Running: npm {quoted_args}")
     runtime = _detect_nodejs_runtime()
     if runtime.get("source") == "nvm":
-        quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)
         command = (
             'export NVM_DIR="$HOME/.nvm" && '
             '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
@@ -209,7 +222,9 @@ def get_global_npm_package_version(package_name):
     return version.strip()
 
 
-def should_install_global_npm_package(package_name, display_name, interactive=None, can_prompt=False):
+def should_install_global_npm_package(
+    package_name, display_name, interactive=None, can_prompt=False
+):
     version = get_global_npm_package_version(package_name)
     if not version:
         return True
@@ -240,7 +255,7 @@ def _replace_managed_block(path, begin_marker, end_marker, block):
     end_idx = content.find(end_marker)
     if begin_idx != -1 and end_idx != -1 and end_idx >= begin_idx:
         end_idx += len(end_marker)
-        if end_idx < len(content) and content[end_idx:end_idx + 1] == "\n":
+        if end_idx < len(content) and content[end_idx : end_idx + 1] == "\n":
             end_idx += 1
         content = content[:begin_idx] + content[end_idx:]
 
@@ -256,7 +271,11 @@ def _replace_managed_block(path, begin_marker, end_marker, block):
 
 
 def _read_bundled_nvm_script():
-    return resources.files("chattool.setup").joinpath("assets/nvm.sh").read_text(encoding="utf-8")
+    return (
+        resources.files("chattool.setup")
+        .joinpath("assets/nvm.sh")
+        .read_text(encoding="utf-8")
+    )
 
 
 def _render_nvm_init_block():
@@ -281,7 +300,9 @@ def _install_bundled_nvm(nvm_sh, shell_rc):
     nvm_sh.parent.mkdir(parents=True, exist_ok=True)
     nvm_sh.write_text(_read_bundled_nvm_script(), encoding="utf-8")
     nvm_sh.chmod(0o755)
-    _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block())
+    _replace_managed_block(
+        shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block()
+    )
 
 
 def _echo_recent_output(result, heading):
@@ -295,9 +316,11 @@ def _echo_recent_output(result, heading):
 def setup_nodejs(interactive=None):
     logger.info("Start nodejs setup")
     usage = "Usage: chattool setup nodejs [-i|-I]"
-    interactive, can_prompt, force_interactive, _, need_prompt = resolve_interactive_mode(
-        interactive=interactive,
-        auto_prompt_condition=False,
+    interactive, can_prompt, force_interactive, _, need_prompt = (
+        resolve_interactive_mode(
+            interactive=interactive,
+            auto_prompt_condition=False,
+        )
     )
     abort_if_force_without_tty(force_interactive, can_prompt, usage)
 
@@ -309,7 +332,12 @@ def setup_nodejs(interactive=None):
         click.echo(f"npm already installed: {npm_version}")
         click.echo("Use -i to install/switch version with nvm.")
         return
-    if runtime.get("node_bin") and runtime.get("npm_bin") and runtime.get("node_major") is not None and runtime["node_major"] < MIN_NODEJS_MAJOR:
+    if (
+        runtime.get("node_bin")
+        and runtime.get("npm_bin")
+        and runtime.get("node_major") is not None
+        and runtime["node_major"] < MIN_NODEJS_MAJOR
+    ):
         click.echo(
             f"Detected Node.js {runtime['node_version']} with npm {runtime['npm_version']}. "
             f"Upgrading to Node.js >= {MIN_NODEJS_MAJOR} via nvm..."
@@ -330,13 +358,17 @@ def setup_nodejs(interactive=None):
         click.echo(f"Updated {shell_name} init: {shell_rc}")
     else:
         click.echo(f"Found nvm: {nvm_sh}")
-        _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block())
+        _replace_managed_block(
+            shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block()
+        )
         logger.info(f"Ensured nvm init block in {shell_rc}")
         click.echo(f"Ensured nvm init in {shell_rc}")
 
     version_spec = "lts/*"
     if need_prompt:
-        version_spec = click.prompt("Node.js version to install via nvm", default="lts/*")
+        version_spec = click.prompt(
+            "Node.js version to install via nvm", default="lts/*"
+        )
 
     quoted_version = shlex.quote(version_spec)
     logger.info(f"Running nvm install for version target: {version_spec}")
@@ -351,7 +383,9 @@ def setup_nodejs(interactive=None):
     )
     result = _run_bash_with_output_tail(nvm_cmd)
     if result.returncode != 0:
-        logger.error(f"Failed to install/use Node.js via nvm for version target: {version_spec}")
+        logger.error(
+            f"Failed to install/use Node.js via nvm for version target: {version_spec}"
+        )
         click.echo("Failed to install/use Node.js via nvm.", err=True)
         _echo_recent_output(result, "Recent nvm output:")
         raise click.Abort()

@@ -63,7 +63,7 @@ def codex_setup(preferred_auth_method, base_url, model, env, interactive):
     )
 
 
-def cc_connect_setup(interactive):
+def cc_connect_setup(sudo=None, interactive=None):
     setup_cc_connect(interactive=interactive)
 
 

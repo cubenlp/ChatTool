@@ -40,7 +40,9 @@ def test_replace_managed_block_updates_existing_block(tmp_path):
         encoding="utf-8",
     )
 
-    _replace_managed_block(rc_path, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block())
+    _replace_managed_block(
+        rc_path, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block()
+    )
 
     content = rc_path.read_text(encoding="utf-8")
     assert "old line" not in content
@@ -115,9 +117,16 @@ def test_ensure_nodejs_requirement_prompts_install_and_rechecks(monkeypatch):
     checks = iter([False, True])
     install_calls = []
 
-    monkeypatch.setattr("chattool.setup.nodejs._detect_nodejs_runtime", lambda: next(detections))
-    monkeypatch.setattr("chattool.setup.nodejs.has_required_nodejs", lambda min_major=20, runtime=None: next(checks))
-    monkeypatch.setattr("chattool.setup.nodejs.ask_confirm", lambda message, default=True: True)
+    monkeypatch.setattr(
+        "chattool.setup.nodejs._detect_nodejs_runtime", lambda: next(detections)
+    )
+    monkeypatch.setattr(
+        "chattool.setup.nodejs.has_required_nodejs",
+        lambda min_major=20, runtime=None: next(checks),
+    )
+    monkeypatch.setattr(
+        "chattool.setup.nodejs.ask_confirm", lambda message, default=True: True
+    )
     monkeypatch.setattr(
         "chattool.setup.nodejs.setup_nodejs",
         lambda interactive=None: install_calls.append(interactive),
@@ -140,7 +149,10 @@ def test_ensure_nodejs_requirement_aborts_without_prompt(monkeypatch):
             "node_major": None,
         },
     )
-    monkeypatch.setattr("chattool.setup.nodejs.has_required_nodejs", lambda min_major=20, runtime=None: False)
+    monkeypatch.setattr(
+        "chattool.setup.nodejs.has_required_nodejs",
+        lambda min_major=20, runtime=None: False,
+    )
 
     with pytest.raises(click.Abort):
         ensure_nodejs_requirement(interactive=False, can_prompt=False)
@@ -173,7 +185,7 @@ def test_detect_nodejs_runtime_falls_back_to_nvm(monkeypatch, tmp_path):
     assert runtime["node_major"] == 24
 
 
-def test_run_npm_command_uses_nvm_when_runtime_comes_from_nvm(monkeypatch):
+def test_run_npm_command_uses_nvm_when_runtime_comes_from_nvm(monkeypatch, capsys):
     commands = []
 
     monkeypatch.setattr(
@@ -189,7 +201,8 @@ def test_run_npm_command_uses_nvm_when_runtime_comes_from_nvm(monkeypatch):
     )
     monkeypatch.setattr(
         "chattool.setup.nodejs._run_bash",
-        lambda command: commands.append(command) or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
+        lambda command: commands.append(command)
+        or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
     )
 
     result = run_npm_command(["install", "-g", "@openai/codex@latest"])
@@ -197,3 +210,5 @@ def test_run_npm_command_uses_nvm_when_runtime_comes_from_nvm(monkeypatch):
     assert result.returncode == 0
     assert len(commands) == 1
     assert "npm install -g @openai/codex@latest" in commands[0]
+    out = capsys.readouterr().out
+    assert "Running: npm install -g @openai/codex@latest" in out
