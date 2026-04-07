@@ -144,7 +144,8 @@ def setup_alias(shell=None, dry_run=False):
     block = render_alias_block(alias_keys)
     if dry_run:
         for shell_name, rc_path in rc_paths:
-            click.echo(f"[dry-run] target shell rc ({shell_name}): {rc_path}")
+            click.echo(f"[dry-run] target shell rc: {rc_path}")
+            click.echo(f"[dry-run] target shell: {shell_name}")
             if block:
                 click.echo("[dry-run] alias block:")
                 click.echo(block.rstrip("\n"))
