@@ -31,7 +31,7 @@
   - `<tmp>/mychat-cli/`
 
 预期过程和结果：
-  1. 执行 `chattool pypi init mychat-cli --project-dir <tmp>/mychat-cli --template cli-style`。
+  1. 执行 `chattool pypi init cli-style mychat-cli --project-dir <tmp>/mychat-cli`。
   2. 预期额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md`、`docs/README.md`、`cli-tests/README.md`、`mock-cli-tests/README.md`。
   3. 这些文件应体现 CLI 规范、开发规范、文档/测试约定和自动化基础说明。
 
@@ -39,7 +39,7 @@
 
 ```sh
 chattool pypi init mychat --project-dir /tmp/mychat
-chattool pypi init
+chattool pypi init cli-style mychat-cli --project-dir /tmp/mychat-cli
 ```
 
 ## 用例 2：build/check 验证最小包结构

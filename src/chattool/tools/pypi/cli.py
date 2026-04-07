@@ -8,12 +8,14 @@ import click
 from chattool.interaction import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    ask_select,
     ask_text,
     resolve_interactive_mode,
 )
 
 from .main import (
     PyPICommandError,
+    _ensure_empty_or_missing,
     build_package,
     check_distributions,
     check_repository_conflicts,
@@ -142,6 +144,7 @@ def cli():
 
 
 @cli.command(name="init")
+@click.argument("template_arg", required=False)
 @click.argument("name", required=False)
 @click.option("--email", default=None, help="Author email to record in pyproject.toml.")
 @click.option("--author", default=None, help="Author name to record in pyproject.toml.")
@@ -180,14 +183,8 @@ def cli():
     default=None,
     help="Auto prompt on missing args, -i forces interactive, -I disables it.",
 )
-@click.option(
-    "--template",
-    type=click.Choice(["default", "cli-style"]),
-    default="default",
-    show_default=True,
-    help="Scaffold template preset.",
-)
 def init(
+    template_arg: str | None,
     name: str | None,
     description: str | None,
     initial_version: str,
@@ -197,12 +194,17 @@ def init(
     email: str | None,
     project_dir: Path | None,
     interactive: bool | None,
-    template: str,
 ):
     """Scaffold a minimal src-layout Python package."""
+    template = "default"
+    if template_arg in {"default", "cli-style"}:
+        template = template_arg
+    elif template_arg and not name:
+        name = template_arg
+
     missing_required = _is_name_missing(name, project_dir)
     usage = (
-        "Usage: chattool pypi init [NAME] [--project-dir PATH] [--description TEXT] "
+        "Usage: chattool pypi init [default|cli-style] [NAME] [--project-dir PATH] [--description TEXT] "
         "[--version TEXT] [--python TEXT] [--license TEXT] [--author TEXT] "
         "[--email TEXT] [-i|-I]"
     )
@@ -222,6 +224,13 @@ def init(
     )
 
     if need_prompt:
+        template = ask_select(
+            "选择模板",
+            choices=[
+                "default - minimal Python package",
+                "cli-style - CLI/docs/tests/automation scaffold with chatstyle",
+            ],
+        ).split(" - ", 1)[0]
         name_default = _normalize_optional_text(name) or (
             project_dir.name if project_dir is not None and project_dir.name else ""
         )
@@ -236,6 +245,10 @@ def init(
         project_dir = Path(
             ask_text("project_dir", default=project_dir_default)
         ).expanduser()
+        try:
+            _ensure_empty_or_missing(project_dir)
+        except PyPICommandError as exc:
+            _raise_click_error(exc)
         description = ask_text(
             "description",
             default=_normalize_optional_text(description)
@@ -258,8 +271,6 @@ def init(
             or _read_git_config("user.email")
             or "",
         )
-
-        template = ask_text("template", default=template or "default")
 
     (
         package_name,

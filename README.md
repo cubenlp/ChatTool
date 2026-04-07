@@ -165,7 +165,7 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
 ```bash
 chattool pypi init mychat
-chattool pypi init mycli --template cli-style
+chattool pypi init cli-style mycli
 ```
 
 默认生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`。

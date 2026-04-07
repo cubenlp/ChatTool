@@ -152,11 +152,10 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
         [
             "pypi",
             "init",
+            "cli-style",
             "mychat-cli",
             "--project-dir",
             str(project_dir),
-            "--template",
-            "cli-style",
         ],
     )
 

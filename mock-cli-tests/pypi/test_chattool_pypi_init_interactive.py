@@ -34,6 +34,10 @@ def test_chattool_pypi_init_prompts_when_name_missing(tmp_path, monkeypatch, run
         "chattool.tools.pypi.cli.ask_text",
         lambda label, default="", password=False, style=None: answers[label],
     )
+    monkeypatch.setattr(
+        "chattool.tools.pypi.cli.ask_select",
+        lambda message, choices, style=None: "default - minimal Python package",
+    )
 
     result = runner.invoke(cli, ["pypi", "init"], catch_exceptions=False)
 
@@ -77,6 +81,12 @@ def test_chattool_pypi_init_cli_style_template_interactive(
         "chattool.tools.pypi.cli.ask_text",
         lambda label, default="", password=False, style=None: answers[label],
     )
+    monkeypatch.setattr(
+        "chattool.tools.pypi.cli.ask_select",
+        lambda message,
+        choices,
+        style=None: "cli-style - CLI/docs/tests/automation scaffold with chatstyle",
+    )
 
     result = runner.invoke(cli, ["pypi", "init"], catch_exceptions=False)
 
@@ -84,3 +94,37 @@ def test_chattool_pypi_init_cli_style_template_interactive(
     assert (tmp_path / "demo-pkg" / "DEVELOP.md").exists()
     assert (tmp_path / "demo-pkg" / "setup.md").exists()
     assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "ci.yml").exists()
+
+
+def test_chattool_pypi_init_stops_early_when_project_dir_not_empty(
+    tmp_path, monkeypatch, runner
+):
+    occupied = tmp_path / "demo-pkg"
+    occupied.mkdir()
+    (occupied / "existing.txt").write_text("busy", encoding="utf-8")
+
+    prompts = []
+    answers = {
+        "package_name": "demo-pkg",
+        "project_dir": str(occupied),
+    }
+
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    monkeypatch.setattr(
+        "chattool.tools.pypi.cli.ask_select",
+        lambda message, choices, style=None: "default - minimal Python package",
+    )
+
+    def fake_ask_text(label, default="", password=False, style=None):
+        prompts.append(label)
+        return answers[label]
+
+    monkeypatch.setattr("chattool.tools.pypi.cli.ask_text", fake_ask_text)
+
+    result = runner.invoke(cli, ["pypi", "init"])
+
+    assert result.exit_code != 0
+    assert f"Target directory is not empty: {occupied}" in result.output
+    assert prompts == ["package_name", "project_dir"]
