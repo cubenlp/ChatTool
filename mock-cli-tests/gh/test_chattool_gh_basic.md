@@ -166,6 +166,25 @@ run chattool gh repo-perms --repo owner/repo --token ghp_xxx
 assert output contains pull push admin permissions
 ```
 
+## 用例 9：repo-scoped 校验模式下，credential 不精确匹配时不应误用其他 token
+
+- 初始环境准备：
+  - `.git-credential` 中存在另一个 GitHub 仓库 path 的 token，但没有当前仓库 path 的精确条目。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 当命令明确要求当前仓库的精确 credential path 时，不应回退误用其他 GitHub 仓库的 token。
+  2. 这条规则主要用于 repo-scoped 校验和 `chattool gh set-token` 的当前仓库凭据处理。
+
+参考执行脚本（伪代码）：
+
+```sh
+mock git credential store with github.com/other/repo only
+call resolve_token(..., exact_only=True)
+assert result is empty
+```
+
 ## 清理 / 回滚
 
 - 无需额外操作。

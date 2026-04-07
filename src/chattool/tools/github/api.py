@@ -21,7 +21,7 @@ def get_client(
     token = resolve_token(token, credential_path=credential_path)
     if require_token and not token:
         raise click.ClickException(
-            "Missing token. Pass --token or configure a GitHub credential for the current repository."
+            "Missing token. Pass --token or run `chattool gh set-token` inside the current repository to configure a repo-scoped GitHub credential."
         )
     if not token:
         click.secho(
@@ -42,14 +42,20 @@ def resolve_repo(repo: Optional[str]) -> str:
 
 
 def resolve_token(
-    token: Optional[str], credential_path: Optional[str] = None
+    token: Optional[str],
+    credential_path: Optional[str] = None,
+    exact_only: bool = False,
 ) -> Optional[str]:
     if token:
         return token
-    return (
-        read_github_token_from_credentials(credential_path)
-        or GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    credential_token = read_github_token_from_credentials(
+        credential_path, exact_only=exact_only
     )
+    if credential_token:
+        return credential_token
+    if credential_path and exact_only:
+        return None
+    return GitHubConfig.GITHUB_ACCESS_TOKEN.value
 
 
 def resolve_repo_from_git_remote() -> tuple[str, str]:
@@ -125,11 +131,14 @@ def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, str]]:
 
 def read_github_token_from_credentials(
     credential_path: Optional[str] = None,
+    exact_only: bool = False,
 ) -> Optional[str]:
     for store_path in _credential_store_candidates():
         if not store_path.exists():
             continue
-        token = _read_token_from_store(store_path, credential_path)
+        token = _read_token_from_store(
+            store_path, credential_path, exact_only=exact_only
+        )
         if token:
             return token
     return None
@@ -140,7 +149,7 @@ def _credential_store_candidates() -> list[Path]:
 
 
 def _read_token_from_store(
-    store_path: Path, credential_path: Optional[str]
+    store_path: Path, credential_path: Optional[str], exact_only: bool = False
 ) -> Optional[str]:
     exact_match = None
     host_match = None
@@ -160,6 +169,8 @@ def _read_token_from_store(
         if credential_path and path == credential_path:
             exact_match = password
             break
+        if credential_path and exact_only:
+            continue
         if host_match is None:
             host_match = password
 
@@ -288,7 +299,7 @@ def github_api_request(
     except ValueError:
         pass
     raise click.ClickException(
-        f"GitHub API error ({response.status_code}) for {path}: {detail}"
+        f"GitHub API error ({response.status_code}) for {path}: {detail}. If this repository should use a dedicated token, run `chattool gh set-token` inside the repo to add a matching git credential entry."
     )
 
 

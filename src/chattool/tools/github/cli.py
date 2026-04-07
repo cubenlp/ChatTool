@@ -598,7 +598,11 @@ def repo_perms(repo, json_output, token):
 def set_token(token, save_env):
     """Configure HTTPS credentials for the current GitHub repository."""
     repo, credential_path = resolve_repo_from_git_remote()
-    resolved_token = resolve_token(token, credential_path=credential_path)
+    resolved_token = resolve_token(
+        token,
+        credential_path=credential_path,
+        exact_only=True,
+    ) or resolve_token(token, credential_path=credential_path)
     if is_interactive_available():
         prompt_label = "github_token"
         if resolved_token:
