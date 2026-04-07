@@ -656,18 +656,33 @@ def set_token(token, save_env):
 def _build_pr_check_payload(
     pr, commit, repo_obj, check_limit: int, workflow_limit: int
 ) -> dict:
-    combined_status = commit.get_combined_status()
     statuses = []
-    for status in combined_status.statuses:
-        statuses.append(
-            {
-                "context": status.context,
-                "state": status.state,
-                "description": status.description,
-                "target_url": status.target_url,
-                "updated_at": _isoformat(status.updated_at),
-            }
-        )
+    try:
+        combined_status = commit.get_combined_status()
+        for status in combined_status.statuses:
+            statuses.append(
+                {
+                    "context": status.context,
+                    "state": status.state,
+                    "description": status.description,
+                    "target_url": status.target_url,
+                    "updated_at": _isoformat(status.updated_at),
+                }
+            )
+        combined_status_payload = {
+            "state": combined_status.state,
+            "sha": combined_status.sha,
+            "total_count": combined_status.total_count,
+            "statuses": statuses,
+        }
+    except Exception as exc:
+        combined_status_payload = {
+            "state": "unavailable",
+            "sha": getattr(pr.head, "sha", None),
+            "total_count": 0,
+            "statuses": [],
+            "error": str(exc),
+        }
 
     check_runs = []
     for check_run in commit.get_check_runs():
@@ -720,12 +735,7 @@ def _build_pr_check_payload(
         "head_sha": pr.head.sha if pr.head else None,
         "mergeable": getattr(pr, "mergeable", None),
         "mergeable_state": getattr(pr, "mergeable_state", None),
-        "combined_status": {
-            "state": combined_status.state,
-            "sha": combined_status.sha,
-            "total_count": combined_status.total_count,
-            "statuses": statuses,
-        },
+        "combined_status": combined_status_payload,
         "check_runs": check_runs,
         "workflow_runs": workflow_runs,
     }
