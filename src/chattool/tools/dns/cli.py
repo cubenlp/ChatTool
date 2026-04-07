@@ -8,16 +8,132 @@ import os
 import click
 import asyncio
 
+from chattool.interaction import (
+    ask_select,
+    CommandConstraint,
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    is_interactive_available,
+    resolve_command_inputs,
+)
 from chattool.utils import setup_logger
 from chattool.tools import DynamicIPUpdater, create_dns_client
 from chattool.tools.dns.domain_utils import split_full_domain
 
 
 # CLI 接口
-@click.group()
-def cli():
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
     """DNS helpers for dynamic IP updates and record management."""
-    pass
+    if ctx.invoked_subcommand is not None:
+        return
+    if not is_interactive_available():
+        click.echo(ctx.get_help())
+        return
+
+    selected = ask_select(
+        "选择 DNS 命令",
+        choices=[
+            "ddns - 动态更新 DNS 记录",
+            "set - 创建或更新 DNS 记录",
+            "get - 查询 DNS 记录",
+            "cert-update - 申请或更新证书",
+        ],
+    )
+    ctx.invoke(cli.get_command(ctx, selected.split(" - ", 1)[0]))
+
+
+def _resolve_domain_inputs(full_domain, domain, rr):
+    if full_domain:
+        if domain or rr:
+            click.echo(
+                "警告: 当提供 full_domain 时，--domain 和 --rr 参数将被忽略。", err=True
+            )
+
+        try:
+            return split_full_domain(full_domain)
+        except ValueError as exc:
+            raise click.ClickException(
+                "无效的完整域名格式。应如 'sub.example.com'"
+            ) from exc
+
+    return domain, rr
+
+
+def _validate_dns_domain_pair(values):
+    if values.get("domain") and values.get("rr"):
+        return None
+    return "必须提供 full_domain 位置参数，或者同时提供 --domain 和 --rr 选项。"
+
+
+def _validate_dns_domain_only(values):
+    if values.get("domain"):
+        return None
+    return "必须提供域名。"
+
+
+DNS_PAIR_SCHEMA = CommandSchema(
+    name="dns-domain-pair",
+    fields=(
+        CommandField(
+            "domain",
+            prompt="domain",
+            required=True,
+            missing_message="必须提供 full_domain 位置参数，或者同时提供 --domain 和 --rr 选项。",
+        ),
+        CommandField(
+            "rr",
+            prompt="rr",
+            required=True,
+            default="@",
+            prompt_if_missing=True,
+            missing_message="必须提供 full_domain 位置参数，或者同时提供 --domain 和 --rr 选项。",
+        ),
+    ),
+    constraints=(CommandConstraint(_validate_dns_domain_pair),),
+)
+
+
+DNS_SET_SCHEMA = CommandSchema(
+    name="dns-set",
+    fields=(
+        CommandField(
+            "domain",
+            prompt="domain",
+            required=True,
+            missing_message="必须提供 full_domain 或同时提供 -d 和 -r，并指定 --value。",
+        ),
+        CommandField(
+            "rr",
+            prompt="rr",
+            required=True,
+            default="@",
+            prompt_if_missing=True,
+            missing_message="必须提供 full_domain 或同时提供 -d 和 -r，并指定 --value。",
+        ),
+        CommandField(
+            "value",
+            prompt="value",
+            required=True,
+            missing_message="必须提供 full_domain 或同时提供 -d 和 -r，并指定 --value。",
+        ),
+    ),
+    constraints=(CommandConstraint(_validate_dns_domain_pair),),
+)
+
+
+DNS_GET_SCHEMA = CommandSchema(
+    name="dns-get",
+    fields=(
+        CommandField(
+            "domain", prompt="domain", required=True, missing_message="必须提供域名。"
+        ),
+        CommandField("rr", prompt="rr", default="@", prompt_if_missing=True),
+    ),
+    constraints=(CommandConstraint(_validate_dns_domain_only),),
+)
 
 
 @cli.command()
@@ -25,7 +141,7 @@ def cli():
 @click.option("--domain", "-d", help="域名 (如 rexwang.site)")
 @click.option("--rr", "-r", help="主机记录 (如 www, @)")
 @click.option("--ttl", default=600, help="TTL值 (默认: 600)")
-@click.option("--interval", "-i", default=120, help="检查间隔秒数 (默认: 120)")
+@click.option("--interval", default=120, help="检查间隔秒数 (默认: 120)")
 @click.option("--max-retries", default=3, help="最大重试次数 (默认: 3)")
 @click.option("--retry-delay", default=5, help="重试延迟秒数 (默认: 5)")
 @click.option("--monitor", is_flag=True, help="持续监控IP变化")
@@ -52,6 +168,7 @@ def cli():
     type=click.Choice(["aliyun", "tencent"]),
     help="DNS提供商 (默认: aliyun)",
 )
+@add_interactive_option
 def ddns(
     full_domain,
     domain,
@@ -66,6 +183,7 @@ def ddns(
     ip_type,
     local_ip_cidr,
     provider,
+    interactive,
 ):
     """Run dynamic DNS updates once or in continuous monitoring mode.
 
@@ -78,28 +196,15 @@ def ddns(
     """
     record_type = "A"
 
-    # 参数验证与解析
-    if full_domain:
-        # 方式1: 使用 positional argument
-        if domain or rr:
-            click.echo(
-                "警告: 当提供 full_domain 时，--domain 和 --rr 参数将被忽略。", err=True
-            )
-
-        try:
-            domain, rr = split_full_domain(full_domain)
-        except ValueError:
-            click.echo("错误: 无效的完整域名格式。应如 'sub.example.com'", err=True)
-            exit(1)
-    else:
-        # 方式2: 使用 options
-        if not domain or not rr:
-            click.echo(
-                "错误: 必须提供 full_domain 位置参数，或者同时提供 --domain 和 --rr 选项。",
-                err=True,
-            )
-            click.echo(ddns.get_help(click.Context(ddns)))
-            exit(1)
+    domain, rr = _resolve_domain_inputs(full_domain, domain, rr)
+    inputs = resolve_command_inputs(
+        schema=DNS_PAIR_SCHEMA,
+        provided={"domain": domain, "rr": rr},
+        interactive=interactive,
+        usage="Usage: chattool dns ddns [FULL_DOMAIN] [--domain TEXT] [--rr TEXT] [--provider aliyun|tencent] [-i|-I]",
+    )
+    domain = inputs["domain"]
+    rr = inputs["rr"]
 
     # 设置日志
     # 如果开启监控且未指定log_file，使用默认 LOG_FILE (定义在本地，或 ip_updater)
@@ -143,15 +248,17 @@ def ddns(
                 logger.info("DNS更新完成")
             else:
                 logger.error("DNS更新失败")
-                exit(1)
+                raise click.ClickException("DNS更新失败")
     except KeyboardInterrupt:
         if monitor:
             logger.info("监控已停止")
         else:
             logger.info("程序被用户中断")
+    except click.ClickException:
+        raise
     except Exception as e:
         logger.error(f"运行失败: {e}")
-        exit(1)
+        raise click.ClickException(f"运行失败: {e}")
 
 
 @cli.command(name="set")
@@ -159,7 +266,7 @@ def ddns(
 @click.option("--domain", "-d", help="域名")
 @click.option("--rr", "-r", help="主机记录")
 @click.option("--type", "-t", "record_type", default="A", help="记录类型 (默认: A)")
-@click.option("--value", "-v", required=True, help="记录值")
+@click.option("--value", "-v", required=False, help="记录值")
 @click.option("--ttl", default=600, help="TTL值 (默认: 600)")
 @click.option(
     "--provider",
@@ -168,23 +275,24 @@ def ddns(
     type=click.Choice(["aliyun", "tencent"]),
     help="DNS提供商 (默认: aliyun)",
 )
-def set_record(full_domain, domain, rr, record_type, value, ttl, provider):
+@add_interactive_option
+def set_record(full_domain, domain, rr, record_type, value, ttl, provider, interactive):
     """Create or update a DNS record.
 
     支持:
     1. 完整域名: chattool dns set test.example.com -v 1.2.3.4
     2. 分开指定: chattool dns set -d example.com -r test -v 1.2.3.4
     """
-    # 解析参数 (复用逻辑)
-    if full_domain:
-        try:
-            domain, rr = split_full_domain(full_domain)
-        except ValueError:
-            click.echo("错误: 无效的完整域名格式", err=True)
-            exit(1)
-    elif not (domain and rr):
-        click.echo("错误: 必须提供 full_domain 或同时提供 -d 和 -r", err=True)
-        exit(1)
+    domain, rr = _resolve_domain_inputs(full_domain, domain, rr)
+    inputs = resolve_command_inputs(
+        schema=DNS_SET_SCHEMA,
+        provided={"domain": domain, "rr": rr, "value": value},
+        interactive=interactive,
+        usage="Usage: chattool dns set [FULL_DOMAIN] [--domain TEXT] [--rr TEXT] --value TEXT [--provider aliyun|tencent] [-i|-I]",
+    )
+    domain = inputs["domain"]
+    rr = inputs["rr"]
+    value = inputs["value"]
 
     logger = setup_logger("dns_set", log_level="INFO", format_type="simple")
     try:
@@ -204,12 +312,13 @@ def set_record(full_domain, domain, rr, record_type, value, ttl, provider):
         if res:
             click.echo(f"操作成功: {rr}.{domain} -> {value}")
         else:
-            click.echo("操作失败", err=True)
-            exit(1)
+            raise click.ClickException("操作失败")
 
+    except click.ClickException:
+        raise
     except Exception as e:
         logger.error(f"设置DNS记录失败: {e}")
-        exit(1)
+        raise click.ClickException(f"设置DNS记录失败: {e}")
 
 
 @cli.command(name="get")
@@ -224,22 +333,23 @@ def set_record(full_domain, domain, rr, record_type, value, ttl, provider):
     type=click.Choice(["aliyun", "tencent"]),
     help="DNS提供商 (默认: aliyun)",
 )
-def get_record(full_domain, domain, rr, record_type, provider):
+@add_interactive_option
+def get_record(full_domain, domain, rr, record_type, provider, interactive):
     """Show DNS record details.
 
     支持:
     1. 完整域名: chattool dns get test.example.com
     2. 分开指定: chattool dns get -d example.com -r test
     """
-    if full_domain:
-        try:
-            domain, rr = split_full_domain(full_domain)
-        except ValueError:
-            click.echo("错误: 无效的完整域名格式", err=True)
-            exit(1)
-    elif not domain:
-        click.echo("错误: 必须提供域名", err=True)
-        exit(1)
+    domain, rr = _resolve_domain_inputs(full_domain, domain, rr)
+    inputs = resolve_command_inputs(
+        schema=DNS_GET_SCHEMA,
+        provided={"domain": domain, "rr": rr},
+        interactive=interactive,
+        usage="Usage: chattool dns get [FULL_DOMAIN] [--domain TEXT] [--rr TEXT] [--provider aliyun|tencent] [-i|-I]",
+    )
+    domain = inputs["domain"]
+    rr = inputs["rr"]
 
     logger = setup_logger("dns_get", log_level="INFO", format_type="simple")
     try:
@@ -261,9 +371,11 @@ def get_record(full_domain, domain, rr, record_type, provider):
         else:
             click.echo("未找到匹配的记录")
 
+    except click.ClickException:
+        raise
     except Exception as e:
         logger.error(f"获取DNS记录失败: {e}")
-        exit(1)
+        raise click.ClickException(f"获取DNS记录失败: {e}")
 
 
 @cli.command(name="hook-auth", hidden=True)

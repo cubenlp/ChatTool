@@ -11,17 +11,6 @@ import chattool.client.main as client_main
 pytestmark = pytest.mark.mock_cli
 
 
-@pytest.fixture(autouse=True)
-def _restore_root_cli_state():
-    commands = dict(client_main.cli.commands)
-    lazy_commands = dict(client_main.cli._lazy_commands)
-    yield
-    client_main.cli.commands.clear()
-    client_main.cli.commands.update(commands)
-    client_main.cli._lazy_commands.clear()
-    client_main.cli._lazy_commands.update(lazy_commands)
-
-
 def _make_command(name: str, help_text: str) -> click.Command:
     @click.command(name=name, help=help_text)
     def _cmd():
@@ -39,7 +28,9 @@ def _make_group(name: str, help_text: str) -> click.Group:
 
 
 def test_main_help_lists_lazy_commands_without_loading_them(runner, monkeypatch):
-    load_attr = Mock(side_effect=AssertionError("_load_attr should not run for root help"))
+    load_attr = Mock(
+        side_effect=AssertionError("_load_attr should not run for root help")
+    )
     monkeypatch.setattr(client_main, "_load_attr", load_attr)
 
     result = runner.invoke(client_main.cli, ["--help"])

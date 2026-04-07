@@ -91,6 +91,10 @@
 - `-i` 强制 interactive，`-I` 强制非 interactive；参数不全时抛错。
 - 参数提示读取默认值并显示脱敏内容（密钥必须 mask）。
 - 所有新的 CLI 交互统一走 `src/chattool/interaction/`。
+- 新 CLI 命令默认应优先使用 `src/chattool/interaction/command_schema.py` 提供的 `CommandField`、`CommandSchema`、`CommandConstraint`、`resolve_command_inputs()` 与 `add_interactive_option()`，不要在每个命令里重复手写 `missing_required`、TTY 判断和逐项 `ask_text()`。
+- 除非参数本身就是纯机械性的、且缺失后不需要恢复，否则不要再把交互可恢复参数直接写成 Click 的 `required=True` 或必填位置参数；这会让命令在进入 callback 之前就被 Click 拦截，统一交互机制无法执行。
+- 命令函数优先只做三件事：接入 Click 参数、调用共享 resolver 拿到完整输入、执行业务逻辑。缺参补问和约束校验应尽量声明在 schema 里。
+- 多字段依赖关系优先用 `CommandConstraint` 表达，例如“`full_domain` 或 `domain + rr` 二选一”；不要在 callback 里散落多段 if/else 校验。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致。
 - `-i` 进入当前命令交互流程，`-I` 完全禁止交互。
@@ -99,6 +103,67 @@
 - 若交互流程是“先选择大类/模板，再逐项填写”，文档、测试设计和实际实现三者必须保持同一顺序，不能文档写一套、CLI 跑另一套。
 - CLI 模块应优先保持最小顶层 import：入口层只保留 wiring 所需依赖，执行期才需要的实现优先下沉到命令函数或局部 helper。
 - 所有一级命令和一级 group 的 `--help` 都必须单独校对：语言风格统一、顶层描述不超过实际暴露能力、group 下每个子命令都应有可读的 short help。
+
+### 推荐实现模式
+
+- 推荐写法：Click 参数尽量设为 `required=False`，在 schema 里声明 `required`、`default`、`prompt_if_missing` 和约束，再统一调用 `resolve_command_inputs()`。
+- 推荐把共享的 `-i/-I` 直接通过 `@add_interactive_option` 接到命令上，避免重复写 option 文案和参数名。
+- 对于根 group 的“先选命令再进入子流程”，可以继续在 group 层用 `ask_select()` 做入口选择；但进入具体子命令后的补参逻辑，仍优先交给 schema/resolver。
+- 允许保留少量命令专属 helper，但这些 helper 应服务于业务语义归一化，例如 `full_domain -> domain/rr` 解析；不要再承载通用交互流程。
+
+### 新旧复杂度对比
+
+- 旧写法通常需要在每个命令里重复维护：
+  - `--interactive/--no-interactive`
+  - `missing_required` 判断
+  - TTY 可用性判断
+  - `-i/-I` 语义
+  - 多个 `ask_text()` / `ask_select()`
+  - 约束报错文案
+- 新写法通常只需要：
+  - 定义字段 schema
+  - 定义约束
+  - 一次 `resolve_command_inputs()`
+  - 业务执行
+- 这样做的收益：
+  - 新命令默认更容易符合规范
+  - 测试点更集中，mock 更稳定
+  - 参数补问风格更统一
+  - 旧命令迁移时可逐步替换，不要求一次重写整个 CLI 框架
+
+### 最小示例
+
+```python
+from chattool.interaction import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
+
+
+MY_SCHEMA = CommandSchema(
+    name="demo",
+    fields=(
+        CommandField("name", prompt="name", required=True),
+        CommandField("output", prompt="output path", kind="path", default="./out.txt"),
+    ),
+)
+
+
+@click.command()
+@click.option("--name", required=False)
+@click.option("--output", required=False)
+@add_interactive_option
+def demo(name, output, interactive):
+    inputs = resolve_command_inputs(
+        schema=MY_SCHEMA,
+        provided={"name": name, "output": output},
+        interactive=interactive,
+        usage="Usage: chattool demo [--name TEXT] [--output PATH] [-i|-I]",
+    )
+    run_demo(inputs["name"], inputs["output"])
+```
 
 ### 交互式页面风格
 

@@ -1,6 +1,13 @@
 """Shared CLI interaction helpers."""
 
 from .choice import create_choice, get_separator
+from .command_schema import (
+    CommandConstraint,
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
 from .policy import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
@@ -29,6 +36,10 @@ __all__ = [
     "BACK_VALUE",
     "CHECKBOX_SELECTED_INDICATOR",
     "CHECKBOX_UNSELECTED_INDICATOR",
+    "CommandConstraint",
+    "CommandField",
+    "CommandSchema",
+    "add_interactive_option",
     "abort_if_force_without_tty",
     "abort_if_missing_without_tty",
     "ask_checkbox",
@@ -45,6 +56,7 @@ __all__ = [
     "normalize_interactive",
     "prompt_sensitive_value",
     "prompt_text_value",
+    "resolve_command_inputs",
     "resolve_interactive_mode",
     "resolve_value",
 ]

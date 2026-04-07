@@ -15,6 +15,8 @@
 - 新能力先落 `tools/<name>/`，再接入 `client/mcp/serve`。
 - CLI 统一 `-i/-I` 与缺参自动交互规则。
 - 所有 CLI 交互统一走 `src/chattool/interaction/`。
+- 新 CLI 默认优先使用 `src/chattool/interaction/command_schema.py` 里的 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，不要在每个命令里重复手写缺参判断、TTY 检查和补问流程。
+- 对可恢复缺参，避免直接使用 Click 的 `required=True` 或必填位置参数；否则命令会在进入 callback 前被 Click 拦截，统一交互机制不会生效。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致，敏感值默认脱敏。
 - 任何新增或修改的 CLI 都必须统一满足这些规则，不能只让当前命令局部符合。

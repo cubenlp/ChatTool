@@ -71,20 +71,29 @@ client.delete_subdomain_records("example.com", "temp")
 
 ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 DNS 记录（常用于 DDNS 场景）以及管理 SSL 证书。
 
+在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns get` / `set` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
+
 ### 基本用法
 
 #### 1. 查看/管理 DNS 记录
 
 ```bash
+# 直接进入 DNS 交互入口
+chattool dns
+
 # 获取 DNS 记录 (get)
 # 完整域名方式:
 chattool dns get test.example.com
 # 分开指定方式:
 chattool dns get -d example.com -r test
+# 缺参时自动进入交互补问：
+chattool dns get
 
 # 设置 DNS 记录 (set) - 自动处理新增或更新
 # 将 test.example.com 解析到 1.2.3.4
 chattool dns set test.example.com -v 1.2.3.4
+# 缺参时自动补问 domain / rr / value：
+chattool dns set
 # 指定类型和 TTL
 chattool dns set test.example.com -v "some-text-value" -t TXT --ttl 300
 ```
@@ -98,6 +107,8 @@ chattool dns set test.example.com -v "some-text-value" -t TXT --ttl 300
 chattool dns ddns home.example.com
 # 或传统写法：
 chattool dns ddns -d example.com -r home
+# 缺参时自动补问：
+chattool dns ddns
 
 # 2. 局域网 IP 更新 (自动探测)
 # 自动探测局域网 IP (192.168.x.x, 10.x.x.x 等) 并更新
@@ -115,7 +126,8 @@ chattool dns ddns home.example.com --monitor
 - `[DOMAIN]`: (可选位置参数) 完整域名，如 `home.example.com`。如果提供此参数，则忽略 `-d` 和 `-r`。
 - `--domain, -d`: (可选) 域名名称，如 `example.com`
 - `--rr, -r`: (可选) 主机记录，如 `www`, `@`, `home`
-- `--interval, -i`: (可选) 监控间隔秒数 (默认 120s)
+- `--interval`: (可选) 监控间隔秒数 (默认 120s)
+- `--interactive/--no-interactive, -i/-I`: 缺参时自动补问，`-i` 强制进入交互，`-I` 禁用交互
 - `--ip-type`: (可选) IP 类型，`public` (默认) 或 `local`
 - `--local-ip-cidr`: (可选) 局域网 IP 过滤网段，仅当 `ip-type=local` 时有效 (如 `192.168.1.0/24`)
 
