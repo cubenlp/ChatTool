@@ -165,17 +165,12 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
 ```bash
 chattool pypi init mychat
+chattool pypi init mycli --template cli-style
 ```
 
 默认生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`。
 
-如果你要生成一个更贴近 ChatTool 当前协作方式的模板仓库，可以使用：
-
-```bash
-chattool pypi init mychat --template cli-style
-```
-
-`cli-style` 模板会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`cli-tests/`、`mock-cli-tests/` 的基础说明文件。
+`cli-style` 模板会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md`、`docs/`、`cli-tests/`、`mock-cli-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle` 作为可复用 CLI 运行时。
 
 `chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
 

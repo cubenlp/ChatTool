@@ -197,6 +197,62 @@ def _build_pyproject_content(
     return "\n".join(lines)
 
 
+def _build_cli_style_pyproject_content(
+    package_name: str,
+    module_name: str,
+    description: str,
+    requires_python: str,
+    license_name: str,
+    author: str | None,
+    email: str | None,
+) -> str:
+    lines = [
+        "[build-system]",
+        'requires = ["setuptools>=61.0", "wheel"]',
+        'build-backend = "setuptools.build_meta"',
+        "",
+        "[project]",
+        f'name = "{_toml_escape(package_name)}"',
+        'dynamic = ["version"]',
+        f'description = "{_toml_escape(description)}"',
+        'readme = "README.md"',
+        f'requires-python = "{_toml_escape(requires_python)}"',
+        f'license = "{_toml_escape(license_name)}"',
+        'dependencies = ["click>=8.0", "chatstyle"]',
+    ]
+    if author and email:
+        lines.append(
+            f'authors = [{{name = "{_toml_escape(author)}", email = "{_toml_escape(email)}"}}]'
+        )
+    elif author:
+        lines.append(f'authors = [{{name = "{_toml_escape(author)}"}}]')
+    elif email:
+        lines.append(f'authors = [{{email = "{_toml_escape(email)}"}}]')
+    lines.extend(
+        [
+            f'keywords = ["{_toml_escape(module_name)}", "cli"]',
+            "classifiers = [",
+            '    "Programming Language :: Python :: 3",',
+            '    "Operating System :: OS Independent",',
+            "]",
+            "",
+            "[project.scripts]",
+            f'{module_name} = "{module_name}.cli:main"',
+            "",
+            "[tool.setuptools.dynamic]",
+            f'version = {{attr = "{module_name}.__version__"}}',
+            "",
+            "[tool.setuptools.packages.find]",
+            'where = ["src"]',
+            "",
+            "[tool.setuptools]",
+            "include-package-data = true",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _build_cli_style_readme(package_name: str, description: str) -> str:
     return (
         textwrap.dedent(
@@ -412,8 +468,18 @@ def scaffold_package(
         (project_dir / "cli-tests").mkdir(parents=True, exist_ok=True)
         (project_dir / "mock-cli-tests").mkdir(parents=True, exist_ok=True)
         (project_dir / "docs").mkdir(parents=True, exist_ok=True)
+        (project_dir / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
         file_map.update(
             {
+                project_dir / "pyproject.toml": _build_cli_style_pyproject_content(
+                    package_name=package_name,
+                    module_name=module_name,
+                    description=description,
+                    requires_python=requires_python,
+                    license_name=license_name,
+                    author=author,
+                    email=email,
+                ),
                 project_dir / "README.md": _build_cli_style_readme(
                     package_name, description
                 ),
@@ -430,6 +496,55 @@ def scaffold_package(
                 project_dir
                 / "mock-cli-tests"
                 / "README.md": "# Mock CLI Tests\n\nMock/fake CLI tests live here.\n",
+                project_dir / ".github" / "workflows" / "ci.yml": textwrap.dedent(
+                    """
+                    name: CI
+
+                    on:
+                      push:
+                        branches:
+                          - main
+                          - master
+                      pull_request:
+
+                    jobs:
+                      test:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+                          - uses: actions/setup-python@v5
+                            with:
+                              python-version: "3.11"
+                          - run: python -m pip install --upgrade pip build pytest
+                          - run: python -m pip install -e .
+                          - run: python -m pytest -q
+                          - run: python -m build
+                    """
+                ).strip()
+                + "\n",
+                project_dir / ".github" / "workflows" / "publish.yml": textwrap.dedent(
+                    """
+                    name: Publish Package
+
+                    on:
+                      workflow_dispatch:
+
+                    jobs:
+                      publish:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+                          - uses: actions/setup-python@v5
+                            with:
+                              python-version: "3.11"
+                          - run: python -m pip install --upgrade pip build
+                          - run: python -m build
+                          - run: |
+                              echo "Publish workflow scaffold only."
+                              echo "Add trusted publishing or credentials before real release."
+                    """
+                ).strip()
+                + "\n",
             }
         )
 

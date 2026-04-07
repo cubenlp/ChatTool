@@ -168,6 +168,7 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
     assert (project_dir / "docs" / "README.md").exists()
     assert (project_dir / "cli-tests" / "README.md").exists()
     assert (project_dir / "mock-cli-tests" / "README.md").exists()
-    develop_text = (project_dir / "DEVELOP.md").read_text(encoding="utf-8")
-    assert "CLI Rules" in develop_text
-    assert "doc-first CLI testing" in develop_text
+    assert (project_dir / ".github" / "workflows" / "ci.yml").exists()
+    assert (project_dir / ".github" / "workflows" / "publish.yml").exists()
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"chatstyle"' in pyproject_text

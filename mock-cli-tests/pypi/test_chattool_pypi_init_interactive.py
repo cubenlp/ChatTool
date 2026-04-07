@@ -83,3 +83,4 @@ def test_chattool_pypi_init_cli_style_template_interactive(
     assert result.exit_code == 0
     assert (tmp_path / "demo-pkg" / "DEVELOP.md").exists()
     assert (tmp_path / "demo-pkg" / "setup.md").exists()
+    assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "ci.yml").exists()

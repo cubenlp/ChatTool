@@ -157,6 +157,7 @@ assert git credential approve uses prompted token
 预期过程和结果：
   1. 执行 `chattool gh repo-perms --repo owner/repo --token <pat>`。
   2. CLI 应输出该仓库的 `permissions` 字段，至少包括 `pull`、`push`、`admin`。
+  3. CLI 还应基于这些权限给出一个简短的 capability 摘要，例如是否可读 PR、是否可合并 PR、是否可查看 checks / actions。
 
 参考执行脚本（伪代码）：
 
@@ -165,6 +166,31 @@ mock GET /repos/owner/repo payload with permissions
 run chattool gh repo-perms --repo owner/repo --token ghp_xxx
 assert output contains pull push admin permissions
 ```
+
+## 用例 8b：`repo-perms --json-output --full-json` 可输出完整仓库 payload
+
+- 初始环境准备：
+  - fake GitHub repo API 返回固定仓库 JSON。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh repo-perms --repo owner/repo --json-output --full-json`。
+  2. 输出 JSON 中除 `permissions` 和 `capabilities` 外，还应包含原始 `repository` payload。
+
+## 用例 2b：combined status 因权限不足失败时，`pr-check` 应降级继续
+
+- 初始环境准备：
+  - fake GitHub client 在 `get_combined_status()` 时抛 403 类错误。
+  - `check_runs` 和 `workflow_runs` 仍然可读。
+- 相关文件：
+  - 无。
+
+预期过程和结果：
+  1. 执行 `chattool gh pr-check --number <id>`。
+  2. CLI 不应因为 combined status 读取失败而整体退出。
+  3. 输出中应显示 `Combined status: unavailable`，并附带 note。
+  4. check runs 和 workflow runs 仍应继续展示。
 
 ## 用例 9：repo-scoped 校验模式下，credential 不精确匹配时不应误用其他 token
 

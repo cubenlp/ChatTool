@@ -17,6 +17,21 @@ from chattool.tools.github.api import (
 )
 
 
+def _derive_repo_capabilities(permissions: dict) -> dict:
+    pull = bool(permissions.get("pull"))
+    push = bool(permissions.get("push"))
+    admin = bool(permissions.get("admin"))
+    maintain = bool(permissions.get("maintain"))
+    triage = bool(permissions.get("triage"))
+    return {
+        "can_read_pr": pull,
+        "can_comment_pr": triage or push or maintain or admin,
+        "can_merge_pr": push or maintain or admin,
+        "can_view_checks": pull,
+        "can_view_actions": pull,
+    }
+
+
 def _resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, str]:
     if repo:
         normalized = resolve_repo(repo)
@@ -552,21 +567,30 @@ def pr_update(repo, number, title, body, body_file, state, base, token):
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
+    "--full-json",
+    is_flag=True,
+    help="Include the full repository payload in JSON output.",
+)
+@click.option(
     "--token",
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def repo_perms(repo, json_output, token):
+def repo_perms(repo, json_output, full_json, token):
     """Show repository permissions for the current token."""
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     token = resolve_token(token, credential_path=credential_path)
     payload = github_api_get_json(repo, "", token)
+    permissions = payload.get("permissions") or {}
     result = {
         "repo": payload.get("full_name") or repo,
         "private": payload.get("private"),
         "visibility": payload.get("visibility"),
-        "permissions": payload.get("permissions") or {},
+        "permissions": permissions,
+        "capabilities": _derive_repo_capabilities(permissions),
     }
+    if full_json:
+        result["repository"] = payload
 
     if json_output:
         click.echo(json.dumps(result, ensure_ascii=False, indent=2))
@@ -576,12 +600,15 @@ def repo_perms(repo, json_output, token):
     click.echo(f"Private: {_format_optional(result['private'])}")
     click.echo(f"Visibility: {_format_optional(result['visibility'])}")
     click.echo("Permissions:")
-    permissions = result["permissions"]
     if not permissions:
         click.echo("  - none returned")
-        return
-    for key in sorted(permissions):
-        click.echo(f"  - {key}: {permissions[key]}")
+    else:
+        for key in sorted(permissions):
+            click.echo(f"  - {key}: {permissions[key]}")
+
+    click.echo("Capabilities:")
+    for key, value in result["capabilities"].items():
+        click.echo(f"  - {key}: {value}")
 
 
 @cli.command(name="set-token")
@@ -770,6 +797,8 @@ def _echo_pr_check_payload(payload: dict) -> None:
         f"Combined status: {combined['state']} "
         f"({combined['total_count']} status{'es' if combined['total_count'] != 1 else ''})"
     )
+    if combined.get("error"):
+        click.echo(f"  note: {combined['error']}")
 
     if combined["statuses"]:
         click.echo("Statuses:")
