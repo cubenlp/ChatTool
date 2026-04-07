@@ -26,7 +26,7 @@ version: 0.2.1
    - 交互里展示的默认值必须与真实执行一致。
 
 3. 是否使用统一交互样式
-   - 新增 CLI 交互优先走 [src/chattool/utils/tui.py](src/chattool/utils/tui.py)。
+   - 新增 CLI 交互优先走 [src/chattool/interaction](src/chattool/interaction)。
    - 不要为新的交互流程继续直接写 `click.prompt` / `click.confirm`，除非有明确理由并在文档中说明。
    - 敏感信息在 prompt 和输出中必须脱敏。
 
@@ -63,7 +63,7 @@ version: 0.2.1
 git diff --stat
 git diff --name-only
 rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
-rg -n "lazy import|utils/tui.py|interactive" docs/development-guide docs README.md
+rg -n "lazy import|src/chattool/interaction|interactive" docs/development-guide docs README.md
 ```
 
 ## 输出要求

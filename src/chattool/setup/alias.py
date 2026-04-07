@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 import click
@@ -40,6 +41,21 @@ def resolve_shell(shell=None):
     if "bash" in shell_env:
         return "bash"
     return "bash"
+
+
+def resolve_target_shells(shell=None):
+    if shell in {"zsh", "bash"}:
+        return [shell]
+
+    detected = []
+    if shutil.which("zsh"):
+        detected.append("zsh")
+    if shutil.which("bash"):
+        detected.append("bash")
+    if detected:
+        return detected
+
+    return [resolve_shell(None)]
 
 
 def resolve_shell_rc(shell, home=None):
@@ -107,9 +123,14 @@ def setup_alias(shell=None, dry_run=False):
     if os.name != "posix":
         click.echo("setup alias only supports Unix-like systems.", err=True)
         raise click.Abort()
-    shell_name = resolve_shell(shell)
-    rc_path = resolve_shell_rc(shell_name)
-    logger.info(f"Start setup alias for shell: {shell_name}")
+    shell_names = resolve_target_shells(shell)
+    rc_paths = [
+        (shell_name, resolve_shell_rc(shell_name)) for shell_name in shell_names
+    ]
+    logger.info(
+        "Start setup alias for shells: %s",
+        ", ".join(shell_name for shell_name, _ in rc_paths),
+    )
 
     default_selected = list(ALIAS_MAP.keys())
     if is_interactive_available():
@@ -122,22 +143,25 @@ def setup_alias(shell=None, dry_run=False):
 
     block = render_alias_block(alias_keys)
     if dry_run:
-        click.echo(f"[dry-run] target shell rc: {rc_path}")
-        if block:
-            click.echo("[dry-run] alias block:")
-            click.echo(block.rstrip("\n"))
+        for shell_name, rc_path in rc_paths:
+            click.echo(f"[dry-run] target shell rc: {rc_path}")
+            click.echo(f"[dry-run] target shell: {shell_name}")
+            if block:
+                click.echo("[dry-run] alias block:")
+                click.echo(block.rstrip("\n"))
+                for key in alias_keys:
+                    click.echo(f"  {key} => {ALIAS_MAP[key]}")
+            else:
+                click.echo("[dry-run] alias block would be removed.")
+        return
+
+    for shell_name, rc_path in rc_paths:
+        apply_alias_block(rc_path, block)
+
+        if alias_keys:
+            click.echo(f"Updated aliases in {rc_path}")
             for key in alias_keys:
                 click.echo(f"  {key} => {ALIAS_MAP[key]}")
         else:
-            click.echo("[dry-run] alias block would be removed.")
-        return
-
-    apply_alias_block(rc_path, block)
-
-    if alias_keys:
-        click.echo(f"Updated aliases in {rc_path}")
-        for key in alias_keys:
-            click.echo(f"  {key} => {ALIAS_MAP[key]}")
-    else:
-        click.echo(f"Removed ChatTool alias block from {rc_path}")
-    click.echo(f"Run: source {rc_path}")
+            click.echo(f"Removed ChatTool alias block from {rc_path}")
+        click.echo(f"Run: source {rc_path}")

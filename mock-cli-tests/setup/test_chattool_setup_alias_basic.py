@@ -21,3 +21,17 @@ def test_setup_alias_uses_shared_multi_select_controls(monkeypatch):
     assert "chatenv => chattool env" in result.output
     assert "chatskill => chattool skill" in result.output
     assert "chatdns => chattool dns" not in result.output
+
+
+def test_setup_alias_detects_all_available_shells_by_default(monkeypatch):
+    monkeypatch.setattr("chattool.setup.alias.is_interactive_available", lambda: False)
+    monkeypatch.setattr(
+        "chattool.setup.alias.shutil.which",
+        lambda name: f"/usr/bin/{name}" if name in {"zsh", "bash"} else None,
+    )
+
+    result = CliRunner().invoke(cli, ["setup", "alias", "--dry-run"])
+
+    assert result.exit_code == 0
+    assert ".zshrc" in result.output
+    assert ".bashrc" in result.output

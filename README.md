@@ -109,6 +109,16 @@ chattool dns ddns home.example.com --monitor
 chattool dns cert-update -d example.com -e admin@example.com
 ```
 
+### Nginx 配置生成 (`chattool nginx`)
+
+```bash
+chattool nginx --list
+chattool nginx proxy-pass --set SERVER_NAME=app.example.com --set PROXY_PASS=http://127.0.0.1:8080
+chattool nginx websocket-proxy ./websocket.conf --set SERVER_NAME=ws.example.com --set PROXY_PASS=http://127.0.0.1:3000
+chattool nginx static-root ./nas.conf --set SERVER_NAME=share.example.com --set ROOT_DIR=/storage/nas
+chattool nginx -i  # 交互式选择模板并逐项填写
+```
+
 ### AI 绘图 (`chattool image`)
 
 ```bash
@@ -130,6 +140,7 @@ chattool explore arxiv get 1706.03762 -v
 | 工具 | 命令 | 说明 |
 |------|------|------|
 | 网络扫描 | `chattool network` | 扫描局域网主机和端口 |
+| Nginx 配置 | `chattool nginx` | 按模板生成常见的反向代理、路径转发和静态目录配置 |
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup codex/claude/opencode/lark-cli/docker` | 安装或检查常用 CLI / Docker 环境，并在确认后执行建议的系统命令 |

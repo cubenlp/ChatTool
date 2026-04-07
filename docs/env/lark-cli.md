@@ -60,9 +60,9 @@ chattool setup lark-cli \
 
 1. 显式参数：`--app-id`、`--app-secret`、`--brand`
 2. `-e/--env` 指定的 Feishu 配置
-3. 当前保存的 `feishu/lark` typed env 配置
+3. 现有 `~/.lark-cli/config.json` 中已有的 app 元信息
 4. shell 环境变量
-5. 现有 `~/.lark-cli/config.json` 中已有的 app 元信息
+5. 当前保存的 ChatTool Feishu `.env` 配置
 6. 默认品牌值 `feishu`
 
 其中 `-e/--env` 支持两种形式：

@@ -58,3 +58,27 @@ assert no generated files exist
 run chattool setup workspace /tmp/workspace --language en -I
 assert AGENTS.md contains English headings
 ```
+
+## Case 4: interactive extra repos should enter repo token input directly
+
+### 初始环境准备
+
+- 在 mock CLI 环境下调用 `chattool setup workspace`。
+- 交互中启用 `chattool` 和 `rexblog` 两个额外模块。
+- mock 当前仓库 `.git-credential` 中已存在 GitHub token。
+
+### 预期过程和结果
+
+- 选择额外模块后，应直接进入 `ChatTool` 和 `RexBlog` 的 token 输入。
+- token 默认值应来自当前仓库对应的 git credential，并以 mask 形式展示在输入标签中。
+- 回车应保留当前 token；空值则表示跳过。
+- 若保留或输入 token，应在 clone 前把它传给对应 repo 的 HTTPS credential 配置流程。
+
+### 参考执行脚本（伪代码）
+
+```sh
+mock current repo credential token -> github_pat_xxx
+run chattool setup workspace
+assert token inputs appear directly for ChatTool and RexBlog
+assert token is passed to cubenlp/ChatTool.git and RexWzh/RexBlog
+```

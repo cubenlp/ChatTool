@@ -20,7 +20,6 @@ chatenv cat -t gh
 
 Recommended config keys:
 - `GITHUB_ACCESS_TOKEN`
-- `GITHUB_DEFAULT_REPO`
 
 ## Create PR (Preferred)
 
@@ -97,8 +96,8 @@ chattool gh pr-check --repo owner/repo --number 123 --json-output
 
 ```
 chattool gh pr-comment --repo owner/repo --number 123 --body "Looks good"
-chattool gh pr-merge --repo owner/repo --number 123 --method squash --confirm
-chattool gh pr-merge --repo owner/repo --number 123 --method squash --confirm --check
+chattool gh pr-merge --repo owner/repo --number 123 --method squash
+chattool gh pr-merge --repo owner/repo --number 123 --method squash --check
 ```
 
 ## Notes

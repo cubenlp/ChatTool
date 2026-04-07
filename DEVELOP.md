@@ -4,6 +4,7 @@
 
 - 统一入口：`src/chattool/client/`
 - 核心能力：`src/chattool/tools/`
+- 模板型工具优先复用现有生成器风格，例如 `chattool docker`、`chattool nginx`
 - 协议入口：`src/chattool/mcp/`（实现下放 `tools/*/mcp.py`）
 - 环境安装：`src/chattool/setup/`
 - 远程服务：`src/chattool/serve/`
@@ -13,9 +14,13 @@
 
 - 新能力先落 `tools/<name>/`，再接入 `client/mcp/serve`。
 - CLI 统一 `-i/-I` 与缺参自动交互规则。
-- 所有 CLI 交互统一走 `utils/tui.py`。
+- 所有 CLI 交互统一走 `src/chattool/interaction/`。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致，敏感值默认脱敏。
+- 任何新增或修改的 CLI 都必须统一满足这些规则，不能只让当前命令局部符合。
+- 若交互先做分类/模板选择，再逐项补参，文档、测试和实现顺序必须一致。
+- CLI 顶层 import 保持最小化，执行期才需要的实现优先下沉到命令函数或局部 helper。
+- 一级命令 help 也要校对：语言风格统一、描述不超出实际能力、group 子命令要带 short help。
 - setup 命令必须记录关键阶段日志。
 - 入口层只做编排，不承载业务实现。
 
@@ -25,11 +30,12 @@
 - 环境变量：更新 `docs/configuration.md`
 - 开发规范：更新 `docs/development-guide/`
 - 导航变更：同步更新 `mkdocs.yml`
+- 新工具落地后，同步更新 `README.md` / `README_en.md` / `AGENTS.md`
 
 ## 配置机制
 
-- 默认优先级统一为：`显式参数 > environment variable > envs/<Config>/.env > default`
-- 对支持 `-e/--env` 的命令，统一为：`显式参数 > -e/显式 env > environment variable > envs/<Config>/.env > default`
+- 默认优先级统一为：`显式参数 > 配置（若存在） > environment variable > ChatTool .env > default`
+- 对支持 `-e/--env` 的命令，统一为：`显式参数 > -e/显式 env > 配置（若存在） > environment variable > ChatTool .env > default`
 - profile 固定保存在 `envs/<Config>/<profile>.env`
 - 新命令需要临时切换配置时，优先复用 `-e/--env`，不要再新增一套临时环境变量语义
 

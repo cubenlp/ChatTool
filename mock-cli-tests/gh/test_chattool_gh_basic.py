@@ -223,6 +223,21 @@ def test_chattool_gh_repo_perms_basic(monkeypatch, runner):
     assert "  - push: False" in result.output
 
 
+def test_chattool_gh_repo_scoped_credential_requires_exact_path(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chattool.tools.github.api.read_github_token_from_credentials",
+        lambda credential_path=None, exact_only=False: None
+        if credential_path and exact_only
+        else "ghp_other_repo_token",
+    )
+    from chattool.tools.github.api import resolve_token
+
+    assert (
+        resolve_token(None, credential_path="CubeNLP/ChatTool.git", exact_only=True)
+        is None
+    )
+
+
 def test_chattool_gh_set_token_configures_repo_scoped_https_credential(
     tmp_path, monkeypatch, runner
 ):
@@ -345,7 +360,9 @@ def test_chattool_gh_set_token_prompts_for_missing_token_in_tty(monkeypatch, run
     monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
     monkeypatch.delenv("GITHUB_ACCESS_TOKEN", raising=False)
     monkeypatch.setattr(
-        gh_cli, "resolve_token", lambda token, credential_path=None: token
+        gh_cli,
+        "resolve_token",
+        lambda token, credential_path=None, exact_only=False: token,
     )
     monkeypatch.setattr(gh_cli, "is_interactive_available", lambda: True)
     monkeypatch.setattr(

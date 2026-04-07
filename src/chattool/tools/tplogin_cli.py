@@ -6,14 +6,16 @@ from chattool.tools.tplogin import TPLogin
 
 console = Console()
 
+
 @click.group()
 def cli():
-    """TP-Link Router Tool"""
+    """TP-Link router helpers."""
     pass
+
 
 @cli.command()
 def info():
-    """获取设备信息"""
+    """Show router device info."""
     try:
         client = TPLogin()
         info = client.get_device_info()
@@ -23,6 +25,7 @@ def info():
             click.echo("获取设备信息失败", err=True)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
+
 
 def _render_ufw_table(rules):
     table = Table(title="TP-Link UFW 规则")
@@ -47,6 +50,7 @@ def _render_ufw_table(rules):
         )
     console.print(table)
 
+
 def _parse_rule_spec(rule_spec):
     parts = rule_spec.split(":")
     if len(parts) != 3:
@@ -62,11 +66,13 @@ def _parse_rule_spec(rule_spec):
     dest_port = int(in_port_text)
     return src_port_start, src_port_end, dest_ip, dest_port
 
+
 def _to_rule_spec(rule):
     start = str(rule.get("src_dport_start", ""))
     end = str(rule.get("src_dport_end", ""))
     out_port = start if start == end or not end else f"{start}-{end}"
     return f"{out_port}:{rule.get('dest_ip', '')}:{rule.get('dest_port', '')}"
+
 
 def _signature_by_fields(src_port_start, src_port_end, dest_ip, dest_port, proto):
     end = src_port_end if src_port_end is not None else src_port_start
@@ -78,6 +84,7 @@ def _signature_by_fields(src_port_start, src_port_end, dest_ip, dest_port, proto
         str(proto).lower(),
     )
 
+
 def _signature_from_rule(rule):
     return (
         str(rule.get("src_dport_start", "")),
@@ -87,17 +94,18 @@ def _signature_from_rule(rule):
         str(rule.get("proto", "all")).lower(),
     )
 
+
 @cli.group(name="ufw", invoke_without_command=True)
 @click.pass_context
 def ufw(ctx):
-    """虚拟服务器规则（ufw 风格）"""
+    """Manage virtual server rules with a ufw-style interface."""
     if ctx.invoked_subcommand is None:
         ctx.invoke(ufw_status)
 
 
 @ufw.command(name="status")
 def ufw_status():
-    """查看虚拟服务器规则状态"""
+    """Show current virtual server rules."""
     try:
         client = TPLogin()
         rules = client.list_virtual_servers()
@@ -108,11 +116,18 @@ def ufw_status():
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
 
+
 @ufw.command(name="add")
 @click.argument("rule_spec", type=str)
-@click.option("--proto", type=click.Choice(["all", "tcp", "udp"]), default="all", show_default=True, help="协议")
+@click.option(
+    "--proto",
+    type=click.Choice(["all", "tcp", "udp"]),
+    default="all",
+    show_default=True,
+    help="协议",
+)
 def ufw_add(rule_spec, proto):
-    """添加虚拟服务器规则，格式 OUT_PORT:local_ip:IN_PORT"""
+    """Add a virtual server rule: OUT_PORT:local_ip:IN_PORT."""
     try:
         src_port_start, src_port_end, dest_ip, dest_port = _parse_rule_spec(rule_spec)
         client = TPLogin()
@@ -132,10 +147,11 @@ def ufw_add(rule_spec, proto):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
 
+
 @ufw.command(name="dump")
 @click.argument("path", required=False, default="tplogin_ufw_rules.json")
 def ufw_dump(path):
-    """导出虚拟服务器规则到文件"""
+    """Export virtual server rules to a file."""
     try:
         client = TPLogin()
         rules = client.list_virtual_servers()
@@ -155,13 +171,25 @@ def ufw_dump(path):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
 
+
 @ufw.command(name="load")
 @click.argument("path", type=click.Path(exists=True, dir_okay=False))
-@click.option("--merge", is_flag=True, default=True, help="合并模式（默认）：跳过已存在的规则，仅添加新规则")
-@click.option("--delete", is_flag=True, help="清理模式：删除路由器中存在但文件中没有的规则，添加新规则")
-@click.option("--replace", is_flag=True, help="覆盖模式：删除所有现有规则，重新添加文件中的规则")
+@click.option(
+    "--merge",
+    is_flag=True,
+    default=True,
+    help="合并模式（默认）：跳过已存在的规则，仅添加新规则",
+)
+@click.option(
+    "--delete",
+    is_flag=True,
+    help="清理模式：删除路由器中存在但文件中没有的规则，添加新规则",
+)
+@click.option(
+    "--replace", is_flag=True, help="覆盖模式：删除所有现有规则，重新添加文件中的规则"
+)
 def ufw_load(path, merge, delete, replace):
-    """从文件导入虚拟服务器规则"""
+    """Load virtual server rules from a file."""
     # 互斥检查
     if replace and delete:
         click.echo("错误: --replace 和 --delete 不能同时使用", err=True)
@@ -186,34 +214,38 @@ def ufw_load(path, merge, delete, replace):
             else:
                 rule_spec = entry.get("spec", "")
                 proto = str(entry.get("proto", "all")).lower()
-            
+
             if not rule_spec:
                 continue
-                
+
             try:
-                src_port_start, src_port_end, dest_ip, dest_port = _parse_rule_spec(rule_spec)
+                src_port_start, src_port_end, dest_ip, dest_port = _parse_rule_spec(
+                    rule_spec
+                )
                 signature = _signature_by_fields(
                     src_port_start, src_port_end, dest_ip, dest_port, proto
                 )
-                file_rules_parsed.append({
-                    "signature": signature,
-                    "params": {
-                        "src_port_start": src_port_start,
-                        "src_port_end": src_port_end,
-                        "dest_ip": dest_ip,
-                        "dest_port": dest_port,
-                        "proto": proto,
+                file_rules_parsed.append(
+                    {
+                        "signature": signature,
+                        "params": {
+                            "src_port_start": src_port_start,
+                            "src_port_end": src_port_end,
+                            "dest_ip": dest_ip,
+                            "dest_port": dest_port,
+                            "proto": proto,
+                        },
                     }
-                })
+                )
             except Exception:
                 click.echo(f"警告: 忽略无效规则 {rule_spec}", err=True)
                 continue
 
         client = TPLogin()
-        
+
         # 2. 获取当前规则
         current_rules = client.list_virtual_servers()
-        current_map = {} # signature -> rule_name
+        current_map = {}  # signature -> rule_name
         for rule in current_rules:
             sig = _signature_from_rule(rule)
             current_map[sig] = rule.get("name")
@@ -233,9 +265,9 @@ def ufw_load(path, merge, delete, replace):
                         deleted += 1
                     else:
                         click.echo(f"删除失败: {name}", err=True)
-            
+
             # 重新获取当前规则（应为空）
-            current_map = {} 
+            current_map = {}
 
         elif delete:
             # 策略：删除不在文件中的规则
@@ -245,9 +277,11 @@ def ufw_load(path, merge, delete, replace):
             for sig, name in current_map.items():
                 if sig not in file_signatures:
                     to_delete.append(name)
-            
+
             if to_delete:
-                with console.status(f"[bold red]正在清理 {len(to_delete)} 条多余规则..."):
+                with console.status(
+                    f"[bold red]正在清理 {len(to_delete)} 条多余规则..."
+                ):
                     for name in to_delete:
                         if client.delete_virtual_server(name):
                             deleted += 1
@@ -265,12 +299,12 @@ def ufw_load(path, merge, delete, replace):
             for item in file_rules_parsed:
                 sig = item["signature"]
                 params = item["params"]
-                
+
                 if sig in current_map:
                     # 已存在，跳过
                     skipped += 1
                     continue
-                
+
                 # 不存在，添加
                 ok = client.add_virtual_server(**params)
                 if ok:
@@ -279,13 +313,15 @@ def ufw_load(path, merge, delete, replace):
                     # 但我们不知道新规则的 name，所以只能假设它存在了
                     # 更好的做法是重新 fetch，但效率低。
                     # 这里主要防止文件自身重复导致重复添加
-                    current_map[sig] = "newly_added" 
+                    current_map[sig] = "newly_added"
                 else:
                     failed += 1
                     click.echo(f"添加失败: {params}", err=True)
 
-        click.echo(f"操作完成: added={added}, deleted={deleted}, skipped={skipped}, failed={failed}")
-        
+        click.echo(
+            f"操作完成: added={added}, deleted={deleted}, skipped={skipped}, failed={failed}"
+        )
+
         # 5. 显示最终结果
         final_rules = client.list_virtual_servers()
         if final_rules:
@@ -296,9 +332,11 @@ def ufw_load(path, merge, delete, replace):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
 
+
 @ufw.command(name="list", hidden=True)
 def ufw_list():
     ufw_status()
+
 
 @ufw.command(name="delete")
 @click.option("--name", type=str, default=None, help="规则名，如 redirect_3")

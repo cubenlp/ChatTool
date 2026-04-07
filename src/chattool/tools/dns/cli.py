@@ -16,7 +16,7 @@ from chattool.tools.dns.domain_utils import split_full_domain
 # CLI 接口
 @click.group()
 def cli():
-    """DNSPod动态IP更新工具"""
+    """DNS helpers for dynamic IP updates and record management."""
     pass
 
 
@@ -67,7 +67,7 @@ def ddns(
     local_ip_cidr,
     provider,
 ):
-    """执行动态DNS更新（支持一次性或持续监控）
+    """Run dynamic DNS updates once or in continuous monitoring mode.
 
     支持两种参数方式:
     1. 完整域名位置参数:
@@ -169,7 +169,7 @@ def ddns(
     help="DNS提供商 (默认: aliyun)",
 )
 def set_record(full_domain, domain, rr, record_type, value, ttl, provider):
-    """设置DNS记录 (新增或更新)
+    """Create or update a DNS record.
 
     支持:
     1. 完整域名: chattool dns set test.example.com -v 1.2.3.4
@@ -225,7 +225,7 @@ def set_record(full_domain, domain, rr, record_type, value, ttl, provider):
     help="DNS提供商 (默认: aliyun)",
 )
 def get_record(full_domain, domain, rr, record_type, provider):
-    """获取DNS记录信息
+    """Show DNS record details.
 
     支持:
     1. 完整域名: chattool dns get test.example.com

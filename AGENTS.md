@@ -15,7 +15,7 @@ src/chattool/
 ├── client/     # 统一 CLI 主入口（chattool）
 ├── llm/        # LLM 路由、Chat 对象
 ├── config/     # 环境变量管理（chatenv）
-├── tools/      # 工具箱（dns、lark、image、network 等）
+├── tools/      # 工具箱（dns、lark、image、network、nginx 等）
 ├── mcp/        # MCP 入口与编排（工具实现下放到 tools/*/mcp.py）
 ├── setup/      # 环境安装脚本
 ├── serve/      # 服务端（截图、证书分发等）
@@ -37,7 +37,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - 必要参数缺失时自动触发 interactive 模式
 - `-i` 强制开启交互，`-I` 强制关闭（参数不全则报错）
 - 参数默认值从环境变量读取，敏感值在提示中自动 mask
-- 所有 CLI 交互统一走 `utils/tui.py`
+- 所有 CLI 交互统一走 `src/chattool/interaction/`
 - 进入 interactive 后，补全当前任务相关的关键参数
 - interactive 展示的默认值必须与实际执行一致
 - `-i` 进入当前命令交互流程，`-I` 完全禁用交互
@@ -49,7 +49,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - setup 命令记录关键阶段日志（开始、依赖检测、安装执行、配置写入、失败原因）
 - 出错时同时保留用户可读错误输出与 logger 错误记录
 - 若 setup 流程涉及 `sudo` 命令，必须提供显式 `--sudo` 开关；未指定 `--sudo` 时，无论非交互还是交互未确认，都只打印建议命令，由用户自行处理
-- setup 类命令若同时支持显式参数、`-e/--env`、已有工具配置、环境变量与 typed `.env`，统一优先级必须为：`显式参数 > -e/--env > 工具默认配置位置 > 系统环境变量 > typed .env`
+- setup 类命令若同时支持显式参数、`-e/--env`、已有工具配置、环境变量与 ChatTool `.env`，统一优先级必须为：`显式参数 > -e/--env > 工具默认配置位置 > 系统环境变量 > ChatTool .env > 默认值`
 
 ### 工具结构
 

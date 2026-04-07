@@ -92,4 +92,9 @@ chattool setup frp
 
 Nginx 反向代理配置指南。
 
+```bash
+chattool nginx --list
+chattool nginx -i
+```
+
 详细文档：[nginx_proxy.md](nginx_proxy.md)

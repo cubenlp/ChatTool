@@ -15,10 +15,16 @@ mock-cli-tests/
 │   └── test_chattool_cc_basic.md
 ├── client/
 │   └── test_chattool_client_dispatch_basic.md
+│   └── test_chattool_top_level_help_basic.md
+│   └── test_chattool_remaining_top_level_help_basic.md
 ├── dns/
 │   └── test_chattool_dns_basic.md
 ├── explore/
 │   └── test_chattool_explore_basic.md
+├── pypi/
+│   └── test_chattool_pypi_init_interactive.md
+├── nginx/
+│   └── test_chattool_nginx_dispatch_basic.md
 └── gh/
     ├── test_chattool_gh_basic.md
     └── test_chattool_gh_actions_diagnostics.md
