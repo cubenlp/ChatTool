@@ -66,6 +66,7 @@ chattool nginx -i
 
 - 适合直接暴露静态目录或 NAS 目录。
 - 默认带 `autoindex on;`。
+- 默认站点目录示例为 `/var/www/example-site`。
 
 ### `redirect`
 

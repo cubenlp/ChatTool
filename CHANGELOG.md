@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
+- `chattool nginx static-root` 的默认站点根目录现从 NAS 风格示例调整为更通用的 `/var/www/example-site`，交互默认值、文档和测试同步更新
 - `chattool setup` 中通过 npm 执行安装或检查时，现会先打印真实的 `npm ...` 命令，方便用户确认当前实际在执行什么
 - `chattool pypi init` 在交互终端里省略包名时，现会自动进入交互式补参；显式 `-I` 关闭交互时才保持缺参报错
 - `chattool setup workspace` 在交互式启用 ChatTool / RexBlog 模块时，现会分别提示是否配置 GitHub token；默认值优先读取当前仓库 git credential，并以 mask 形式展示，便于直接复用到目标仓库

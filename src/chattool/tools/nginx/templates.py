@@ -180,7 +180,7 @@ server {
                 "/etc/letsencrypt/live/example/privkey.pem",
             ),
             TemplateField("LOCATION", "location", "/"),
-            TemplateField("ROOT_DIR", "root directory", "/storage/nas"),
+            TemplateField("ROOT_DIR", "root directory", "/var/www/example-site"),
         ),
         prompt_fields=(
             "SERVER_NAME",
