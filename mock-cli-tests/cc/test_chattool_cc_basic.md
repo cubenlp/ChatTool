@@ -53,10 +53,11 @@ chattool cc init -I \
 
 ### 预期过程和结果
 
-- 执行 `chattool cc init -i --config <path>` 时先提示是否覆盖已有配置文件
+- 执行 `chattool cc init -i --config <path>` 时先进入统一的确认交互，询问是否覆盖已有配置文件
 - 覆盖确认选择否，立即退出成功，不再继续询问其它字段
 - 覆盖确认选择是后，后续字段提示默认值来自已有配置
-- 若已有 `quiet = true`，交互阶段会把 quiet 提示的默认值展示为开启
+- 交互输出可以从原生 Click prompt 变为统一 TUI 风格，但顺序必须保持：覆盖确认先于平台/agent 等其它字段
+- 若已有 `quiet = true`，交互阶段会把 quiet 提示默认值展示为开启
 - 若已有平台凭证且选择不重新填写，生成的新配置会保留原有平台凭证
 - 若沿用默认 quiet，生成的新配置会继续写入 `quiet = true`
 - 该用例通过 monkeypatch 固定交互能力探测结果，不依赖真实 TTY。
@@ -79,7 +80,7 @@ chattool cc init -i --config /tmp/config.toml
 - 执行 `chattool cc init -i --agent claudecode --platform feishu --config <path>` 返回 0
 - 交互阶段提示检测到 `chatenv` 的飞书配置候选
 - `app_id` 提示默认值来自 `FEISHU_APP_ID`
-- `app_secret` 直接以默认值形式提供，回车即可复用
+- `app_secret` 作为敏感默认值处理，可直接回车复用，不应回显原始值
 - 生成的配置文件写入对应飞书凭证
 - 该用例通过 monkeypatch 固定 `chatenv` 候选值来源，不要求本机提前写入真实飞书配置。
 

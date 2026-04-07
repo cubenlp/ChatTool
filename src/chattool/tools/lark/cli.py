@@ -111,7 +111,7 @@ def _create_chat_session(*, system: str = "", max_history: int | None = None):
     help="从指定 .env 文件或已保存 profile 读取配置",
 )
 def info(env_ref):
-    """获取机器人基本信息（验证凭证）"""
+    """Show bot profile info and validate credentials."""
     _load_runtime_env(env_ref)
     bot = _get_bot()
     resp = bot.get_bot_info()
@@ -147,7 +147,7 @@ def info(env_ref):
     help="接收者 ID 类型 (默认 user_id)",
 )
 def send(receiver, text, env_ref, id_type):
-    """发送一条文本消息。
+    """Send a text message.
 
     示例:
       chattool lark send "你好"
@@ -208,7 +208,7 @@ def send(receiver, text, env_ref, id_type):
     help="虚拟 user_id，用于会话隔离 (默认 cli_user)",
 )
 def chat(env_ref, system, max_history, user):
-    """在终端启动交互式 AI 对话。"""
+    """Start an interactive AI chat session in the terminal."""
     _load_runtime_env(env_ref)
 
     session = _create_chat_session(system=system, max_history=max_history)

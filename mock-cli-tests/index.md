@@ -16,6 +16,7 @@ mock-cli-tests/
 ├── client/
 │   └── test_chattool_client_dispatch_basic.md
 │   └── test_chattool_top_level_help_basic.md
+│   └── test_chattool_remaining_top_level_help_basic.md
 ├── dns/
 │   └── test_chattool_dns_basic.md
 ├── explore/

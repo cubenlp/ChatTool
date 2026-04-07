@@ -14,6 +14,8 @@ from typing import Iterable
 
 import click
 
+from chattool.interaction import ask_confirm, ask_text
+
 
 DEFAULT_CONFIG_DIR = Path.home() / ".cc-connect"
 DEFAULT_CONFIG_FILE = DEFAULT_CONFIG_DIR / "config.toml"
@@ -197,30 +199,36 @@ def _prompt_platform_options() -> dict[str, str]:
     options: dict[str, str] = {}
     click.echo("输入平台配置项，按提示输入 key 与 value，直接回车结束")
     while True:
-        key = click.prompt("Option key", default="", show_default=False)
+        key = ask_text("Option key", default="")
         if not key:
             break
         if _is_sensitive_key(key):
-            value = click.prompt(f"{key}", hide_input=True, confirmation_prompt=True)
+            value = ask_text(f"{key}", password=True)
         else:
-            value = click.prompt(f"{key}")
+            value = ask_text(f"{key}")
         options[key] = value
     return options
+
+
+def _prompt_choice_text(
+    label: str, choices: list[str], default: str | None = None
+) -> str:
+    prompt = label
+    if default:
+        prompt += f" ({'/'.join(choices)})"
+    value = ask_text(prompt, default=default or "")
+    normalized = str(value).strip()
+    if normalized in choices:
+        return normalized
+    raise click.ClickException(f"{label} must be one of: {', '.join(choices)}")
 
 
 def _prompt_secret_with_optional_default(label: str, default: str = "") -> str:
     if default:
         masked_default = _mask_value(default)
-        entered = click.prompt(
-            f"{label} [{masked_default}]",
-            default="",
-            show_default=False,
-            hide_input=True,
-        )
+        entered = ask_text(f"{label} [{masked_default}]", default="", password=True)
         return entered or default
-    return click.prompt(
-        label, confirmation_prompt=True, hide_input=True, show_default=False
-    )
+    return ask_text(label, default="", password=True)
 
 
 def _get_feishu_candidate_options() -> dict[str, str]:
@@ -249,7 +257,7 @@ def _prompt_platform_credentials(
             click.echo(f"检测到 chatenv 飞书配置候选: {masked}")
 
         app_id_default = prompt_defaults.get("app_id") or ""
-        app_id = click.prompt("app_id", default=app_id_default)
+        app_id = ask_text("app_id", default=app_id_default)
         app_secret_default = prompt_defaults.get("app_secret") or ""
         app_secret = _prompt_secret_with_optional_default(
             "app_secret", app_secret_default
@@ -282,23 +290,19 @@ def _prompt_proxy_options(
     if proxy_keys.intersection(current_options):
         masked = _mask_proxy_options(current_options)
         click.echo(f"检测到已有代理配置: {masked}")
-        if not click.confirm("是否修改代理配置?", default=False):
+        if not ask_confirm("是否修改代理配置?", default=False):
             return current_options
     else:
-        if not click.confirm("是否配置代理?", default=False):
+        if not ask_confirm("是否配置代理?", default=False):
             return current_options
 
-    proxy = click.prompt(
-        "proxy", default=existing_proxy, show_default=bool(existing_proxy)
-    )
+    proxy = ask_text("proxy", default=existing_proxy)
     if not proxy:
         return current_options
     current_options["proxy"] = proxy
 
-    if click.confirm("代理是否需要认证?", default=bool(existing_user)):
-        proxy_user = click.prompt(
-            "proxy_username", default=existing_user, show_default=bool(existing_user)
-        )
+    if ask_confirm("代理是否需要认证?", default=bool(existing_user)):
+        proxy_user = ask_text("proxy_username", default=existing_user)
         if proxy_user:
             current_options["proxy_username"] = proxy_user
             current_options["proxy_password"] = _prompt_secret_with_optional_default(
@@ -454,23 +458,21 @@ def init(
             click.echo(f"配置文件已存在: {config_path}", err=True)
             click.echo("请手动删除后重试，或使用交互模式确认覆盖。", err=True)
             raise click.Abort()
-        if not click.confirm(
-            f"配置文件已存在: {config_path}，是否覆盖?", default=False
-        ):
+        if not ask_confirm(f"配置文件已存在: {config_path}，是否覆盖?", default=False):
             click.echo("已取消")
             return
 
     if need_prompt:
         if not platform:
-            platform = click.prompt(
+            platform = _prompt_choice_text(
                 "选择消息平台",
-                type=click.Choice(PLATFORM_CHOICES),
+                PLATFORM_CHOICES,
                 default=default_platform or "feishu",
             )
         if not agent:
-            agent = click.prompt(
+            agent = _prompt_choice_text(
                 "选择 Agent 类型",
-                type=click.Choice(AGENT_CHOICES),
+                AGENT_CHOICES,
                 default=default_agent or "claudecode",
             )
         if not mode:
@@ -479,15 +481,15 @@ def init(
                 mode_default = default_mode or AGENT_MODE_DEFAULTS.get(
                     agent or "", "default"
                 )
-                mode = click.prompt(
+                mode = _prompt_choice_text(
                     "选择权限模式",
-                    type=click.Choice(mode_choices),
+                    mode_choices,
                     default=mode_default,
                 )
-        work_dir = click.prompt("Agent 工作目录", default=work_dir)
-        project = click.prompt("项目名称", default=project)
+        work_dir = ask_text("Agent 工作目录", default=work_dir)
+        project = ask_text("项目名称", default=project)
         if quiet is None:
-            quiet = click.confirm(
+            quiet = ask_confirm(
                 "默认 quiet 模式（隐藏思考和工具进度消息）",
                 default=default_quiet if default_quiet is not None else False,
             )
@@ -514,11 +516,11 @@ def init(
             }
             click.echo(f"检测到已有平台配置: {masked}")
             platform_options = dict(existing_options)
-            if click.confirm("是否填写平台鉴权信息?", default=True):
+            if ask_confirm("是否填写平台鉴权信息?", default=True):
                 platform_options = _prompt_platform_credentials(
                     platform or "feishu", existing_options
                 )
-        elif click.confirm("是否填写平台鉴权信息?", default=True):
+        elif ask_confirm("是否填写平台鉴权信息?", default=True):
             platform_options = _prompt_platform_credentials(
                 platform or "feishu", existing_options
             )
