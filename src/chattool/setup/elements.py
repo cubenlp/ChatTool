@@ -129,7 +129,7 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "default": None,
                     "type": click.Choice(["zsh", "bash"]),
-                    "help": "Target shell: zsh or bash. Defaults to $SHELL.",
+                    "help": "Target shell override: zsh or bash. By default, update all detected shells.",
                 },
             ),
             SetupOptionElement(

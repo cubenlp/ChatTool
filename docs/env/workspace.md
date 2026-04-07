@@ -73,7 +73,7 @@ workspace/
 - 仓库放到 `core/RexBlog/`
 - 把 `source/_posts` 链接到 `./public/hexo_blog`
 - `public/` 根目录默认附带 `README.md`，说明这里用于部署公开网站
-- 交互模式下同样会直接进入 GitHub token 输入，可复用当前仓库 token；若暂时不填，也可稍后进入目标仓库执行 `chatgh set-token`
+- 交互模式下同样会直接进入 GitHub token 输入，可复用当前仓库 token；若暂时不填，也可稍后进入目标仓库执行 `chattool gh set-token`
 
 ## 4. 设计原则
 

@@ -19,3 +19,24 @@ run chattool setup alias --dry-run in pty
 use multi-select controls to keep chatenv and chatskill
 assert dry-run output only contains chatenv and chatskill
 ```
+
+## Case 2: default shell detection should update all detected shells
+
+### 初始环境准备
+
+- 在非交互或 dry-run 环境下执行 `chattool setup alias --dry-run`。
+- mock `which zsh` 和 `which bash` 都存在。
+
+### 预期过程和结果
+
+- 不传 `--shell` 时，不应要求用户输入 shell。
+- 命令应自动选择所有已探测到的 shell。
+- dry-run 输出应同时包含 `.zshrc` 和 `.bashrc` 两个目标文件。
+
+### 参考执行脚本（伪代码）
+
+```sh
+mock zsh and bash both available
+run chattool setup alias --dry-run
+assert output includes .zshrc and .bashrc
+```
