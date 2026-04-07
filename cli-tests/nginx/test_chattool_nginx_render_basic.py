@@ -57,13 +57,13 @@ def test_chattool_nginx_basic(tmp_path: Path):
             "--set",
             "SERVER_NAME=share.example.com",
             "--set",
-            "ROOT_DIR=/storage/nas",
+            "ROOT_DIR=/var/www/example-site",
             "--force",
         ],
     )
     assert result.exit_code == 0
     nas_content = nas_file.read_text(encoding="utf-8")
-    assert "root /storage/nas;" in nas_content
+    assert "root /var/www/example-site;" in nas_content
     assert "autoindex on;" in nas_content
     assert "charset utf-8;" in nas_content
 

@@ -221,6 +221,120 @@ def test_chattool_gh_repo_perms_basic(monkeypatch, runner):
     assert "  - admin: False" in result.output
     assert "  - pull: True" in result.output
     assert "  - push: False" in result.output
+    assert "Capabilities:" in result.output
+    assert "  - can_comment_pr: False" in result.output
+    assert "  - can_merge_pr: False" in result.output
+    assert "  - can_read_pr: True" in result.output
+    assert "  - can_view_actions: True" in result.output
+    assert "  - can_view_checks: True" in result.output
+
+
+def test_chattool_gh_repo_perms_full_json(monkeypatch, runner):
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "github_api_get_json",
+        lambda repo, path, token, params=None: {
+            "full_name": "CubeNLP/ChatTool",
+            "private": False,
+            "visibility": "public",
+            "permissions": {"pull": True, "push": True, "admin": True},
+            "allow_merge_commit": True,
+        },
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "gh",
+            "repo-perms",
+            "--repo",
+            "CubeNLP/ChatTool",
+            "--json-output",
+            "--full-json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert '"capabilities"' in result.output
+    assert '"repository"' in result.output
+    assert '"allow_merge_commit": true' in result.output
+
+
+def test_chattool_gh_pr_check_falls_back_when_combined_status_forbidden(
+    monkeypatch, runner
+):
+    pr = _fake_pr()
+    commit = SimpleNamespace(
+        get_combined_status=lambda: (_ for _ in ()).throw(
+            Exception(
+                'GitHub API error: Resource not accessible by personal access token: 403 {"message": "Resource not accessible by personal access token"}'
+            )
+        ),
+        get_check_runs=lambda: iter(
+            [
+                SimpleNamespace(
+                    name="tests",
+                    status="completed",
+                    conclusion="success",
+                    details_url="https://github.com/CubeNLP/ChatTool/actions/runs/1/job/11",
+                    html_url="https://github.com/CubeNLP/ChatTool/runs/11",
+                    app=SimpleNamespace(name="GitHub Actions"),
+                    started_at=_dt("2026-03-23T09:55:00Z"),
+                    completed_at=_dt("2026-03-23T10:00:00Z"),
+                )
+            ]
+        ),
+    )
+    repo_obj = SimpleNamespace(
+        get_pull=lambda number: pr,
+        get_commit=lambda sha: commit,
+        get_workflow_runs=lambda head_sha=None: iter(
+            [
+                SimpleNamespace(
+                    name="CI",
+                    display_title="CI / tests",
+                    event="pull_request",
+                    status="completed",
+                    conclusion="success",
+                    html_url="https://github.com/CubeNLP/ChatTool/actions/runs/1",
+                    created_at=_dt("2026-03-23T09:50:00Z"),
+                    updated_at=_dt("2026-03-23T10:05:00Z"),
+                    run_started_at=_dt("2026-03-23T09:51:00Z"),
+                    head_branch="rex/setup",
+                    head_sha="abc123def456",
+                    run_number=501,
+                )
+            ]
+        ),
+    )
+    client = SimpleNamespace(get_repo=lambda repo: repo_obj)
+
+    monkeypatch.setattr(
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: client,
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+
+    result = runner.invoke(cli, ["gh", "pr-check", "--number", "138"])
+
+    assert result.exit_code == 0
+    assert "Combined status: unavailable (0 statuses)" in result.output
+    assert (
+        "note: GitHub API error: Resource not accessible by personal access token"
+        in result.output
+    )
+    assert "tests: completed/success [GitHub Actions]" in result.output
+    assert "CI: completed/success (event=pull_request, run=501)" in result.output
 
 
 def test_chattool_gh_repo_scoped_credential_requires_exact_path(monkeypatch, runner):

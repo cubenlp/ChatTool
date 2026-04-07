@@ -52,13 +52,13 @@ chattool nginx websocket-proxy /tmp/websocket.conf --set SERVER_NAME=ws.example.
   - `<tmp>/nas.conf`
 
 预期过程和结果：
-1. 执行 `chattool nginx static-root <tmp>/nas.conf --set SERVER_NAME=share.example.com --set ROOT_DIR=/storage/nas --force`，预期输出文件被创建。
-2. 预期文件中包含 `root /storage/nas;`、`autoindex on;` 和 `charset utf-8;`。
+1. 执行 `chattool nginx static-root <tmp>/nas.conf --set SERVER_NAME=share.example.com --set ROOT_DIR=/var/www/example-site --force`，预期输出文件被创建。
+2. 预期文件中包含 `root /var/www/example-site;`、`autoindex on;` 和 `charset utf-8;`。
 
 参考执行脚本（伪代码）：
 
 ```sh
-chattool nginx static-root /tmp/nas.conf --set SERVER_NAME=share.example.com --set ROOT_DIR=/storage/nas --force
+chattool nginx static-root /tmp/nas.conf --set SERVER_NAME=share.example.com --set ROOT_DIR=/var/www/example-site --force
 ```
 
 ## 用例 4：生成 HTTP 到 HTTPS 跳转模板

@@ -98,11 +98,15 @@ def test_chattool_pypi_basic(tmp_path):
     dist_dir = project_dir / "dist"
     fake_site = tmp_path / "fake-site"
 
-    init = runner.invoke(cli, ["pypi", "init", "mychat", "--project-dir", str(project_dir)])
+    init = runner.invoke(
+        cli, ["pypi", "init", "mychat", "--project-dir", str(project_dir)]
+    )
     assert init.exit_code == 0
     assert (project_dir / "src" / "mychat" / "__init__.py").exists()
     assert (project_dir / "tests" / "conftest.py").exists()
-    assert 'requires-python = ">=3.9"' in (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'requires-python = ">=3.9"' in (project_dir / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
 
     pytest_result = subprocess.run(
         [sys.executable, "-m", "pytest", "-q"],
@@ -123,7 +127,9 @@ def test_chattool_pypi_basic(tmp_path):
         env={"PYTHONPATH": _pythonpath_with_fake_site(fake_site)},
     )
     assert build.exit_code == 0
-    assert f"Building distributions from {project_dir} into {dist_dir}..." in build.output
+    assert (
+        f"Building distributions from {project_dir} into {dist_dir}..." in build.output
+    )
     assert "Built distributions:" in build.output
     assert "fake build ok" in build.output
 
@@ -135,3 +141,33 @@ def test_chattool_pypi_basic(tmp_path):
     assert check.exit_code == 0
     assert "fake check ok" in check.output
     assert "Checked distributions:" in check.output
+
+
+def test_chattool_pypi_init_cli_style_template(tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "mychat-cli"
+
+    result = runner.invoke(
+        cli,
+        [
+            "pypi",
+            "init",
+            "cli-style",
+            "mychat-cli",
+            "--project-dir",
+            str(project_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (project_dir / "DEVELOP.md").exists()
+    assert (project_dir / "setup.md").exists()
+    assert (project_dir / "CHANGELOG.md").exists()
+    assert (project_dir / "AGENTS.md").exists()
+    assert (project_dir / "docs" / "README.md").exists()
+    assert (project_dir / "cli-tests" / "README.md").exists()
+    assert (project_dir / "mock-cli-tests" / "README.md").exists()
+    assert (project_dir / ".github" / "workflows" / "ci.yml").exists()
+    assert (project_dir / ".github" / "workflows" / "publish.yml").exists()
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"chatstyle"' in pyproject_text

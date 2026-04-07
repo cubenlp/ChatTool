@@ -8,12 +8,14 @@ import click
 from chattool.interaction import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    ask_select,
     ask_text,
     resolve_interactive_mode,
 )
 
 from .main import (
     PyPICommandError,
+    _ensure_empty_or_missing,
     build_package,
     check_distributions,
     check_repository_conflicts,
@@ -142,6 +144,7 @@ def cli():
 
 
 @cli.command(name="init")
+@click.argument("template_arg", required=False)
 @click.argument("name", required=False)
 @click.option("--email", default=None, help="Author email to record in pyproject.toml.")
 @click.option("--author", default=None, help="Author name to record in pyproject.toml.")
@@ -181,6 +184,7 @@ def cli():
     help="Auto prompt on missing args, -i forces interactive, -I disables it.",
 )
 def init(
+    template_arg: str | None,
     name: str | None,
     description: str | None,
     initial_version: str,
@@ -192,9 +196,15 @@ def init(
     interactive: bool | None,
 ):
     """Scaffold a minimal src-layout Python package."""
+    template = "default"
+    if template_arg in {"default", "cli-style"}:
+        template = template_arg
+    elif template_arg and not name:
+        name = template_arg
+
     missing_required = _is_name_missing(name, project_dir)
     usage = (
-        "Usage: chattool pypi init [NAME] [--project-dir PATH] [--description TEXT] "
+        "Usage: chattool pypi init [default|cli-style] [NAME] [--project-dir PATH] [--description TEXT] "
         "[--version TEXT] [--python TEXT] [--license TEXT] [--author TEXT] "
         "[--email TEXT] [-i|-I]"
     )
@@ -214,6 +224,13 @@ def init(
     )
 
     if need_prompt:
+        template = ask_select(
+            "选择模板",
+            choices=[
+                "default - minimal Python package",
+                "cli-style - CLI/docs/tests/automation scaffold with chatstyle",
+            ],
+        ).split(" - ", 1)[0]
         name_default = _normalize_optional_text(name) or (
             project_dir.name if project_dir is not None and project_dir.name else ""
         )
@@ -228,6 +245,10 @@ def init(
         project_dir = Path(
             ask_text("project_dir", default=project_dir_default)
         ).expanduser()
+        try:
+            _ensure_empty_or_missing(project_dir)
+        except PyPICommandError as exc:
+            _raise_click_error(exc)
         description = ask_text(
             "description",
             default=_normalize_optional_text(description)
@@ -280,6 +301,7 @@ def init(
             license_name=license_name,
             author=author,
             email=email,
+            template=template,
         )
     except PyPICommandError as exc:
         _raise_click_error(exc)
@@ -363,12 +385,6 @@ def upload(project_dir: Path, dist_dir: Path | None, skip_existing: bool):
 
 @cli.command(name="probe")
 @click.option(
-    "--version",
-    "package_version",
-    default=None,
-    help="Override the version used for repository conflict checks.",
-)
-@click.option(
     "--name",
     "package_name",
     default=None,
@@ -382,9 +398,9 @@ def upload(project_dir: Path, dist_dir: Path | None, skip_existing: bool):
 @click.option(
     "--repository",
     type=click.Choice(["testpypi", "pypi"]),
-    default="testpypi",
+    default="pypi",
     show_default=True,
-    help="Target repository name for availability checks.",
+    help="Target repository for exact project/version releaseability checks.",
 )
 @click.option(
     "--project-dir",
@@ -398,9 +414,8 @@ def probe(
     repository: str,
     repository_url: str | None,
     package_name: str | None,
-    package_version: str | None,
 ):
-    """Check whether a package name/version is already taken on PyPI or TestPyPI."""
+    """Check whether an exact package name is available on PyPI."""
     project_dir = _resolve_project_dir(project_dir)
     try:
         metadata = read_project_metadata(project_dir)
@@ -410,9 +425,6 @@ def probe(
     target_name = _normalize_optional_text(package_name) or (
         metadata.name if metadata else None
     )
-    target_version = _normalize_optional_text(package_version) or (
-        metadata.version if metadata else None
-    )
     if not target_name:
         raise click.ClickException(
             "Package name is required. Pass --name or provide a readable pyproject.toml."
@@ -421,7 +433,6 @@ def probe(
     try:
         repository_checks = check_repository_conflicts(
             target_name,
-            target_version,
             repository=repository,
             repository_url=repository_url,
         )
