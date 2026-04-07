@@ -25,6 +25,11 @@ def _fake_pr():
         user=SimpleNamespace(login="rex"),
         base=SimpleNamespace(ref="vibe/master"),
         head=SimpleNamespace(ref="rex/setup", sha="abc123def456"),
+        created_at=_dt("2026-03-23T09:40:00Z"),
+        updated_at=_dt("2026-03-23T10:05:00Z"),
+        merged_at=None,
+        mergeable=True,
+        mergeable_state="clean",
     )
 
 
@@ -183,6 +188,145 @@ def test_chattool_gh_pr_check_basic(monkeypatch, runner):
     assert "Combined status: pending (1 status)" in result.output
     assert "tests: completed/success [GitHub Actions]" in result.output
     assert "CI: completed/success (event=pull_request, run=501)" in result.output
+
+
+def test_chattool_gh_pr_view_prompts_for_number(monkeypatch, runner):
+    _install_fake_client(monkeypatch)
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.command_schema.ask_text",
+        lambda message, default="", password=False, style=None: "138",
+    )
+
+    result = runner.invoke(cli, ["gh", "pr-view"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "#138 [open] Improve setup and CI visibility" in result.output
+
+
+def test_chattool_gh_pr_create_prompts_for_missing_fields(monkeypatch, runner):
+    created = {}
+
+    class FakeRepo:
+        def create_pull(self, title, body, base, head):
+            created.update({"title": title, "body": body, "base": base, "head": head})
+            return SimpleNamespace(
+                html_url="https://github.com/CubeNLP/ChatTool/pull/200"
+            )
+
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: SimpleNamespace(
+            get_repo=lambda repo: FakeRepo()
+        ),
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    answers = {"base": "main", "head": "rex/feature", "title": "Test PR"}
+    monkeypatch.setattr(
+        "chattool.interaction.command_schema.ask_text",
+        lambda message, default="", password=False, style=None: answers[message],
+    )
+
+    result = runner.invoke(cli, ["gh", "pr-create"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert created == {
+        "title": "Test PR",
+        "body": "",
+        "base": "main",
+        "head": "rex/feature",
+    }
+
+
+def test_chattool_gh_pr_comment_prompts_for_inputs(monkeypatch, runner):
+    comment_calls = {}
+
+    class FakePr:
+        html_url = "https://github.com/CubeNLP/ChatTool/pull/138"
+
+        def create_issue_comment(self, body):
+            comment_calls["body"] = body
+            return SimpleNamespace(
+                html_url="https://github.com/CubeNLP/ChatTool/pull/138#issuecomment-1"
+            )
+
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: SimpleNamespace(
+            get_repo=lambda repo: SimpleNamespace(get_pull=lambda number: FakePr())
+        ),
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    answers = {"pr number": "138", "comment body": "LGTM"}
+    monkeypatch.setattr(
+        "chattool.interaction.command_schema.ask_text",
+        lambda message, default="", password=False, style=None: answers[message],
+    )
+
+    result = runner.invoke(cli, ["gh", "pr-comment"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert comment_calls["body"] == "LGTM"
+
+
+def test_chattool_gh_pr_merge_prompts_for_number(monkeypatch, runner):
+    merge_calls = []
+    pr = _fake_pr()
+
+    def merge(**payload):
+        merge_calls.append(payload)
+        return SimpleNamespace(merged=True, message="merged")
+
+    pr.merge = merge
+    monkeypatch.setattr(
+        gh_cli,
+        "_resolve_repo_and_credential_path",
+        lambda repo: (repo or "CubeNLP/ChatTool", "CubeNLP/ChatTool.git"),
+    )
+    monkeypatch.setattr(
+        gh_cli,
+        "get_client",
+        lambda token, require_token=False, credential_path=None: SimpleNamespace(
+            get_repo=lambda repo: SimpleNamespace(get_pull=lambda number: pr)
+        ),
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.command_schema.ask_text",
+        lambda message, default="", password=False, style=None: "138",
+    )
+
+    result = runner.invoke(cli, ["gh", "pr-merge"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert merge_calls == [{"merge_method": "merge"}]
+
+
+def test_chattool_gh_required_commands_error_with_no_interaction(runner):
+    result = runner.invoke(cli, ["gh", "pr-view", "-I"])
+
+    assert result.exit_code != 0
+    assert "Missing required value: number" in result.output
 
 
 def test_chattool_gh_pr_merge_check_basic(monkeypatch, runner):
