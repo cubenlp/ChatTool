@@ -12,11 +12,15 @@ def test_chattool_pypi_probe_detects_existing_project_name():
 
     result = runner.invoke(
         cli,
-        ["pypi", "probe", "--name", "mychat", "--repository", "pypi"],
+        ["pypi", "probe", "--name", "mychat"],
     )
 
     if result.exit_code != 0 and "Repository query failed" in result.output:
         pytest.skip(result.output.strip())
 
-    assert result.exit_code == 0
-    assert "[WARN] repository.project: mychat already exists on pypi" in result.output
+    assert result.exit_code != 0
+    assert "[FAIL] package name: mychat already exists on pypi" in result.output
+    assert (
+        "[FAIL] result: blocked for a new package: mychat already exists on pypi"
+        in result.output
+    )

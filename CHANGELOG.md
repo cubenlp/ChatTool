@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
+- `chattool pypi probe` 现在默认检查正式 `pypi`，收口为更直接的精确项目名可用性检查：名称已占用时直接给出阻塞结论，并补充作者、摘要、链接、最新版本等少量有用信息；不再默认查 `testpypi`，也不再输出一组对决策无帮助的固定状态项
 - `chattool nginx static-root` 的默认站点根目录现从 NAS 风格示例调整为更通用的 `/var/www/example-site`，交互默认值、文档和测试同步更新
 - `chattool setup` 中通过 npm 执行安装或检查时，现会先打印真实的 `npm ...` 命令，方便用户确认当前实际在执行什么
 - `chattool pypi init` 在交互终端里省略包名时，现会自动进入交互式补参；显式 `-I` 关闭交互时才保持缺参报错
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
+- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`cli-tests/`、`mock-cli-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 - `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖

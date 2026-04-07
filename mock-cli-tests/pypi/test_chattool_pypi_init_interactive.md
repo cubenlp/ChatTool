@@ -44,6 +44,26 @@ chattool pypi init
 chattool pypi init -I
 ```
 
+## 用例 3：交互模式支持选择 `cli-style` 模板
+
+- 初始环境准备：
+  - 准备临时目录。
+- 相关文件：
+  - `<tmp>/demo-pkg/DEVELOP.md`
+  - `<tmp>/demo-pkg/setup.md`
+
+预期过程和结果：
+1. 在交互可用条件下执行 `chattool pypi init`，并把 `template` 选择为 `cli-style`。
+2. 预期生成的模板仓库额外包含开发规范、测试约定和初始化说明文件。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool pypi init
+select template = cli-style
+assert scaffold contains DEVELOP.md and setup.md
+```
+
 ## 清理 / 回滚
 
 - 删除生成的临时目录。

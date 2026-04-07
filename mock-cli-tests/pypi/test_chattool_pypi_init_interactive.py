@@ -18,6 +18,7 @@ def test_chattool_pypi_init_prompts_when_name_missing(tmp_path, monkeypatch, run
         "license": "MIT",
         "author": "",
         "email": "",
+        "template": "default",
     }
     monkeypatch.setattr(
         "chattool.interaction.policy.is_interactive_available", lambda: True
@@ -46,3 +47,39 @@ def test_chattool_pypi_init_errors_when_interaction_disabled(runner):
 
     assert result.exit_code != 0
     assert "Package name is required" in result.output
+
+
+def test_chattool_pypi_init_cli_style_template_interactive(
+    tmp_path, monkeypatch, runner
+):
+    answers = {
+        "package_name": "demo-pkg",
+        "project_dir": str(tmp_path / "demo-pkg"),
+        "description": "demo-pkg package",
+        "version": "0.1.0",
+        "requires_python": ">=3.9",
+        "license": "MIT",
+        "author": "",
+        "email": "",
+        "template": "cli-style",
+    }
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    monkeypatch.setattr(
+        "chattool.tools.pypi.cli._read_git_config",
+        lambda key: {
+            "user.name": "RexWzh",
+            "user.email": "1073853456@qq.com",
+        }.get(key),
+    )
+    monkeypatch.setattr(
+        "chattool.tools.pypi.cli.ask_text",
+        lambda label, default="", password=False, style=None: answers[label],
+    )
+
+    result = runner.invoke(cli, ["pypi", "init"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert (tmp_path / "demo-pkg" / "DEVELOP.md").exists()
+    assert (tmp_path / "demo-pkg" / "setup.md").exists()

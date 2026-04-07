@@ -180,6 +180,13 @@ def cli():
     default=None,
     help="Auto prompt on missing args, -i forces interactive, -I disables it.",
 )
+@click.option(
+    "--template",
+    type=click.Choice(["default", "cli-style"]),
+    default="default",
+    show_default=True,
+    help="Scaffold template preset.",
+)
 def init(
     name: str | None,
     description: str | None,
@@ -190,6 +197,7 @@ def init(
     email: str | None,
     project_dir: Path | None,
     interactive: bool | None,
+    template: str,
 ):
     """Scaffold a minimal src-layout Python package."""
     missing_required = _is_name_missing(name, project_dir)
@@ -251,6 +259,8 @@ def init(
             or "",
         )
 
+        template = ask_text("template", default=template or "default")
+
     (
         package_name,
         description,
@@ -280,6 +290,7 @@ def init(
             license_name=license_name,
             author=author,
             email=email,
+            template=template,
         )
     except PyPICommandError as exc:
         _raise_click_error(exc)
@@ -363,12 +374,6 @@ def upload(project_dir: Path, dist_dir: Path | None, skip_existing: bool):
 
 @cli.command(name="probe")
 @click.option(
-    "--version",
-    "package_version",
-    default=None,
-    help="Override the version used for repository conflict checks.",
-)
-@click.option(
     "--name",
     "package_name",
     default=None,
@@ -382,9 +387,9 @@ def upload(project_dir: Path, dist_dir: Path | None, skip_existing: bool):
 @click.option(
     "--repository",
     type=click.Choice(["testpypi", "pypi"]),
-    default="testpypi",
+    default="pypi",
     show_default=True,
-    help="Target repository name for availability checks.",
+    help="Target repository for exact project/version releaseability checks.",
 )
 @click.option(
     "--project-dir",
@@ -398,9 +403,8 @@ def probe(
     repository: str,
     repository_url: str | None,
     package_name: str | None,
-    package_version: str | None,
 ):
-    """Check whether a package name/version is already taken on PyPI or TestPyPI."""
+    """Check whether an exact package name is available on PyPI."""
     project_dir = _resolve_project_dir(project_dir)
     try:
         metadata = read_project_metadata(project_dir)
@@ -410,9 +414,6 @@ def probe(
     target_name = _normalize_optional_text(package_name) or (
         metadata.name if metadata else None
     )
-    target_version = _normalize_optional_text(package_version) or (
-        metadata.version if metadata else None
-    )
     if not target_name:
         raise click.ClickException(
             "Package name is required. Pass --name or provide a readable pyproject.toml."
@@ -421,7 +422,6 @@ def probe(
     try:
         repository_checks = check_repository_conflicts(
             target_name,
-            target_version,
             repository=repository,
             repository_url=repository_url,
         )
