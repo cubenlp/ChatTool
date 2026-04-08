@@ -5,12 +5,16 @@ import dotenv
 
 from chattool.interaction import (
     BACK_VALUE,
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
     ask_confirm,
     ask_select,
     ask_text,
     create_choice,
     get_separator,
     is_interactive_available,
+    resolve_command_inputs,
 )
 from chattool.config import BaseEnvConfig
 from chattool.interaction import install_cli_warning_filters
@@ -20,6 +24,24 @@ from chattool.utils import mask_secret
 from .test_cmd import test_cmd
 
 install_cli_warning_filters()
+
+
+PROFILE_NAME_SCHEMA = CommandSchema(
+    name="chatenv-profile-name",
+    fields=(CommandField("name", prompt="profile name", required=True),),
+)
+
+
+KEY_SCHEMA = CommandSchema(
+    name="chatenv-key",
+    fields=(CommandField("key", prompt="key", required=True),),
+)
+
+
+KEY_VALUE_SCHEMA = CommandSchema(
+    name="chatenv-key-value",
+    fields=(CommandField("key_value", prompt="KEY=VALUE", required=True),),
+)
 
 
 @click.group(name="chatenv")
@@ -366,7 +388,7 @@ def cat_env(name, no_mask, config_types):
 
 
 @cli.command(name="save")
-@click.argument("name")
+@click.argument("name", required=False)
 @click.option(
     "--type",
     "-t",
@@ -374,8 +396,17 @@ def cat_env(name, no_mask, config_types):
     multiple=True,
     help="Target exactly one configuration type.",
 )
-def save_env(name, config_types):
+@add_interactive_option
+def save_env(name, config_types, interactive):
     """Save the current active config for one type as a profile."""
+    inputs = resolve_command_inputs(
+        schema=PROFILE_NAME_SCHEMA,
+        provided={"name": name},
+        interactive=interactive,
+        usage="Usage: chatenv save [NAME] -t TYPE [-i|-I]",
+    )
+    name = inputs["name"]
+
     config_cls = _resolve_single_config_for_profile_action(config_types, "save")
     name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
@@ -437,7 +468,7 @@ def new_env(name, config_types):
 
 
 @cli.command(name="use")
-@click.argument("name")
+@click.argument("name", required=False)
 @click.option(
     "--type",
     "-t",
@@ -445,8 +476,17 @@ def new_env(name, config_types):
     multiple=True,
     help="Target exactly one configuration type.",
 )
-def use_env(name, config_types):
+@add_interactive_option
+def use_env(name, config_types, interactive):
     """Activate a profile for one config type."""
+    inputs = resolve_command_inputs(
+        schema=PROFILE_NAME_SCHEMA,
+        provided={"name": name},
+        interactive=interactive,
+        usage="Usage: chatenv use [NAME] -t TYPE [-i|-I]",
+    )
+    name = inputs["name"]
+
     config_cls = _resolve_single_config_for_profile_action(config_types, "use")
     name = _normalize_profile_name(name)
     source_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
@@ -464,7 +504,7 @@ def use_env(name, config_types):
 
 
 @cli.command(name="delete")
-@click.argument("name")
+@click.argument("name", required=False)
 @click.option(
     "--type",
     "-t",
@@ -472,8 +512,17 @@ def use_env(name, config_types):
     multiple=True,
     help="Target exactly one configuration type.",
 )
-def delete_env(name, config_types):
+@add_interactive_option
+def delete_env(name, config_types, interactive):
     """Delete a profile for one config type."""
+    inputs = resolve_command_inputs(
+        schema=PROFILE_NAME_SCHEMA,
+        provided={"name": name},
+        interactive=interactive,
+        usage="Usage: chatenv delete [NAME] -t TYPE [-i|-I]",
+    )
+    name = inputs["name"]
+
     config_cls = _resolve_single_config_for_profile_action(config_types, "delete")
     name = _normalize_profile_name(name)
     target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
@@ -614,9 +663,18 @@ def init(interactive, config_types):
 
 
 @cli.command(name="set")
-@click.argument("key_value")
-def set_env(key_value):
+@click.argument("key_value", required=False)
+@add_interactive_option
+def set_env(key_value, interactive):
     """Set a configuration value (KEY=VALUE)."""
+    inputs = resolve_command_inputs(
+        schema=KEY_VALUE_SCHEMA,
+        provided={"key_value": key_value},
+        interactive=interactive,
+        usage="Usage: chatenv set [KEY=VALUE] [-i|-I]",
+    )
+    key_value = inputs["key_value"]
+
     if "=" not in key_value:
         click.echo("Error: Invalid format. Use KEY=VALUE", err=True)
         return
@@ -637,9 +695,18 @@ def set_env(key_value):
 
 
 @cli.command(name="get")
-@click.argument("key")
-def get_env(key):
+@click.argument("key", required=False)
+@add_interactive_option
+def get_env(key, interactive):
     """Get a configuration value."""
+    inputs = resolve_command_inputs(
+        schema=KEY_SCHEMA,
+        provided={"key": key},
+        interactive=interactive,
+        usage="Usage: chatenv get [KEY] [-i|-I]",
+    )
+    key = inputs["key"]
+
     _reload_runtime_config()
     match = BaseEnvConfig.find_field(key)
     if match is None:
@@ -651,9 +718,18 @@ def get_env(key):
 
 
 @cli.command(name="unset")
-@click.argument("key")
-def unset_env(key):
+@click.argument("key", required=False)
+@add_interactive_option
+def unset_env(key, interactive):
     """Unset a configuration value."""
+    inputs = resolve_command_inputs(
+        schema=KEY_SCHEMA,
+        provided={"key": key},
+        interactive=interactive,
+        usage="Usage: chatenv unset [KEY] [-i|-I]",
+    )
+    key = inputs["key"]
+
     match = BaseEnvConfig.find_field(key)
     if match is None:
         click.echo(f"Error: Key '{key}' not found", err=True)

@@ -1,6 +1,27 @@
 import click
+from chattool.interaction import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
 from chattool.tools.image import create_generator
 from chattool.tools.image.helpers import download_binary, echo_model_list
+
+
+PROMPT_SCHEMA = CommandSchema(
+    name="image-prompt",
+    fields=(CommandField("prompt", prompt="prompt", required=True),),
+)
+
+
+HF_GENERATE_SCHEMA = CommandSchema(
+    name="image-huggingface-generate",
+    fields=(
+        CommandField("prompt", prompt="prompt", required=True),
+        CommandField("output", prompt="output", kind="path", required=True),
+    ),
+)
 
 
 @click.group(name="image")
@@ -16,11 +37,20 @@ def liblib():
 
 
 @liblib.command(name="generate")
-@click.argument("prompt")
+@click.argument("prompt", required=False)
 @click.option("--model-id", help="Model ID for generation (required).")
 @click.option("--output", "-o", help="Optional output file path to download the image.")
-def liblib_generate(prompt, model_id, output):
+@add_interactive_option
+def liblib_generate(prompt, model_id, output, interactive):
     """Generate an image using LiblibAI."""
+    inputs = resolve_command_inputs(
+        schema=PROMPT_SCHEMA,
+        provided={"prompt": prompt},
+        interactive=interactive,
+        usage="Usage: chattool image liblib generate [PROMPT] [-i|-I]",
+    )
+    prompt = inputs["prompt"]
+
     try:
         generator = create_generator("liblib")
         click.echo("Generating image with LiblibAI...")
@@ -64,15 +94,25 @@ def huggingface():
 
 
 @huggingface.command(name="generate")
-@click.argument("prompt")
+@click.argument("prompt", required=False)
 @click.option(
     "--output",
     "-o",
-    required=True,
+    required=False,
     help="Output file path (required for bytes result).",
 )
-def huggingface_generate(prompt, output):
+@add_interactive_option
+def huggingface_generate(prompt, output, interactive):
     """Generate an image using Hugging Face."""
+    inputs = resolve_command_inputs(
+        schema=HF_GENERATE_SCHEMA,
+        provided={"prompt": prompt, "output": output},
+        interactive=interactive,
+        usage="Usage: chattool image huggingface generate [PROMPT] -o PATH [-i|-I]",
+    )
+    prompt = inputs["prompt"]
+    output = inputs["output"]
+
     try:
         generator = create_generator("huggingface")
         click.echo("Generating image with Hugging Face...")
@@ -95,12 +135,21 @@ def tongyi():
 
 
 @tongyi.command(name="generate")
-@click.argument("prompt")
+@click.argument("prompt", required=False)
 @click.option("--style", default="<auto>", help="Image style.")
 @click.option("--size", default="1024*1024", help="Image size.")
 @click.option("--output", "-o", help="Optional output file path to download the image.")
-def tongyi_generate(prompt, style, size, output):
+@add_interactive_option
+def tongyi_generate(prompt, style, size, output, interactive):
     """Generate an image using Tongyi Wanxiang."""
+    inputs = resolve_command_inputs(
+        schema=PROMPT_SCHEMA,
+        provided={"prompt": prompt},
+        interactive=interactive,
+        usage="Usage: chattool image tongyi generate [PROMPT] [-i|-I]",
+    )
+    prompt = inputs["prompt"]
+
     try:
         generator = create_generator("tongyi")
         click.echo("Generating image with Tongyi Wanxiang...")
@@ -127,13 +176,22 @@ def pollinations():
 
 
 @pollinations.command(name="generate")
-@click.argument("prompt")
+@click.argument("prompt", required=False)
 @click.option("--model", help="Model name (flux, turbo, etc).")
 @click.option("--width", default=1024, help="Image width.")
 @click.option("--height", default=1024, help="Image height.")
 @click.option("--output", "-o", help="Optional output file path to download the image.")
-def pollinations_generate(prompt, model, width, height, output):
+@add_interactive_option
+def pollinations_generate(prompt, model, width, height, output, interactive):
     """Generate an image using Pollinations.ai."""
+    inputs = resolve_command_inputs(
+        schema=PROMPT_SCHEMA,
+        provided={"prompt": prompt},
+        interactive=interactive,
+        usage="Usage: chattool image pollinations generate [PROMPT] [-i|-I]",
+    )
+    prompt = inputs["prompt"]
+
     try:
         from chattool.config import PollinationsConfig
         from chattool.tools.image import create_generator
@@ -182,12 +240,21 @@ def siliconflow():
 
 
 @siliconflow.command(name="generate")
-@click.argument("prompt")
+@click.argument("prompt", required=False)
 @click.option("--model", help="Model name.")
 @click.option("--size", default="1024x1024", help="Image size (e.g., 1024x1024).")
 @click.option("--output", "-o", help="Optional output file path to download the image.")
-def siliconflow_generate(prompt, model, size, output):
+@add_interactive_option
+def siliconflow_generate(prompt, model, size, output, interactive):
     """Generate an image using SiliconFlow API."""
+    inputs = resolve_command_inputs(
+        schema=PROMPT_SCHEMA,
+        provided={"prompt": prompt},
+        interactive=interactive,
+        usage="Usage: chattool image siliconflow generate [PROMPT] [-i|-I]",
+    )
+    prompt = inputs["prompt"]
+
     try:
         from chattool.config import SiliconFlowConfig
         from chattool.tools.image import create_generator

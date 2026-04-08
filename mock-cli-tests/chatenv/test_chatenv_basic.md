@@ -24,3 +24,17 @@ export MOCK_KEY=from_env
 run chatenv cat -t mock
 assert output contains MOCK_KEY='from_file'
 ```
+
+## Case 2: profile and key commands should auto-prompt on missing args
+
+### 初始环境准备
+
+- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 注册一个最小 `MockConfig`，包含 `MOCK_KEY`。
+- mock 交互输入与 profile/config 文件写入。
+
+### 预期过程和结果
+
+- 执行 `chatenv save -t mock`、`use -t mock`、`delete -t mock`、`get`、`unset`、`set`。
+- 在交互终端下，缺少 `name` / `key` / `KEY=VALUE` 时应自动补问。
+- 加 `-I` 时应直接报缺少必要参数。

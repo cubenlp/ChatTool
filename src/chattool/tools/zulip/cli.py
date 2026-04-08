@@ -9,6 +9,7 @@ Commands:
     chattool zulip profile     Show bot profile
     chattool zulip news        Summarize recent updates
 """
+
 from __future__ import annotations
 
 import json
@@ -17,6 +18,13 @@ import datetime
 from typing import List, Optional, Dict
 
 import click
+
+from chattool.interaction import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
 
 from chattool.tools.zulip import ZulipClient
 from chattool.config import ZulipConfig
@@ -61,6 +69,22 @@ def _clean_text(text: str, max_len: int = 200) -> str:
 def _format_ts(ts: int) -> str:
     return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
 
+
+ZULIP_STREAM_SCHEMA = CommandSchema(
+    name="zulip-stream",
+    fields=(CommandField("stream", prompt="stream", required=True),),
+)
+
+
+ZULIP_TOPIC_SCHEMA = CommandSchema(
+    name="zulip-topic",
+    fields=(
+        CommandField("stream", prompt="stream", required=True),
+        CommandField("topic_name", prompt="topic", required=True),
+    ),
+)
+
+
 def _resolve_stream_id(client: ZulipClient, stream: str) -> Optional[int]:
     if stream.isdigit():
         return int(stream)
@@ -79,7 +103,9 @@ def _resolve_stream_id(client: ZulipClient, stream: str) -> Optional[int]:
 
 
 @cli.command(name="streams")
-@click.option("--all", "show_all", is_flag=True, help="Show all accessible public streams")
+@click.option(
+    "--all", "show_all", is_flag=True, help="Show all accessible public streams"
+)
 @click.option("--json-output", is_flag=True, help="Output JSON")
 def streams(show_all: bool, json_output: bool):
     """List streams (subscribed by default)."""
@@ -105,11 +131,21 @@ def streams(show_all: bool, json_output: bool):
         if desc:
             click.echo(f"  {desc}")
 
+
 @cli.command(name="topics")
-@click.option("--stream", required=True, help="Stream name or id")
+@click.option("--stream", required=False, help="Stream name or id")
 @click.option("--json-output", is_flag=True, help="Output JSON")
-def topics(stream: str, json_output: bool):
+@add_interactive_option
+def topics(stream: str, json_output: bool, interactive):
     """List topics for a stream."""
+    inputs = resolve_command_inputs(
+        schema=ZULIP_STREAM_SCHEMA,
+        provided={"stream": stream},
+        interactive=interactive,
+        usage="Usage: chattool zulip topics --stream TEXT [-i|-I]",
+    )
+    stream = inputs["stream"]
+
     client = _get_client()
     stream_id = _resolve_stream_id(client, stream)
     if stream_id is None:
@@ -134,8 +170,16 @@ def topics(stream: str, json_output: bool):
 
 @cli.command(name="messages")
 @click.option("--anchor", default="newest", help="Message anchor ID or newest/oldest")
-@click.option("--before", "num_before", default=20, show_default=True, help="Messages before anchor")
-@click.option("--after", "num_after", default=0, show_default=True, help="Messages after anchor")
+@click.option(
+    "--before",
+    "num_before",
+    default=20,
+    show_default=True,
+    help="Messages before anchor",
+)
+@click.option(
+    "--after", "num_after", default=0, show_default=True, help="Messages after anchor"
+)
 @click.option("--stream", default=None, help="Stream filter")
 @click.option("--topic", default=None, help="Topic filter")
 @click.option("--sender", default=None, help="Sender email filter")
@@ -178,13 +222,26 @@ def messages(anchor, num_before, num_after, stream, topic, sender, search, json_
         click.echo(f"[{ts}] {stream_name} > {topic_name} | {sender_name}")
         click.echo(f"  {content}")
 
+
 @cli.command(name="topic")
-@click.option("--stream", required=True, help="Stream name or id")
-@click.option("--topic", "topic_name", required=True, help="Topic name")
+@click.option("--stream", required=False, help="Stream name or id")
+@click.option("--topic", "topic_name", required=False, help="Topic name")
 @click.option("--limit", type=int, default=None, help="Limit to latest N messages")
 @click.option("--json-output", is_flag=True, help="Output JSON")
-def topic(stream: str, topic_name: str, limit: Optional[int], json_output: bool):
+@add_interactive_option
+def topic(
+    stream: str, topic_name: str, limit: Optional[int], json_output: bool, interactive
+):
     """Export full topic thread."""
+    inputs = resolve_command_inputs(
+        schema=ZULIP_TOPIC_SCHEMA,
+        provided={"stream": stream, "topic_name": topic_name},
+        interactive=interactive,
+        usage="Usage: chattool zulip topic --stream TEXT --topic TEXT [-i|-I]",
+    )
+    stream = inputs["stream"]
+    topic_name = inputs["topic_name"]
+
     client = _get_client()
     items = client.get_topic_messages(stream, topic_name)
 
@@ -208,7 +265,6 @@ def topic(stream: str, topic_name: str, limit: Optional[int], json_output: bool)
         sender_name = msg.get("sender_full_name") or "unknown"
         content = msg.get("content", "")
         click.echo(f"- {ts} — {sender_name}: {content}")
-
 
 
 @cli.command(name="profile")
@@ -286,21 +342,43 @@ def _render_news_markdown(
         topic_name = msg.get("subject") or "unknown"
         sender_name = msg.get("sender_full_name") or "unknown"
         content = _clean_text(msg.get("content", ""), max_len=180)
-        header.append(f"- [{ts}] **{stream_name}** / *{topic_name}* — {sender_name}: {content}")
+        header.append(
+            f"- [{ts}] **{stream_name}** / *{topic_name}* — {sender_name}: {content}"
+        )
     return "\n".join(header)
 
 
 @cli.command(name="news")
 @click.option("--stream", "streams", multiple=True, help="Specify stream (repeatable)")
 @click.option("--topic", "topics", multiple=True, help="Specify topic (repeatable)")
-@click.option("--since-hours", type=int, default=None, help="Look back N hours (default 24)")
+@click.option(
+    "--since-hours", type=int, default=None, help="Look back N hours (default 24)"
+)
 @click.option("--per-stream", type=int, default=None, help="Per-stream fetch limit")
 @click.option("--limit", type=int, default=None, help="Global message cap (latest)")
 @click.option("--output", default=None, help="Output file path (Markdown)")
 @click.option("--model", default=None, help="LLM model override")
-@click.option("--max-tokens", type=int, default=800, show_default=True, help="Summary max tokens")
-@click.option("--temperature", type=float, default=0.2, show_default=True, help="Summary temperature")
-def news(streams, topics, since_hours, per_stream, limit, output, model, max_tokens, temperature):
+@click.option(
+    "--max-tokens", type=int, default=800, show_default=True, help="Summary max tokens"
+)
+@click.option(
+    "--temperature",
+    type=float,
+    default=0.2,
+    show_default=True,
+    help="Summary temperature",
+)
+def news(
+    streams,
+    topics,
+    since_hours,
+    per_stream,
+    limit,
+    output,
+    model,
+    max_tokens,
+    temperature,
+):
     """Summarize recent updates (console + Markdown file)."""
     client = _get_client()
 
@@ -328,7 +406,9 @@ def news(streams, topics, since_hours, per_stream, limit, output, model, max_tok
             streams = [item.get("name") for item in public_streams if item.get("name")]
 
     if not streams:
-        raise click.ClickException("No streams available. Set ZULIP_NEWS_STREAMS or pass --stream.")
+        raise click.ClickException(
+            "No streams available. Set ZULIP_NEWS_STREAMS or pass --stream."
+        )
 
     now = int(time.time())
     since_ts = now - since_hours * 3600
@@ -373,14 +453,20 @@ def news(streams, topics, since_hours, per_stream, limit, output, model, max_tok
 
     summary = ""
     try:
-        summary = _llm_summarize(all_messages, streams, topics, since_hours, model, max_tokens, temperature)
+        summary = _llm_summarize(
+            all_messages, streams, topics, since_hours, model, max_tokens, temperature
+        )
     except Exception as exc:
         summary = _render_fallback_summary(all_messages)
-        click.echo(f"LLM summary failed, fell back to rule-based summary: {exc}", err=True)
+        click.echo(
+            f"LLM summary failed, fell back to rule-based summary: {exc}", err=True
+        )
 
     output_time = datetime.datetime.now()
     markdown = _render_news_markdown(
-        messages=list(reversed(all_messages)) if len(all_messages) > 30 else all_messages,
+        messages=list(reversed(all_messages))
+        if len(all_messages) > 30
+        else all_messages,
         summary=summary,
         streams=streams,
         topics=topics,
@@ -401,7 +487,7 @@ def _llm_summarize(
     max_tokens: int,
     temperature: float,
 ) -> str:
-    sample = messages[-min(len(messages), 200):]
+    sample = messages[-min(len(messages), 200) :]
     lines = []
     for msg in sample:
         ts = _format_ts(msg.get("timestamp", 0))
@@ -409,30 +495,40 @@ def _llm_summarize(
         topic_name = msg.get("subject") or "unknown"
         sender_name = msg.get("sender_full_name") or "unknown"
         content = _clean_text(msg.get("content", ""), max_len=240)
-        lines.append(f"- [{ts}] {stream_name} / {topic_name} | {sender_name}: {content}")
+        lines.append(
+            f"- [{ts}] {stream_name} / {topic_name} | {sender_name}: {content}"
+        )
 
     system_prompt = (
         "You are a community editor. Summarize the messages concisely and accurately. "
         "Do not invent details. Output Markdown with 3-6 bullet points, each no more than two sentences."
     )
-    user_prompt = "\n".join([
-        f"Time window: last {since_hours} hours",
-        f"Streams: {', '.join(streams) if streams else 'ALL'}",
-        f"Topics: {', '.join(topics) if topics else 'ALL'}",
-        "",
-        "Messages (chronological):",
-        *lines,
-    ])
+    user_prompt = "\n".join(
+        [
+            f"Time window: last {since_hours} hours",
+            f"Streams: {', '.join(streams) if streams else 'ALL'}",
+            f"Topics: {', '.join(topics) if topics else 'ALL'}",
+            "",
+            "Messages (chronological):",
+            *lines,
+        ]
+    )
 
-    chat = Chat(messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ])
-    resp = chat.get_response(max_tokens=max_tokens, temperature=temperature, model=model)
+    chat = Chat(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+    )
+    resp = chat.get_response(
+        max_tokens=max_tokens, temperature=temperature, model=model
+    )
     return (resp.content or "").strip()
 
 
-def _write_news_output(markdown: str, output: Optional[str], output_time: datetime.datetime) -> str:
+def _write_news_output(
+    markdown: str, output: Optional[str], output_time: datetime.datetime
+) -> str:
     if output:
         output_path = output
     else:
