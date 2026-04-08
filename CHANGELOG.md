@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
-- `src/chattool/interaction/` 新增声明式 CLI 输入规范层：统一提供 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，把缺参补问、`-i/-I` 语义、TTY 检查和多字段约束从各命令的重复样板中收口到共享模块；`chattool dns`、`chattool client cert`、`chattool client svg2gif` 已切到这套机制，并补充了相应 mock CLI 测试与开发文档规范
+- `src/chattool/interaction/` 新增声明式 CLI 输入规范层：统一提供 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，把缺参补问、`-i/-I` 语义、TTY 检查和多字段约束从各命令的重复样板中收口到共享模块；`chattool dns`、`chattool client cert`、`chattool client svg2gif`、`chattool gh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool dns cert-update` 已切到这套机制，并补充了相应 mock CLI 测试与开发文档规范
 - `chattool dns` 现在在交互终端里默认进入命令选择；`chattool dns get` / `set` / `ddns` 缺少必要参数时会自动补问，`-I` 才显式禁用交互并报错；同时 `ddns` 的监控间隔短参数收口为仅保留 `--interval`，避免与统一的 `-i` 交互开关冲突
 - `chattool pypi probe` 现在默认检查正式 `pypi`，收口为更直接的精确项目名可用性检查：名称已占用时直接给出阻塞结论，并补充作者、摘要、链接、最新版本等少量有用信息；不再默认查 `testpypi`，也不再输出一组对决策无帮助的固定状态项
 - `chattool nginx static-root` 的默认站点根目录现从 NAS 风格示例调整为更通用的 `/var/www/example-site`，交互默认值、文档和测试同步更新

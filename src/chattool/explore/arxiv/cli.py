@@ -4,6 +4,19 @@ from __future__ import annotations
 
 import click
 
+from chattool.interaction import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
+
+
+ARXIV_GET_SCHEMA = CommandSchema(
+    name="arxiv-get",
+    fields=(CommandField("arxiv_id", prompt="arxiv id", required=True),),
+)
+
 
 def _fmt_paper(p, verbose: bool = False) -> str:
     authors = ", ".join(p.authors[:3]) + (" et al." if len(p.authors) > 3 else "")
@@ -21,11 +34,14 @@ def _fmt_paper(p, verbose: bool = False) -> str:
 def _resolve_preset(preset_name, categories, keywords):
     """Merge preset config with explicit -c/-k overrides."""
     from chattool.explore.arxiv import PRESETS
+
     cats = list(categories)
     kws = list(keywords)
     if preset_name:
         if preset_name not in PRESETS:
-            raise click.BadParameter(f"Unknown preset '{preset_name}'. Available: {', '.join(PRESETS)}")
+            raise click.BadParameter(
+                f"Unknown preset '{preset_name}'. Available: {', '.join(PRESETS)}"
+            )
         p = PRESETS[preset_name]
         cats = cats or p.categories
         kws = kws or p.keywords
@@ -41,12 +57,25 @@ def arxiv_cli():
 @arxiv_cli.command("search")
 @click.argument("query", required=False, default=None)
 @click.option("-p", "--preset", default=None, help="Use a named preset (e.g. ai4math).")
-@click.option("-n", "--max-results", default=10, show_default=True, help="Max number of results.")
-@click.option("-c", "--category", multiple=True, help="Filter by category (e.g. cs.AI). Repeatable.")
-@click.option("-k", "--keyword", multiple=True, help="Filter results by keyword. Repeatable.")
-@click.option("--sort", default="submittedDate", show_default=True,
-              type=click.Choice(["submittedDate", "lastUpdatedDate", "relevance"]),
-              help="Sort criterion.")
+@click.option(
+    "-n", "--max-results", default=10, show_default=True, help="Max number of results."
+)
+@click.option(
+    "-c",
+    "--category",
+    multiple=True,
+    help="Filter by category (e.g. cs.AI). Repeatable.",
+)
+@click.option(
+    "-k", "--keyword", multiple=True, help="Filter results by keyword. Repeatable."
+)
+@click.option(
+    "--sort",
+    default="submittedDate",
+    show_default=True,
+    type=click.Choice(["submittedDate", "lastUpdatedDate", "relevance"]),
+    help="Sort criterion.",
+)
 @click.option("-v", "--verbose", is_flag=True, help="Show abstract excerpt.")
 def search_cmd(query, preset, max_results, category, keyword, sort, verbose):
     """Search arXiv papers by QUERY string or preset.
@@ -86,9 +115,16 @@ def search_cmd(query, preset, max_results, category, keyword, sort, verbose):
 
 @arxiv_cli.command("daily")
 @click.option("-p", "--preset", default=None, help="Use a named preset (e.g. ai4math).")
-@click.option("-c", "--category", multiple=True, help="Category to fetch (e.g. cs.AI). Repeatable.")
+@click.option(
+    "-c",
+    "--category",
+    multiple=True,
+    help="Category to fetch (e.g. cs.AI). Repeatable.",
+)
 @click.option("-k", "--keyword", multiple=True, help="Filter by keyword. Repeatable.")
-@click.option("--days", default=1, show_default=True, help="Fetch papers from last N days.")
+@click.option(
+    "--days", default=1, show_default=True, help="Fetch papers from last N days."
+)
 @click.option("-n", "--max-results", default=200, show_default=True)
 @click.option("-v", "--verbose", is_flag=True, help="Show abstract excerpt.")
 def daily_cmd(preset, category, keyword, days, max_results, verbose):
@@ -115,6 +151,7 @@ def daily_cmd(preset, category, keyword, days, max_results, verbose):
     )
     # If using a preset, apply its strict client-side filter
     from chattool.explore.arxiv import PRESETS
+
     if preset and preset in PRESETS:
         papers = PRESETS[preset].filter(raw)
     else:
@@ -130,9 +167,10 @@ def daily_cmd(preset, category, keyword, days, max_results, verbose):
 
 
 @arxiv_cli.command("get")
-@click.argument("arxiv_id")
+@click.argument("arxiv_id", required=False)
 @click.option("-v", "--verbose", is_flag=True, help="Show full abstract.")
-def get_cmd(arxiv_id, verbose):
+@add_interactive_option
+def get_cmd(arxiv_id, verbose, interactive):
     """Fetch a single paper by arXiv ID.
 
     \b
@@ -140,6 +178,15 @@ def get_cmd(arxiv_id, verbose):
       chattool explore arxiv get 1706.03762
     """
     from chattool.explore.arxiv import ArxivClient
+
+    inputs = resolve_command_inputs(
+        schema=ARXIV_GET_SCHEMA,
+        provided={"arxiv_id": arxiv_id},
+        interactive=interactive,
+        usage="Usage: chattool explore arxiv get [ARXIV_ID] [-i|-I]",
+    )
+    arxiv_id = inputs["arxiv_id"]
+
     client = ArxivClient()
     try:
         p = client.get_by_id(arxiv_id)
@@ -155,6 +202,7 @@ def get_cmd(arxiv_id, verbose):
 def presets_cmd():
     """List available search presets."""
     from chattool.explore.arxiv import PRESETS
+
     for name, p in PRESETS.items():
         click.echo(f"{name}")
         click.echo(f"  {p.description}")
