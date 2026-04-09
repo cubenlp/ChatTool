@@ -127,7 +127,10 @@ chattool nginx -i  # 交互式选择模板并逐项填写
 ```bash
 chattool image pollinations generate "a cat in space" -o cat.png
 chattool image siliconflow generate "a cute dog" -o dog.png
+chattool image huggingface generate
 ```
+
+交互终端里，各家 `generate` 命令缺少 `prompt` 时会自动补问；`huggingface generate` 缺少 `-o/--output` 也会自动补问。显式传 `-I` 时保持直接报错。
 
 ### 数据探索 (`chattool explore`)
 
@@ -136,7 +139,10 @@ chattool explore arxiv search -p ai4math -n 10
 chattool explore arxiv daily -p math-formalization --days 3
 chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
 chattool explore arxiv get 1706.03762 -v
+chattool explore arxiv get
 ```
+
+交互终端里，`chattool explore arxiv get` 缺少 arXiv ID 时会自动补问。
 
 ### 其他工具
 

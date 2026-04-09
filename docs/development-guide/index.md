@@ -95,6 +95,7 @@
 - 除非参数本身就是纯机械性的、且缺失后不需要恢复，否则不要再把交互可恢复参数直接写成 Click 的 `required=True` 或必填位置参数；这会让命令在进入 callback 之前就被 Click 拦截，统一交互机制无法执行。
 - 命令函数优先只做三件事：接入 Click 参数、调用共享 resolver 拿到完整输入、执行业务逻辑。缺参补问和约束校验应尽量声明在 schema 里。
 - 多字段依赖关系优先用 `CommandConstraint` 表达，例如“`full_domain` 或 `domain + rr` 二选一”；不要在 callback 里散落多段 if/else 校验。
+- 经过这一轮规范化后，`chattool dns`、`chattool client cert/svg2gif`、`chattool gh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key/test 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool tplogin ufw add` 都已经作为参考实现落到共享机制上；新增 CLI 应直接比照这些命令，而不是再复制旧样板。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致。
 - `-i` 进入当前命令交互流程，`-I` 完全禁止交互。
