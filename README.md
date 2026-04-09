@@ -175,7 +175,10 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 ```bash
 chattool pypi init mychat
 chattool pypi init cli-style mycli
+chatpypi mychat
 ```
+
+`chatpypi` 现在是更直接的快捷入口：传入普通首参数时，会自动按 `chattool pypi init <name>` 处理；如果首参数本身就是 `init/build/check/upload/probe` 之一，则保持原样透传给 `chattool pypi`。
 
 默认生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`。
 
