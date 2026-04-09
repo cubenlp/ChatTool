@@ -50,7 +50,7 @@ version: 0.2.1
    - 检查 `--interactive/--no-interactive`、`-i/-I` 和缺参处理是否一致
 
 3. 检查文档与测试
-   - 在 `docs/`、`README.md`、`CHANGELOG.md`、`cli-tests/` 中搜索对应命令名
+   - 在 `docs/`、`README.md`、`CHANGELOG.md`、`tests/cli-tests/` 中搜索对应命令名
    - 新参数、新环境变量、新行为如果没有同步文档，记为 finding
 
 4. 做最小必要验证

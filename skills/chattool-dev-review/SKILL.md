@@ -50,7 +50,7 @@ Boundary: this skill stops at development review. Merge timing, release prep, ta
    - Look for `--interactive/--no-interactive`, `-i/-I`, and missing-arg handling.
 
 3. Check docs and tests next to the change.
-   - Search for the command name in `docs/`, `README.md`, `CHANGELOG.md`, and `cli-tests/`.
+   - Search for the command name in `docs/`, `README.md`, `CHANGELOG.md`, and `tests/cli-tests/`.
    - Treat undocumented new flags, env vars, or behavior changes as findings.
 
 4. Validate the most relevant path.

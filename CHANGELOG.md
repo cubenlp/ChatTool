@@ -29,24 +29,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
-- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`cli-tests/`、`mock-cli-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
+- `chattool setup workspace` 现在会把“任务未完成前不要阶段性邀请 review；默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档并自行 review
+- `chattool setup workspace` 现在区分新建与已有 workspace：新目录直接生成 `AGENTS.md` / `MEMORY.md` / `setup.md`，已有 workspace 则额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 与迁移版 `setup.md`，便于模型完成协议迁移后再删除辅助文件
+- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 - `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖
 - 新增 `chattool setup docker`，用于检查 Docker / Docker Compose / docker 组状态；涉及 `sudo` 的建议命令默认只打印，显式传入 `--sudo` 后才允许在确认后执行
-- `chattool setup playground` 现支持 `--language zh|en`；默认生成中文的 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md` 和相关 README，也可显式切到英文模板
 - 新增 `chattool nginx`，用于按模板生成常见的 Nginx 配置片段；当前收口为配置导向的最小模板集：基础 `proxy_pass`、HTTPS 入口反代、WebSocket 转发、静态目录站点和重定向，并支持 `-i` 交互式补齐必要参数
 
 ### Changed
-- `chattool setup workspace` / `chattool setup playground` 的任务集汇报结构现统一为 `reports/MM-DD-<set-name>/`：集合目录下直接维护 `TASKSET.md`、`progress.md` 与各子任务目录，不再额外套一层 `task-sets/` 或 `tasks/`
-- `chattool setup playground` 的外层工作区结构现对齐 `setup workspace`：默认使用 `reports/`、`playgrounds/`、`knowledge/`，并把工作区 skills 副本收口到 `knowledge/skills/`；同时继续保留 `ChatTool/` 仓库和 skills 同步逻辑
-- `chattool setup workspace` 与 `chattool setup playground` 现移除全局 `thoughts/` 面，避免并发任务时出现一个共享的“当前关注点”入口；相关角色统一收口到各任务或任务集的 `reports/` 结构
+- `chattool setup workspace` 的任务集汇报结构现统一为 `reports/MM-DD-<set-name>/`：集合目录下直接维护 `TASKSET.md`、`progress.md` 与各子任务目录，不再额外套一层 `task-sets/` 或 `tasks/`
+- `chattool setup workspace` 现移除全局 `thoughts/` 面，避免并发任务时出现一个共享的“当前关注点”入口；相关角色统一收口到各任务或任务集的 `reports/` 结构
 
 ## [6.5.0] - 2026-03-31
 
 ### Changed
-- CLI 测试规范现拆成双轨：`cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入新目录 `mock-cli-tests/`
-- GitHub CI 的 stable smoke tests 现同步切到 `mock-cli-tests/` 新目录，避免继续引用已迁走的 `cli-tests/gh`
+- CLI 测试规范现拆成双轨：`tests/cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入 `tests/mock-cli-tests/`
+- GitHub CI 的 stable smoke tests 现同步切到 `tests/mock-cli-tests/`，避免继续引用真实 CLI 用例目录
 - `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
@@ -56,15 +56,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Fixed
 - `skills/feishu/` 现在把 Agent 协作登录明确收口到 `lark-cli auth login --recommend --no-wait` 与 `--device-code` 的非阻塞 device flow，避免 skill 入口直接把会话带进阻塞式浏览器登录
-- `cli-tests/lark/guide/test_chattool_lark_skill_index.py` 现在会同时校对 `SKILL.md` 与 `SKILL.zh.md` 的命令分流和 Agent 登录指引，避免中文入口回归时被漏检
+- `tests/cli-tests/lark/guide/test_chattool_lark_skill_index.py` 现在会同时校对 `SKILL.md` 与 `SKILL.zh.md` 的命令分流和 Agent 登录指引，避免中文入口回归时被漏检
 
 ### Added
-- 新增 `mock-cli-tests/` 测试线，并补充 `chattool` 统一入口 lazy dispatch 的 mock CLI 测试
+- 新增 `tests/mock-cli-tests/` 测试线，并补充 `chattool` 统一入口 lazy dispatch 的 mock CLI 测试
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
 - 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查、PyPI 校验和正式发版后的 `release.log` 记录
-- 新增 `cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
-- 新增 `cli-tests/skill/test_chattool_release_tag_format.md` 与 `cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
-- 新增 `cli-tests/skill/test_chattool_release_version_bump.md` 与 `cli-tests/skill/test_chattool_release_version_bump.py`，校对 release/practice/dev-review skill、开发文档与 workflow 都明确要求“版本号必须在 PR 阶段先 bump，PyPI 已有同版本时必须失败”
+- 新增 `tests/cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `tests/cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
+- 新增 `tests/cli-tests/skill/test_chattool_release_tag_format.md` 与 `tests/cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
+- 新增 `tests/cli-tests/skill/test_chattool_release_version_bump.md` 与 `tests/cli-tests/skill/test_chattool_release_version_bump.py`，校对 release/practice/dev-review skill、开发文档与 workflow 都明确要求“版本号必须在 PR 阶段先 bump，PyPI 已有同版本时必须失败”
 
 ### Fixed
 - `chattool setup codex` / `chatup codex` 的交互式补参现在不再因为旧的 login shell 副作用和隐藏输入提示显示异常而表现成“像是已经回到 shell、但实际还在等待输入”
@@ -84,10 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - 对支持 `-e/--env` 的命令，配置优先级进一步固定为 `显式参数 > -e/显式 env > os.environ > 类型内置 .env > 默认值`，并写入配置文档与开发规范，便于后续统一复用
 - `OpenAI` 配置移除了 `OPENAI_API_BASE_URL`，统一只保留 `OPENAI_API_BASE`
 - `chattool lark` 现已从仓库内“平行飞书 CLI”收缩为最小遗留入口，只保留 `info`、`send`、`chat` 三个调试命令；原有文档、设计说明和大部分真实 CLI 测试已同步收口到这一边界
-- `chattool setup playground` 现在默认使用工作区仓库目录名 `ChatTool/`；再次执行时会进入更新模式，优先更新现有仓库，并在交互模式下提示是否同步工作区 `skills/`
-- `chattool setup playground` 同步 `skills/` 时现在只覆盖常规文件，继续保留各 skill 下的 `experience/` 目录和历史记录；历史工作区里的 `chattool/` 目录也会自动迁移到 `ChatTool/`
-- `chattool setup playground` 现在会在 clone / 更新工作区仓库后自动执行 `git submodule update --init --recursive`，确保 `lark-cli/` 等子模块跟随仓库版本一起同步
-- 仓库开发规范现在把“绝对禁止 mock”明确写入 `AGENTS.md`、`DEVELOP.md`、`docs/development-guide/` 与 `cli-tests/README.md`：宁可做更窄的真实测试，也不接受用 mock 伪造行为
+- 仓库开发规范现在把“绝对禁止 mock”明确写入 `AGENTS.md`、`DEVELOP.md`、`docs/development-guide/` 与 `tests/cli-tests/README.md`：宁可做更窄的真实测试，也不接受用 mock 伪造行为
 - 开发规范现补充说明：GitHub 自动测试当前只覆盖 `.github/workflows/ci.yml` 里的 stable smoke tests，不包含 `lark` / `dns` 这类第三方链路与大多数真实 CLI 测试；相关能力需要本地单独验证
 - `chattool gh pr-check` 现在支持 `--wait` 轮询等待 CI 结束；默认不设超时，只有显式传 `--timeout` 时才会超时报错
 - `skills/feishu/` 现在改为紧凑双语入口：`SKILL.md` / `SKILL.zh.md` 统一强调官方 `lark-cli` 为默认入口，并把消息调试路由到 `im`、正文路由到 `docs`、评论与权限路由到 `drive`、wiki 路由到 `wiki`
@@ -105,7 +102,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup alias` 的自定义多选现在统一走 `utils/tui.py` 的 checkbox 封装，交互里显式显示 `☑/☐` 勾选态，不再只靠高亮区分选中项
 
 ### Added
-- 新增根目录 `Dockerfile.playground`，用于直接构建一个最小的 ChatTool Playground 镜像；镜像在 `/opt/venv` 中安装 ChatTool，容器启动后会线性执行 `chattool setup playground -> chattool env set CHATTOOL_SKILLS_DIR -> chattool setup alias`
+- 新增根目录 `Dockerfile.playground`，用于直接构建一个最小的 ChatTool workspace 启动镜像；镜像在 `/opt/venv` 中安装 ChatTool，容器启动后会线性执行 `chattool setup workspace -> chattool env set CHATTOOL_SKILLS_DIR -> chattool setup alias`
 - `chatenv new <profile> -t <type>`，用于从当前激活的类型配置直接创建并激活一个新 profile，补齐 `save/use/delete` 之间的便捷新建入口
 - `chattool gh run-view` 与 `chattool gh job-logs`，用于直接查看 GitHub Actions workflow run / job 详情与失败日志，避免排查 CI 时再临时写脚本
 - `chattool setup codex -e ...` 现可显式复用 OpenAI 配置来源：支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 oai 配置 > 当前 oai 配置 > 现有 codex 配置 > 默认值` 回退
@@ -119,7 +116,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [6.4.0]
 
 ### Changed
-- `chattool setup playground` 现在会在 workspace bootstrap 完成后，优先复用 `chatenv` 当前生效的 `GITHUB_ACCESS_TOKEN` 为 Git 配置 `https://github.com` 的 credential store；交互模式下也会提示是否配置并允许覆写 token
 - `chattool cc init -i` 现在会在一开始先确认是否覆盖已有配置文件；已有平台配置和飞书凭证候选值会直接作为默认值展示，回车即可复用，不再追加“是否沿用默认”确认
 - `chattool gh pr-view` 与 `chattool gh pr-check` 现在会直接显示 PR 的 `mergeable` / `mergeable_state`，避免只看到 head checks 却漏掉相对最新 base 的冲突态
 - 飞书主 skill 现在重组为索引式技能包：根目录只保留 `skills/feishu/SKILL.md` 作为入口，专题说明、API 参考与 docx 边界统一收口到主题子目录
@@ -132,7 +128,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 - `FEISHU_TEST_USER_ID` 与 `FEISHU_TEST_USER_ID_TYPE` 配置项，用于 `chatenv cat -t feishu` 和 `@pytest.mark.lark` 真实测试共享测试用户配置
-- `cli-tests/lark/guide/test_chattool_lark_basic.py`、`cli-tests/lark/documents/test_chattool_lark_doc_basic.py`、`cli-tests/lark/documents/test_chattool_lark_doc_markdown.py`，补齐 Feishu 基础链路与文档链路的真实 CLI 执行覆盖
+- `tests/cli-tests/lark/guide/test_chattool_lark_basic.py`、`tests/cli-tests/lark/documents/test_chattool_lark_doc_basic.py`、`tests/cli-tests/lark/documents/test_chattool_lark_doc_markdown.py`，补齐 Feishu 基础链路与文档链路的真实 CLI 执行覆盖
 
 ### Removed
 - 旧的文档读写型 Feishu skill `feishu-create-doc`、`feishu-fetch-doc`、`feishu-update-doc` 已并回主 `feishu` skill，不再单独维护
@@ -140,14 +136,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [6.3.0]
 
 ### Changed
-- `chattool setup playground` 现在在交互模式下遇到非空目录时会先提示是否继续；确认后会保留已有文件并继续初始化，且若 `chattool/` 已存在，会默认提示跳过克隆并保留本地版本，不再误走覆盖语义
 - `chattool setup cc-connect` 现已提供 cc-connect 安装入口；`chattool cc setup` 改为该命令的别名，两者共用同一套安装逻辑
 - `chattool setup codex` 默认模型现改为 `gpt-5.4`，`chattool setup claude` 默认小模型现改为 `claude-opus-4-6`
 - `chattool setup codex` / `claude` / `opencode` 现在会在收集配置前先检查 `Node.js >= 20` 与 `npm`；若当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级
 - `skills/practice-make-perfact` 现在改为任务完成后的后处理工作流：回顾已有改动、提取可复用内容、串联 `chattool-dev-review`，再统一完成文档/测试/变更记录与 PR/MR 收尾
 - 开发流程现在明确要求把 scratch、临时试验产物与一次性导出结果放到仓库外独立目录，而不是放在仓库内
 - `skills/chattool-gh` 现在覆盖 `pr-check`、PR 后续维护与 CI 排查流程，并同步更新为当前 GitHub CLI 用法
-- `chattool setup playground` 现在可以在空目录下快速创建工作区：clone `chattool/`、生成 `AGENTS.md`/`CHATTOOL.md`/`MEMORY.md`、创建 `Memory/`/`skills/`/`scratch/`，并为复制出的每个 skill 建立 `experience/`
 - `chattool setup nodejs` 现在改为写入仓库内置的 `nvm.sh` 与 shell 初始化块，不再通过 `curl` 从 GitHub 拉取 nvm 安装脚本
 - `chattool cc init -i` 在选择飞书平台时，现会把当前 `chatenv` 中的 `FEISHU_APP_ID` / `FEISHU_APP_SECRET` 作为默认候选值
 - `chattool skill` / `chatskill` 现在在未显式传 `--source` 时，会正确读取 `chatenv` 中的 `CHATTOOL_SKILLS_DIR`
@@ -155,10 +149,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chatenv init -t skill` 中 `CHATTOOL_SKILLS_DIR` 的交互提示已缩短，避免占用过多输入空间
 
 ### Fixed
-- `cli-tests/env/test_chattool_env_basic.py` 现已补齐 `env init -t ...` 交互输入，避免因新增默认字段 prompt 导致测试中断
-- 全量 `pytest` 现在可稳定完成：历史 `tests/tools/lark/test_cli_integration.py` 已改为唯一模块名，避免与 DNS 测试模块同名导致收集冲突
-- `tests/dns/test_cert_server_real.py` 与 `tests/dns/test_cert_update_real.py` 现改为显式 `CHATTOOL_RUN_DNS_CERT_REAL=1` 才启用，避免日常全量回归卡在真实证书生命周期测试
-- `tests/core/test_batch.py` 现已修正未 await 的协程调用，且 pytest 过滤规则补齐了常见第三方告警，降低全量回归噪音
+- `tests/cli-tests/env/test_chattool_env_basic.py` 现已补齐 `env init -t ...` 交互输入，避免因新增默认字段 prompt 导致测试中断
+- 全量 `pytest` 现在可稳定完成：历史 `tests/code-tests/tools/lark/test_cli_integration.py` 已改为唯一模块名，避免与 DNS 测试模块同名导致收集冲突
+- `tests/code-tests/dns/test_cert_server_real.py` 与 `tests/code-tests/dns/test_cert_update_real.py` 现改为显式 `CHATTOOL_RUN_DNS_CERT_REAL=1` 才启用，避免日常全量回归卡在真实证书生命周期测试
+- `tests/code-tests/core/test_batch.py` 现已修正未 await 的协程调用，且 pytest 过滤规则补齐了常见第三方告警，降低全量回归噪音
 - `chattool setup nodejs` 首次通过内置 `nvm` 安装 Node.js 后，后续同一轮 `setup codex/claude/opencode/cc-connect` 现在会正确复用 `~/.nvm` 中的运行时，不再误报 “Node.js requirement still not satisfied after setup”
 - `chattool setup alias` 现在会把 `chatskill` 正确映射到 `chattool skill`
 

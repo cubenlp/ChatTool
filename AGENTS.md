@@ -72,31 +72,31 @@ mkdocs serve --no-livereload # 本地预览文档
 
 - **CLI 测试文档先行**：ChatTool 仓库内涉及 CLI 行为的开发，必须先写测试设计文档，再决定是否补对应 `.py`。
 - **双轨测试面**：
-  - `cli-tests/*.md` / `cli-tests/*.py`：真实 CLI 链路与真实环境验收。
-  - `mock-cli-tests/*.md` / `mock-cli-tests/*.py`：基于 mock 的 CLI 编排、参数流向、输出格式与懒加载验证。
-- **真实执行测试**：`cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现；真实链路测试应标记为 `@pytest.mark.e2e`。
-- **Mock 收纳规则**：所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，都必须收纳到 `mock-cli-tests/`，不要继续放在 `cli-tests/`。
+  - `tests/cli-tests/*.md` / `tests/cli-tests/*.py`：真实 CLI 链路与真实环境验收。
+  - `tests/mock-cli-tests/*.md` / `tests/mock-cli-tests/*.py`：基于 mock 的 CLI 编排、参数流向、输出格式与懒加载验证。
+- **真实执行测试**：`tests/cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现；真实链路测试应标记为 `@pytest.mark.e2e`。
+- **Mock 收纳规则**：所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，都必须收纳到 `tests/mock-cli-tests/`，不要继续放在 `tests/cli-tests/`。
 - **GitHub 自动测试边界**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 `lark` / `dns` 这类第三方链路与大多数真实 CLI 测试；本地验证不能省。
-- **`tests/` 定位**：仓库根下 `tests/` 为弃用区，仅保留历史参考，不再作为新功能默认测试落点或交付要求。
-- **第三方集成规则**：真实测试必须从默认 `chatenv` / 配置对象读取生效值；若改用 mock 验证，只能放到 `mock-cli-tests/`，不能伪装成真实链路。
+- **`tests/code-tests/` 定位**：`tests/code-tests/` 用于非 CLI 代码测试与历史测试迁移，不作为新 CLI 测试默认落点。
+- **第三方集成规则**：真实测试必须从默认 `chatenv` / 配置对象读取生效值；若改用 mock 验证，只能放到 `tests/mock-cli-tests/`，不能伪装成真实链路。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录。
 
-### CLI 测试文档驱动机制（`cli-tests` / `mock-cli-tests`）
+### CLI 测试文档驱动机制（`tests/cli-tests` / `tests/mock-cli-tests`）
 
-- `cli-tests` 与 `mock-cli-tests` 都采用 **doc-first**：
+- `tests/cli-tests` 与 `tests/mock-cli-tests` 都采用 **doc-first**：
   - 先写 `.md`（测试目标、输入、执行顺序、预期）。
   - 文档评审通过后再实现对应 `.py`。
-- `cli-tests/` 只维护真实 CLI 测试；`mock-cli-tests/` 只维护 mock CLI 测试；`tests/` 中的历史文件不再作为新规范依据。
+- `tests/cli-tests/` 只维护真实 CLI 测试；`tests/mock-cli-tests/` 只维护 mock CLI 测试；`tests/code-tests/` 中的历史/代码测试不作为 CLI 规范依据。
 - 命名规范（与 CLI 命令保持一致）：
   - 至少一个基础文件：`test_<cli>_<command>_basic.py`
   - 按主题扩展：`test_<cli>_<command>_<topic>.py`
   - 对应文档文件同名后缀 `.md`。
 - 目录建议：
   - 命令目录下优先平铺（通过文件名区分 `basic/topic`），避免无必要的层级嵌套。
-  - 例如：`cli-tests/chattool/dns/test_chattool_dns_basic.md`
-  - 例如：`mock-cli-tests/chattool/gh/test_chattool_gh_basic.md`
+  - 例如：`tests/cli-tests/dns/test_chattool_dns_basic.md`
+  - 例如：`tests/mock-cli-tests/gh/test_chattool_gh_basic.md`
 - 文档结构建议：
   - 每个 case 优先保留“初始环境准备 / 预期过程和结果 / 参考执行脚本（伪代码）”结构。
   - 根据需要，可在 case 开头写必要的文字说明。
@@ -106,14 +106,14 @@ mkdocs serve --no-livereload # 本地预览文档
   - 路径语义、错误语义与核心返回字段应与当前设计文档和真实实现保持一致，避免保留旧接口预期。
 - 文档与实现关系：
   - 实现测试时严格遵循对应 `.md` 的步骤。
-  - 若需要测试某个真实行为，优先缩小测试范围、构造真实文件系统或真实仓库状态，放到 `cli-tests/`。
-  - 若需要验证 CLI 编排、参数传递、输出格式或懒加载，并依赖 mock / fake 数据，放到 `mock-cli-tests/`。
+  - 若需要测试某个真实行为，优先缩小测试范围、构造真实文件系统或真实仓库状态，放到 `tests/cli-tests/`。
+  - 若需要验证 CLI 编排、参数传递、输出格式或懒加载，并依赖 mock / fake 数据，放到 `tests/mock-cli-tests/`。
   - 若测试过程中发现 `.md` 逻辑有疑点，可反向更新 `.md` 保持一致性，但**非必要不改文档**。
   - 若确需更新 `.md`，必须在文档变更中明确写清修改原因。
-- 旧的 `tests/` 文件：
-  - 不作为新规范样例。
-  - 不作为评审验收依据。
-  - 仅在迁移到 `cli-tests/` 时参考其历史行为。
+- `tests/code-tests/` 中的旧测试：
+  - 不作为新 CLI 规范样例。
+  - 不作为 CLI 评审验收依据。
+  - 仅在迁移真实/模拟 CLI 测试时参考其历史行为。
 - 仓库污染防护（特别是 rebuild/依赖变更测试）：
   - 涉及改写文件的用例必须包含对修改内容的还原。
   - 推荐使用 `try/finally` 做无条件回滚，避免异常中断导致脏工作区。

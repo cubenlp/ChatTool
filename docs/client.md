@@ -237,43 +237,6 @@ chattool setup docker --log-level DEBUG
 chattool setup docker --sudo -i
 ```
 
-### 0.6 Playground (`setup playground`)
-
-把一个目录快速初始化或更新为工作区：
-
-1. clone `ChatTool/`
-2. 运行 `git submodule update --init --recursive`
-3. 生成 `AGENTS.md`、`CHATTOOL.md`、`MEMORY.md`
-4. 创建 `reports/`、`playgrounds/`、`knowledge/`
-5. 从 clone 出来的 `ChatTool/skills/` 复制 skills 到 `knowledge/skills/`，并为每个 skill 创建 `experience/`
-
-如果目标目录已经是已有工作区，再次执行时会进入更新模式：
-
-- 优先更新 `ChatTool/` 仓库；如果仓库里有本地改动，则默认跳过仓库更新，避免覆盖工作区中的开发状态
-- 仓库完成 clone / fast-forward 后，会自动执行 `git submodule update --init --recursive`，确保诸如 `lark-cli/` 这类子模块同步到当前仓库版本
-- 交互模式下会提示是否同步工作区 `knowledge/skills/`
-- 同步 `knowledge/skills/` 时只覆盖常规文件，不会改动各 skill 下的 `experience/`
-- 已存在的工作区说明文件默认仍然保留；只有显式传 `--force` 时才会覆盖这些生成文件
-
-如果目标目录只是普通非空目录而不是现有工作区，交互模式下仍会先提示是否继续；确认后会保留已有文件，并跳过已存在的生成文件。
-
-完成 workspace bootstrap 后，命令还会尝试配置 GitHub 的 HTTPS Git 鉴权：
-
-- 优先读取 `GitHubConfig.GITHUB_ACCESS_TOKEN.value`，也就是 `chatenv cat -t gh` 对应的当前配置值
-- 交互模式下会提示是否配置，并允许输入新的 token；直接回车则保留当前配置值
-- 非交互模式下如果当前 `chatenv` 里已有 `GITHUB_ACCESS_TOKEN`，会自动写入 `git credential store`
-- 该步骤会执行 `git config --global credential.helper store`，并为默认的 ChatTool GitHub 仓库写入一条 repo 级 PAT 凭据，方便后续 clone / push / fetch
-
-在目标空目录里直接执行：
-
-```bash
-chattool setup playground
-```
-
-默认模板语言是中文。
-
-或显式指定工作区目录：
-
 ### 0.6 Workspace (`setup workspace`)
 
 如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 多任务并发面 + 知识沉淀”工作区，可以用：
@@ -295,9 +258,11 @@ chattool setup workspace ~/workspace/demo --language en
 - `skills/`：共享 skills 目录
 - `public/`：公开网站和发布目录
 
-默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。对于后继 task，建议在它自己的 `TASK.md` 开头写清验收需求，并说明不满足时是否需要人类 review，还是允许模型自行决断。
+默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。工作区协议现在还会明确一条用户偏好：任务未完成前不要阶段性邀请 review，默认完整做完后再统一汇报结果；如果是开发任务，每个阶段都要先测试通过、完善文档并自行 review。
 
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
+
+如果目标目录已经是一个已有 workspace，`setup workspace` 不会直接覆盖原有 `AGENTS.md` / `MEMORY.md`，而是额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 和迁移版 `setup.md`，帮助模型先完成协议迁移；迁移完成后再删除这些辅助文件。
 
 如果只想先看计划不落盘：
 

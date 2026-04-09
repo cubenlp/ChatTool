@@ -238,37 +238,37 @@ INFO: Start opencode setup
 
 - **CLI 测试文档先行**：ChatTool 仓库内的新功能、重构和 Bugfix 如涉及 CLI 行为，必须先补对应测试线下的 `.md`。
 - **双轨测试面**：
-  - `cli-tests/*.md` / `cli-tests/*.py`：真实 CLI 链路与真实环境验收。
-  - `mock-cli-tests/*.md` / `mock-cli-tests/*.py`：基于 mock 的 CLI 编排、参数流向、输出格式与懒加载验证。
-- **真实执行测试的落点**：`cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现，真实链路测试应标记为 `@pytest.mark.e2e`。
-- **Mock 收纳规则**：所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，都必须收纳到 `mock-cli-tests/`。
+  - `tests/cli-tests/*.md` / `tests/cli-tests/*.py`：真实 CLI 链路与真实环境验收。
+  - `tests/mock-cli-tests/*.md` / `tests/mock-cli-tests/*.py`：基于 mock 的 CLI 编排、参数流向、输出格式与懒加载验证。
+- **真实执行测试的落点**：`tests/cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现，真实链路测试应标记为 `@pytest.mark.e2e`。
+- **Mock 收纳规则**：所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，都必须收纳到 `tests/mock-cli-tests/`。
 - **GitHub 自动测试范围有限**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 `lark` / `dns` 等第三方链路与大多数 `@pytest.mark.e2e`；不要把“GitHub CI 通过”误当成这些能力已验收。
-- **`tests/` 的定位**：仓库根下 `tests/` 视为弃用区，只保留历史参考，不再作为新开发的默认测试落点，也不再作为交付要求。
+- **`tests/code-tests/` 的定位**：`tests/code-tests/` 收纳非 CLI 代码测试与历史测试迁移，不再作为新 CLI 测试默认落点。
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
-- 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值；如果改用 mock，只能放到 `mock-cli-tests/`。
+- 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值；如果改用 mock，只能放到 `tests/mock-cli-tests/`。
 - 如果测试依赖接收者、群聊或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`，并在对应 `.md` 中写清配置要求与回滚方式。
-- Feishu 相关测试设计应统一落在 `cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留紧凑入口文档，不再要求和 skill 子目录一一对齐。
-- Feishu 的真实执行测试只能以这些 `cli-tests/lark/<topic>/*.md` 为准；`tests/tools/lark/` 中的历史文件不再作为主规范依据。
+- Feishu 相关测试设计应统一落在 `tests/cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留紧凑入口文档，不再要求和 skill 子目录一一对齐。
+- Feishu 的真实执行测试只能以这些 `tests/cli-tests/lark/<topic>/*.md` 为准；`tests/code-tests/tools/lark/` 中的历史文件不再作为主规范依据。
 - Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`。
 - Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版完成后，必须先确保目标版本已在 PR/MR 阶段写入 `src/chattool/__init__.py` 与对应 `CHANGELOG.md`，再从已合并主线推送标准 tag `vX.Y.Z` 触发发布；若 PyPI 已存在该版本，必须先走新的版本 bump 变更，不能复用同版本 tag，并在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
 
-### CLI 测试文档驱动机制（`cli-tests` / `mock-cli-tests`）
+### CLI 测试文档驱动机制（`tests/cli-tests` / `tests/mock-cli-tests`）
 
-- `cli-tests` 与 `mock-cli-tests` 都采用 **doc-first**：
+- `tests/cli-tests` 与 `tests/mock-cli-tests` 都采用 **doc-first**：
   - 先写 `.md`（测试目标、输入、执行顺序、预期）。
   - 文档评审通过后再实现对应 `.py`。
-- `cli-tests/` 只维护真实 CLI 测试；`mock-cli-tests/` 只维护 mock CLI 测试；`tests/` 中的历史文件不再作为新样例、新要求或评审依据。
+- `tests/cli-tests/` 只维护真实 CLI 测试；`tests/mock-cli-tests/` 只维护 mock CLI 测试；`tests/code-tests/` 中的历史/代码测试不再作为 CLI 新样例、新要求或评审依据。
 - 命名规范（与 CLI 命令保持一致）：
   - 至少一个基础文件：`test_<cli>_<command>_basic.py`
   - 按主题扩展：`test_<cli>_<command>_<topic>.py`
   - 对应文档文件同名后缀 `.md`。
 - 目录建议：
   - 默认在命令目录下平铺；当某个 CLI 下面已经形成稳定专题时，可引入一层 topic 目录保持与 skill / CLI 结构一致。
-  - 例如：`cli-tests/dns/test_chattool_dns_basic.md`
-  - 例如：`mock-cli-tests/gh/test_chattool_gh_basic.md`
+  - 例如：`tests/cli-tests/dns/test_chattool_dns_basic.md`
+  - 例如：`tests/mock-cli-tests/gh/test_chattool_gh_basic.md`
 - 文档结构建议：
   - 每个 case 优先保留“初始环境准备 / 相关文件 / 预期过程和结果 / 参考执行脚本（伪代码）”结构。
   - 根据需要，可在 case 开头写必要的文字说明。
@@ -278,15 +278,15 @@ INFO: Start opencode setup
   - 路径语义、错误语义与核心返回字段应与当前设计文档和真实实现保持一致，避免保留旧接口预期。
 - 文档与实现关系：
   - 实现测试时严格遵循对应 `.md` 的步骤。
-  - 若需要验证真实行为，优先构造真实文件、真实目录、真实 git 仓库和真实配置，并放到 `cli-tests/`。
-  - 若需要验证 CLI 编排、参数传递、输出格式或懒加载，并依赖 mock / fake 数据，放到 `mock-cli-tests/`。
+  - 若需要验证真实行为，优先构造真实文件、真实目录、真实 git 仓库和真实配置，并放到 `tests/cli-tests/`。
+  - 若需要验证 CLI 编排、参数传递、输出格式或懒加载，并依赖 mock / fake 数据，放到 `tests/mock-cli-tests/`。
   - 若测试过程中发现 `.md` 逻辑有疑点，可反向更新 `.md` 保持一致性。
   - **非必要不改文档**；仅在逻辑冲突、步骤错误、预期失效时更新。
   - 若确需更新 `.md`，必须在文档变更中明确写清修改原因。
-- 旧的 `tests/` 文件：
-  - 不作为新规范样例。
-  - 不作为评审验收依据。
-  - 仅在迁移到 `cli-tests/` 时参考其历史行为。
+- `tests/code-tests/` 中的旧测试：
+  - 不作为新 CLI 规范样例。
+  - 不作为 CLI 评审验收依据。
+  - 仅在迁移到 `tests/cli-tests/` 时参考其历史行为。
 - 仓库污染防护（特别是 rebuild/依赖变更测试）：
   - 涉及改写文件的用例必须包含对修改内容的还原。
   - 推荐使用 `try/finally` 做无条件回滚，避免异常中断导致脏工作区。

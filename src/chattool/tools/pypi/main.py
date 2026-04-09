@@ -271,9 +271,9 @@ def _build_cli_style_readme(package_name: str, description: str) -> str:
             ## Layout
 
             - `src/`: package source code
-            - `tests/`: historical/basic test area
-            - `cli-tests/`: real CLI tests, doc-first
-            - `mock-cli-tests/`: mock/fake CLI tests, doc-first
+            - `tests/code-tests/`: code tests and migrated historical tests
+            - `tests/cli-tests/`: real CLI tests, doc-first
+            - `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first
             - `docs/`: long-lived project docs
 
             ## Development Notes
@@ -302,8 +302,8 @@ def _build_cli_style_develop_md() -> str:
             ## Docs and Tests
 
             - Use doc-first CLI testing.
-            - Put real CLI coverage under `cli-tests/`.
-            - Put mock/fake CLI coverage under `mock-cli-tests/`.
+            - Put real CLI coverage under `tests/cli-tests/`.
+            - Put mock/fake CLI coverage under `tests/mock-cli-tests/`.
             - Keep `README.md`, `docs/`, and `CHANGELOG.md` in sync with user-facing changes.
 
             ## Automation
@@ -333,7 +333,7 @@ def _build_cli_style_setup_md(package_name: str) -> str:
             2. Update `README.md` to match the actual package purpose.
             3. Decide whether this package needs a CLI, library API, or both.
             4. Add or remove folders from the scaffold as needed.
-            5. Expand tests using the doc-first conventions in `cli-tests/` and `mock-cli-tests/`.
+            5. Expand tests using the doc-first conventions in `tests/cli-tests/` and `tests/mock-cli-tests/`.
 
             ## Suggested Next Edits
 
