@@ -74,7 +74,9 @@ def test_explore_arxiv_search_uses_preset_query(monkeypatch, runner):
         def filter_papers(self, papers, categories=None, keywords=None):
             return papers
 
-    def fake_build_query(categories=None, keywords=None, title=None, abstract=None, author=None):
+    def fake_build_query(
+        categories=None, keywords=None, title=None, abstract=None, author=None
+    ):
         calls["build_categories"] = categories
         calls["build_keywords"] = keywords
         return "preset-query"
@@ -82,7 +84,9 @@ def test_explore_arxiv_search_uses_preset_query(monkeypatch, runner):
     monkeypatch.setattr(arxiv_mod, "ArxivClient", FakeArxivClient)
     monkeypatch.setattr(arxiv_mod, "build_query", fake_build_query)
 
-    result = runner.invoke(cli, ["explore", "arxiv", "search", "-p", "ai4math", "-n", "2"])
+    result = runner.invoke(
+        cli, ["explore", "arxiv", "search", "-p", "ai4math", "-n", "2"]
+    )
     assert result.exit_code == 0
     assert calls["query"] == "preset-query"
     assert calls["max_results"] == 2
@@ -141,6 +145,34 @@ def test_explore_arxiv_get_verbose(monkeypatch, runner):
     assert "Attention Is All You Need" in result.output
     assert "Abstract:" in result.output
     assert "removes recurrence entirely" in result.output
+
+
+def test_explore_arxiv_get_prompts_for_missing_id(monkeypatch, runner):
+    import chattool.explore.arxiv as arxiv_mod
+
+    class FakeArxivClient:
+        def get_by_id(self, arxiv_id):
+            assert arxiv_id == "1706.03762"
+            return _paper(
+                "1706.03762",
+                "Attention Is All You Need",
+                "The Transformer architecture removes recurrence entirely.",
+                categories=["cs.CL"],
+            )
+
+    monkeypatch.setattr(arxiv_mod, "ArxivClient", FakeArxivClient)
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.command_schema.ask_text",
+        lambda message, default="", password=False, style=None: "1706.03762",
+    )
+
+    result = runner.invoke(cli, ["explore", "arxiv", "get"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Attention Is All You Need" in result.output
 
 
 def test_explore_arxiv_presets_lists_known_entries(runner):

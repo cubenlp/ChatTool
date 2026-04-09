@@ -103,11 +103,14 @@ bot.start()
 ### DNS 管理 (`chattool dns`)
 
 ```bash
+chattool dns
 chattool dns get home.example.com
 chattool dns set home.example.com -v 1.2.3.4
 chattool dns ddns home.example.com --monitor
 chattool dns cert-update -d example.com -e admin@example.com
 ```
+
+交互终端里直接运行 `chattool dns` 会先进入命令选择；`get` / `set` / `ddns` 缺少必要参数时会自动补问，`-I` 才会禁用交互并直接报错。
 
 ### Nginx 配置生成 (`chattool nginx`)
 
@@ -124,7 +127,10 @@ chattool nginx -i  # 交互式选择模板并逐项填写
 ```bash
 chattool image pollinations generate "a cat in space" -o cat.png
 chattool image siliconflow generate "a cute dog" -o dog.png
+chattool image huggingface generate
 ```
+
+交互终端里，各家 `generate` 命令缺少 `prompt` 时会自动补问；`huggingface generate` 缺少 `-o/--output` 也会自动补问。显式传 `-I` 时保持直接报错。
 
 ### 数据探索 (`chattool explore`)
 
@@ -133,7 +139,10 @@ chattool explore arxiv search -p ai4math -n 10
 chattool explore arxiv daily -p math-formalization --days 3
 chattool explore arxiv daily -p math-formalization-weekly --days 7 -v
 chattool explore arxiv get 1706.03762 -v
+chattool explore arxiv get
 ```
+
+交互终端里，`chattool explore arxiv get` 缺少 arXiv ID 时会自动补问。
 
 ### 其他工具
 
@@ -166,7 +175,10 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 ```bash
 chattool pypi init mychat
 chattool pypi init cli-style mycli
+chatpypi mychat
 ```
+
+`chatpypi` 现在是更直接的快捷入口：传入普通首参数时，会自动按 `chattool pypi init <name>` 处理；如果首参数本身就是 `init/build/check/upload/probe` 之一，则保持原样透传给 `chattool pypi`。
 
 默认生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`。
 

@@ -35,3 +35,4 @@ def test_setup_alias_detects_all_available_shells_by_default(monkeypatch):
     assert result.exit_code == 0
     assert ".zshrc" in result.output
     assert ".bashrc" in result.output
+    assert "chattp => chattool tplogin" in result.output

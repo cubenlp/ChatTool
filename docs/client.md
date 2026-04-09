@@ -334,7 +334,7 @@ chattool dns set test.example.com -v 1.2.3.4
 chattool dns set -d example.com -r _test -t TXT -v "some-value"
 ```
 **选项:**
-- `-v, --value`: 记录值 (必填)。
+- `-v, --value`: 记录值。交互终端里缺少时会自动补问；显式传 `-I` 时才保持直接报错。
 - `-t, --type`: 记录类型 (默认: `A`)。
 - `--ttl`: TTL 值 (默认: 600)。
 - `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
@@ -345,7 +345,10 @@ chattool dns set -d example.com -r _test -t TXT -v "some-value"
 
 ```bash
 chattool dns cert-update -d example.com -d *.example.com -e admin@example.com
+chattool dns cert-update
 ```
+
+在交互终端里，缺少域名或邮箱时会自动补问；显式传 `-I` 时才会禁用交互并直接报错。
 
 **输出文件结构:**
 证书将保存在 `<cert-dir>/<domain>/` 目录下，包含以下文件：
@@ -377,10 +380,11 @@ chattool dns cert-update -d example.com -d *.example.com -e admin@example.com
 #### 申请证书 (`apply`)
 ```bash
 chattool client cert apply -d example.com -d *.example.com --token my-secret-token
+chattool client cert apply
 ```
 **选项:**
-- `-d, --domain`: 域名列表 (必填)。
-- `-e, --email`: 邮箱 (如果配置了 `git config user.email` 则可选，否则必填)。
+- `-d, --domain`: 域名列表。缺少时会在交互终端里自动补问。
+- `-e, --email`: 邮箱。默认优先尝试 `git config user.email`，缺少时会自动补问。
 - `-p, --provider`: DNS 提供商 (可选)。
 - `--secret-id/--secret-key`: 云厂商凭证 (可选)。
 
@@ -393,8 +397,11 @@ chattool client cert list --token my-secret-token
 #### 下载证书 (`download`)
 ```bash
 chattool client cert download example.com -o ./my-certs --token my-secret-token
+chattool client cert download
 ```
 下载指定域名的证书文件 (`cert.pem`, `privkey.pem`, `fullchain.pem`) 到本地目录。
+
+在交互终端里，`download` 缺少 domain 时会自动补问；显式传 `-I` 时保持直接报错。
 
 ---
 
@@ -405,7 +412,10 @@ chattool client cert download example.com -o ./my-certs --token my-secret-token
 ### 3.1 存活扫描 (`network ping`)
 ```bash
 chattool network ping --network 192.168.1.0/24
+chattool network ping
 ```
+
+交互终端里缺少 `--network` 时会自动补问；`-I` 会禁用交互。
 
 ### 3.2 端口扫描 (`network ssh`)
 ```bash
@@ -454,6 +464,7 @@ chattool gh pr-list --state open --limit 20
 
 # 查看 PR 详情（含 mergeable / merge state）
 chattool gh pr-view --number 123
+chattool gh pr-view
 
 # 查看 PR 的可合并状态与 CI / checks 状态
 chattool gh pr-check --number 123
@@ -468,6 +479,7 @@ chattool gh job-logs --job-id 68373094563
 
 # 创建 PR
 chattool gh pr-create --base vibe/master --head feature-branch --title "Title" --body "Body"
+chattool gh pr-create
 
 # 评论 PR
 chattool gh pr-comment --number 123 --body "Looks good"
@@ -488,6 +500,8 @@ chattool gh set-token --token github_pat_xxx --save-env
 # 查看当前 token 对仓库的权限列表
 chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 ```
+
+在交互终端里，`pr-create` / `pr-view` / `pr-check` / `run-view` / `job-logs` / `pr-comment` / `pr-merge` / `pr-update` 缺少关键参数时都会自动补问；显式传 `-I` 才禁用交互并直接报错。
 
 `set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
 
@@ -578,6 +592,10 @@ chattool chatenv cat -t zulip
 # 列出订阅的 streams
 chattool zulip streams
 
+# 缺少 stream/topic 时自动补问
+chattool zulip topics
+chattool zulip topic
+
 # 查看消息（支持过滤）
 chattool zulip messages --stream general --before 20
 
@@ -586,6 +604,8 @@ chattool zulip news --since-hours 24 --stream general --stream announcements
 ```
 
 默认输出文件：`zulip-news-YYYYMMDD.md`（当前目录），可用 `--output` 覆盖。
+
+在交互终端里，`topics` / `topic` 缺少关键参数时会自动补问；显式传 `-I` 时保持直接报错。
 
 ---
 
@@ -608,6 +628,14 @@ chattool env get CHATTOOL_DNS_PROVIDER
 
 # 删除配置值
 chattool env unset CHATTOOL_DNS_PROVIDER
+
+# 缺少 key / profile 名时自动补问
+chattool env save -t gh
+chattool env use -t gh
+chattool env delete -t gh
+chattool env get
+chattool env set
+chattool env unset
 ```
 
 **命令详解:**
@@ -616,6 +644,8 @@ chattool env unset CHATTOOL_DNS_PROVIDER
 - `set`: 设置单个配置项，格式为 `KEY=VALUE`。
 - `get`: 获取单个配置项的值。
 - `unset`: 删除（置空）单个配置项的值。
+
+在交互终端里，`save/use/delete/get/set/unset/test` 缺少关键参数时都会自动补问；显式传 `-I` 才禁用交互并直接报错。
 
 ---
 

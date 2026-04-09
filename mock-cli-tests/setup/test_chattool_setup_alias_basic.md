@@ -11,6 +11,7 @@
 
 - 命令应进入共享的多选控制页，而不是先进入单独的 preset 选择页。
 - 通过控制页返回自定义 alias 集合后，dry-run 输出应只包含这些 alias。
+- alias 列表中应包含 `chattp => chattool tplogin`。
 
 ### 参考执行脚本（伪代码）
 

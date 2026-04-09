@@ -3,6 +3,12 @@ import os
 import ipaddress
 import re
 from pathlib import Path
+from chattool.interaction import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
 from chattool.tools.network.scanner import ping_scan, port_scan
 from chattool.tools.network.link_check import (
     collect_urls,
@@ -10,6 +16,12 @@ from chattool.tools.network.link_check import (
     check_service_url,
 )
 from chattool.tools.network.service_urls import append_token, ensure_path
+
+
+NETWORK_PING_SCHEMA = CommandSchema(
+    name="network-ping",
+    fields=(CommandField("network", prompt="network", required=True),),
+)
 
 
 @click.group(name="network")
@@ -22,13 +34,21 @@ def cli():
 @click.option(
     "-net",
     "--network",
-    required=True,
+    required=False,
     help="Network segment to scan (e.g. 192.168.1.0/24)",
 )
 @click.option("-n", "--concurrency", default=50, help="Number of concurrent threads")
 @click.option("-o", "--output", default=None, help="Output file path")
-def ping(network, concurrency, output):
+@add_interactive_option
+def ping(network, concurrency, output, interactive):
     """Scan a network for active hosts using ICMP ping."""
+    inputs = resolve_command_inputs(
+        schema=NETWORK_PING_SCHEMA,
+        provided={"network": network},
+        interactive=interactive,
+        usage="Usage: chattool network ping --network CIDR [-i|-I]",
+    )
+    network = inputs["network"]
     ping_scan(network_segment=network, concurrency=concurrency, output_path=output)
 
 

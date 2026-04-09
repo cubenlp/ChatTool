@@ -1,6 +1,6 @@
 # test_chattool_dns_basic
 
-测试 `chattool dns` 的 mock 基础链路，覆盖 ddns/get/set/cert-update 的命令流程与参数解析。
+测试 `chattool dns` 的 mock 基础链路，覆盖默认交互入口、ddns/get/set/cert-update 的命令流程与参数解析。
 
 ## 元信息
 
@@ -31,7 +31,26 @@ chattool dns ddns --help
 chattool dns cert-update --help
 ```
 
-## 用例 2：ddns 完整域名与分离参数
+## 用例 2：根命令默认进入交互选择
+
+- 初始环境准备：
+  - patch 交互可用状态和命令选择结果。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+1. 在交互终端执行 `chattool dns`，预期不会只打印帮助，而是先进入命令选择。
+2. 当选择 `set` 时，预期继续进入 `set` 命令流程，并补问缺失参数。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool dns
+select command = set
+input domain / rr / value
+```
+
+## 用例 3：ddns 完整域名与分离参数
 
 - 初始环境准备：
   - patch `DynamicIPUpdater`。
@@ -51,21 +70,24 @@ chattool dns ddns -d example.com -r test
 chattool dns ddns -d example.com -r test --monitor
 ```
 
-## 用例 3：set / get 记录
+## 用例 4：set / get 缺参时自动补问
 
 - 初始环境准备：
-  - patch `create_dns_client`。
+  - patch `create_dns_client` 和交互输入。
 - 相关文件：
   - 无
 
 预期过程和结果：
-  1. 执行 `chattool dns set test.example.com -v 1.2.3.4`，预期客户端收到新增或更新记录请求。
-  2. 执行 `chattool dns get test.example.com`，预期客户端收到查询请求。
+1. 在交互可用条件下执行 `chattool dns set`，预期自动补问 `domain`、`rr`、`value`，而不是先被 Click 的必填参数拦截。
+2. 执行 `chattool dns set -I`，预期直接报错，提示缺少必要参数。
+3. 在交互可用条件下执行 `chattool dns get`，预期自动补问 `domain` 和 `rr`，随后发起查询。
 
 参考执行脚本（伪代码）：
 
 ```sh
-chattool dns cert-update -d example.com -e admin@example.com
+chattool dns set
+chattool dns set -I
+chattool dns get
 ```
 
 ## 清理 / 回滚

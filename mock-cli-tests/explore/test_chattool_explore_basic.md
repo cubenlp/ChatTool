@@ -83,6 +83,18 @@ chattool explore arxiv daily -p math-formalization --days 3
 chattool explore arxiv get 1706.03762 -v
 ```
 
+## 用例 4b：`get` 缺少 arXiv ID 时自动补问
+
+- 初始环境准备：
+  - mock `ArxivClient.get_by_id` 返回指定论文对象。
+  - mock 交互输入 `1706.03762`。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+  1. 在交互可用环境下执行 `chattool explore arxiv get`。
+  2. CLI 应补问 arXiv ID，然后继续获取并输出论文信息。
+
 ## 用例 5：列出 preset 清单
 
 - 初始环境准备：

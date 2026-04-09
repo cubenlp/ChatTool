@@ -3,7 +3,15 @@ import time
 import click
 from typing import Optional
 
-from chattool.interaction import BACK_VALUE, ask_text, is_interactive_available
+from chattool.interaction import (
+    BACK_VALUE,
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    ask_text,
+    is_interactive_available,
+    resolve_command_inputs,
+)
 from chattool.utils import mask_secret
 from chattool.tools.github.api import (
     configure_github_https_token,
@@ -39,6 +47,47 @@ def _resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, str]:
     return resolve_repo_from_git_remote()
 
 
+PR_CREATE_SCHEMA = CommandSchema(
+    name="gh-pr-create",
+    fields=(
+        CommandField("base", prompt="base", required=True),
+        CommandField("head", prompt="head", required=True),
+        CommandField("title", prompt="title", required=True),
+    ),
+)
+
+
+PR_NUMBER_SCHEMA = CommandSchema(
+    name="gh-pr-number",
+    fields=(CommandField("number", prompt="pr number", kind="int", required=True),),
+)
+
+
+RUN_ID_SCHEMA = CommandSchema(
+    name="gh-run-id",
+    fields=(
+        CommandField("run_id", prompt="workflow run id", kind="int", required=True),
+    ),
+)
+
+
+JOB_ID_SCHEMA = CommandSchema(
+    name="gh-job-id",
+    fields=(
+        CommandField("job_id", prompt="workflow job id", kind="int", required=True),
+    ),
+)
+
+
+PR_COMMENT_SCHEMA = CommandSchema(
+    name="gh-pr-comment",
+    fields=(
+        CommandField("number", prompt="pr number", kind="int", required=True),
+        CommandField("body", prompt="comment body", required=True),
+    ),
+)
+
+
 @click.group(name="gh")
 def cli():
     """GitHub helpers (PR, issues)."""
@@ -51,11 +100,11 @@ def cli():
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--base", required=True, help="Base branch (e.g., main, vibe-master).")
+@click.option("--base", required=False, help="Base branch (e.g., main, vibe-master).")
 @click.option(
-    "--head", required=True, help="Head branch (e.g., feature-branch or owner:branch)."
+    "--head", required=False, help="Head branch (e.g., feature-branch or owner:branch)."
 )
-@click.option("--title", required=True, help="Pull request title.")
+@click.option("--title", required=False, help="Pull request title.")
 @click.option("--body", default="", help="Pull request body.")
 @click.option(
     "--body-file",
@@ -67,10 +116,21 @@ def cli():
     default=None,
     help="GitHub token. Defaults to the git credential entry for the current repository.",
 )
-def pr_create(repo, base, head, title, body, body_file, token):
+@add_interactive_option
+def pr_create(repo, base, head, title, body, body_file, token, interactive):
     """Create a GitHub pull request."""
     from github import Github
     from github.GithubException import GithubException
+
+    inputs = resolve_command_inputs(
+        schema=PR_CREATE_SCHEMA,
+        provided={"base": base, "head": head, "title": title},
+        interactive=interactive,
+        usage="Usage: chattool gh pr-create [--repo TEXT] --base TEXT --head TEXT --title TEXT [-i|-I]",
+    )
+    base = inputs["base"]
+    head = inputs["head"]
+    title = inputs["title"]
 
     if body_file:
         with open(body_file, "r", encoding="utf-8") as handle:
@@ -159,17 +219,26 @@ def pr_list(repo, state, limit, json_output, token):
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--number", required=True, type=int, help="Pull request number.")
+@click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option(
     "--token",
     default=None,
     help="GitHub token. Defaults to the git credential entry for the current repository.",
 )
-def pr_view(repo, number, json_output, token):
+@add_interactive_option
+def pr_view(repo, number, json_output, token, interactive):
     """Show pull request details."""
     from github import Github
     from github.GithubException import GithubException
+
+    inputs = resolve_command_inputs(
+        schema=PR_NUMBER_SCHEMA,
+        provided={"number": number},
+        interactive=interactive,
+        usage="Usage: chattool gh pr-view [--repo TEXT] --number INTEGER [-i|-I]",
+    )
+    number = inputs["number"]
 
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     client = get_client(token, credential_path=credential_path)
@@ -216,7 +285,7 @@ def pr_view(repo, number, json_output, token):
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--number", required=True, type=int, help="Pull request number.")
+@click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option(
     "--check-limit",
     default=20,
@@ -256,6 +325,7 @@ def pr_view(repo, number, json_output, token):
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
+@add_interactive_option
 def pr_check(
     repo,
     number,
@@ -266,9 +336,18 @@ def pr_check(
     timeout,
     json_output,
     token,
+    interactive,
 ):
     """Show CI/check status for a pull request."""
     from github.GithubException import GithubException
+
+    inputs = resolve_command_inputs(
+        schema=PR_NUMBER_SCHEMA,
+        provided={"number": number},
+        interactive=interactive,
+        usage="Usage: chattool gh pr-check [--repo TEXT] --number INTEGER [-i|-I]",
+    )
+    number = inputs["number"]
 
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     client = get_client(token, credential_path=credential_path)
@@ -312,7 +391,7 @@ def pr_check(
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--run-id", required=True, type=int, help="Workflow run id.")
+@click.option("--run-id", required=False, type=int, help="Workflow run id.")
 @click.option(
     "--job-limit", default=50, type=int, show_default=True, help="Max jobs to show."
 )
@@ -322,8 +401,17 @@ def pr_check(
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def run_view(repo, run_id, job_limit, json_output, token):
+@add_interactive_option
+def run_view(repo, run_id, job_limit, json_output, token, interactive):
     """Show a workflow run and its jobs."""
+    inputs = resolve_command_inputs(
+        schema=RUN_ID_SCHEMA,
+        provided={"run_id": run_id},
+        interactive=interactive,
+        usage="Usage: chattool gh run-view [--repo TEXT] --run-id INTEGER [-i|-I]",
+    )
+    run_id = inputs["run_id"]
+
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     token = resolve_token(token, credential_path=credential_path)
 
@@ -351,7 +439,7 @@ def run_view(repo, run_id, job_limit, json_output, token):
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--job-id", required=True, type=int, help="Workflow job id.")
+@click.option("--job-id", required=False, type=int, help="Workflow job id.")
 @click.option(
     "--tail",
     default=200,
@@ -371,8 +459,17 @@ def run_view(repo, run_id, job_limit, json_output, token):
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def job_logs(repo, job_id, tail, output, json_output, token):
+@add_interactive_option
+def job_logs(repo, job_id, tail, output, json_output, token, interactive):
     """Show logs for a workflow job."""
+    inputs = resolve_command_inputs(
+        schema=JOB_ID_SCHEMA,
+        provided={"job_id": job_id},
+        interactive=interactive,
+        usage="Usage: chattool gh job-logs [--repo TEXT] --job-id INTEGER [-i|-I]",
+    )
+    job_id = inputs["job_id"]
+
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     token = resolve_token(token, credential_path=credential_path)
 
@@ -408,17 +505,27 @@ def job_logs(repo, job_id, tail, output, json_output, token):
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--number", required=True, type=int, help="Pull request number.")
-@click.option("--body", required=True, help="Comment body.")
+@click.option("--number", required=False, type=int, help="Pull request number.")
+@click.option("--body", required=False, help="Comment body.")
 @click.option(
     "--token",
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def pr_comment(repo, number, body, token):
+@add_interactive_option
+def pr_comment(repo, number, body, token, interactive):
     """Add a comment to a pull request."""
     from github import Github
     from github.GithubException import GithubException
+
+    inputs = resolve_command_inputs(
+        schema=PR_COMMENT_SCHEMA,
+        provided={"number": number, "body": body},
+        interactive=interactive,
+        usage="Usage: chattool gh pr-comment [--repo TEXT] --number INTEGER --body TEXT [-i|-I]",
+    )
+    number = inputs["number"]
+    body = inputs["body"]
 
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     client = get_client(token, require_token=True, credential_path=credential_path)
@@ -438,7 +545,7 @@ def pr_comment(repo, number, body, token):
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--number", required=True, type=int, help="Pull request number.")
+@click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option(
     "--method",
     default="merge",
@@ -458,10 +565,21 @@ def pr_comment(repo, number, body, token):
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def pr_merge(repo, number, method, title, message, check_before_merge, token):
+@add_interactive_option
+def pr_merge(
+    repo, number, method, title, message, check_before_merge, token, interactive
+):
     """Merge a pull request."""
     from github import Github
     from github.GithubException import GithubException
+
+    inputs = resolve_command_inputs(
+        schema=PR_NUMBER_SCHEMA,
+        provided={"number": number},
+        interactive=interactive,
+        usage="Usage: chattool gh pr-merge [--repo TEXT] --number INTEGER [-i|-I]",
+    )
+    number = inputs["number"]
 
     repo, credential_path = _resolve_repo_and_credential_path(repo)
     client = get_client(token, require_token=True, credential_path=credential_path)
@@ -507,7 +625,7 @@ def pr_merge(repo, number, method, title, message, check_before_merge, token):
     required=False,
     help="Repository in owner/name form. Defaults to the current GitHub remote.",
 )
-@click.option("--number", required=True, type=int, help="Pull request number.")
+@click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option("--title", default=None, help="New pull request title.")
 @click.option("--body", default=None, help="New pull request body.")
 @click.option(
@@ -524,10 +642,19 @@ def pr_merge(repo, number, method, title, message, check_before_merge, token):
     default=None,
     help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
 )
-def pr_update(repo, number, title, body, body_file, state, base, token):
+@add_interactive_option
+def pr_update(repo, number, title, body, body_file, state, base, token, interactive):
     """Update pull request metadata (title/body/state/base)."""
     from github import Github
     from github.GithubException import GithubException
+
+    inputs = resolve_command_inputs(
+        schema=PR_NUMBER_SCHEMA,
+        provided={"number": number},
+        interactive=interactive,
+        usage="Usage: chattool gh pr-update [--repo TEXT] --number INTEGER [-i|-I]",
+    )
+    number = inputs["number"]
 
     if body_file:
         with open(body_file, "r", encoding="utf-8") as handle:

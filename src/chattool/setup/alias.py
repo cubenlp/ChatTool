@@ -18,10 +18,11 @@ ALIAS_MAP = {
     "chatenv": "chattool env",
     "chatskill": "chattool skill",
     "chatdns": "chattool dns",
+    "chattp": "chattool tplogin",
     "chatgh": "chattool gh",
     "chatcc": "chattool cc",
     "chatcli": "chattool client",
-    "chatpypi": "chattool pypi",
+    "chatpypi": "chatpypi",
     "chatup": "chattool setup",
     "chatlark": "chattool lark",
     "chatimg": "chattool image",
@@ -139,29 +140,34 @@ def setup_alias(shell=None, dry_run=False):
             raise click.Abort()
     else:
         alias_keys = default_selected
-        click.echo("No interactive TTY detected, apply default alias set.")
+        click.secho(
+            "[info] No interactive TTY detected, applying default alias set.",
+            fg="yellow",
+        )
 
     block = render_alias_block(alias_keys)
     if dry_run:
         for shell_name, rc_path in rc_paths:
-            click.echo(f"[dry-run] target shell rc: {rc_path}")
-            click.echo(f"[dry-run] target shell: {shell_name}")
+            click.secho(f"[dry-run] target shell rc: {rc_path}", fg="cyan")
+            click.secho(f"[dry-run] target shell: {shell_name}", fg="cyan")
             if block:
-                click.echo("[dry-run] alias block:")
+                click.secho("[dry-run] alias block:", fg="cyan")
                 click.echo(block.rstrip("\n"))
                 for key in alias_keys:
                     click.echo(f"  {key} => {ALIAS_MAP[key]}")
             else:
-                click.echo("[dry-run] alias block would be removed.")
+                click.secho("[dry-run] alias block would be removed.", fg="cyan")
         return
 
     for shell_name, rc_path in rc_paths:
         apply_alias_block(rc_path, block)
 
         if alias_keys:
-            click.echo(f"Updated aliases in {rc_path}")
+            click.secho(f"[info] Updated aliases in {rc_path}", fg="green")
             for key in alias_keys:
                 click.echo(f"  {key} => {ALIAS_MAP[key]}")
         else:
-            click.echo(f"Removed ChatTool alias block from {rc_path}")
-        click.echo(f"Run: source {rc_path}")
+            click.secho(
+                f"[info] Removed ChatTool alias block from {rc_path}", fg="yellow"
+            )
+        click.secho(f"[info] Run: source {rc_path}", fg="blue")

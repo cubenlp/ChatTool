@@ -38,6 +38,8 @@ mkdocs serve --no-livereload # 本地预览文档
 - `-i` 强制开启交互，`-I` 强制关闭（参数不全则报错）
 - 参数默认值从环境变量读取，敏感值在提示中自动 mask
 - 所有 CLI 交互统一走 `src/chattool/interaction/`
+- 新 CLI 默认优先使用 `src/chattool/interaction/command_schema.py` 里的 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，不要在每个命令里重复手写缺参判断、TTY 检查和 prompt 流程
+- 对可恢复缺参，避免直接使用 Click 的 `required=True` 或必填位置参数；否则会在 callback 执行前被 Click 拦截，统一交互机制无法运行
 - 进入 interactive 后，补全当前任务相关的关键参数
 - interactive 展示的默认值必须与实际执行一致
 - `-i` 进入当前命令交互流程，`-I` 完全禁用交互

@@ -115,6 +115,7 @@ Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
 chattool = "chattool.client:main_cli"
+chatpypi = "chattool.client:main_pypi_cli"
 chatmcp = "chattool.mcp:main"
 
 [tool.setuptools.dynamic]

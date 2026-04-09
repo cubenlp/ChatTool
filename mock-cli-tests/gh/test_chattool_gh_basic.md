@@ -1,6 +1,6 @@
 # test_chattool_gh_basic
 
-测试 `chattool gh` 的 mock 基础链路，覆盖帮助信息、PR 检查与合并前校验流程。
+测试 `chattool gh` 的 mock 基础链路，覆盖帮助信息、PR 检查、缺参自动补问与合并前校验流程。
 
 ## 元信息
 
@@ -42,6 +42,22 @@ chattool gh --help
 ```sh
 chattool gh pr-check --number 1
 ```
+
+## 用例 2a：高频命令缺参时自动补问
+
+- 初始环境准备：
+  - patch 交互可用状态与 `ask_text`。
+  - fake GitHub client 返回固定 PR / repo / merge 结果。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+  1. 执行 `chattool gh pr-view`，预期自动补问 PR number。
+  2. 执行 `chattool gh pr-create`，预期自动补问 `base` / `head` / `title`。
+  3. 执行 `chattool gh pr-comment`，预期自动补问 PR number 和 comment body。
+  4. 执行 `chattool gh pr-merge`，预期自动补问 PR number。
+  5. 执行 `chattool gh run-view` / `job-logs`，预期分别自动补问 run id / job id。
+  6. 执行上述命令并加 `-I` 时，预期直接报错，不进入交互。
 
 ## 用例 3：阻止失败状态下的合并
 
