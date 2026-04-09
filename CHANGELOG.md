@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
+- `chattool cc start` 现在会捕获启动异常和非零退出码，并把失败原因直接输出给用户；默认连续失败 5 次后才停止重试，避免 cc-connect 因偶发异常直接变成不可用状态
 - `chattool setup nodejs`、`setup codex`、`setup opencode`、`setup claude`、`setup lark-cli`、`setup cc-connect`、`setup frp`、`setup docker` 与 `chattool dns cert-update` 现在统一支持 `-l/--log-level`；复杂等待型命令的阶段日志可按 `DEBUG/INFO/WARNING/ERROR` 控制，而 `setup alias` 这类本地即时配置命令继续保持简洁输出
 - `chattool setup alias` 现在在未显式传 `--shell` 且终端可交互时，会先进入 shell 多选页，再进入 alias 多选页；`chattool setup nodejs` 也改为像 alias 一样默认同步更新所有已探测到的 `~/.zshrc` / `~/.bashrc`，并在 `-i` 时允许交互选择目标 shell
 - `src/chattool/interaction/` 新增声明式 CLI 输入规范层：统一提供 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，把缺参补问、`-i/-I` 语义、TTY 检查和多字段约束从各命令的重复样板中收口到共享模块；`chattool dns`、`chattool client cert`、`chattool client svg2gif`、`chattool gh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool dns cert-update` 已切到这套机制，并补充了相应 mock CLI 测试与开发文档规范

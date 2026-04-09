@@ -55,6 +55,7 @@ chattool cc setup
 
 ```bash
 chattool cc init -i --quiet
+chattool cc start --max-failures 5
 ```
 
 ### 0.1 Codex (`setup codex`)

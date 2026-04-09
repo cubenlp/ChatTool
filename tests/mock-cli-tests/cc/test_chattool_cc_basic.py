@@ -243,3 +243,77 @@ def test_cc_init_feishu_uses_chatenv_candidates(tmp_path, monkeypatch):
     content = config_path.read_text(encoding="utf-8")
     assert 'app_id = "env-app-id"' in content
     assert 'app_secret = "env-app-secret"' in content
+
+
+def test_cc_start_retries_until_failure_threshold(tmp_path, monkeypatch):
+    runner = CliRunner()
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('[[projects]]\nname = "demo"\n', encoding="utf-8")
+
+    attempts = []
+    monkeypatch.setattr(cc_cli, "_check_binary", lambda name: "/usr/bin/cc-connect")
+    monkeypatch.setattr(cc_cli.time, "sleep", lambda seconds: None)
+
+    def fake_stream(cmd, env):
+        attempts.append(list(cmd))
+        return 2
+
+    monkeypatch.setattr(cc_cli, "_stream_process", fake_stream)
+
+    result = runner.invoke(
+        cli,
+        [
+            "cc",
+            "start",
+            "--config",
+            str(config_path),
+            "--max-failures",
+            "3",
+            "--retry-delay",
+            "0",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert len(attempts) == 3
+    assert "cc-connect 启动失败 (1/3): exit code 2" in result.output
+    assert "cc-connect 启动失败 (3/3): exit code 2" in result.output
+    assert (
+        "cc-connect 连续失败 3 次，已停止重试。最后错误: exit code 2" in result.output
+    )
+
+
+def test_cc_start_recovers_before_failure_threshold(tmp_path, monkeypatch):
+    runner = CliRunner()
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('[[projects]]\nname = "demo"\n', encoding="utf-8")
+
+    attempts = []
+    exits = iter([1, 1, 0])
+    monkeypatch.setattr(cc_cli, "_check_binary", lambda name: "/usr/bin/cc-connect")
+    monkeypatch.setattr(cc_cli.time, "sleep", lambda seconds: None)
+
+    def fake_stream(cmd, env):
+        attempts.append(list(cmd))
+        return next(exits)
+
+    monkeypatch.setattr(cc_cli, "_stream_process", fake_stream)
+
+    result = runner.invoke(
+        cli,
+        [
+            "cc",
+            "start",
+            "--config",
+            str(config_path),
+            "--max-failures",
+            "5",
+            "--retry-delay",
+            "0",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert len(attempts) == 3
+    assert "cc-connect 启动失败 (1/5): exit code 1" in result.output
+    assert "cc-connect 已正常退出。" in result.output

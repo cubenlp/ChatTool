@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import time
 from typing import Iterable
 
 import click
@@ -20,6 +21,8 @@ from chattool.interaction import ask_confirm, ask_text
 DEFAULT_CONFIG_DIR = Path.home() / ".cc-connect"
 DEFAULT_CONFIG_FILE = DEFAULT_CONFIG_DIR / "config.toml"
 DEFAULT_LOG_FILE = DEFAULT_CONFIG_DIR / "cc-connect.log"
+DEFAULT_MAX_FAILURES = 5
+DEFAULT_RETRY_DELAY = 2.0
 
 AGENT_CHOICES = [
     "claudecode",
@@ -356,6 +359,62 @@ def _stream_process(cmd: Iterable[str], env: dict[str, str]) -> int:
             return process.wait()
 
 
+def _notify_start_failure(
+    *,
+    attempt: int,
+    max_failures: int,
+    reason: str,
+    retry_delay: float,
+) -> None:
+    click.secho(
+        f"cc-connect 启动失败 ({attempt}/{max_failures}): {reason}",
+        fg="yellow",
+        err=True,
+    )
+    click.echo(f"日志文件: {DEFAULT_LOG_FILE}", err=True)
+    if attempt < max_failures:
+        click.echo(f"将在 {retry_delay:g} 秒后重试...", err=True)
+
+
+def _run_with_retries(
+    *,
+    cmd: list[str],
+    env: dict[str, str],
+    max_failures: int,
+    retry_delay: float,
+) -> None:
+    last_reason = ""
+    for attempt in range(1, max_failures + 1):
+        try:
+            exit_code = _stream_process(cmd, env)
+        except (OSError, subprocess.SubprocessError) as exc:
+            last_reason = str(exc) or exc.__class__.__name__
+            _notify_start_failure(
+                attempt=attempt,
+                max_failures=max_failures,
+                reason=last_reason,
+                retry_delay=retry_delay,
+            )
+        else:
+            if exit_code == 0:
+                click.secho("cc-connect 已正常退出。", fg="green")
+                return
+            last_reason = f"exit code {exit_code}"
+            _notify_start_failure(
+                attempt=attempt,
+                max_failures=max_failures,
+                reason=last_reason,
+                retry_delay=retry_delay,
+            )
+
+        if attempt < max_failures:
+            time.sleep(retry_delay)
+
+    raise click.ClickException(
+        f"cc-connect 连续失败 {max_failures} 次，已停止重试。最后错误: {last_reason}"
+    )
+
+
 @cli.command()
 @click.option(
     "--interactive/--no-interactive",
@@ -553,7 +612,26 @@ def init(
 @cli.command()
 @click.option("--config", "-c", default=None, help="配置文件路径")
 @click.option("--debug", is_flag=True, help="开启调试日志")
-def start(config: str | None, debug: bool) -> None:
+@click.option(
+    "--max-failures",
+    default=DEFAULT_MAX_FAILURES,
+    show_default=True,
+    type=click.IntRange(1, None),
+    help="连续失败多少次后停止重试。",
+)
+@click.option(
+    "--retry-delay",
+    default=DEFAULT_RETRY_DELAY,
+    show_default=True,
+    type=click.FloatRange(0.0, None),
+    help="失败后的重试间隔秒数。",
+)
+def start(
+    config: str | None,
+    debug: bool,
+    max_failures: int,
+    retry_delay: float,
+) -> None:
     """启动 cc-connect（前台输出 + 写入日志）。"""
     config_path = Path(config).expanduser() if config else DEFAULT_CONFIG_FILE
 
@@ -571,7 +649,12 @@ def start(config: str | None, debug: bool) -> None:
 
     cmd = ["cc-connect", "-config", str(config_path)]
     click.secho(f"启动 cc-connect (config={config_path})...", fg="green")
-    _stream_process(cmd, env)
+    _run_with_retries(
+        cmd=cmd,
+        env=env,
+        max_failures=max_failures,
+        retry_delay=retry_delay,
+    )
 
 
 @cli.command()

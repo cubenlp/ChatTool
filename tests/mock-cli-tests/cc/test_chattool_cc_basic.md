@@ -90,3 +90,47 @@ chattool cc init -i --config /tmp/config.toml
 chatenv cat -t feishu
 chattool cc init -i --agent claudecode --platform feishu --config /tmp/config.toml
 ```
+
+## Case 5: start 失败时按阈值重试并提示用户
+
+### 初始环境准备
+
+- 准备可读的 `config.toml`
+- stub `cc-connect` 二进制检查为存在
+- stub 启动过程持续返回失败退出码
+
+### 预期过程和结果
+
+- 执行 `chattool cc start --config <path> --max-failures 3 --retry-delay 0`
+- 命令应连续尝试 3 次
+- 每次失败都应向用户输出当前失败次数和错误原因
+- 达到阈值后，应以非零状态退出，并明确说明已停止重试
+
+### 参考执行脚本（伪代码）
+
+```sh
+chattool cc start --config /tmp/config.toml --max-failures 3 --retry-delay 0
+assert output shows retries and final stop message
+```
+
+## Case 6: start 在阈值内恢复成功
+
+### 初始环境准备
+
+- 准备可读的 `config.toml`
+- stub `cc-connect` 二进制检查为存在
+- 前两次启动失败，第三次成功
+
+### 预期过程和结果
+
+- 执行 `chattool cc start --config <path> --max-failures 5 --retry-delay 0`
+- 命令应在失败后继续重试
+- 第三次成功时返回 0，不再继续重试
+- 输出应包含失败提示与最终正常退出提示
+
+### 参考执行脚本（伪代码）
+
+```sh
+chattool cc start --config /tmp/config.toml --max-failures 5 --retry-delay 0
+assert command succeeds after retry
+```
