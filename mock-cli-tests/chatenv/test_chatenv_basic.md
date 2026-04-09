@@ -36,5 +36,6 @@ assert output contains MOCK_KEY='from_file'
 ### 预期过程和结果
 
 - 执行 `chatenv save -t mock`、`use -t mock`、`delete -t mock`、`get`、`unset`、`set`。
+- 执行 `chatenv test` 时，缺少 `--target` 也应自动补问。
 - 在交互终端下，缺少 `name` / `key` / `KEY=VALUE` 时应自动补问。
 - 加 `-I` 时应直接报缺少必要参数。

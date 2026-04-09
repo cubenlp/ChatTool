@@ -14,6 +14,12 @@ class MockConfig(BaseEnvConfig):
 
     MOCK_KEY = EnvField("MOCK_KEY", default="default_mock")
 
+    @classmethod
+    def test(cls):
+        click_output = getattr(cls, "_test_output", None)
+        if click_output is not None:
+            click_output.append("tested")
+
 
 def test_cat_prefers_typed_env_over_shell_env(tmp_path, monkeypatch):
     env_dir = tmp_path / "envs"
@@ -92,3 +98,31 @@ def test_chatenv_get_errors_with_no_interaction():
 
     assert result.exit_code != 0
     assert "Missing required value: key" in result.output
+
+
+def test_chatenv_test_prompts_for_target(tmp_path, monkeypatch):
+    env_dir = tmp_path / "envs"
+    env_file = tmp_path / ".env"
+    env_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
+    monkeypatch.setattr(
+        "chattool.config.elements.BaseEnvConfig._registry", [MockConfig]
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.policy.is_interactive_available", lambda: True
+    )
+    monkeypatch.setattr(
+        "chattool.interaction.command_schema.ask_text",
+        lambda message, default="", password=False, style=None: "mock",
+    )
+    outputs = []
+    MockConfig._test_output = outputs
+
+    result = CliRunner().invoke(cli, ["test"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert outputs == ["tested"]

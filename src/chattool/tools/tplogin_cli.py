@@ -2,9 +2,21 @@ import click
 import json
 from rich.console import Console
 from rich.table import Table
+from chattool.interaction import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
 from chattool.tools.tplogin import TPLogin
 
 console = Console()
+
+
+UFW_RULE_SPEC_SCHEMA = CommandSchema(
+    name="tplogin-ufw-rule-spec",
+    fields=(CommandField("rule_spec", prompt="rule spec", required=True),),
+)
 
 
 @click.group()
@@ -118,7 +130,7 @@ def ufw_status():
 
 
 @ufw.command(name="add")
-@click.argument("rule_spec", type=str)
+@click.argument("rule_spec", type=str, required=False)
 @click.option(
     "--proto",
     type=click.Choice(["all", "tcp", "udp"]),
@@ -126,8 +138,17 @@ def ufw_status():
     show_default=True,
     help="协议",
 )
-def ufw_add(rule_spec, proto):
+@add_interactive_option
+def ufw_add(rule_spec, proto, interactive):
     """Add a virtual server rule: OUT_PORT:local_ip:IN_PORT."""
+    inputs = resolve_command_inputs(
+        schema=UFW_RULE_SPEC_SCHEMA,
+        provided={"rule_spec": rule_spec},
+        interactive=interactive,
+        usage="Usage: chattool tplogin ufw add [RULE_SPEC] [-i|-I]",
+    )
+    rule_spec = inputs["rule_spec"]
+
     try:
         src_port_start, src_port_end, dest_ip, dest_port = _parse_rule_spec(rule_spec)
         client = TPLogin()
