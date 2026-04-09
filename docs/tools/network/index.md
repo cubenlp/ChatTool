@@ -12,11 +12,14 @@ chattool network [COMMAND] [OPTIONS]
 
 ```bash
 chattool network ping --network 192.168.1.0/24 --output active_hosts.txt
+chattool network ping
 ```
+
+在交互终端里，缺少 `--network` 时会自动补问；显式传 `-I` 时才保持直接报错。
 
 | 参数 | 说明 |
 |------|------|
-| `--network / -net` | 扫描网段（CIDR），必填 |
+| `--network / -net` | 扫描网段（CIDR）；交互终端里缺少时会自动补问 |
 | `--concurrency / -n` | 并发线程数（默认 50） |
 | `--output / -o` | 结果保存路径 |
 

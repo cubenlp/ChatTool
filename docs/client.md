@@ -334,7 +334,7 @@ chattool dns set test.example.com -v 1.2.3.4
 chattool dns set -d example.com -r _test -t TXT -v "some-value"
 ```
 **选项:**
-- `-v, --value`: 记录值 (必填)。
+- `-v, --value`: 记录值。交互终端里缺少时会自动补问；显式传 `-I` 时才保持直接报错。
 - `-t, --type`: 记录类型 (默认: `A`)。
 - `--ttl`: TTL 值 (默认: 600)。
 - `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
