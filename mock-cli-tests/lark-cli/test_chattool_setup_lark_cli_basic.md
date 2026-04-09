@@ -22,3 +22,23 @@ stub node/npm and lark-cli init calls
 run chattool setup lark-cli -I
 assert lark-cli init uses existing config values
 ```
+
+## Case 2: `--log-level` should be forwarded to Node.js requirement checks
+
+### 初始环境准备
+
+- mock 掉 Node.js 检查函数，记录收到的 `log_level`。
+- mock 掉 npm 安装与 `lark-cli` 初始化。
+
+### 预期过程和结果
+
+- 执行 `chattool setup lark-cli -I --log-level DEBUG --app-id ... --app-secret ...`。
+- `ensure_nodejs_requirement()` 应收到 `log_level="DEBUG"`。
+
+### 参考执行脚本（伪代码）
+
+```sh
+stub ensure_nodejs_requirement and record log_level
+run chattool setup lark-cli -I --log-level DEBUG with explicit values
+assert ensure_nodejs_requirement received DEBUG
+```

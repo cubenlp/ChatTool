@@ -23,6 +23,12 @@ FRP_VERSION_DEFAULT = "0.66.0"
 logger = setup_logger("setup_frp")
 
 
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_frp", log_level=str(log_level).upper())
+    return logger
+
+
 def get_system_arch():
     arch = platform.machine()
     if arch == "x86_64":
@@ -71,7 +77,8 @@ def extract_frp(archive_path, extract_to, binary_name):
     return extracted_bin
 
 
-def setup_frp(interactive=None):
+def setup_frp(interactive=None, log_level="INFO"):
+    _configure_logger(log_level)
     logger.info("Start frp setup")
     usage = "Usage: chattool setup frp [-i|-I]"
     interactive, can_prompt, force_interactive, _, _ = resolve_interactive_mode(

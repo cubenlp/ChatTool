@@ -39,7 +39,7 @@ def test_setup_codex_prefers_existing_config_over_current_env(
     monkeypatch.setenv("OPENAI_API_MODEL", "env-model")
     monkeypatch.setattr(
         "chattool.setup.codex.ensure_nodejs_requirement",
-        lambda interactive, can_prompt: None,
+        lambda interactive, can_prompt, log_level="INFO": None,
     )
     monkeypatch.setattr(
         "chattool.setup.codex.should_install_global_npm_package",
@@ -82,7 +82,7 @@ def test_setup_codex_explicit_args_override_env_ref(tmp_path, monkeypatch, runne
     monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.setup.codex.ensure_nodejs_requirement",
-        lambda interactive, can_prompt: None,
+        lambda interactive, can_prompt, log_level="INFO": None,
     )
     monkeypatch.setattr(
         "chattool.setup.codex.should_install_global_npm_package",
@@ -114,3 +114,44 @@ def test_setup_codex_explicit_args_override_env_ref(tmp_path, monkeypatch, runne
     assert auth_payload["OPENAI_API_KEY"] == "sk-explicit"
     assert 'base_url = "https://explicit.example/v1"' in config_text
     assert 'model = "explicit-model"' in config_text
+
+
+def test_setup_codex_forwards_log_level_to_nodejs_check(tmp_path, monkeypatch, runner):
+    home_dir = tmp_path / "home"
+    captured = {}
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+
+    def fake_ensure_nodejs_requirement(interactive, can_prompt, log_level):
+        captured["interactive"] = interactive
+        captured["can_prompt"] = can_prompt
+        captured["log_level"] = log_level
+
+    monkeypatch.setattr(
+        "chattool.setup.codex.ensure_nodejs_requirement",
+        fake_ensure_nodejs_requirement,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.codex.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "codex",
+            "-I",
+            "--log-level",
+            "DEBUG",
+            "--api-key",
+            "sk-explicit",
+            "--base-url",
+            "https://explicit.example/v1",
+            "--model",
+            "explicit-model",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["log_level"] == "DEBUG"

@@ -23,6 +23,12 @@ NVM_INIT_END = "# <<< chattool nvm <<<"
 logger = setup_logger("setup_nodejs")
 
 
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_nodejs", log_level=str(log_level).upper())
+    return logger
+
+
 def _run_bash(command):
     return subprocess.run(["bash", "-c", command], capture_output=True, text=True)
 
@@ -156,8 +162,9 @@ def has_required_nodejs(min_major=MIN_NODEJS_MAJOR, runtime=None):
 
 
 def ensure_nodejs_requirement(
-    min_major=MIN_NODEJS_MAJOR, interactive=None, can_prompt=False
+    min_major=MIN_NODEJS_MAJOR, interactive=None, can_prompt=False, log_level="INFO"
 ):
+    _configure_logger(log_level)
     runtime = _detect_nodejs_runtime()
     logger.info(f"Checking Node.js runtime requirement (>= {min_major})")
     if has_required_nodejs(min_major=min_major, runtime=runtime):
@@ -174,7 +181,7 @@ def ensure_nodejs_requirement(
         if install_now == BACK_VALUE:
             raise click.Abort()
         if install_now:
-            setup_nodejs(interactive=True)
+            setup_nodejs(interactive=True, log_level=log_level)
             runtime = _detect_nodejs_runtime()
             if has_required_nodejs(min_major=min_major, runtime=runtime):
                 return runtime
@@ -290,21 +297,35 @@ def _render_nvm_init_block():
     return "\n".join(lines) + "\n"
 
 
-def _resolve_shell_rc_path():
-    from chattool.setup.alias import resolve_shell, resolve_shell_rc
+def _resolve_shell_rc_targets(interactive=False):
+    from chattool.setup.alias import (
+        BACK_VALUE,
+        resolve_shell_rc,
+        resolve_target_shells,
+        select_target_shells_interactively,
+    )
 
-    shell_name = resolve_shell(None)
-    return resolve_shell_rc(shell_name), shell_name
+    shell_names = resolve_target_shells(None)
+    if interactive:
+        shell_names = select_target_shells_interactively(shell_names)
+        if shell_names == BACK_VALUE:
+            raise click.Abort()
+
+    if not shell_names:
+        click.echo("No shells selected for nvm init update.", err=True)
+        raise click.Abort()
+
+    return [(shell_name, resolve_shell_rc(shell_name)) for shell_name in shell_names]
 
 
-def _install_bundled_nvm(nvm_sh, shell_rc):
+def _install_bundled_nvm(nvm_sh, shell_targets):
     logger.info(f"Writing bundled nvm.sh ({BUNDLED_NVM_VERSION}) to {nvm_sh}")
     nvm_sh.parent.mkdir(parents=True, exist_ok=True)
     nvm_sh.write_text(_read_bundled_nvm_script(), encoding="utf-8")
     nvm_sh.chmod(0o755)
-    _replace_managed_block(
-        shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block()
-    )
+    block = _render_nvm_init_block()
+    for _, shell_rc in shell_targets:
+        _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, block)
 
 
 def _echo_recent_output(result, heading):
@@ -315,7 +336,8 @@ def _echo_recent_output(result, heading):
     click.echo(output, err=True)
 
 
-def setup_nodejs(interactive=None):
+def setup_nodejs(interactive=None, log_level="INFO"):
+    _configure_logger(log_level)
     logger.info("Start nodejs setup")
     usage = "Usage: chattool setup nodejs [-i|-I]"
     interactive, can_prompt, force_interactive, _, need_prompt = (
@@ -346,25 +368,26 @@ def setup_nodejs(interactive=None):
         )
 
     nvm_sh = Path.home() / ".nvm" / "nvm.sh"
-    shell_rc, shell_name = _resolve_shell_rc_path()
+    shell_targets = _resolve_shell_rc_targets(interactive=need_prompt)
     if not nvm_sh.exists():
         logger.info(f"nvm not found, installing bundled nvm ({BUNDLED_NVM_VERSION})")
         click.echo(f"nvm not found, writing bundled nvm.sh ({BUNDLED_NVM_VERSION})...")
         try:
-            _install_bundled_nvm(nvm_sh, shell_rc)
+            _install_bundled_nvm(nvm_sh, shell_targets)
         except Exception as exc:
             logger.error(f"Failed to install bundled nvm: {exc}")
             click.echo("Failed to install bundled nvm.", err=True)
             raise click.Abort() from exc
         click.echo(f"Bundled nvm installed: {nvm_sh}")
-        click.echo(f"Updated {shell_name} init: {shell_rc}")
+        for shell_name, shell_rc in shell_targets:
+            click.echo(f"Updated {shell_name} init: {shell_rc}")
     else:
         click.echo(f"Found nvm: {nvm_sh}")
-        _replace_managed_block(
-            shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, _render_nvm_init_block()
-        )
-        logger.info(f"Ensured nvm init block in {shell_rc}")
-        click.echo(f"Ensured nvm init in {shell_rc}")
+        block = _render_nvm_init_block()
+        for shell_name, shell_rc in shell_targets:
+            _replace_managed_block(shell_rc, NVM_INIT_BEGIN, NVM_INIT_END, block)
+            logger.info(f"Ensured nvm init block in {shell_rc}")
+            click.echo(f"Ensured nvm init in {shell_rc} ({shell_name})")
 
     version_spec = "lts/*"
     if need_prompt:

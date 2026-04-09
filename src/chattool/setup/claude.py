@@ -53,7 +53,11 @@ def _load_existing_claude_config(claude_dir):
 
 
 def setup_claude(
-    auth_token=None, base_url=None, small_fast_model=None, interactive=None
+    auth_token=None,
+    base_url=None,
+    small_fast_model=None,
+    interactive=None,
+    log_level="INFO",
 ):
     import click
 
@@ -73,7 +77,7 @@ def setup_claude(
     from chattool.utils.custom_logger import setup_logger
     from chattool.interaction import BACK_VALUE
 
-    logger = setup_logger("setup_claude")
+    logger = setup_logger("setup_claude", log_level=str(log_level).upper())
     claude_dir = Path.home() / ".claude"
     existing = _load_existing_claude_config(claude_dir)
     existing_auth = existing.get("auth_token")
@@ -118,7 +122,11 @@ def setup_claude(
         logger.error("Missing required arguments and no TTY available")
         raise
 
-    ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
+    ensure_nodejs_requirement(
+        interactive=interactive,
+        can_prompt=can_prompt,
+        log_level=log_level,
+    )
 
     if need_prompt:
         auth_token = prompt_sensitive_value(

@@ -29,6 +29,12 @@ DEFAULT_PROVIDER_NPM = "@ai-sdk/openai-compatible"
 logger = setup_logger("setup_opencode")
 
 
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_opencode", log_level=str(log_level).upper())
+    return logger
+
+
 def _mask_secret(value):
     if not value:
         return ""
@@ -140,8 +146,14 @@ def _load_existing_opencode_config(config_path, provider_id):
 
 
 def setup_opencode(
-    base_url=None, api_key=None, model=None, env_ref=None, interactive=None
+    base_url=None,
+    api_key=None,
+    model=None,
+    env_ref=None,
+    interactive=None,
+    log_level="INFO",
 ):
+    _configure_logger(log_level)
     config_dir = Path.home() / ".config" / "opencode"
     config_path = config_dir / "opencode.json"
     provider_id = DEFAULT_PROVIDER_ID
@@ -214,7 +226,11 @@ def setup_opencode(
         logger.error("Missing required arguments and no TTY available")
         raise
 
-    ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
+    ensure_nodejs_requirement(
+        interactive=interactive,
+        can_prompt=can_prompt,
+        log_level=log_level,
+    )
 
     if need_prompt:
         base_url = prompt_text_value("base_url", base_url, fallback=DEFAULT_BASE_URL)

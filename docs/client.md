@@ -39,6 +39,12 @@ CLI按功能分为几个命令组：
 chattool setup cc-connect
 ```
 
+如需看更详细的阶段日志，可附加：
+
+```bash
+chattool setup cc-connect --log-level DEBUG
+```
+
 如果你更习惯从 `cc` 分组进入，也可以继续使用别名：
 
 ```bash
@@ -57,6 +63,12 @@ chattool cc init -i --quiet
 
 ```bash
 chattool setup codex
+```
+
+如需更详细地查看依赖检测、npm 安装和配置写入阶段，可附加：
+
+```bash
+chattool setup codex --log-level DEBUG
 ```
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
@@ -102,6 +114,12 @@ chattool setup codex --api-key "sk-xxx" --base-url "https://example.com/openai" 
 chattool setup claude
 ```
 
+如需查看更详细的安装和写入日志，可附加：
+
+```bash
+chattool setup claude --log-level DEBUG
+```
+
 命令同样会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续收集 Claude Code 配置。
 
 直接传参：
@@ -122,6 +140,12 @@ chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/
 
 ```bash
 chattool setup opencode
+```
+
+如需更详细的依赖检查和配置写入日志，可附加：
+
+```bash
+chattool setup opencode --log-level DEBUG
 ```
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 OpenCode 的配置流程。
@@ -154,6 +178,12 @@ chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 
 ```bash
 chattool setup lark-cli
+```
+
+如需更详细地查看 Node.js 检查、npm 安装和 `lark-cli` 初始化阶段，可附加：
+
+```bash
+chattool setup lark-cli --log-level DEBUG
 ```
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 `lark-cli` 的配置流程。
@@ -193,6 +223,12 @@ lark-cli auth login --recommend
 
 ```bash
 chattool setup docker
+```
+
+如需更详细地查看环境检查分支和建议命令判断，可附加：
+
+```bash
+chattool setup docker --log-level DEBUG
 ```
 
 默认只打印建议命令，不会直接执行 `sudo`。如需允许命令在确认后直接执行，显式传入：

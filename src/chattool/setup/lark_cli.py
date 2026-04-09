@@ -31,6 +31,12 @@ from chattool.utils.custom_logger import setup_logger
 logger = setup_logger("setup_lark_cli")
 
 
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_lark_cli", log_level=str(log_level).upper())
+    return logger
+
+
 def _mask_secret(value):
     if not value:
         return ""
@@ -230,8 +236,14 @@ def _run_lark_cli_command(
 
 
 def setup_lark_cli(
-    app_id=None, app_secret=None, brand=None, env_ref=None, interactive=None
+    app_id=None,
+    app_secret=None,
+    brand=None,
+    env_ref=None,
+    interactive=None,
+    log_level="INFO",
 ):
+    _configure_logger(log_level)
     config_dir = _get_lark_cli_config_dir()
     config_path = _get_lark_cli_config_path()
     existing = _load_existing_lark_cli_config(config_path)
@@ -312,7 +324,11 @@ def setup_lark_cli(
         logger.error("Missing required arguments and no TTY available")
         raise
 
-    ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
+    ensure_nodejs_requirement(
+        interactive=interactive,
+        can_prompt=can_prompt,
+        log_level=log_level,
+    )
 
     if need_prompt:
         app_id = prompt_text_value("lark-cli app_id", app_id)

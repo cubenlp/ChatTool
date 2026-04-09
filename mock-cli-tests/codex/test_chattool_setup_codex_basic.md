@@ -23,6 +23,26 @@ run chattool setup codex -I
 assert config.toml and auth.json keep existing codex values
 ```
 
+## Case 1.1: `--log-level` should be forwarded to Node.js requirement checks
+
+### 初始环境准备
+
+- mock 掉 Node.js 检查函数，记录收到的 `log_level` 参数。
+- mock 掉 npm 安装判断。
+
+### 预期过程和结果
+
+- 执行 `chattool setup codex -I --log-level DEBUG --api-key ...`。
+- `ensure_nodejs_requirement()` 应收到 `log_level="DEBUG"`。
+
+### 参考执行脚本（伪代码）
+
+```sh
+stub ensure_nodejs_requirement and record log_level
+run chattool setup codex -I --log-level DEBUG with explicit values
+assert ensure_nodejs_requirement received DEBUG
+```
+
 ## Case 2: explicit args should override `-e` values
 
 ### 初始环境准备

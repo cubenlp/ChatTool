@@ -11,6 +11,7 @@ chattool setup nodejs
 ```
 
 该命令会直接写入 ChatTool 内置的 `nvm.sh`，不会再通过 `curl` 从 GitHub 拉取安装脚本。
+默认会把 ChatTool 管理的 nvm 初始化块同步写入所有已探测到的 shell rc 文件（当前支持 `~/.zshrc` 和 `~/.bashrc`）；使用 `-i` 时可先交互选择要更新的 shell。
 注意后续 `nvm install` 仍需要联网下载 Node.js 版本文件。
 执行 `chattool setup opencode` 时，也会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足且终端可交互时，会先提示是否安装/升级。
 
@@ -30,6 +31,12 @@ chattool setup opencode
 
 ```bash
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
+```
+
+如需更详细地查看依赖检测、npm 安装和配置写入阶段，可附加：
+
+```bash
+chattool setup opencode --log-level DEBUG
 ```
 
 如果你已经在 `chatenv` 里维护了 OpenAI 配置，也可以显式复用：

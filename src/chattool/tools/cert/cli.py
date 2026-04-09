@@ -46,8 +46,16 @@ CERT_UPDATE_SCHEMA = CommandSchema(
 @click.option("--cert-dir", default="certs", help=f"证书存储根目录，默认 certs")
 @click.option("--staging", is_flag=True, help="使用Let's Encrypt测试环境")
 @click.option("--log-file", default=None, help=f"日志文件路径，默认不记录到文件")
+@click.option(
+    "-l",
+    "--log-level",
+    default="INFO",
+    show_default=True,
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
+    help="控制证书更新过程的日志级别",
+)
 @add_interactive_option
-def main(domains, email, provider, cert_dir, staging, log_file, interactive):
+def main(domains, email, provider, cert_dir, staging, log_file, log_level, interactive):
     """SSL 证书自动更新工具
 
     使用 Let's Encrypt 和 DNS API 自动申请和更新 SSL 证书。
@@ -72,7 +80,11 @@ def main(domains, email, provider, cert_dir, staging, log_file, interactive):
         domains = (domains,)
     email = inputs["email"]
 
-    logger = setup_logger("ssl_cert_updater", log_file)
+    logger = setup_logger(
+        "ssl_cert_updater",
+        log_file,
+        log_level=str(log_level).upper(),
+    )
 
     click.echo(f"启动SSL证书更新器...")
     click.echo(f"域名: {', '.join(domains)}")

@@ -14,6 +14,8 @@ from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_alias")
 
+SUPPORTED_SHELLS = ("zsh", "bash")
+
 ALIAS_MAP = {
     "chatenv": "chattool env",
     "chatskill": "chattool skill",
@@ -34,7 +36,7 @@ BLOCK_END = "# <<< chattool aliases <<<"
 
 
 def resolve_shell(shell=None):
-    if shell in {"zsh", "bash"}:
+    if shell in SUPPORTED_SHELLS:
         return shell
     shell_env = os.path.basename(os.environ.get("SHELL", "")).lower()
     if "zsh" in shell_env:
@@ -45,7 +47,7 @@ def resolve_shell(shell=None):
 
 
 def resolve_target_shells(shell=None):
-    if shell in {"zsh", "bash"}:
+    if shell in SUPPORTED_SHELLS:
         return [shell]
 
     detected = []
@@ -57,6 +59,28 @@ def resolve_target_shells(shell=None):
         return detected
 
     return [resolve_shell(None)]
+
+
+def select_target_shells_interactively(default_selected):
+    choices = [
+        create_choice(
+            title=shell_name,
+            value=shell_name,
+            checked=shell_name in default_selected,
+        )
+        for shell_name in SUPPORTED_SHELLS
+        if shell_name in default_selected
+    ]
+    selected = ask_checkbox_with_controls(
+        "Select shells",
+        choices=choices,
+        default_values=default_selected,
+        instruction="(Use arrow keys to move, <space> to toggle, <a> to toggle all, <enter> to confirm)",
+        select_all_label="Select all shells",
+    )
+    if selected == BACK_VALUE:
+        return BACK_VALUE
+    return selected or []
 
 
 def resolve_shell_rc(shell, home=None):
@@ -124,7 +148,18 @@ def setup_alias(shell=None, dry_run=False):
     if os.name != "posix":
         click.echo("setup alias only supports Unix-like systems.", err=True)
         raise click.Abort()
-    shell_names = resolve_target_shells(shell)
+
+    detected_shells = resolve_target_shells(shell)
+    shell_names = detected_shells
+    if shell is None and is_interactive_available():
+        shell_names = select_target_shells_interactively(detected_shells)
+        if shell_names == BACK_VALUE:
+            raise click.Abort()
+
+    if not shell_names:
+        click.secho("[info] No shells selected, nothing to update.", fg="yellow")
+        return
+
     rc_paths = [
         (shell_name, resolve_shell_rc(shell_name)) for shell_name in shell_names
     ]

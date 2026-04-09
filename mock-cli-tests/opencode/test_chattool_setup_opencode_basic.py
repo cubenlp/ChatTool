@@ -34,7 +34,7 @@ def test_setup_opencode_reuses_openai_profile(tmp_path, monkeypatch, runner):
     monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.setup.opencode.ensure_nodejs_requirement",
-        lambda interactive, can_prompt: None,
+        lambda interactive, can_prompt, log_level="INFO": None,
     )
     monkeypatch.setattr(
         "chattool.setup.opencode.should_install_global_npm_package",
@@ -85,7 +85,7 @@ def test_setup_opencode_prefers_existing_config_over_current_env(
     monkeypatch.setenv("OPENAI_API_MODEL", "env-model")
     monkeypatch.setattr(
         "chattool.setup.opencode.ensure_nodejs_requirement",
-        lambda interactive, can_prompt: None,
+        lambda interactive, can_prompt, log_level="INFO": None,
     )
     monkeypatch.setattr(
         "chattool.setup.opencode.should_install_global_npm_package",
@@ -128,7 +128,7 @@ def test_setup_opencode_explicit_args_override_env_ref(tmp_path, monkeypatch, ru
     monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.setup.opencode.ensure_nodejs_requirement",
-        lambda interactive, can_prompt: None,
+        lambda interactive, can_prompt, log_level="INFO": None,
     )
     monkeypatch.setattr(
         "chattool.setup.opencode.should_install_global_npm_package",
@@ -162,3 +162,44 @@ def test_setup_opencode_explicit_args_override_env_ref(tmp_path, monkeypatch, ru
     assert provider["options"]["baseURL"] == "https://explicit.example/v1"
     assert provider["options"]["apiKey"] == "sk-explicit"
     assert payload["model"] == "opencode/explicit-model"
+
+
+def test_setup_opencode_forwards_log_level_to_nodejs_check(
+    tmp_path, monkeypatch, runner
+):
+    home_dir = tmp_path / "home"
+    captured = {}
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+
+    def fake_ensure_nodejs_requirement(interactive, can_prompt, log_level):
+        captured["log_level"] = log_level
+
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        fake_ensure_nodejs_requirement,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "opencode",
+            "-I",
+            "--log-level",
+            "DEBUG",
+            "--base-url",
+            "https://explicit.example/v1",
+            "--api-key",
+            "sk-explicit",
+            "--model",
+            "explicit-model",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["log_level"] == "DEBUG"
