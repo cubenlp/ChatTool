@@ -48,7 +48,7 @@ When you finish a task, ask these in order:
 2. If not CLI, should it become a reusable Python helper under `src/`?
 3. If task-specific, should it become a skill note or reference file under `skills/<name>/`?
 4. Does the new behavior require:
-   - `cli-tests/*.md`
+   - `tests/cli-tests/*.md`
    - `docs/tools/<name>/index.md`
    - `README.md`
    - `CHANGELOG.md`

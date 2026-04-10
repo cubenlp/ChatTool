@@ -40,6 +40,7 @@ BASE_DIRS = [
     "playgrounds",
     "docs",
     "docs/memory",
+    "docs/skills",
     "docs/tools",
     "core",
     "reference",

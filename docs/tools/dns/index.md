@@ -153,6 +153,7 @@ chattool dns cert-update -d *.example.com -e admin@example.com --cert-dir ./cert
 - `--email, -e`: Let's Encrypt 账户邮箱 (用于接收通知)；交互终端里缺少时会自动补问。
 - `--cert-dir`: (可选) 证书存储根目录 (默认: `certs`)。证书将保存在 `<cert-dir>/<domain>/` 下。
 - `--staging`: (可选) 使用 Let's Encrypt 测试环境 (建议首次测试时使用)。
+- `-l, --log-level`: (可选) 控制证书更新阶段日志级别，默认 `INFO`；排查问题时可用 `DEBUG`。
 
 ## 扩展指南
 

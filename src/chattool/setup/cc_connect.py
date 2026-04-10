@@ -14,7 +14,14 @@ from chattool.utils.custom_logger import setup_logger
 logger = setup_logger("setup_cc_connect")
 
 
-def setup_cc_connect(interactive=None):
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_cc_connect", log_level=str(log_level).upper())
+    return logger
+
+
+def setup_cc_connect(interactive=None, log_level="INFO"):
+    _configure_logger(log_level)
     logger.info("Start cc-connect setup")
     usage = "Usage: chattool setup cc-connect [-i|-I]"
     interactive, can_prompt, force_interactive, _, _ = resolve_interactive_mode(
@@ -23,7 +30,11 @@ def setup_cc_connect(interactive=None):
     )
     abort_if_force_without_tty(force_interactive, can_prompt, usage)
 
-    ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
+    ensure_nodejs_requirement(
+        interactive=interactive,
+        can_prompt=can_prompt,
+        log_level=log_level,
+    )
 
     logger.info("Checking cc-connect installation")
     if not should_install_global_npm_package(

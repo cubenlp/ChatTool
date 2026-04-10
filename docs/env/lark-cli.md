@@ -54,6 +54,12 @@ chattool setup lark-cli \
   --brand feishu
 ```
 
+如需更详细地查看 Node.js 检查、npm 安装与 `lark-cli config init` 阶段，可附加：
+
+```bash
+chattool setup lark-cli --log-level DEBUG
+```
+
 ## 参数优先级
 
 `setup lark-cli` 的解析顺序是：

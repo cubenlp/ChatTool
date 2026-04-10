@@ -6,7 +6,7 @@
 - `docker-compose.playwright.yml`
 - `docker-compose.headless-chromedriver.yml`
 - `docker-compose.nas.yml`
-- `../Dockerfile.playground`
+- `../Dockerfile.playground`（workspace 启动镜像）
 - `chromium.env.example`
 - `playwright.env.example`
 - `headless-chromedriver.env.example`
@@ -78,7 +78,7 @@ chattool docker nas /path/to --set IMAGE=halverneus/static-file-server:latest --
 chattool docker chromium /path/to --compose-name compose.yaml --env-name chromium.local.env.example
 ```
 
-另外，仓库根目录提供了一个直接可构建的 Playground 镜像文件：
+另外，仓库根目录提供了一个直接可构建的 workspace 启动镜像文件：
 
 ```bash
 docker build -f Dockerfile.playground -t chattool-playground .
@@ -86,7 +86,7 @@ docker build -f Dockerfile.playground -t chattool-playground .
 
 这个镜像会在线性启动流程里依次执行：
 
-1. `chattool setup playground`
+1. `chattool setup workspace /workspace --with-chattool --chattool-source /playground/ChatTool -I`
 2. `chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills`
 3. `chattool setup alias`
 

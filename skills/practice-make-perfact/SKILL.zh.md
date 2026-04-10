@@ -46,7 +46,7 @@ version: 0.4.1
    - 检查最小 import / lazy import  
    - 检查缺参自动交互与 `-i/-I`  
     - 检查新的交互是否统一走 `src/chattool/interaction/`  
-   - 检查测试、`docs/`、`README.md`、`CHANGELOG.md`、`cli-tests/` 是否同步  
+   - 检查测试、`docs/`、`README.md`、`CHANGELOG.md`、`tests/cli-tests/` 是否同步  
    - 默认主动调用 `$chattool-dev-review` 做这一轮开发验收，除非用户明确不要
 
 5. **文档与 skill 同步**  

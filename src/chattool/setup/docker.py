@@ -19,6 +19,12 @@ logger = setup_logger("setup_docker")
 DOCKER_COMPOSE_VERSION = "v2.22.0"
 
 
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_docker", log_level=str(log_level).upper())
+    return logger
+
+
 def _run(command: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(command, capture_output=True, text=True)
 
@@ -88,7 +94,8 @@ def _maybe_run_command(
     click.echo(f"Suggested: {command_text}")
 
 
-def setup_docker(interactive=None, use_sudo=False):
+def setup_docker(interactive=None, use_sudo=False, log_level="INFO"):
+    _configure_logger(log_level)
     usage = "Usage: chattool setup docker [--sudo] [-i|-I]"
     interactive, can_prompt, force_interactive, _, _ = resolve_interactive_mode(
         interactive=interactive,

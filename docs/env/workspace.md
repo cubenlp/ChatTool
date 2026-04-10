@@ -4,6 +4,8 @@
 
 当前版本采用“基础 workspace + 可选配置项”的结构。
 
+新建工作区时，命令会直接生成可用的 `AGENTS.md`、`MEMORY.md` 和 `setup.md`。如果目标目录已经像一个 workspace，命令不会贸然覆盖现有协议，而是额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 与迁移版 `setup.md`，作为迁移指南。
+
 基础目录固定生成：
 
 - `reports/`
@@ -41,6 +43,11 @@ chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--force] 
 - `--dry-run`：只打印将创建的目录与文件，不写入磁盘
 - `-i / -I`：强制交互 / 禁止交互
 
+补充语义：
+
+- 如果 `setup.md` 中已经标记 `completed: ...`，即使传 `--force` 也不会覆盖它。
+- 如果目标目录已存在 `AGENTS.md` / `MEMORY.md` 等 workspace 标记，优先进入“迁移辅助”模式，而不是直接改写现有协议。
+
 ## 2. 基础结构
 
 ```text
@@ -48,6 +55,7 @@ workspace/
 ├── README.md
 ├── AGENTS.md
 ├── MEMORY.md
+├── setup.md
 ├── TODO.md
 ├── reports/
 ├── playgrounds/
@@ -80,6 +88,8 @@ workspace/
 - `workspace` 是基础模型
 - 额外仓库和发布能力通过“可选配置项”叠加
 - 不再为每个场景分叉新的 workspace 命令
+- 默认完整做完后再统一汇报结果，不在任务未完成时阶段性邀请 review
+- 如果是开发任务，每个阶段要先测试通过、完善文档并自行 review
 
 ## 5. dry-run
 
@@ -92,3 +102,17 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 - 将创建哪些目录
 - 将写哪些文件
 - 将启用哪些可选配置项
+
+## 6. setup.md 的两种模式
+
+### 新建 workspace
+
+- `setup.md` 会作为 onboarding checklist
+- 引导模型先读 `AGENTS.md` / `MEMORY.md`
+- 默认先创建常规 `task`，只有长期系列目标才切换到 `taskset`
+
+### 已有 workspace
+
+- `setup.md` 会作为 migration guide
+- 会提示对照 `AGENTS.generated.md` / `MEMORY.generated.md` 迁移新版协议
+- 迁移完成后可以删除这些辅助文件

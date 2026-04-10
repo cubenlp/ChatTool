@@ -18,7 +18,7 @@ chattool cc start
 - `chattool setup cc-connect`：安装/检查 Node.js、npm 与 cc-connect
 - `chattool cc setup`：`chattool setup cc-connect` 的别名
 - `chattool cc init`：生成最小可用配置（Agent + Platform + Project）
-- `chattool cc start`：启动 cc-connect（前台输出，同时写入日志）
+- `chattool cc start`：启动 cc-connect（前台输出，同时写入日志；失败时默认重试 5 次）
 - `chattool cc status`：查看基础状态
 - `chattool cc logs`：查看/跟随日志
 - `chattool cc doctor`：快速自检
@@ -34,6 +34,8 @@ chattool cc start
 - 飞书平台会直接提示 `app_id` 与 `app_secret`；如果当前 `chatenv` 已配置飞书凭证，会自动作为默认候选值。
 - 生成的配置会包含可选代理字段（`proxy`/`proxy_username`/`proxy_password`）注释。
 - 如需填写代理配置，请使用 `chattool cc init -i --full-options`。
+- `chattool cc start` 现在会捕获启动异常和非零退出；每次失败都会把错误输出给用户，并按 `--max-failures` / `--retry-delay` 继续重试。
+- 默认连续失败阈值是 `5`；达到阈值后会停止重试并以错误退出，避免异常崩溃后直接不可用。
 
 ## 代理说明
 

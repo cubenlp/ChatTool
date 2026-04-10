@@ -41,59 +41,76 @@ def frp_setup(interactive):
     setup_frp(interactive=interactive)
 
 
-def nodejs_setup(interactive):
-    setup_nodejs(interactive=interactive)
+def nodejs_setup(interactive, log_level):
+    setup_nodejs(interactive=interactive, log_level=log_level)
 
 
-def docker_setup(sudo, interactive):
-    setup_docker(interactive=interactive, use_sudo=sudo)
+def docker_setup(sudo, interactive, log_level):
+    setup_docker(interactive=interactive, use_sudo=sudo, log_level=log_level)
 
 
 def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(api_key, base_url, model, env, interactive):
+def codex_setup(api_key, base_url, model, env, interactive, log_level):
     setup_codex(
         api_key=api_key,
         base_url=base_url,
         model=model,
         env_ref=env,
         interactive=interactive,
+        log_level=log_level,
     )
 
 
-def cc_connect_setup(sudo=None, interactive=None):
-    setup_cc_connect(interactive=interactive)
+def cc_connect_setup(sudo=None, interactive=None, log_level="INFO"):
+    setup_cc_connect(interactive=interactive, log_level=log_level)
 
 
-def claude_setup(auth_token, base_url, small_fast_model, interactive):
+def claude_setup(auth_token, base_url, small_fast_model, interactive, log_level):
     setup_claude(
         auth_token=auth_token,
         base_url=base_url,
         small_fast_model=small_fast_model,
         interactive=interactive,
+        log_level=log_level,
     )
 
 
-def opencode_setup(base_url, api_key, model, env, interactive):
+def opencode_setup(base_url, api_key, model, env, interactive, log_level):
     setup_opencode(
         base_url=base_url,
         api_key=api_key,
         model=model,
         env_ref=env,
         interactive=interactive,
+        log_level=log_level,
     )
 
 
-def lark_cli_setup(app_id, app_secret, brand, env, interactive):
+def lark_cli_setup(app_id, app_secret, brand, env, interactive, log_level):
     setup_lark_cli(
         app_id=app_id,
         app_secret=app_secret,
         brand=brand,
         env_ref=env,
         interactive=interactive,
+        log_level=log_level,
     )
+
+
+LOG_LEVEL_OPTION = SetupOptionElement(
+    param_decls=("-l", "--log-level"),
+    kwargs={
+        "default": "INFO",
+        "show_default": True,
+        "type": click.Choice(
+            ["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False
+        ),
+        "help": "Console log level for staged setup logs.",
+    },
+)
 
 
 def workspace_setup(
@@ -146,6 +163,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup cc-connect CLI and runtime dependencies.",
         callback=cc_connect_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--sudo",),
                 kwargs={
@@ -167,6 +185,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup Claude Code CLI and config files.",
         callback=claude_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
@@ -217,6 +236,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Check Docker environment and optionally run suggested sudo commands.",
         callback=docker_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--sudo",),
                 kwargs={
@@ -238,6 +258,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup FRP Client/Server.",
         callback=frp_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
@@ -252,6 +273,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup nvm and Node.js (default LTS).",
         callback=nodejs_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
@@ -266,6 +288,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup Codex CLI and config files.",
         callback=codex_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
@@ -305,6 +328,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup OpenCode CLI and config files.",
         callback=opencode_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
@@ -338,6 +362,7 @@ SETUP_COMMAND_ELEMENTS = (
         help="Setup official lark-cli and reuse ChatTool Feishu config.",
         callback=lark_cli_setup,
         options=(
+            LOG_LEVEL_OPTION,
             SetupOptionElement(
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={

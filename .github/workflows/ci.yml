@@ -38,8 +38,8 @@ jobs:
     - name: Run stable smoke tests
       run: |
         python -m pytest -q \
-          tests/test_setup_alias.py \
-          tests/skills/test_cli.py \
-          tests/skills/test_skill_assets.py \
-          tests/tools/github/test_cli.py \
-          mock-cli-tests
+          tests/code-tests/test_setup_alias.py \
+          tests/code-tests/skills/test_cli.py \
+          tests/code-tests/skills/test_skill_assets.py \
+          tests/code-tests/tools/github/test_cli.py \
+          tests/mock-cli-tests

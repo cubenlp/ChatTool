@@ -29,6 +29,12 @@ DEFAULT_AUTH_METHOD = "apikey"
 logger = setup_logger("setup_codex")
 
 
+def _configure_logger(log_level="INFO"):
+    global logger
+    logger = setup_logger("setup_codex", log_level=str(log_level).upper())
+    return logger
+
+
 def _mask_secret(value):
     if not value:
         return ""
@@ -159,7 +165,9 @@ def setup_codex(
     model=None,
     env_ref=None,
     interactive=None,
+    log_level="INFO",
 ):
+    _configure_logger(log_level)
     codex_dir = Path.home() / ".codex"
     existing = _load_existing_codex_config(codex_dir)
     env_values, typed_env_values = split_config_sources(
@@ -213,7 +221,11 @@ def setup_codex(
         logger.error("Missing required OpenAI API key and no TTY available")
         raise
 
-    ensure_nodejs_requirement(interactive=interactive, can_prompt=can_prompt)
+    ensure_nodejs_requirement(
+        interactive=interactive,
+        can_prompt=can_prompt,
+        log_level=log_level,
+    )
 
     if need_prompt:
         api_key = prompt_sensitive_value("OPENAI_API_KEY", api_key, _mask_secret)
