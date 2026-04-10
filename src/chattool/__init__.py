@@ -4,7 +4,7 @@ import importlib
 
 __author__ = """Rex Wang"""
 __email__ = "1073853456@qq.com"
-__version__ = "6.5.5"
+__version__ = "6.5.4"
 
 from dotenv import load_dotenv
 
