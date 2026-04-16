@@ -162,6 +162,7 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 ```bash
 chattool setup opencode -e work
 chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
+chattool setup opencode -e work --plugin auto-loop
 ```
 
 解析顺序为：
@@ -172,6 +173,12 @@ chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 4. 当前 shell 的系统环境变量
 5. `envs/OpenAI/.env` 的 typed 默认值
 6. 默认值
+
+如果你希望顺手把 `opencode-auto-loop` 写入 OpenCode 配置，也可以显式加上：
+
+```bash
+chattool setup opencode --plugin auto-loop
+```
 
 ### 0.4 Lark CLI (`setup lark-cli`)
 

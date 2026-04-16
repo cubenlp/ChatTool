@@ -203,3 +203,104 @@ def test_setup_opencode_forwards_log_level_to_nodejs_check(
 
     assert result.exit_code == 0
     assert captured["log_level"] == "DEBUG"
+
+
+def test_setup_opencode_adds_auto_loop_plugin(tmp_path, monkeypatch, runner):
+    home_dir = tmp_path / "home"
+    config_dir = home_dir / ".config" / "opencode"
+    config_dir.mkdir(parents=True)
+    (config_dir / "opencode.json").write_text(
+        json.dumps(
+            {
+                "$schema": "https://opencode.ai/config.json",
+                "model": "opencode/existing-model",
+                "provider": {
+                    "opencode": {
+                        "options": {
+                            "baseURL": "https://existing.example/v1",
+                            "apiKey": "sk-existing",
+                        },
+                        "models": {"existing-model": {"name": "existing-model"}},
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "opencode",
+            "-I",
+            "--base-url",
+            "https://explicit.example/v1",
+            "--api-key",
+            "sk-explicit",
+            "--model",
+            "explicit-model",
+            "--plugin",
+            "auto-loop",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Enabled OpenCode plugin preset: opencode-auto-loop" in result.output
+    payload = json.loads((config_dir / "opencode.json").read_text(encoding="utf-8"))
+    assert payload["plugin"] == ["opencode-auto-loop"]
+    assert payload["model"] == "opencode/explicit-model"
+
+
+def test_setup_opencode_interactive_can_select_auto_loop_plugin(
+    tmp_path, monkeypatch, runner
+):
+    home_dir = tmp_path / "home"
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (True, True, False, True, True),
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.prompt_text_value",
+        lambda label, value, fallback=None: value or fallback,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.prompt_sensitive_value",
+        lambda label, value, masker=None: value or "sk-interactive",
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ask_checkbox_with_controls",
+        lambda message, choices, default_values=None, instruction=None, select_all_label=None: [
+            "auto-loop"
+        ],
+    )
+
+    result = runner.invoke(cli, ["setup", "opencode"])
+
+    assert result.exit_code == 0
+    payload = json.loads(
+        (home_dir / ".config" / "opencode" / "opencode.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert payload["plugin"] == ["opencode-auto-loop"]

@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
+- `chattool setup opencode` 新增 `--plugin auto-loop`，可在写入 OpenCode 基础 provider/model 配置时同步把 `opencode-auto-loop` 追加到 `plugin` 数组，方便直接启用现成 auto-loop 插件
 - `chattool setup workspace` 现在会把“任务未完成前不要阶段性邀请 review；默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档并自行 review
 - `chattool setup workspace` 现在区分新建与已有 workspace：新目录直接生成 `AGENTS.md` / `MEMORY.md` / `setup.md`，已有 workspace 则额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 与迁移版 `setup.md`，便于模型完成协议迁移后再删除辅助文件
 - `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板

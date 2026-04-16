@@ -31,6 +31,7 @@ chattool setup opencode
 
 ```bash
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
+chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini" --plugin auto-loop
 ```
 
 如需更详细地查看依赖检测、npm 安装和配置写入阶段，可附加：
@@ -60,7 +61,17 @@ chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 5. `envs/OpenAI/.env` 中的 typed 默认值
 6. 默认值
 
-## 4. 配置文件位置
+## 4. 可选插件预设
+
+如果你希望在 OpenCode 配置里顺手启用现成的 `opencode-auto-loop` 插件，可显式附加：
+
+```bash
+chattool setup opencode --plugin auto-loop
+```
+
+该选项会把 `opencode-auto-loop` 追加写入 OpenCode 配置文件中的 `plugin` 数组；若已存在则不会重复追加。
+
+## 5. 配置文件位置
 
 配置默认写入：
 

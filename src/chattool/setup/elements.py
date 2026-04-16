@@ -78,13 +78,22 @@ def claude_setup(auth_token, base_url, small_fast_model, interactive, log_level)
     )
 
 
-def opencode_setup(base_url, api_key, model, env, interactive, log_level):
+def opencode_setup(
+    base_url=None,
+    api_key=None,
+    model=None,
+    env=None,
+    interactive=None,
+    plugin=None,
+    log_level="INFO",
+):
     setup_opencode(
         base_url=base_url,
         api_key=api_key,
         model=model,
         env_ref=env,
         interactive=interactive,
+        plugin=plugin,
         log_level=log_level,
     )
 
@@ -353,6 +362,14 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "default": None,
                     "help": "Load OpenAI config from a .env file path or saved OpenAI profile name.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--plugin",),
+                kwargs={
+                    "default": None,
+                    "type": click.Choice(["auto-loop"]),
+                    "help": "Optionally enable an OpenCode plugin preset such as opencode-auto-loop.",
                 },
             ),
         ),

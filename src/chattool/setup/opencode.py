@@ -9,8 +9,10 @@ from chattool.config.source_chain import split_config_sources
 from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
 from chattool.interaction import (
     BACK_VALUE,
+    ask_checkbox_with_controls,
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    create_choice,
     prompt_sensitive_value,
     prompt_text_value,
     resolve_interactive_mode,
@@ -26,6 +28,7 @@ from chattool.utils.custom_logger import setup_logger
 DEFAULT_PROVIDER_ID = "opencode"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_PROVIDER_NPM = "@ai-sdk/openai-compatible"
+PLUGIN_PRESETS = {"auto-loop": "opencode-auto-loop"}
 logger = setup_logger("setup_opencode")
 
 
@@ -150,6 +153,7 @@ def setup_opencode(
     api_key=None,
     model=None,
     env_ref=None,
+    plugin=None,
     interactive=None,
     log_level="INFO",
 ):
@@ -245,6 +249,24 @@ def setup_opencode(
         if model == BACK_VALUE:
             return
 
+        if plugin is None:
+            selected_plugins = ask_checkbox_with_controls(
+                "Select plugins",
+                choices=[
+                    create_choice(
+                        "opencode-auto-loop",
+                        "auto-loop",
+                    )
+                ],
+                default_values=[],
+                instruction="(Use arrow keys to move, <space> to toggle, <a> to toggle all, <enter> to confirm)",
+                select_all_label="Select all plugins",
+            )
+            if selected_plugins == BACK_VALUE:
+                return
+            if selected_plugins:
+                plugin = "auto-loop"
+
     if not (base_url and api_key and model):
         logger.error("Missing base_url, api_key, or model")
         click.echo("Missing base_url, api_key, or model.", err=True)
@@ -287,6 +309,15 @@ def setup_opencode(
 
     config_payload["model"] = f"{provider_id}/{model}"
 
+    if plugin:
+        plugin_name = PLUGIN_PRESETS[plugin]
+        existing_plugins = config_payload.get("plugin")
+        if not isinstance(existing_plugins, list):
+            existing_plugins = []
+        if plugin_name not in existing_plugins:
+            existing_plugins.append(plugin_name)
+        config_payload["plugin"] = existing_plugins
+
     config_dir.mkdir(parents=True, exist_ok=True)
     config_path.write_text(
         json.dumps(config_payload, ensure_ascii=False, indent=2) + "\n",
@@ -299,3 +330,5 @@ def setup_opencode(
     click.echo(f"Config: {config_path}")
     if env_ref:
         click.echo(f"Reused ChatTool OpenAI config: {env_ref}")
+    if plugin:
+        click.echo(f"Enabled OpenCode plugin preset: {PLUGIN_PRESETS[plugin]}")
