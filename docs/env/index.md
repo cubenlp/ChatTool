@@ -45,7 +45,7 @@ chattool setup docker --sudo -i
 
 ### Workspace 协作脚手架
 
-使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架，默认采用常规任务模式，并支持在长期系列工作中切换到 `task-sets` 结构。
+使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架。当前默认采用 `projects/` 为中心的 project 执行模型：先用单任务 project，确实需要多个协同任务时再升级为多任务 project。
 
 ```bash
 chattool setup workspace

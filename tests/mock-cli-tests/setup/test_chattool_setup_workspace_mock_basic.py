@@ -38,10 +38,10 @@ def test_setup_workspace_prompts_for_missing_profile_and_dir(
     assert result.exit_code == 0
     assert selected["workspace"] is not None
     assert (tmp_path / "workspace" / "core").exists()
-    assert (tmp_path / "workspace" / "reference").exists()
+    assert (tmp_path / "workspace" / "projects").exists()
     assert (tmp_path / "workspace" / "skills").exists()
     assert (tmp_path / "workspace" / "public").exists()
-    assert (tmp_path / "workspace" / "setup.md").exists()
+    assert (tmp_path / "workspace" / "README.md").exists()
     assert "Workspace 初始化完成。" in result.output
 
 
@@ -207,13 +207,30 @@ def test_setup_workspace_explicit_english_language(tmp_path, runner):
 
     assert result.exit_code == 0
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
+    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     assert "Current Options" in agents
     assert "已启用项" not in agents
-    assert "Startup Checklist" in setup_md
+    assert "Human-AI collaboration workspace root." in readme
 
 
-def test_setup_workspace_existing_workspace_generates_helper_files(tmp_path, runner):
+def test_setup_workspace_uses_projects_model(tmp_path, runner):
+    workspace_dir = tmp_path / "workspace"
+
+    result = runner.invoke(cli, ["setup", "workspace", str(workspace_dir), "-I"])
+
+    assert result.exit_code == 0
+    assert (workspace_dir / "projects" / "README.md").exists()
+    assert not (workspace_dir / "reports" / "README.md").exists()
+    assert not (workspace_dir / "playgrounds" / "README.md").exists()
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    assert "projects/" in agents
+    assert "reports/" not in agents
+    assert "projects/" in memory
+    assert "reference/" not in memory
+
+
+def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path, runner):
     workspace_dir = tmp_path / "workspace"
     workspace_dir.mkdir()
     (workspace_dir / "AGENTS.md").write_text("legacy agents\n", encoding="utf-8")
@@ -222,8 +239,9 @@ def test_setup_workspace_existing_workspace_generates_helper_files(tmp_path, run
     result = runner.invoke(cli, ["setup", "workspace", str(workspace_dir), "-I"])
 
     assert result.exit_code == 0
-    assert (workspace_dir / "AGENTS.generated.md").exists()
-    assert (workspace_dir / "MEMORY.generated.md").exists()
+    assert not (workspace_dir / "AGENTS.generated.md").exists()
+    assert not (workspace_dir / "MEMORY.generated.md").exists()
+    assert (workspace_dir / "README.md").exists()
     assert (workspace_dir / "AGENTS.md").read_text(
         encoding="utf-8"
     ) == "legacy agents\n"

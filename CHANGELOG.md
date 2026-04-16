@@ -31,8 +31,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 - `chattool setup opencode` 新增 `--plugin auto-loop`，可在写入 OpenCode 基础 provider/model 配置时同步把 `opencode-auto-loop` 追加到 `plugin` 数组，方便直接启用现成 auto-loop 插件
-- `chattool setup workspace` 现在会把“任务未完成前不要阶段性邀请 review；默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档并自行 review
-- `chattool setup workspace` 现在区分新建与已有 workspace：新目录直接生成 `AGENTS.md` / `MEMORY.md` / `setup.md`，已有 workspace 则额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 与迁移版 `setup.md`，便于模型完成协议迁移后再删除辅助文件
+- `chattool setup workspace` 默认结构现切换到 `projects/` 模型：workspace 根目录保留 `README.md` / `AGENTS.md` / `MEMORY.md` 作为 general-use 协议与上下文入口，实际工作统一进入 `projects/` 下的单任务或多任务 project 执行
+- `chattool setup workspace` 现在会把“review 由 loop 在模型准备停下时触发，默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档，再按 `review.md` 规则完成校验与收尾
 - `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
@@ -41,8 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - 新增 `chattool nginx`，用于按模板生成常见的 Nginx 配置片段；当前收口为配置导向的最小模板集：基础 `proxy_pass`、HTTPS 入口反代、WebSocket 转发、静态目录站点和重定向，并支持 `-i` 交互式补齐必要参数
 
 ### Changed
-- `chattool setup workspace` 的任务集汇报结构现统一为 `reports/MM-DD-<set-name>/`：集合目录下直接维护 `TASKSET.md`、`progress.md` 与各子任务目录，不再额外套一层 `task-sets/` 或 `tasks/`
-- `chattool setup workspace` 现移除全局 `thoughts/` 面，避免并发任务时出现一个共享的“当前关注点”入口；相关角色统一收口到各任务或任务集的 `reports/` 结构
+- `chattool setup workspace` 不再默认生成 `reports/` / `playgrounds/` / `setup.md`，也不再依赖 `AGENTS.generated.md` / `MEMORY.generated.md` 这类 helper files 做主要迁移路径；当前更强调通过根目录 `README.md` 和 `projects/README.md` 提供 general-use 入口与结构约定
 
 ## [6.5.0] - 2026-03-31
 

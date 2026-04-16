@@ -25,48 +25,42 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     result = _run_chattool_setup_workspace([str(workspace_dir), "-I"])
 
     assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "README.md").exists()
     assert (workspace_dir / "AGENTS.md").exists()
     assert (workspace_dir / "MEMORY.md").exists()
-    assert (workspace_dir / "setup.md").exists()
+    assert (workspace_dir / "projects" / "README.md").exists()
     assert (workspace_dir / "core").exists()
-    assert (workspace_dir / "reference").exists()
-    assert (workspace_dir / "reports" / "README.md").exists()
-    assert (workspace_dir / "playgrounds" / "README.md").exists()
     assert (workspace_dir / "docs" / "README.md").exists()
     assert (workspace_dir / "docs" / "memory" / "README.md").exists()
     assert (workspace_dir / "docs" / "skills" / "README.md").exists()
     assert (workspace_dir / "docs" / "tools" / "README.md").exists()
 
+    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
     assert "## 写入规则" in agents
-    assert "- 任务分为 `task` 和 `taskset`，默认使用 `task`。" in agents
+    assert "- 所有实际工作统一放到 `projects/` 下。" in agents
     assert (
-        "- 任务未完成前不要阶段性邀请 review；默认完整做完后再统一汇报结果。" in agents
-    )
-    assert (
-        "- 如果是开发任务，每个阶段都要先测试通过、文档完善，并自行 review 后再继续。"
+        "- review 由 loop 在模型准备停下时触发；默认完整做完后再统一汇报结果。"
         in agents
     )
-    assert "reports/MM-DD-<task-name>/" in agents
-    assert "reports/MM-DD-<set-name>/" in agents
-    assert "playgrounds/<task-name>/" in agents
-    assert "playgrounds/task-sets/<set-name>/" in agents
+    assert (
+        "- 如果是开发任务，每个阶段都要先测试通过、文档完善，再根据 `review.md` 定义的规则做校验与验收收尾。"
+        in agents
+    )
+    assert "projects/MM-DD-<task-name>/" in agents
+    assert "projects/MM-DD-<project-name>/" in agents
+    assert "tasks/<task-name>/" in agents
     assert "docs/memory/YYYY-MM-DD-status.md" in agents
     assert "core/" in agents
-    assert "reference/" in agents
     assert "docs/" in agents
+    assert "`projects/` 作为实际工作的执行容器" in readme
     assert "## 当前 Workspace" in memory
     assert "- 核心仓库目录：`core/`" in memory
-    assert "- 参考资料目录：`reference/`" in memory
+    assert "- 项目根目录：`projects/`" in memory
     assert "- 持久状态记录目录：`docs/memory/`" in memory
     assert "- 技能沉淀目录：`docs/skills/`" in memory
-    assert "## 启动清单" in setup_md
-    assert "1. Discover" in setup_md
-    assert "6. Done" in setup_md
-    assert "默认完整做完后再统一汇报结果" in setup_md
 
 
 def test_setup_workspace_english_language_creates_english_templates(tmp_path: Path):
@@ -77,13 +71,13 @@ def test_setup_workspace_english_language_creates_english_templates(tmp_path: Pa
     )
 
     assert result.returncode == 0, result.stderr
+    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
     assert "## Architecture" in agents
     assert "## 架构" not in agents
     assert "## Current Workspace" in memory
-    assert "## Startup Checklist" in setup_md
+    assert "Human-AI collaboration workspace root." in readme
 
 
 def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
@@ -113,15 +107,15 @@ def test_setup_workspace_force_overwrites_generated_files(tmp_path: Path):
     first = _run_chattool_setup_workspace([str(workspace_dir), "-I"])
     assert first.returncode == 0, first.stderr
 
-    reports_readme = workspace_dir / "reports" / "README.md"
-    reports_readme.write_text("custom reports readme\n", encoding="utf-8")
+    projects_readme = workspace_dir / "projects" / "README.md"
+    projects_readme.write_text("custom projects readme\n", encoding="utf-8")
 
     second = _run_chattool_setup_workspace([str(workspace_dir), "--force", "-I"])
     assert second.returncode == 0, second.stderr
-    assert reports_readme.read_text(encoding="utf-8") != "custom reports readme\n"
+    assert projects_readme.read_text(encoding="utf-8") != "custom projects readme\n"
 
 
-def test_setup_workspace_existing_workspace_writes_migration_helpers(tmp_path: Path):
+def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path: Path):
     workspace_dir = tmp_path / "workspace"
     workspace_dir.mkdir()
     (workspace_dir / "AGENTS.md").write_text("legacy agents\n", encoding="utf-8")
@@ -136,25 +130,6 @@ def test_setup_workspace_existing_workspace_writes_migration_helpers(tmp_path: P
     assert (workspace_dir / "MEMORY.md").read_text(
         encoding="utf-8"
     ) == "legacy memory\n"
-    assert (workspace_dir / "AGENTS.generated.md").exists()
-    assert (workspace_dir / "MEMORY.generated.md").exists()
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
-    assert "## 迁移清单" in setup_md
-    assert "AGENTS.generated.md" in setup_md
-    assert "MEMORY.generated.md" in setup_md
-
-
-def test_setup_workspace_completed_setup_md_is_not_overwritten(tmp_path: Path):
-    workspace_dir = tmp_path / "workspace"
-
-    first = _run_chattool_setup_workspace([str(workspace_dir), "-I"])
-    assert first.returncode == 0, first.stderr
-
-    setup_md = workspace_dir / "setup.md"
-    original = setup_md.read_text(encoding="utf-8")
-    locked = original + "\ncompleted: 2026-04-10\n"
-    setup_md.write_text(locked, encoding="utf-8")
-
-    second = _run_chattool_setup_workspace([str(workspace_dir), "--force", "-I"])
-    assert second.returncode == 0, second.stderr
-    assert setup_md.read_text(encoding="utf-8") == locked
+    assert not (workspace_dir / "AGENTS.generated.md").exists()
+    assert not (workspace_dir / "MEMORY.generated.md").exists()
+    assert (workspace_dir / "README.md").exists()

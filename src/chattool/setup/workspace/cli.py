@@ -25,28 +25,14 @@ from . import options as workspace_options
 from .render import base_file_map
 
 
-SETUP_COMPLETED_MARKER = "completed:"
-HELPER_AGENTS_FILE = "AGENTS.generated.md"
-HELPER_MEMORY_FILE = "MEMORY.generated.md"
-
-
 def _is_existing_workspace(workspace_dir: Path) -> bool:
     markers = [
         workspace_dir / "AGENTS.md",
         workspace_dir / "MEMORY.md",
-        workspace_dir / "reports",
-        workspace_dir / "playgrounds",
+        workspace_dir / "projects",
         workspace_dir / "core",
-        workspace_dir / "reference",
     ]
     return any(path.exists() for path in markers)
-
-
-def _setup_md_locked(path: Path) -> bool:
-    if not path.exists():
-        return False
-    content = path.read_text(encoding="utf-8")
-    return SETUP_COMPLETED_MARKER in content.lower()
 
 
 def _select_profile_interactively(default_profile: str = "base") -> str:
@@ -68,16 +54,12 @@ def _plan_workspace(
     dir_paths = [workspace_dir / rel for rel in BASE_DIRS]
     dir_paths.extend(workspace_dir / rel for rel in profile.extra_dirs())
     existing_workspace = _is_existing_workspace(workspace_dir)
-    helper_agents_path = HELPER_AGENTS_FILE if existing_workspace else None
-    helper_memory_path = HELPER_MEMORY_FILE if existing_workspace else None
     file_map = base_file_map(
         workspace_dir,
         profile,
         language,
         enabled_options,
         existing_workspace=existing_workspace,
-        helper_agents_path=helper_agents_path,
-        helper_memory_path=helper_memory_path,
     )
     planned_files = {workspace_dir / rel: content for rel, content in file_map.items()}
     return dir_paths, planned_files
@@ -181,8 +163,6 @@ def setup_workspace(
         path.mkdir(parents=True, exist_ok=True)
 
     for path, content in file_map.items():
-        if path.name == "setup.md" and _setup_md_locked(path):
-            continue
         write_text_file(path, content, force=force)
 
     applied = []

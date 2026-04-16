@@ -153,7 +153,7 @@ chattool explore arxiv get
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup codex/claude/opencode/lark-cli/docker` | 安装或检查常用 CLI / Docker 环境，并在确认后执行建议的系统命令；`setup opencode` 现支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
-| Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；新目录直接生成协议，已有 workspace 则生成 `setup.md` 迁移指南与辅助协议文件 |
+| Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
 
