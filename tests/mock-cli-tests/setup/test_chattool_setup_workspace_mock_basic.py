@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from chattool.client.main import cli
+from chattool.setup.workspace.render import render_agents_md, render_memory_md, render_projects_readme, render_root_readme
 
 
 pytestmark = pytest.mark.mock_cli
@@ -43,6 +44,22 @@ def test_setup_workspace_prompts_for_missing_profile_and_dir(
     assert (tmp_path / "workspace" / "public").exists()
     assert (tmp_path / "workspace" / "README.md").exists()
     assert "Workspace 初始化完成。" in result.output
+
+
+def test_workspace_template_variants_can_be_loaded():
+    assert "Workspace" in render_root_readme("en", template_variant="default")
+    assert "Workspace" in render_root_readme("en", template_variant="opencode-loop")
+    assert "Projects" in render_projects_readme("en", template_variant="default")
+    assert "Projects" in render_projects_readme("en", template_variant="opencode-loop")
+    assert "项目根目录" in render_memory_md("zh", template_variant="default")
+    assert "项目根目录" in render_memory_md("zh", template_variant="opencode-loop")
+    assert "已启用项" in render_agents_md(
+        Path("/tmp/demo"),
+        profile=type("P", (), {"extra_files": lambda self, workspace_dir: {}})(),
+        language="zh",
+        enabled_options=["opencode_loop"],
+        template_variant="opencode-loop",
+    )
 
 
 def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, runner):
