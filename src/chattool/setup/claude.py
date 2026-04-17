@@ -56,6 +56,7 @@ def setup_claude(
     auth_token=None,
     base_url=None,
     small_fast_model=None,
+    install_only=False,
     interactive=None,
     log_level="INFO",
 ):
@@ -69,6 +70,7 @@ def setup_claude(
         resolve_interactive_mode,
         resolve_value,
     )
+    from chattool.setup.mode_prompt import resolve_install_only_mode
     from chattool.setup.nodejs import (
         ensure_nodejs_requirement,
         run_npm_command,
@@ -127,6 +129,33 @@ def setup_claude(
         can_prompt=can_prompt,
         log_level=log_level,
     )
+
+    install_only, aborted = resolve_install_only_mode(
+        need_prompt=need_prompt,
+        install_only=install_only,
+        can_prompt=can_prompt,
+    )
+    if aborted:
+        return
+
+    if install_only:
+        if should_install_global_npm_package(
+            "@anthropic-ai/claude-code",
+            "Claude Code CLI",
+            interactive=interactive,
+            can_prompt=can_prompt,
+            default_update=True,
+        ):
+            logger.info("Installing claude-code cli with npm")
+            result = run_npm_command(["install", "-g", "@anthropic-ai/claude-code"])
+            if result.returncode != 0:
+                logger.error("Failed to install claude-code cli")
+                click.echo("Failed to install claude-code.", err=True)
+                if result.stderr:
+                    click.echo(result.stderr.strip(), err=True)
+                raise click.Abort()
+        click.echo("Claude Code CLI install completed.")
+        return
 
     if need_prompt:
         auth_token = prompt_sensitive_value(

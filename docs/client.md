@@ -162,6 +162,7 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 ```bash
 chattool setup opencode -e work
 chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
+chattool setup opencode -e work --plugin auto-loop
 ```
 
 解析顺序为：
@@ -172,6 +173,12 @@ chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 4. 当前 shell 的系统环境变量
 5. `envs/OpenAI/.env` 的 typed 默认值
 6. 默认值
+
+如果你希望顺手把 `opencode-auto-loop` 写入 OpenCode 配置，也可以显式加上：
+
+```bash
+chattool setup opencode --plugin auto-loop
+```
 
 ### 0.4 Lark CLI (`setup lark-cli`)
 
@@ -252,18 +259,18 @@ chattool setup workspace ~/workspace/demo --language en
 
 - `AGENTS.md`：模型主协议
 - `MEMORY.md`：跨 session 记忆
-- `reports/`：默认按任务隔离的人类汇报目录，也支持任务集目录
-- `playgrounds/`：默认按任务隔离的工作目录，也支持任务集共享工作根
+- `README.md`：workspace 的 general-use 入口
+- `projects/`：所有实际工作的执行容器，单任务和多任务 project 都从这里展开
 - `docs/`：长期文档沉淀
 - `core/`：源码仓库目录
 - `skills/`：共享 skills 目录
 - `public/`：公开网站和发布目录
 
-默认先用常规任务模式；如果是一组围绕同一目标持续推进的大任务，再切换到 `reports/MM-DD-<set-name>/` 与 `playgrounds/task-sets/<set-name>/`。工作区协议现在还会明确一条用户偏好：任务未完成前不要阶段性邀请 review，默认完整做完后再统一汇报结果；如果是开发任务，每个阶段都要先测试通过、完善文档并自行 review。
+默认先用单任务 project；如果是一组围绕同一目标持续推进的大任务，再升级为多任务 project，并在 project 根保留 `PROJECT.md`、`progress.md`、`review.md`。工作区协议现在也会明确：review 由 loop 在模型准备停下时触发；如果是开发任务，每个阶段都要先测试通过、完善文档，再按 `review.md` 的规则完成校验与收尾。
 
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 
-如果目标目录已经是一个已有 workspace，`setup workspace` 不会直接覆盖原有 `AGENTS.md` / `MEMORY.md`，而是额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 和迁移版 `setup.md`，帮助模型先完成协议迁移；迁移完成后再删除这些辅助文件。
+如果目标目录已经是一个已有 workspace，`setup workspace` 不会直接覆盖原有 `AGENTS.md` / `MEMORY.md`；当前更强调通过根目录 `README.md` 和 `projects/README.md` 提供 general-use 入口与结构约定，再逐步完成迁移。
 
 如果只想先看计划不落盘：
 

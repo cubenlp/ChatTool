@@ -16,6 +16,7 @@ from chattool.interaction import (
     resolve_interactive_mode,
     resolve_value,
 )
+from chattool.setup.mode_prompt import resolve_install_only_mode
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
     run_npm_command,
@@ -164,6 +165,7 @@ def setup_codex(
     base_url=None,
     model=None,
     env_ref=None,
+    install_only=False,
     interactive=None,
     log_level="INFO",
 ):
@@ -226,6 +228,33 @@ def setup_codex(
         can_prompt=can_prompt,
         log_level=log_level,
     )
+
+    install_only, aborted = resolve_install_only_mode(
+        need_prompt=need_prompt,
+        install_only=install_only,
+        can_prompt=can_prompt,
+    )
+    if aborted:
+        return
+
+    if install_only:
+        if should_install_global_npm_package(
+            "@openai/codex",
+            "Codex CLI",
+            interactive=interactive,
+            can_prompt=can_prompt,
+            default_update=True,
+        ):
+            logger.info("Installing codex cli with npm")
+            result = run_npm_command(["install", "-g", "@openai/codex@latest"])
+            if result.returncode != 0:
+                logger.error("Failed to install codex cli")
+                click.echo("Failed to install codex.", err=True)
+                if result.stderr:
+                    click.echo(result.stderr.strip(), err=True)
+                raise click.Abort()
+        click.echo("Codex CLI install completed.")
+        return
 
     if need_prompt:
         api_key = prompt_sensitive_value("OPENAI_API_KEY", api_key, _mask_secret)

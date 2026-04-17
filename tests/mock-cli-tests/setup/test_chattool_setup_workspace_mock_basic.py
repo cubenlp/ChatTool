@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from chattool.client.main import cli
+from chattool.setup.workspace.render import render_agents_md, render_memory_md, render_projects_readme, render_root_readme
 
 
 pytestmark = pytest.mark.mock_cli
@@ -38,11 +39,27 @@ def test_setup_workspace_prompts_for_missing_profile_and_dir(
     assert result.exit_code == 0
     assert selected["workspace"] is not None
     assert (tmp_path / "workspace" / "core").exists()
-    assert (tmp_path / "workspace" / "reference").exists()
+    assert (tmp_path / "workspace" / "projects").exists()
     assert (tmp_path / "workspace" / "skills").exists()
     assert (tmp_path / "workspace" / "public").exists()
-    assert (tmp_path / "workspace" / "setup.md").exists()
+    assert (tmp_path / "workspace" / "README.md").exists()
     assert "Workspace 初始化完成。" in result.output
+
+
+def test_workspace_template_variants_can_be_loaded():
+    assert "Workspace" in render_root_readme("en", template_variant="default")
+    assert "Workspace" in render_root_readme("en", template_variant="opencode-loop")
+    assert "Projects" in render_projects_readme("en", template_variant="default")
+    assert "Projects" in render_projects_readme("en", template_variant="opencode-loop")
+    assert "项目根目录" in render_memory_md("zh", template_variant="default")
+    assert "项目根目录" in render_memory_md("zh", template_variant="opencode-loop")
+    assert "已启用项" in render_agents_md(
+        Path("/tmp/demo"),
+        profile=type("P", (), {"extra_files": lambda self, workspace_dir: {}})(),
+        language="zh",
+        enabled_options=["opencode_loop"],
+        template_variant="opencode-loop",
+    )
 
 
 def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, runner):
@@ -207,13 +224,30 @@ def test_setup_workspace_explicit_english_language(tmp_path, runner):
 
     assert result.exit_code == 0
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    setup_md = (workspace_dir / "setup.md").read_text(encoding="utf-8")
+    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     assert "Current Options" in agents
     assert "已启用项" not in agents
-    assert "Startup Checklist" in setup_md
+    assert "Human-AI collaboration workspace root." in readme
 
 
-def test_setup_workspace_existing_workspace_generates_helper_files(tmp_path, runner):
+def test_setup_workspace_uses_projects_model(tmp_path, runner):
+    workspace_dir = tmp_path / "workspace"
+
+    result = runner.invoke(cli, ["setup", "workspace", str(workspace_dir), "-I"])
+
+    assert result.exit_code == 0
+    assert (workspace_dir / "projects" / "README.md").exists()
+    assert not (workspace_dir / "reports" / "README.md").exists()
+    assert not (workspace_dir / "playgrounds" / "README.md").exists()
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    assert "projects/" in agents
+    assert "reports/" not in agents
+    assert "projects/" in memory
+    assert "reference/" not in memory
+
+
+def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path, runner):
     workspace_dir = tmp_path / "workspace"
     workspace_dir.mkdir()
     (workspace_dir / "AGENTS.md").write_text("legacy agents\n", encoding="utf-8")
@@ -222,11 +256,36 @@ def test_setup_workspace_existing_workspace_generates_helper_files(tmp_path, run
     result = runner.invoke(cli, ["setup", "workspace", str(workspace_dir), "-I"])
 
     assert result.exit_code == 0
-    assert (workspace_dir / "AGENTS.generated.md").exists()
-    assert (workspace_dir / "MEMORY.generated.md").exists()
+    assert not (workspace_dir / "AGENTS.generated.md").exists()
+    assert not (workspace_dir / "MEMORY.generated.md").exists()
+    assert (workspace_dir / "README.md").exists()
     assert (workspace_dir / "AGENTS.md").read_text(
         encoding="utf-8"
     ) == "legacy agents\n"
-    assert (workspace_dir / "MEMORY.md").read_text(
-        encoding="utf-8"
-    ) == "legacy memory\n"
+
+
+def test_setup_workspace_with_opencode_loop_installs_local_assets(tmp_path, runner):
+    workspace_dir = tmp_path / "workspace"
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "workspace",
+            str(workspace_dir),
+            "-I",
+            "--with-opencode-loop",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (workspace_dir / ".opencode" / "opencode.jsonc").exists()
+    assert (workspace_dir / ".opencode" / "plugins" / "chatloop" / "index.ts").exists()
+    assert (workspace_dir / ".opencode" / "command" / "chatloop.md").exists()
+    assert (workspace_dir / ".opencode" / "command" / "chatloop-project.md").exists()
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
+    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    assert "当前 workspace 已启用 OpenCode loop-aware 模式" in agents
+    assert "OpenCode loop-aware 模式" in readme
+    assert "项目根目录：`projects/`" in memory

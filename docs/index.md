@@ -113,7 +113,7 @@ chattool setup workspace
 chattool setup workspace ~/workspace/demo
 ```
 
-默认生成的 workspace 采用按任务隔离的并发结构：常规任务进入 `reports/MM-DD-<task-name>/` 与 `playgrounds/<task-name>/`；长期系列任务可升级为 `task-sets` 结构。
+默认生成的 workspace 采用 `projects/` 为中心的 project 执行结构：单任务 project 直接在 `projects/MM-DD-<task-name>/` 下推进；需要多个协同任务时，再升级为多任务 project，并在 project 根保留 `PROJECT.md`、`progress.md`、`review.md`。多任务 project 下的子任务目录可以按顺序编号，也可以由项目级 `review.md` 决定当前 active task。
 
 ## 板块说明
 

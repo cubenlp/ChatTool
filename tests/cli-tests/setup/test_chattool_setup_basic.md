@@ -96,19 +96,19 @@ chattool setup lark-cli -i
 - 初始环境准备：
   - 准备一个空目录作为工作区根目录。
 - 相关文件：
+  - `<workspace>/README.md`
   - `<workspace>/AGENTS.md`
   - `<workspace>/MEMORY.md`
-  - `<workspace>/setup.md`
-  - `<workspace>/reports/`
-  - `<workspace>/playgrounds/`
+  - `<workspace>/projects/`
   - `<workspace>/docs/`
   - `<workspace>/core/`
-  - `<workspace>/reference/`
+  - `<workspace>/skills/`
+  - `<workspace>/public/`
 
 预期过程和结果：
-  1. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `AGENTS.md`、`MEMORY.md`、`setup.md`、`reports/`、`playgrounds/`、`docs/`、`core/`、`reference/`，并默认采用按任务隔离的并发协作结构。
+  1. 执行 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，预期可生成围绕核心项目的独立协作骨架，包括 `README.md`、`AGENTS.md`、`MEMORY.md`、`projects/`、`docs/`、`core/`、`skills/`、`public/`，并默认采用 `projects/` 为中心的 project 执行模型。
   2. 如显式传 `--with-chattool --chattool-source <repo-or-url>`，预期在 `core/ChatTool/` 下同步仓库，并把 skills 复制到工作区 `skills/`。
-  3. 若目标目录已经像一个 workspace，预期保留现有 `AGENTS.md` / `MEMORY.md`，并额外生成 `AGENTS.generated.md`、`MEMORY.generated.md` 与迁移版 `setup.md`。
+  3. 若目标目录已经像一个 workspace，预期保留现有 `AGENTS.md` / `MEMORY.md`，并通过根目录 `README.md` 与 `projects/README.md` 提供新的 general-use 入口，而不是继续生成 helper files。
   4. 执行 `chattool setup workspace <workspace> --dry-run -I`，预期仅打印将创建的目录与文件，不实际写入。
 
 参考执行脚本（伪代码）：

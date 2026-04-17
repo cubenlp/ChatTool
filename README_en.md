@@ -175,8 +175,8 @@ chattool nginx -i
 | MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
-| Setup | `chattool setup codex` | Install Codex CLI and write config (supports `--base-url` / `--model`) |
-| Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with task-isolated `reports/` and `playgrounds/` directories |
+| Setup | `chattool setup codex/claude/opencode` | Install or upgrade common agent CLIs; supports `--install-only` for pure install/upgrade flows without writing config |
+| Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-opencode-loop` for a loop-aware OpenCode workspace variant |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 

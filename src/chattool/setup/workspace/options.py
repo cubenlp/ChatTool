@@ -86,6 +86,44 @@ def _copy_skill_tree(src: Path, dst: Path) -> list[str]:
     return copied
 
 
+def _copy_tree(src: Path, dst: Path) -> None:
+    if not src.exists():
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        if dst.is_file() or dst.is_symlink():
+            dst.unlink()
+        else:
+            shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+
+
+def apply_opencode_loop_option(workspace_dir: Path) -> dict:
+    assets_root = Path(__file__).resolve().parent.parent / "assets" / "opencode_chatloop"
+    if not assets_root.exists():
+        raise click.ClickException(f"Missing opencode chatloop assets: {assets_root}")
+
+    opencode_dir = workspace_dir / ".opencode"
+    plugin_dst = opencode_dir / "plugins" / "chatloop"
+    commands_dst = opencode_dir / "command"
+    _copy_tree(assets_root / "plugins" / "chatloop", plugin_dst)
+    commands_dst.mkdir(parents=True, exist_ok=True)
+    for command_file in (assets_root / "commands").glob("*.md"):
+        shutil.copy2(command_file, commands_dst / command_file.name)
+
+    write_text_file(
+        opencode_dir / "opencode.jsonc",
+        '{\n  "$schema": "https://opencode.ai/config.json",\n  "plugin": [\n    "file://{{WORKSPACE}}/.opencode/plugins/chatloop/index.ts"\n  ]\n}\n'.replace("{{WORKSPACE}}", str(workspace_dir)),
+        force=True,
+    )
+    return {
+        "name": "opencode_loop",
+        "plugin_dir": plugin_dst,
+        "commands_dir": commands_dst,
+        "config_file": opencode_dir / "opencode.jsonc",
+    }
+
+
 def _credential_path_from_source(repo_source: str) -> str | None:
     from chattool.tools.github.api import parse_github_repo_from_remote
 
@@ -232,6 +270,7 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
             "source": REXBLOG_REPO_URL,
             "github_token": None,
         },
+        "opencode_loop": {"enabled": False},
     }
 
     enable_extras = ask_confirm(
@@ -252,6 +291,10 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         choices=[
             create_choice("ChatTool -> core/ChatTool + ./skills", "chattool"),
             create_choice("RexBlog -> core/RexBlog + public/hexo_blog", "rexblog"),
+            create_choice(
+                "OpenCode loop support -> .opencode chatloop plugin + commands",
+                "opencode_loop",
+            ),
         ],
         default_values=[],
         instruction="",

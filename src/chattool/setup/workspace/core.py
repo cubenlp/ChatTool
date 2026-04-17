@@ -36,14 +36,12 @@ PROFILES: dict[str, WorkspaceProfile] = {
 
 
 BASE_DIRS = [
-    "reports",
-    "playgrounds",
+    "projects",
     "docs",
     "docs/memory",
     "docs/skills",
     "docs/tools",
     "core",
-    "reference",
     "skills",
     "public",
 ]
