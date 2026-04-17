@@ -16,6 +16,7 @@ from chattool.interaction import (
     resolve_interactive_mode,
     resolve_value,
 )
+from chattool.setup.mode_prompt import resolve_install_only_mode
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
     run_npm_command,
@@ -227,6 +228,14 @@ def setup_codex(
         can_prompt=can_prompt,
         log_level=log_level,
     )
+
+    install_only, aborted = resolve_install_only_mode(
+        need_prompt=need_prompt,
+        install_only=install_only,
+        can_prompt=can_prompt,
+    )
+    if aborted:
+        return
 
     if install_only:
         if should_install_global_npm_package(

@@ -289,6 +289,10 @@ def test_setup_opencode_interactive_can_select_auto_loop_plugin(
         lambda label, value, masker=None: value or "sk-interactive",
     )
     monkeypatch.setattr(
+        "chattool.setup.mode_prompt.ask_confirm",
+        lambda message, default=True: True,
+    )
+    monkeypatch.setattr(
         "chattool.setup.opencode.ask_checkbox_with_controls",
         lambda message, choices, default_values=None, instruction=None, select_all_label=None: [
             "auto-loop"
