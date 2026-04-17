@@ -6,9 +6,9 @@
 
 - workspace 根目录文件用于辅助创建和约束 project；真正执行任务时，应进入对应 project 目录埋头推进。
 - 所有实际工作统一放到 `projects/` 下。
-- 默认使用单任务 project；只有在确实需要多个协同任务时，才升级为多任务 project。
-- 当前 workspace 已启用 OpenCode loop-aware 模式：外层协议负责帮助模型理解规范，内层 loop 只在模型准备停下时触发 `review.md`。
-- 如果是开发任务，每个阶段都要先测试通过、文档完善，再根据 `review.md` 定义的规则做校验与验收收尾。
+- 当前 workspace 已启用 OpenCode loop-aware 模式：外层协议负责帮助模型理解规范，内层 `chatloop` 只围绕 `PRD.md` 做 fresh-start continuation。
+- 前期对话先专注生成和完善 `PRD.md`；执行阶段默认让模型围绕 `PRD.md` 推进。
+- 如果有辅助上下文，可使用 `memory.md` 和 `progress.md`，但它们不是主入口。
 
 具体的 project 目录结构与命名规则，统一看 `projects/README.md`。
 
@@ -40,18 +40,16 @@ Workspace/
 
 1. 开始前先读 `MEMORY.md`。
 2. 识别当前要改的仓库到 `core/`，并进入目标 project。
-3. 先补齐 project 协议文件，再开始 loop 或执行。
-4. 草稿、实验和局部参考都放在当前 project 或 task 内部。
-5. review 文件负责定义验证口径和验收后需要写入的结果文件；loop 只在停下时读取 review，不负责平时该读什么文件。
+3. 先补齐 `PRD.md`，再开始 loop 或执行。
+4. 草稿、实验和局部参考都放在当前 project 内部。
+5. `chatloop` 在模型准备停下时会 fresh start，让模型重新阅读 `PRD.md`，必要时再读 `memory.md` / `progress.md`。
 6. 收尾时完成汇报，并在需要时更新 `MEMORY.md`。
 
 ## 写入规则
 
 | 情况 | 写入位置 |
 |-----------|----------|
-| 单任务 project 工作 | `projects/MM-DD-<task-name>/` |
-| 多任务 project 根 | `projects/MM-DD-<project-name>/` |
-| 子任务工作 | `projects/MM-DD-<project-name>/tasks/<task-name>/` |
+| 任意实际工作单元 | `projects/MM-DD-<project-name>/` |
 | 需要修改的源码仓库 | `core/<repo-name>/` |
 | 状态快照 / 长期上下文 | `docs/memory/YYYY-MM-DD-status.md` |
 | 工具使用发现 | `docs/tools/<toolname>.md` |

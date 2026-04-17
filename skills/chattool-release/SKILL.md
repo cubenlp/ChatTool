@@ -1,7 +1,7 @@
 ---
 name: chattool-release
 description: Handle ChatTool release readiness and post-merge release execution. Use when the task includes version bumps, changelog finalization, tag timing, Publish Package workflow checks, PyPI verification, or appending release.log after a real release.
-version: 0.1.2
+version: 0.1.3
 ---
 
 # ChatTool Release
@@ -73,7 +73,7 @@ git ls-remote --tags origin 'v*'
 python -m build
 python -m twine check dist/*
 chattool gh pr-view --repo cubenlp/ChatTool --number <pr>
-chattool gh pr-check --repo cubenlp/ChatTool --number <pr>
+chattool gh pr-check --repo cubenlp/ChatTool --number <pr> --wait
 chattool gh run-view --repo cubenlp/ChatTool --run-id <id>
 python - <<'PY'
 import json, urllib.request
@@ -85,5 +85,6 @@ PY
 
 - Be explicit about whether the repository is only release-ready or already released.
 - Use concrete commit hashes, tag names, workflow ids, and versions.
+- Before merge or tag creation, prefer `chattool gh pr-check --wait` so CI reaches a terminal state before release decisions.
 - Say explicitly when a tag would only retrigger workflow without producing a new PyPI package.
 - If release timing is wrong, say so before doing anything destructive.

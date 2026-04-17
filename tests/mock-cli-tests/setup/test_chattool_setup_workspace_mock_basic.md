@@ -143,7 +143,7 @@ assert README.md exists
 - 应生成 loop-aware 的 `README.md`、`AGENTS.md`、`projects/README.md`。
 - 应安装 `.opencode/opencode.jsonc`。
 - 应安装 `.opencode/plugins/chatloop/`。
-- 应安装 `.opencode/command/chatloop.md`、`chatloop-project.md`、`chatloop-help.md`、`chatloop-stop.md`。
+- 应安装 `.opencode/command/chatloop.md`、`chatloop-help.md`、`chatloop-stop.md`。
 
 ### 参考执行脚本（伪代码）
 

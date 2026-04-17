@@ -5,11 +5,11 @@ This directory stores the local OpenCode `chatloop` plugin and slash commands th
 Current commands:
 
 - `/chatloop`
-- `/chatloop-project`
 - `/chatloop-help`
 - `/chatloop-stop`
 
 Current model:
 
-- single-task mode: user message goes through verbatim, idle triggers review, review decides continue or exit
-- project mode: user message starts the first selected task directly, task review returns to project review, project review decides next task or completion
+- PRD-driven mode: user message goes through verbatim as the initial instruction, then every idle checkpoint triggers a fresh-start prompt that asks the model to re-read `PRD.md` and optional `memory.md` / `progress.md`
+- completion is signaled by `<complete>DONE</complete>`
+- logs are written to `.opencode/logs/<session-id>.log`

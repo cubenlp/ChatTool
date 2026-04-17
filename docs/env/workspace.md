@@ -64,47 +64,26 @@ workspace/
 
 ## 3. `projects/` 模型
 
-### 单任务 project
+### 默认 project
 
 ```text
-projects/MM-DD-<task-name>/
-  TASK.md
+projects/MM-DD-<project-name>/
+  PRD.md
   progress.md
-  review.md
   memory.md
   playground/
   reference/
 ```
 
-### 多任务 project
-
-```text
-projects/MM-DD-<project-name>/
-  PROJECT.md
-  progress.md
-  review.md
-  tasks/
-    <task-name>/
-      TASK.md
-      progress.md
-      review.md
-      memory.md
-      playground/
-      reference/
-```
-
-子任务目录不要求统一带日期前缀：
-
-- 如果有明确顺序，可以使用 `01-...`、`02-...` 这类编号名称
-- 如果优先级由项目级 `review.md` 动态决定，则可以自由命名
+如果后续工作自然长出子部分，可以继续在子目录里放新的 `PRD.md`，而不是预先引入复杂项目级别管理结构。
 
 ### 设计原则
 
 - workspace 根目录文件用于 general-use 协议与跨 session 上下文
 - 实际执行时，应该进入具体 `project` 目录埋头推进
-- `review.md` 负责定义验证口径，以及验收通过后需要写入的结果产物
-- 是否需要 `SUMMARY.md` 之类文件，不再作为默认模板硬编码，而由 `review.md` 决定
-- review 默认由 loop 在模型准备停下时触发
+- `PRD.md` 是唯一主入口，用于定义任务含义、需求、范围、约束和完成标准
+- `memory.md` / `progress.md` 用于补充当前上下文与进展
+- `chatloop` 默认在 idle 时 fresh start，重新读取 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
 
 ## 4. 可选配置项
 
@@ -117,8 +96,10 @@ projects/MM-DD-<project-name>/
 - 同时安装：
   - `.opencode/opencode.jsonc`
   - `.opencode/plugins/chatloop/`
-  - `.opencode/command/chatloop*.md`
-- 该版本适合当前把 review 触发 continuation 交给 OpenCode `chatloop` 的工作流
+  - `.opencode/command/chatloop.md`
+  - `.opencode/command/chatloop-help.md`
+  - `.opencode/command/chatloop-stop.md`
+- 该版本适合当前把 `PRD.md` 作为唯一入口，并把每次 idle 后的 fresh-start continuation 交给 OpenCode `chatloop` 的工作流
 
 ### ChatTool
 

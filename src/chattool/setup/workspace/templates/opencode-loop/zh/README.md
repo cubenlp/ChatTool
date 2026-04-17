@@ -7,4 +7,4 @@
 当前版本已启用 OpenCode loop-aware 模式：
 
 - 外层协议负责帮助模型理解文档含义、需求和规范
-- 内层 `chatloop` / `chatloop-project` 负责在模型准备停下时基于 `review.md` 继续或退出
+- 内层 `chatloop` 负责在模型准备停下时重新进入基于 `PRD.md` 的 fresh-start loop
