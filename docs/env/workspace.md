@@ -113,6 +113,7 @@ projects/MM-DD-<project-name>/
 ### OpenCode loop-aware template
 
 - 使用 `--with-opencode-loop` 时，会切换到 loop-aware workspace 模板版本
+- 同时会自动执行一次 OpenCode CLI 的纯安装（等价于 `chattool setup opencode --install-only`）
 - 同时安装：
   - `.opencode/opencode.jsonc`
   - `.opencode/plugins/chatloop/`

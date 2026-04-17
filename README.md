@@ -152,7 +152,7 @@ chattool explore arxiv get
 | Nginx 配置 | `chattool nginx` | 按模板生成常见的反向代理、路径转发和静态目录配置 |
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
-| 环境安装 | `chattool setup codex/claude/opencode/lark-cli/docker` | 安装或检查常用 CLI / Docker 环境，并在确认后执行建议的系统命令；`setup opencode` 现支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
+| 环境安装 | `chattool setup codex/claude/opencode/lark-cli/docker` | 安装或检查常用 CLI / Docker 环境，并在确认后执行建议的系统命令；`setup opencode/codex/claude` 现支持 `--install-only` 纯安装/升级，`setup opencode` 也支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
 | Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-opencode-loop` 启用 OpenCode loop-aware 模板并安装本地 `chatloop` 资产 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |

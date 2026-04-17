@@ -15,6 +15,12 @@ chattool setup nodejs
 注意后续 `nvm install` 仍需要联网下载 Node.js 版本文件。
 执行 `chattool setup opencode` 时，也会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足且终端可交互时，会先提示是否安装/升级。
 
+如果你只想安装或升级 OpenCode CLI，而不写入 provider/model 配置，可直接执行：
+
+```bash
+chattool setup opencode --install-only
+```
+
 ## 2. 交互式配置
 
 ```bash
