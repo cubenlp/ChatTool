@@ -243,6 +243,7 @@ def setup_codex(
             "Codex CLI",
             interactive=interactive,
             can_prompt=can_prompt,
+            default_update=True,
         ):
             logger.info("Installing codex cli with npm")
             result = run_npm_command(["install", "-g", "@openai/codex@latest"])

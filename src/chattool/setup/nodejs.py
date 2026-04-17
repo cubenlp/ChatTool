@@ -232,7 +232,7 @@ def get_global_npm_package_version(package_name):
 
 
 def should_install_global_npm_package(
-    package_name, display_name, interactive=None, can_prompt=False
+    package_name, display_name, interactive=None, can_prompt=False, default_update=False
 ):
     version = get_global_npm_package_version(package_name)
     if not version:
@@ -242,7 +242,7 @@ def should_install_global_npm_package(
     if interactive is not False and can_prompt:
         update_now = ask_confirm(
             f"Update {display_name} now via npm install -g?",
-            default=False,
+            default=default_update,
         )
         if update_now == BACK_VALUE:
             raise click.Abort()

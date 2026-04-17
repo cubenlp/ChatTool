@@ -144,6 +144,7 @@ def setup_claude(
             "Claude Code CLI",
             interactive=interactive,
             can_prompt=can_prompt,
+            default_update=True,
         ):
             logger.info("Installing claude-code cli with npm")
             result = run_npm_command(["install", "-g", "@anthropic-ai/claude-code"])

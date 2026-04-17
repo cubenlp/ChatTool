@@ -252,6 +252,7 @@ def setup_opencode(
             "OpenCode CLI",
             interactive=interactive,
             can_prompt=can_prompt,
+            default_update=True,
         ):
             logger.info("Installing opencode cli with npm")
             result = run_npm_command(["install", "-g", "opencode-ai"])
