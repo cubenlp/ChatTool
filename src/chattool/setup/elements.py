@@ -53,13 +53,14 @@ def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
 
 
-def codex_setup(api_key, base_url, model, env, interactive, log_level):
+def codex_setup(api_key, base_url, model, env, interactive, install_only, log_level):
     setup_codex(
         api_key=api_key,
         base_url=base_url,
         model=model,
         env_ref=env,
         interactive=interactive,
+        install_only=install_only,
         log_level=log_level,
     )
 
@@ -68,12 +69,13 @@ def cc_connect_setup(sudo=None, interactive=None, log_level="INFO"):
     setup_cc_connect(interactive=interactive, log_level=log_level)
 
 
-def claude_setup(auth_token, base_url, small_fast_model, interactive, log_level):
+def claude_setup(auth_token, base_url, small_fast_model, interactive, install_only, log_level):
     setup_claude(
         auth_token=auth_token,
         base_url=base_url,
         small_fast_model=small_fast_model,
         interactive=interactive,
+        install_only=install_only,
         log_level=log_level,
     )
 
@@ -85,6 +87,7 @@ def opencode_setup(
     env=None,
     interactive=None,
     plugin=None,
+    install_only=False,
     log_level="INFO",
 ):
     setup_opencode(
@@ -94,6 +97,7 @@ def opencode_setup(
         env_ref=env,
         interactive=interactive,
         plugin=plugin,
+        install_only=install_only,
         log_level=log_level,
     )
 
@@ -219,6 +223,13 @@ SETUP_COMMAND_ELEMENTS = (
                     "help": "Optional ANTHROPIC_SMALL_FAST_MODEL value.",
                 },
             ),
+            SetupOptionElement(
+                param_decls=("--install-only",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Only install or upgrade the CLI without writing config files.",
+                },
+            ),
         ),
     ),
     SetupCommandElement(
@@ -332,6 +343,13 @@ SETUP_COMMAND_ELEMENTS = (
                     "help": "Load OpenAI config from a .env file path or saved OpenAI profile name.",
                 },
             ),
+            SetupOptionElement(
+                param_decls=("--install-only",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Only install or upgrade the CLI without writing config files.",
+                },
+            ),
         ),
     ),
     SetupCommandElement(
@@ -372,6 +390,13 @@ SETUP_COMMAND_ELEMENTS = (
                     "default": None,
                     "type": click.Choice(["auto-loop"]),
                     "help": "Optionally enable an OpenCode plugin preset such as opencode-auto-loop.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--install-only",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Only install or upgrade the CLI without writing config files.",
                 },
             ),
         ),

@@ -154,6 +154,7 @@ def setup_opencode(
     model=None,
     env_ref=None,
     plugin=None,
+    install_only=False,
     interactive=None,
     log_level="INFO",
 ):
@@ -235,6 +236,24 @@ def setup_opencode(
         can_prompt=can_prompt,
         log_level=log_level,
     )
+
+    if install_only:
+        if should_install_global_npm_package(
+            "opencode-ai",
+            "OpenCode CLI",
+            interactive=interactive,
+            can_prompt=can_prompt,
+        ):
+            logger.info("Installing opencode cli with npm")
+            result = run_npm_command(["install", "-g", "opencode-ai"])
+            if result.returncode != 0:
+                logger.error("Failed to install opencode cli")
+                click.echo("Failed to install opencode.", err=True)
+                if result.stderr:
+                    click.echo(result.stderr.strip(), err=True)
+                raise click.Abort()
+        click.echo("OpenCode CLI install completed.")
+        return
 
     if need_prompt:
         base_url = prompt_text_value("base_url", base_url, fallback=DEFAULT_BASE_URL)

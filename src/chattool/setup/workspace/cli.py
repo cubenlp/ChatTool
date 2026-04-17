@@ -4,6 +4,7 @@ from pathlib import Path
 
 import click
 
+from chattool.setup.opencode import setup_opencode
 from chattool.interaction import (
     BACK_VALUE,
     abort_if_force_without_tty,
@@ -176,6 +177,9 @@ def setup_workspace(
         write_text_file(path, content, force=force)
 
     applied = []
+    if option_settings["opencode_loop"]["enabled"]:
+        setup_opencode(interactive=False, install_only=True)
+        applied.append(workspace_options.apply_opencode_loop_option(workspace_path))
     if option_settings["chattool"]["enabled"]:
         applied.append(
             workspace_options.apply_chattool_option(
@@ -196,8 +200,6 @@ def setup_workspace(
                 option_settings["rexblog"].get("github_token"),
             )
         )
-    if option_settings["opencode_loop"]["enabled"]:
-        applied.append(workspace_options.apply_opencode_loop_option(workspace_path))
 
     click.echo(
         "Workspace setup completed." if language == "en" else "Workspace 初始化完成。"
