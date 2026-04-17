@@ -128,7 +128,20 @@ where = ["src"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-"chattool.setup" = ["assets/*.sh"]
+"chattool.setup" = [
+    "assets/*.sh",
+    "assets/opencode_chatloop/README.md",
+    "assets/opencode_chatloop/plugins/chatloop/*",
+    "assets/opencode_chatloop/commands/*.md",
+    "workspace/templates/default/zh/*.md",
+    "workspace/templates/default/zh/projects/*.md",
+    "workspace/templates/default/en/*.md",
+    "workspace/templates/default/en/projects/*.md",
+    "workspace/templates/opencode-loop/zh/*.md",
+    "workspace/templates/opencode-loop/zh/projects/*.md",
+    "workspace/templates/opencode-loop/en/*.md",
+    "workspace/templates/opencode-loop/en/projects/*.md",
+]
 
 [tool.pytest.ini_options]
 markers = [
