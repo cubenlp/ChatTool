@@ -1,5 +1,5 @@
 ---
-description: "Explain chatloop usage and project file expectations"
+description: "Explain PRD-driven chatloop usage"
 ---
 
 # ChatLoop Help

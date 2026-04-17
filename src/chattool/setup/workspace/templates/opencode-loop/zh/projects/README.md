@@ -2,10 +2,10 @@
 
 这里放当前所有实际进行中的工作。每个 project 都应该足够自洽，使执行阶段可以尽量只在该 project 内部完成。
 
-当前版本面向 OpenCode `chatloop` / `chatloop-project`：
+当前版本面向 OpenCode `chatloop`：
 
 - 外层 project 文档负责把任务含义、需求和规范说清楚
-- loop 插件只在模型准备停下时读取 `review.md` 做继续或退出判断
+- loop 插件只围绕 `PRD.md` 工作；模型每次停下后都会 fresh start，再从头阅读 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
 
 ## 什么时候新开一个 project
 

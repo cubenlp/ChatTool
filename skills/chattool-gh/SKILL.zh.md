@@ -1,7 +1,7 @@
 ---
 name: chattool-gh
 description: 使用 `chattool gh` 完成 PR 创建、更新、查看、CI 状态检查与维护，并确保正文 Markdown 正确渲染。
-version: 0.3.0
+version: 0.3.1
 ---
 
 # ChatTool GitHub 帮助（中文）
@@ -83,6 +83,14 @@ chattool gh job-logs --repo owner/repo --job-id 68373094563
 - `--interval <seconds>` 控制轮询间隔
 - 只有显式传 `--timeout <seconds>` 时，才会在超时后报错
 
+在活跃 PR 工作流里，默认推荐直接使用：
+
+```bash
+chattool gh pr-check --repo owner/repo --number 123 --wait
+```
+
+只有在你明确只想看一眼当前快照时，才使用不带 `--wait` 的 `pr-check`。
+
 需要机器可读结果时：
 
 ```
@@ -102,6 +110,7 @@ chattool gh pr-merge --repo owner/repo --number 123 --method squash --check
 - 始终用 `--body-file`，避免 `\n` 字符串导致的乱码。
 - 保持 PR 文本结构化（`Summary`、`Testing`）。
 - 需要看 PR 的 CI 状态时，优先用 `pr-check`，不要手工来回翻 GitHub Actions 页面。
+- 如果 CI 还在运行，优先用 `pr-check --wait` 持续等待，不要手动重复执行状态命令。
 - 提交评审 / MR 前，先从目标主分支更新并处理冲突，不要把可避免的合并债务留给评审阶段。
 - 如果 CI 已经报红，先用 `pr-check` 定位，再用 `run-view` / `job-logs` 下钻，不要在网页上盲猜。
 - 扩展 `chattool gh` 时，优先参考 `docs/client.md` 里列出的 GitHub REST API 与 PyGithub 文档。

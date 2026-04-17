@@ -2,10 +2,10 @@
 
 This directory contains all active work. Each project should be self-contained enough that execution can happen mostly inside that project directory.
 
-This template is designed for OpenCode `chatloop` / `chatloop-project`:
+This template is designed for OpenCode `chatloop`:
 
 - outer project files define meaning, requirements, and rules
-- the loop plugin only intervenes at review checkpoints
+- the loop plugin only works from `PRD.md`, restarting from scratch on each idle checkpoint
 
 ## When to create a new project
 

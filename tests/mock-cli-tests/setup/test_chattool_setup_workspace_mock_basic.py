@@ -282,7 +282,7 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(tmp_path, runn
     assert (workspace_dir / ".opencode" / "opencode.jsonc").exists()
     assert (workspace_dir / ".opencode" / "plugins" / "chatloop" / "index.ts").exists()
     assert (workspace_dir / ".opencode" / "command" / "chatloop.md").exists()
-    assert (workspace_dir / ".opencode" / "command" / "chatloop-project.md").exists()
+    assert not (workspace_dir / ".opencode" / "command" / "chatloop-project.md").exists()
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
