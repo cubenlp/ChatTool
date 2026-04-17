@@ -28,6 +28,7 @@ chattool setup claude
 
 ```bash
 chattool setup opencode
+chattool setup opencode --install-only
 ```
 
 详细文档：[opencode.md](opencode.md)
@@ -50,6 +51,7 @@ chattool setup docker --sudo -i
 ```bash
 chattool setup workspace
 chattool setup workspace ~/workspace/demo
+chattool setup workspace ~/workspace/demo --with-opencode-loop
 ```
 
 详细文档：[workspace.md](workspace.md)

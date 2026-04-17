@@ -113,3 +113,25 @@ stub prompts for base_url api_key model and plugins checkbox selection
 run chattool setup opencode
 assert written opencode.json contains plugin entry opencode-auto-loop
 ```
+
+## Case 6: install-only should install or upgrade CLI without writing config
+
+### 初始环境准备
+
+- 准备临时 HOME。
+- mock 掉 Node.js 检查与 npm 安装判断。
+
+### 预期过程和结果
+
+- 执行 `chattool setup opencode --install-only -I`。
+- 命令应成功完成。
+- 不应写入 `~/.config/opencode/opencode.json`。
+
+### 参考执行脚本（伪代码）
+
+```sh
+prepare temp HOME
+stub node/npm install checks
+run chattool setup opencode --install-only -I
+assert no opencode config file is written
+```
