@@ -130,3 +130,27 @@ assert existing files unchanged
 assert helper generated files do not exist
 assert README.md exists
 ```
+
+## Case 7: enabling OpenCode loop support should switch template variant and install local `.opencode` assets
+
+### 初始环境准备
+
+- 创建空 workspace 临时目录。
+
+### 预期过程和结果
+
+- 执行 `chattool setup workspace <workspace-dir> -I --with-opencode-loop`。
+- 应生成 loop-aware 的 `README.md`、`AGENTS.md`、`projects/README.md`。
+- 应安装 `.opencode/opencode.jsonc`。
+- 应安装 `.opencode/plugins/chatloop/`。
+- 应安装 `.opencode/command/chatloop.md`、`chatloop-project.md`、`chatloop-help.md`、`chatloop-stop.md`。
+
+### 参考执行脚本（伪代码）
+
+```sh
+run chattool setup workspace /tmp/workspace -I --with-opencode-loop
+assert .opencode/opencode.jsonc exists
+assert .opencode/plugins/chatloop/index.ts exists
+assert .opencode/command/chatloop.md exists
+assert AGENTS.md contains loop-aware wording
+```

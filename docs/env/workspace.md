@@ -32,12 +32,13 @@ chattool setup workspace ~/workspace/demo --language en
 命令形态：
 
 ```bash
-chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--force] [--dry-run] [-i|-I]
+chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-opencode-loop] [--force] [--dry-run] [-i|-I]
 ```
 
 - `PROFILE`：可选，当前仅支持 `base`
 - `WORKSPACE_DIR`：可选，默认当前目录
 - `--language`：模板语言，默认 `zh`，也可显式传 `en`
+- `--with-opencode-loop`：启用 OpenCode loop-aware 模板版本，并安装本地 `chatloop` plugin / commands 资产
 - `--force`：覆盖已生成文件
 - `--dry-run`：只打印将创建的目录与文件，不写入磁盘
 - `-i / -I`：强制交互 / 禁止交互
@@ -108,6 +109,15 @@ projects/MM-DD-<project-name>/
 ## 4. 可选配置项
 
 交互模式下可以追加额外模块。
+
+### OpenCode loop-aware template
+
+- 使用 `--with-opencode-loop` 时，会切换到 loop-aware workspace 模板版本
+- 同时安装：
+  - `.opencode/opencode.jsonc`
+  - `.opencode/plugins/chatloop/`
+  - `.opencode/command/chatloop*.md`
+- 该版本适合当前把 review 触发 continuation 交给 OpenCode `chatloop` 的工作流
 
 ### ChatTool
 

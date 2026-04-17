@@ -1,0 +1,6 @@
+{
+  "name": "chatloop-plugin",
+  "type": "module",
+  "private": true,
+  "main": "./index.ts"
+}

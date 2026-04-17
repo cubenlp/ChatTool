@@ -33,6 +33,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup opencode` 新增 `--plugin auto-loop`，可在写入 OpenCode 基础 provider/model 配置时同步把 `opencode-auto-loop` 追加到 `plugin` 数组，方便直接启用现成 auto-loop 插件
 - `chattool setup workspace` 默认结构现切换到 `projects/` 模型：workspace 根目录保留 `README.md` / `AGENTS.md` / `MEMORY.md` 作为 general-use 协议与上下文入口，实际工作统一进入 `projects/` 下的单任务或多任务 project 执行
 - `chattool setup workspace` 现在会把“review 由 loop 在模型准备停下时触发，默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档，再按 `review.md` 规则完成校验与收尾
+- `chattool setup workspace` 新增 `--with-opencode-loop` 模板版本：启用后会安装本地 OpenCode `chatloop` plugin / commands 资产，并切换到 loop-aware workspace 模板
+- `src/chattool/setup/assets/opencode_chatloop/` 现收纳 ChatTool 管理的 OpenCode `chatloop` 安装源，包括 plugin、slash commands 与最小说明文档
 - `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义

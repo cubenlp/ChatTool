@@ -245,6 +245,30 @@ def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path, runne
     assert (workspace_dir / "AGENTS.md").read_text(
         encoding="utf-8"
     ) == "legacy agents\n"
-    assert (workspace_dir / "MEMORY.md").read_text(
-        encoding="utf-8"
-    ) == "legacy memory\n"
+
+
+def test_setup_workspace_with_opencode_loop_installs_local_assets(tmp_path, runner):
+    workspace_dir = tmp_path / "workspace"
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "workspace",
+            str(workspace_dir),
+            "-I",
+            "--with-opencode-loop",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (workspace_dir / ".opencode" / "opencode.jsonc").exists()
+    assert (workspace_dir / ".opencode" / "plugins" / "chatloop" / "index.ts").exists()
+    assert (workspace_dir / ".opencode" / "command" / "chatloop.md").exists()
+    assert (workspace_dir / ".opencode" / "command" / "chatloop-project.md").exists()
+    agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
+    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
+    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    assert "当前 workspace 已启用 OpenCode loop-aware 模式" in agents
+    assert "OpenCode loop-aware 模式" in readme
+    assert "项目根目录：`projects/`" in memory

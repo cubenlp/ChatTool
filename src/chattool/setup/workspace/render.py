@@ -6,29 +6,30 @@ from pathlib import Path
 from .core import WorkspaceProfile
 
 
-def _read_template(language: str, relative_path: str) -> str:
+def _read_template(language: str, relative_path: str, *, template_variant: str = "default") -> str:
     return (
         resources.files("chattool.setup.workspace")
         .joinpath("templates")
+        .joinpath(template_variant)
         .joinpath(language)
         .joinpath(relative_path)
         .read_text(encoding="utf-8")
     )
 
 
-def _render_text_template(language: str, relative_path: str, **variables: str) -> str:
-    content = _read_template(language, relative_path)
+def _render_text_template(language: str, relative_path: str, *, template_variant: str = "default", **variables: str) -> str:
+    content = _read_template(language, relative_path, template_variant=template_variant)
     for key, value in variables.items():
         content = content.replace(f"{{{{{key}}}}}", value)
     return content
 
 
-def render_root_readme(language: str) -> str:
-    return _read_template(language, "README.md")
+def render_root_readme(language: str, *, template_variant: str = "default") -> str:
+    return _read_template(language, "README.md", template_variant=template_variant)
 
 
-def render_projects_readme(language: str) -> str:
-    return _read_template(language, "projects/README.md")
+def render_projects_readme(language: str, *, template_variant: str = "default") -> str:
+    return _read_template(language, "projects/README.md", template_variant=template_variant)
 
 
 def render_docs_readme(language: str) -> str:
@@ -61,8 +62,8 @@ def render_public_readme(language: str) -> str:
     return "# Public\n\n这个目录用于部署公开网站及相关发布产物。\n"
 
 
-def render_memory_md(language: str) -> str:
-    return _read_template(language, "MEMORY.md")
+def render_memory_md(language: str, *, template_variant: str = "default") -> str:
+    return _read_template(language, "MEMORY.md", template_variant=template_variant)
 
 
 def render_agents_md(
@@ -70,9 +71,11 @@ def render_agents_md(
     profile: WorkspaceProfile,
     language: str,
     enabled_options: list[str],
+    *,
+    template_variant: str = "default",
 ) -> str:
     options_text = ", ".join(enabled_options) if enabled_options else "none"
-    return _render_text_template(language, "AGENTS.md", ENABLED_OPTIONS=options_text)
+    return _render_text_template(language, "AGENTS.md", template_variant=template_variant, ENABLED_OPTIONS=options_text)
 
 
 def base_file_map(
@@ -81,22 +84,23 @@ def base_file_map(
     language: str,
     enabled_options: list[str],
     *,
+    template_variant: str = "default",
     existing_workspace: bool,
     helper_agents_path: str | None = None,
     helper_memory_path: str | None = None,
 ) -> dict[str, str]:
     file_map = {
-        "README.md": render_root_readme(language),
+        "README.md": render_root_readme(language, template_variant=template_variant),
         "TODO.md": "# TODO\n\n",
-        "projects/README.md": render_projects_readme(language),
+        "projects/README.md": render_projects_readme(language, template_variant=template_variant),
         "docs/README.md": render_docs_readme(language),
         "docs/memory/README.md": render_docs_memory_readme(language),
         "docs/skills/README.md": render_docs_skills_readme(language),
         "docs/tools/README.md": render_docs_tools_readme(language),
         "public/README.md": render_public_readme(language),
     }
-    agents_content = render_agents_md(workspace_dir, profile, language, enabled_options)
-    memory_content = render_memory_md(language)
+    agents_content = render_agents_md(workspace_dir, profile, language, enabled_options, template_variant=template_variant)
+    memory_content = render_memory_md(language, template_variant=template_variant)
     if helper_agents_path:
         file_map[helper_agents_path] = agents_content
     else:
