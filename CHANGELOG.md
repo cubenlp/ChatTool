@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
+- [2026-04-20] `chattool setup workspace --with-opencode-loop` / `setup opencode --plugin chatloop` 附带的 `chatloop` 插件现在会在启动首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则，不再把 `/chatloop <message>` 原样转发给模型；同时引入更强的 completion gate，要求每轮输出 `## Completed`、`## Next Steps` 与 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`，只有在 `Next Steps` 清空、`STATUS: COMPLETE` 与 `<complete>DONE</complete>` 同时满足时才停止 continuation
 - `chattool cc start` 现在会捕获启动异常和非零退出码，并把失败原因直接输出给用户；默认连续失败 5 次后才停止重试，避免 cc-connect 因偶发异常直接变成不可用状态
 - `chattool setup nodejs`、`setup codex`、`setup opencode`、`setup claude`、`setup lark-cli`、`setup cc-connect`、`setup frp`、`setup docker` 与 `chattool dns cert-update` 现在统一支持 `-l/--log-level`；复杂等待型命令的阶段日志可按 `DEBUG/INFO/WARNING/ERROR` 控制，而 `setup alias` 这类本地即时配置命令继续保持简洁输出
 - `chattool setup alias` 现在在未显式传 `--shell` 且终端可交互时，会先进入 shell 多选页，再进入 alias 多选页；`chattool setup nodejs` 也改为像 alias 一样默认同步更新所有已探测到的 `~/.zshrc` / `~/.bashrc`，并在 `-i` 时允许交互选择目标 shell
@@ -30,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
-- 新增 `docs/env/chatloop-quickstart.md`，用 `arxiv-explore` 示例串起从创建 `PRD.md`、初始化 workspace、显式触发 `/chatloop ...` 到使用 `chatloop.events.log` 调试的完整入门流程；`docs/env/index.md`、`workspace.md`、`opencode.md` 同步增加入口链接
+- [2026-04-20] 新增 `docs/env/chatloop-quickstart.md`，用 `arxiv-explore` 示例串起从创建 `PRD.md`、初始化 workspace、显式触发 `/chatloop ...` 到使用 `.opencode/chatloop.events.log` 调试的完整入门流程；`docs/env/index.md`、`workspace.md`、`opencode.md` 同步增加入口链接
 - `chattool setup opencode` 新增 `--plugin auto-loop`，可在写入 OpenCode 基础 provider/model 配置时同步把 `opencode-auto-loop` 追加到 `plugin` 数组，方便直接启用现成 auto-loop 插件
 - `chattool setup workspace` 默认结构现切换到 `projects/` 模型：workspace 根目录保留 `README.md` / `AGENTS.md` / `MEMORY.md` 作为 general-use 协议与上下文入口，实际工作统一进入 `projects/` 下的单任务或多任务 project 执行
 - `chattool setup workspace` 现在会把“review 由 loop 在模型准备停下时触发，默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档，再按 `review.md` 规则完成校验与收尾
@@ -44,7 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - 新增 `chattool nginx`，用于按模板生成常见的 Nginx 配置片段；当前收口为配置导向的最小模板集：基础 `proxy_pass`、HTTPS 入口反代、WebSocket 转发、静态目录站点和重定向，并支持 `-i` 交互式补齐必要参数
 
 ### Changed
-- `chatloop` 的项目内事件记录现从 `.opencode/logs/<session-id>.log` 收口为 project 根目录下的 `chatloop.events.log`；`/chatloop-status`、help 文案、workspace 模板和 setup 文档同步更新为新的可见调试路径
+- [2026-04-20] `chatloop` 的项目内事件记录现从 `.opencode/logs/<session-id>.log` 收口为 `.opencode/chatloop.events.log`，并补充对 `session.status=idle`、`session.idle`、`session.error`、`session.deleted`、`permission.asked` 与关键消息事件的详细捕获，便于排查 continuation 没有触发的问题；`/chatloop-status`、help 文案、workspace 模板和 setup 文档同步更新为新的调试路径
 - `chattool setup workspace` 不再默认生成 `reports/` / `playgrounds/` / `setup.md`，也不再依赖 `AGENTS.generated.md` / `MEMORY.generated.md` 这类 helper files 做主要迁移路径；当前更强调通过根目录 `README.md` 和 `projects/README.md` 提供 general-use 入口与结构约定
 
 ## [6.5.0] - 2026-03-31

@@ -58,7 +58,7 @@ def test_install_bundled_nvm_writes_script_and_shell_init(tmp_path, monkeypatch)
         lambda: "# bundled nvm\nnvm() { :; }\n",
     )
 
-    _install_bundled_nvm(nvm_sh, shell_rc)
+    _install_bundled_nvm(nvm_sh, [("zsh", shell_rc)])
 
     assert nvm_sh.exists()
     assert nvm_sh.read_text(encoding="utf-8") == "# bundled nvm\nnvm() { :; }\n"
@@ -129,13 +129,15 @@ def test_ensure_nodejs_requirement_prompts_install_and_rechecks(monkeypatch):
     )
     monkeypatch.setattr(
         "chattool.setup.nodejs.setup_nodejs",
-        lambda interactive=None: install_calls.append(interactive),
+        lambda interactive=None, log_level="INFO": install_calls.append(
+            (interactive, log_level)
+        ),
     )
 
     runtime = ensure_nodejs_requirement(interactive=None, can_prompt=True)
 
     assert runtime == runtime_ready
-    assert install_calls == [True]
+    assert install_calls == [(True, "INFO")]
 
 
 def test_ensure_nodejs_requirement_aborts_without_prompt(monkeypatch):
@@ -212,3 +214,30 @@ def test_run_npm_command_uses_nvm_when_runtime_comes_from_nvm(monkeypatch, capsy
     assert "npm install -g @openai/codex@latest" in commands[0]
     out = capsys.readouterr().out
     assert "Running: npm install -g @openai/codex@latest" in out
+
+
+def test_run_npm_command_with_cwd_uses_nvm_shell(monkeypatch, tmp_path):
+    commands = []
+
+    monkeypatch.setattr(
+        "chattool.setup.nodejs._detect_nodejs_runtime",
+        lambda: {
+            "node_bin": "/fake/.nvm/node",
+            "npm_bin": "/fake/.nvm/npm",
+            "node_version": "v24.1.0",
+            "npm_version": "11.1.0",
+            "node_major": 24,
+            "source": "nvm",
+        },
+    )
+    monkeypatch.setattr(
+        "chattool.setup.nodejs._run_bash",
+        lambda command: commands.append(command)
+        or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
+    )
+
+    result = run_npm_command(["install", "--omit=dev"], cwd=tmp_path / "plugin")
+
+    assert result.returncode == 0
+    assert len(commands) == 1
+    assert f"cd {tmp_path / 'plugin'} && npm install --omit=dev" in commands[0]

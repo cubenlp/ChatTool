@@ -264,6 +264,7 @@ def test_setup_opencode_adds_auto_loop_plugin(tmp_path, monkeypatch, runner):
 
 def test_setup_opencode_install_only_can_install_chatloop(tmp_path, monkeypatch, runner):
     home_dir = tmp_path / "home"
+    captured = {}
 
     monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
     monkeypatch.setattr(
@@ -274,6 +275,11 @@ def test_setup_opencode_install_only_can_install_chatloop(tmp_path, monkeypatch,
         "chattool.setup.opencode.should_install_global_npm_package",
         lambda *args, **kwargs: False,
     )
+    monkeypatch.setattr(
+        "chattool.setup.opencode_chatloop.run_npm_command",
+        lambda args, cwd=None: captured.update({"args": args, "cwd": cwd})
+        or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
+    )
 
     result = runner.invoke(
         cli,
@@ -283,12 +289,55 @@ def test_setup_opencode_install_only_can_install_chatloop(tmp_path, monkeypatch,
     assert result.exit_code == 0
     config_path = home_dir / ".config" / "opencode" / "opencode.json"
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    plugin_file = (home_dir / ".config" / "opencode" / "plugins" / "chatloop" / "index.ts").resolve()
-    assert payload["plugin"] == [f"file://{plugin_file}"]
-    assert plugin_file.exists()
+    plugin_dir = (home_dir / ".config" / "opencode" / "plugins" / "chatloop").resolve()
+    assert payload["plugin"] == [plugin_dir.as_uri()]
+    assert (plugin_dir / "index.ts").exists()
+    assert (plugin_dir / "package.json").exists()
     assert (home_dir / ".config" / "opencode" / "command" / "chatloop.md").exists()
     assert (home_dir / ".config" / "opencode" / "command" / "chatloop-status.md").exists()
-    assert f"Enabled OpenCode plugin preset: file://{plugin_file}" in result.output
+    assert captured["args"] == ["install", "--omit=dev", "--no-audit", "--no-fund"]
+    assert captured["cwd"] == plugin_dir
+    assert f"Enabled OpenCode plugin preset: {plugin_dir.as_uri()}" in result.output
+
+
+def test_setup_opencode_chatloop_removes_legacy_file_plugin_entry(
+    tmp_path, monkeypatch, runner
+):
+    home_dir = tmp_path / "home"
+    captured = {}
+    config_dir = home_dir / ".config" / "opencode"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    legacy_entry = (config_dir / "plugins" / "chatloop" / "index.ts").resolve().as_uri()
+    config_path = config_dir / "opencode.json"
+    config_path.write_text(
+        json.dumps({"$schema": "https://opencode.ai/config.json", "plugin": [legacy_entry]}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode_chatloop.run_npm_command",
+        lambda args, cwd=None: captured.update({"args": args, "cwd": cwd})
+        or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
+    )
+
+    result = runner.invoke(
+        cli,
+        ["setup", "opencode", "-I", "--install-only", "--plugin", "chatloop"],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    plugin_dir = (config_dir / "plugins" / "chatloop").resolve()
+    assert payload["plugin"] == [plugin_dir.as_uri()]
 
 
 def test_setup_opencode_interactive_can_select_auto_loop_plugin(

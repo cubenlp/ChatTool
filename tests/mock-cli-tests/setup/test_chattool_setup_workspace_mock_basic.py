@@ -269,6 +269,7 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
 ):
     workspace_dir = tmp_path / "workspace"
     opencode_home = tmp_path / "opencode-home"
+    captured = {}
 
     monkeypatch.setenv("OPENCODE_HOME", str(opencode_home))
     monkeypatch.setattr(
@@ -278,6 +279,11 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
     monkeypatch.setattr(
         "chattool.setup.opencode.should_install_global_npm_package",
         lambda *args, **kwargs: False,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode_chatloop.run_npm_command",
+        lambda args, cwd=None: captured.update({"args": args, "cwd": cwd})
+        or type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})(),
     )
 
     result = runner.invoke(
@@ -294,10 +300,13 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
     assert result.exit_code == 0
     assert not (workspace_dir / ".opencode" / "opencode.jsonc").exists()
     assert (opencode_home / "plugins" / "chatloop" / "index.ts").exists()
+    assert (opencode_home / "plugins" / "chatloop" / "package.json").exists()
     assert (opencode_home / "command" / "chatloop.md").exists()
     assert (opencode_home / "command" / "chatloop-status.md").exists()
     config = (opencode_home / "opencode.json").read_text(encoding="utf-8")
-    assert str((opencode_home / "plugins" / "chatloop" / "index.ts").resolve()) in config
+    assert (opencode_home / "plugins" / "chatloop").resolve().as_uri() in config
+    assert captured["args"] == ["install", "--omit=dev", "--no-audit", "--no-fund"]
+    assert captured["cwd"] == (opencode_home / "plugins" / "chatloop")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
@@ -305,4 +314,4 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
     assert "显式触发 `/chatloop ...`" in readme
     assert "项目根目录：`projects/`" in memory
     assert "OpenCode home:" in result.output
-    assert "chatloop.events.log" in result.output
+    assert ".opencode/ directory" in result.output

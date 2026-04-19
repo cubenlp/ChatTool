@@ -55,8 +55,10 @@ Use this for research, one-off development, focused cleanup, and other work that
 
 - `/chatloop-status` shows the resolved project root, state file, and events file
 - ChatLoop state is written to `.opencode/chatloop.local.md` under the resolved project root
-- event records are appended to `chatloop.events.log` in the resolved project root
-- once completion criteria are satisfied, the model must emit `<complete>DONE</complete>` so the plugin stops continuing
+- event records are appended to `.opencode/chatloop.events.log` under the resolved project root
+- ChatLoop bootstrap already injects the PRD path, project path, and structured progress rules instead of forwarding raw task text alone
+- each iteration should emit `## Completed`, `## Next Steps`, and `STATUS: IN_PROGRESS` or `STATUS: COMPLETE`
+- the plugin only stops when completion criteria are satisfied, `Next Steps` has no unchecked items, and the model emits both `STATUS: COMPLETE` and `<complete>DONE</complete>`
 
 ## Subdirectory growth
 

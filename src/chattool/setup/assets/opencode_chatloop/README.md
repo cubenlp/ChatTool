@@ -11,8 +11,9 @@ Current commands:
 
 Current model:
 
-- PRD-driven mode: user message goes through verbatim as the initial instruction, then every idle checkpoint triggers a fresh-start prompt that asks the model to re-read `PRD.md` and optional `memory.md` / `progress.md`
+- PRD-driven mode: startup and every idle checkpoint both inject a strong PRD contract that includes the project path, required `PRD.md` path, optional `memory.md` / `progress.md` paths, and structured progress rules
 - project root is resolved from the current directory upward until a `PRD.md` is found, so `/chatloop` can start from any project subdirectory
-- completion is signaled by `<complete>DONE</complete>`
+- every iteration must emit `## Completed`, `## Next Steps`, and `STATUS: IN_PROGRESS` or `STATUS: COMPLETE`
+- completion requires both `STATUS: COMPLETE` and `<complete>DONE</complete>`, and is rejected if unchecked next steps remain
 - state is written to `.opencode/chatloop.local.md` under the resolved project root
-- event records are appended to `chatloop.events.log` in the resolved project root
+- event records are appended to `.opencode/chatloop.events.log` under the resolved project root

@@ -59,8 +59,10 @@ MM-DD-<project-name>/
 
 - `/chatloop-status` 可查看当前解析到的 project 根目录、状态文件和事件文件
 - `chatloop` 的状态文件写入当前 project 根目录下的 `.opencode/chatloop.local.md`
-- 事件记录直接追加到当前 project 根目录下的 `chatloop.events.log`
-- 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，让插件停止 continuation
+- 事件记录直接追加到当前 project 根目录下的 `.opencode/chatloop.events.log`
+- `chatloop` 首轮就会强制注入 `PRD.md` 路径、project path 和结构化进度规则
+- 每轮应输出 `## Completed`、`## Next Steps` 和 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`
+- 只有当完成标准已满足、`Next Steps` 没有未完成项，并且模型输出 `STATUS: COMPLETE` 与 `<complete>DONE</complete>` 时，插件才会停止 continuation
 
 ## 子目录拆分
 

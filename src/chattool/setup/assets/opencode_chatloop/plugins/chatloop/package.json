@@ -2,5 +2,8 @@
   "name": "chatloop-plugin",
   "type": "module",
   "private": true,
-  "main": "./index.ts"
+  "main": "./index.ts",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.14.18"
+  }
 }
