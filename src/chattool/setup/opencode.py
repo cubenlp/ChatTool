@@ -19,7 +19,11 @@ from chattool.interaction import (
     resolve_value,
 )
 from chattool.setup.mode_prompt import resolve_install_only_mode
-from chattool.setup.opencode_chatloop import install_chatloop_assets, resolve_opencode_home
+from chattool.setup.opencode_chatloop import (
+    build_legacy_chatloop_plugin_entry,
+    install_chatloop_assets,
+    resolve_opencode_home,
+)
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
     run_npm_command,
@@ -169,12 +173,20 @@ def _append_plugin(config_payload: dict, plugin_entry: str) -> None:
     config_payload["plugin"] = existing_plugins
 
 
+def _remove_plugin(config_payload: dict, plugin_entry: str) -> None:
+    existing_plugins = config_payload.get("plugin")
+    if not isinstance(existing_plugins, list):
+        return
+    config_payload["plugin"] = [item for item in existing_plugins if item != plugin_entry]
+
+
 def _apply_plugin_preset(config_payload: dict, plugin: str | None, opencode_home: Path) -> dict | None:
     if not plugin:
         return None
 
     if plugin == "chatloop":
         installed = install_chatloop_assets(opencode_home)
+        _remove_plugin(config_payload, build_legacy_chatloop_plugin_entry(opencode_home))
         _append_plugin(config_payload, str(installed["plugin_entry"]))
         return {
             "name": plugin,

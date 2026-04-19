@@ -197,18 +197,22 @@ def ensure_nodejs_requirement(
     raise click.Abort()
 
 
-def run_npm_command(args):
+def run_npm_command(args, cwd=None):
     quoted_args = " ".join(shlex.quote(str(arg)) for arg in args)
     click.echo(f"Running: npm {quoted_args}")
     runtime = _detect_nodejs_runtime()
     if runtime.get("source") == "nvm":
+        cwd_prefix = (
+            f"cd {shlex.quote(str(cwd))} && " if cwd is not None else ""
+        )
         command = (
             'export NVM_DIR="$HOME/.nvm" && '
             '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && '
+            f"{cwd_prefix}"
             f"npm {quoted_args}"
         )
         return _run_bash(command)
-    return subprocess.run(["npm", *args], capture_output=True, text=True)
+    return subprocess.run(["npm", *args], capture_output=True, text=True, cwd=cwd)
 
 
 def get_global_npm_package_version(package_name):

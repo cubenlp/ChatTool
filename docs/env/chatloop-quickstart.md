@@ -135,7 +135,7 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 进入 project 根目录后，在 OpenCode 中显式触发：
 
 ```text
-/chatloop 按当前 PRD 开发 arxiv-explore 工具。先阅读 PRD.md，再检查 memory.md 和 progress.md 是否有补充上下文；随后进入实现、测试和文档更新流程。如果完成标准已满足，输出 <complete>DONE</complete>。
+/chatloop 按当前 PRD 开发 arxiv-explore 工具。需要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。只有当完成标准真的满足且 Next Steps 为空时，再输出 STATUS: COMPLETE 和 <complete>DONE</complete>。
 ```
 
 不建议只输入很短的 `/chatloop ?`。更好的方式是给一条清晰任务指令，让第一轮就覆盖主链路。
@@ -147,10 +147,10 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 1. 从当前目录向上寻找最近的 `PRD.md`
 2. 把这个目录视为当前 project 根目录
 3. 在 project 根目录下写状态文件：`.opencode/chatloop.local.md`
-4. 在 project 根目录下追加事件记录：`chatloop.events.log`
-5. 把你的初始消息原样发给当前 session，或在没有消息时构造一条 fresh-start prompt
-6. 每当模型进入 idle，重新发一条 fresh-start prompt，让模型重新从 `PRD.md` 理解任务
-7. 如果模型输出 `<complete>DONE</complete>`，停止 continuation
+4. 在 project 根目录下的 `.opencode/` 目录追加事件记录：`chatloop.events.log`
+5. 把你的初始消息保留为 `Original task`，但首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则
+6. 每当模型进入 idle，重新发一条带同样 `PRD` 约束与结构化进度要求的 continuation prompt
+7. 只有当模型同时输出 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，才停止 continuation
 
 换句话说，`chatloop` 不依赖之前的聊天上下文持续滚动，而是不断回到 `PRD.md` 这个主入口。
 
@@ -174,15 +174,16 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 
 ```text
 .opencode/chatloop.local.md
-chatloop.events.log
+.opencode/chatloop.events.log
 ```
 
-`chatloop.events.log` 是最直接的事件记录，例如：
+`.opencode/chatloop.events.log` 是最直接的事件记录，例如：
 
 ```text
 2026-04-20T10:00:00.000Z | INFO  | chatloop.start | session=abc123 | project=/home/me/workspace/arxiv-demo/projects/04-20-arxiv-explore-tool cwd=/home/me/workspace/arxiv-demo/projects/04-20-arxiv-explore-tool maxIterations=20
-2026-04-20T10:01:12.000Z | INFO  | chatloop.idle | session=abc123 | restarting fresh iteration=2
-2026-04-20T10:03:34.000Z | INFO  | chatloop.complete | session=abc123 | assistant emitted completion marker
+2026-04-20T10:01:12.000Z | DEBUG | chatloop.state.updated | session=abc123 | source=session.idle iteration=1/20 completed=yes next_steps=yes
+2026-04-20T10:01:12.500Z | INFO  | chatloop.idle | session=abc123 | source=session.idle sending continuation iteration=1
+2026-04-20T10:03:34.000Z | INFO  | chatloop.complete | session=abc123 | source=session.idle iteration=3
 ```
 
 ## 8. 常见调试动作
@@ -208,7 +209,7 @@ chatloop.events.log
 查看事件记录：
 
 ```bash
-tail -f chatloop.events.log
+tail -f .opencode/chatloop.events.log
 ```
 
 ## 9. 推荐工作方式
@@ -227,5 +228,5 @@ tail -f chatloop.events.log
 2. `chattool setup workspace ~/workspace/demo --with-opencode-loop`
 3. 在 `projects/` 下创建 project 并写好 `PRD.md`
 4. 进入 project 根目录执行 `/chatloop ...`
-5. 用 `/chatloop-status` 和 `chatloop.events.log` 调试是否生效
-6. 等模型输出 `<complete>DONE</complete>` 正常结束
+5. 用 `/chatloop-status` 和 `.opencode/chatloop.events.log` 调试是否生效
+6. 等模型输出 `STATUS: COMPLETE` 和 `<complete>DONE</complete>`，并让 `Next Steps` 为空后正常结束

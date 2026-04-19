@@ -13,7 +13,10 @@ from chattool.interaction import (
     ask_text,
     create_choice,
 )
-from chattool.setup.opencode_chatloop import install_chatloop_assets
+from chattool.setup.opencode_chatloop import (
+    build_chatloop_plugin_entry,
+    resolve_opencode_home,
+)
 from chattool.utils import mask_secret
 
 
@@ -84,14 +87,16 @@ def _copy_skill_tree(src: Path, dst: Path) -> list[str]:
         copied.append(skill_dir.name)
     return copied
 def apply_opencode_loop_option(workspace_dir: Path) -> dict:
-    installed = install_chatloop_assets()
+    opencode_home = resolve_opencode_home()
+    plugin_dir = opencode_home / "plugins" / "chatloop"
+    commands_dir = opencode_home / "command"
     return {
         "name": "opencode_loop",
         "workspace_dir": workspace_dir,
-        "opencode_home": installed["opencode_home"],
-        "plugin_dir": installed["plugin_dir"],
-        "commands_dir": installed["commands_dir"],
-        "plugin_entry": installed["plugin_entry"],
+        "opencode_home": opencode_home,
+        "plugin_dir": plugin_dir,
+        "commands_dir": commands_dir,
+        "plugin_entry": build_chatloop_plugin_entry(opencode_home),
     }
 
 

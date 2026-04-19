@@ -63,6 +63,10 @@ chattool setup opencode --install-only --plugin chatloop
 
 - [chatloop-quickstart.md](chatloop-quickstart.md)
 
+如果你想看一篇更完整的设计复盘，了解为什么 `chatloop` 要向 `auto-loop` 学 continuation 状态机，以及为什么 `opencode run` 不能代表真实 loop 行为，可参考：
+
+- [../blog/agent-cli/chatloop-from-auto-loop.md](../blog/agent-cli/chatloop-from-auto-loop.md)
+
 ### Lark CLI 配置
 
 使用 `setup lark-cli` 快速安装官方 `lark-cli`，并复用 ChatTool 现有的 Feishu 配置。

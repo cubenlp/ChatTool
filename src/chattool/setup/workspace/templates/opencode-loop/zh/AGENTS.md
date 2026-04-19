@@ -21,6 +21,7 @@ Workspace/
   MEMORY.md
   TODO.md
   projects/
+  reference/
   docs/
   core/
   skills/
@@ -36,6 +37,8 @@ Workspace/
 - 长期文档放到 `docs/`
 - 导入的共享 skills 放到 `skills/`
 - 对外发布产物放到 `public/`
+- 跨多个 project 可复用的长期参考放到 `reference/`
+- 按主题整理的长期维护约定放到 `docs/themes/`
 
 ## 工作流
 
@@ -45,18 +48,23 @@ Workspace/
 4. 草稿、实验和局部参考都放在当前 project 内部。
 5. 只有显式触发 `/chatloop ...` 时，`chatloop` 才会在模型准备停下时 fresh start，让模型重新阅读 `PRD.md`，必要时再读 `memory.md` / `progress.md`。
 6. 收尾时完成汇报，并在需要时更新 `MEMORY.md`。
+7. 如果某类材料已明显跨多个 project 可复用，优先提升到 workspace 根目录 `reference/` 或 `docs/themes/`，而不是继续堆在单个 project 中。
 
 ## 写入规则
 
 | 情况 | 写入位置 |
 |-----------|----------|
 | 任意实际工作单元 | `projects/MM-DD-<project-name>/` |
+| 跨 project 可复用参考 | `reference/` |
 | 需要修改的源码仓库 | `core/<repo-name>/` |
 | 状态快照 / 长期上下文 | `docs/memory/YYYY-MM-DD-status.md` |
 | 工具使用发现 | `docs/tools/<toolname>.md` |
 | 可复用技巧 / skill 说明 | `docs/skills/` |
+| 主题化维护约定 | `docs/themes/` |
 
 ## 约定
 
 - 不要超出当前任务边界；如需扩展，先说明或单独开任务。
 - 不确定时要显式说明，不要默默假设。
+- workspace 根目录的 `reference/` 用于沉淀跨多个 project 可复用的长期参考；不要把一次性草稿和局部样例直接堆进去。
+- `docs/themes/` 用于沉淀按主题整理的长期规范，例如 changelog、project 清理、chatloop 使用约定。

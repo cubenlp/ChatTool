@@ -55,12 +55,20 @@ MM-DD-<project-name>/
 - 如果当前 project 需要更短的访问路径，可手动在 project 内创建符号链接，例如 `ln -s ../../core/ChatTool ./ChatTool`
 - 该符号链接是按需行为，不作为默认模板自动生成
 
+## 与 workspace-level `reference/` 的关系
+
+- project 内的 `reference/` 只放本次任务局部参考、样例和阶段归档。
+- 如果某类参考材料已经明显跨多个 project 可复用，应提升到 workspace 根目录 `reference/`。
+- 如果某类参考材料长期依托某个源码仓库，可在 workspace-level `reference/` 中保存“任务起手参考”，再在具体 project 下按需链接 `core/<repo-name>`。
+
 ## 调试与停止
 
 - `/chatloop-status` 可查看当前解析到的 project 根目录、状态文件和事件文件
 - `chatloop` 的状态文件写入当前 project 根目录下的 `.opencode/chatloop.local.md`
-- 事件记录直接追加到当前 project 根目录下的 `chatloop.events.log`
-- 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，让插件停止 continuation
+- 事件记录直接追加到当前 project 根目录下的 `.opencode/chatloop.events.log`
+- `chatloop` 首轮就会强制注入 `PRD.md` 路径、project path 和结构化进度规则
+- 每轮应输出 `## Completed`、`## Next Steps` 和 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`
+- 只有当完成标准已满足、`Next Steps` 没有未完成项，并且模型输出 `STATUS: COMPLETE` 与 `<complete>DONE</complete>` 时，插件才会停止 continuation
 
 ## 子目录拆分
 

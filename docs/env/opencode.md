@@ -31,7 +31,8 @@ chattool setup opencode --install-only --plugin chatloop
 
 - 安装或升级 OpenCode CLI
 - 把 `chatloop` plugin / commands 写入 OpenCode home（默认 `~/.config/opencode/`）
-- 在 `opencode.json` 的 `plugin` 数组里追加对应的 `file://.../plugins/chatloop/index.ts`
+- 在 `plugins/chatloop/` 下写入完整本地插件包目录，并执行一次依赖安装
+- 在 `opencode.json` 的 `plugin` 数组里追加对应的 `file://.../plugins/chatloop` 目录入口
 
 它不会要求你额外输入 `base_url` / `api_key` / `model`。
 
@@ -94,14 +95,16 @@ chattool setup opencode --plugin chatloop
 其中：
 
 - `auto-loop`：把 `opencode-auto-loop` 追加写入 OpenCode 配置文件中的 `plugin` 数组
-- `chatloop`：安装全局 `chatloop` 资产，并把对应的本地 `file://.../plugins/chatloop/index.ts` 追加写入 `plugin` 数组
+- `chatloop`：安装全局 `chatloop` 资产，在 `plugins/chatloop/` 下准备完整本地插件包目录并安装依赖，再把对应的本地 `file://.../plugins/chatloop` 目录入口追加写入 `plugin` 数组
 
 `chatloop` 安装完成后，常用调试方式是：
 
 - 执行 `/chatloop-help` 查看工作流说明
 - 执行 `/chatloop-status` 查看当前 project 根目录、状态文件和事件文件
-- 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `chatloop.events.log`
-- 当任务完成时，让模型输出 `<complete>DONE</complete>` 停止 continuation
+- 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `.opencode/chatloop.events.log`
+- `chatloop` 首轮和每轮 continuation 都会强制注入 `PRD.md` 路径与读取要求
+- 每轮都要求输出 `## Completed`、`## Next Steps` 和 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`
+- 只有同时满足 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，插件才会停止 continuation
 
 ## 5. 配置文件位置
 

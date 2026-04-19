@@ -9,6 +9,7 @@
 基础目录固定生成：
 
 - `projects/`
+- `reference/`
 - `docs/`
 - `core/`
 - `skills/`
@@ -17,9 +18,11 @@
 其中：
 
 - `projects/`：所有实际进行中的 project 容器根目录；默认从最小 `PRD.md` project 开始
+- `reference/`：跨多个 project 可复用的长期参考材料
 - `core/`：集中放需要加入 workspace 的源码仓库
 - `skills/`：共享 skills 目录，默认放在 workspace 根目录
 - `public/`：用于部署公开网站和相关发布内容
+- `docs/themes/`：按主题整理的长期维护约定，例如 changelog、project 整理与 workspace 维护规则
 
 ## 1. 基本用法
 
@@ -83,6 +86,12 @@ projects/MM-DD-<project-name>/
 - 如果当前 project 需要更短的访问路径，可手动在 project 内创建到 `core/<repo-name>` 的符号链接
 - 该符号链接是按需行为，不作为模板默认自动生成
 
+workspace-level 参考约定：
+
+- project 内的 `reference/` 只放本次任务局部参考、样例和阶段归档
+- 如果某类参考材料已经跨多个 project 可复用，应提升到 workspace 根目录 `reference/`
+- 如果某类规则已经明显变成长期维护约定，应提升到 `docs/themes/`
+
 ### 设计原则
 
 - workspace 根目录文件用于 general-use 协议与跨 session 上下文
@@ -107,9 +116,11 @@ projects/MM-DD-<project-name>/
   - `command/chatloop-stop.md`
 - 该版本适合先完善 `PRD.md`，再通过显式 `/chatloop ...` 触发 fresh-start continuation 的工作流
 - `chatloop` 可从任意 project 子目录触发，会自动向上寻找最近的 `PRD.md`
-- 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 project 根目录 `chatloop.events.log`
+- 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 `.opencode/chatloop.events.log`
 - 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和事件文件
-- 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，插件会据此停止 continuation
+- `chatloop` 启动首轮就会强制注入 `PRD.md` 路径与读取要求，而不是简单原样转发用户消息
+- 每轮都要求输出 `## Completed`、`## Next Steps` 和 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`
+- 只有同时满足 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，插件才会停止 continuation
 
 ### ChatTool
 
@@ -131,6 +142,19 @@ projects/MM-DD-<project-name>/
 - 不再为每个场景分叉新的 workspace 命令
 - 默认完整做完后再统一汇报结果
 - 如果是开发任务，每个阶段要先测试通过、完善文档，再按当前 project 的完成标准收尾
+
+## 8. Workspace Maintenance
+
+当前模板还会生成一个共享 skill：
+
+- `skills/workspace-maintenance/`
+
+适用于这些场景：
+
+- 整理 `projects/` 目录
+- 把可复用材料提升到根目录 `reference/`
+- 把长期规范提升到 `docs/themes/`
+- 校对 workspace 根文档与当前结构是否一致
 
 ## 6. dry-run
 
@@ -156,7 +180,7 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 
 如果是已有 workspace，优先保留现有 `AGENTS.md` / `MEMORY.md`，再通过新的 `README.md` 和 `projects/` 结构逐步迁移。
 
-## 8. Quickstart
+## 9. Quickstart
 
 如果你想看一遍从创建 `PRD.md`、新建 project、再到显式触发 `/chatloop ...` 的完整示例，可参考：
 
