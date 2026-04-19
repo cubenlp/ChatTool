@@ -1,42 +1,27 @@
 ---
 name: cert-manager
-description: A comprehensive toolset for automated SSL certificate generation and management using DNS validation (Let's Encrypt). This skill supports multiple usage routes including direct code import, command-line interface (CLI), client-server architecture, and MCP protocol integration.
+description: "Generate and manage SSL/TLS certificates automatically using DNS validation via Let's Encrypt. Use when the user asks to create, renew, or manage SSL certificates, set up HTTPS, configure Let's Encrypt, or automate certificate issuance for a domain."
 version: 0.1.0
 ---
 
-# Cert Manager Skill
+# Cert Manager
 
-## Description
+Automate SSL certificate generation and renewal using DNS validation (Let's Encrypt) via four integration routes.
 
-This skill provides automated SSL certificate generation and management capabilities using DNS validation (Let's Encrypt). It offers flexibility through multiple usage routes, allowing you to choose the best method for your specific development or deployment scenario.
+## Route Selection
 
-## Usage Routes
-
-Choose the most appropriate route based on your scenario:
-
-| Route | Scenario | Core Tool |
+| Route | Best For | Entry Point |
 | :--- | :--- | :--- |
-| **1. Code Import** | Python script development, integration into other apps | `chattool.tools.cert.cert_updater.SSLCertUpdater` |
-| **2. CLI** | Local machine, Shell script automation, simple ops | `chattool dns cert-update` |
-| **3. Server-Client** | Remote management, async tasks, multi-tenant, distributed | `chattool serve cert` (Server) <br> `chattool client cert` (Client) |
-| **4. MCP** | AI Agent integration, generic tool call | `dns_cert_update` (via MCP Server) |
+| **Code Import** | Python scripts, app integration | `chattool.tools.cert.cert_updater.SSLCertUpdater` |
+| **CLI** | Shell scripts, local machine ops | `chattool dns cert-update` |
+| **Server-Client** | Remote management, distributed / multi-tenant | `chattool serve cert` + `chattool client cert` |
+| **MCP** | AI agent tool calls | `dns_cert_update` (MCP tool) |
 
----
+## Route 1: Code Import
 
-## Detailed Instructions
-
-### Route 1: Code Import
-
-Import and use the `SSLCertUpdater` class directly in Python code.
-
-**Configuration**:
-- Configure DNS Provider AccessKey/SecretKey (via env vars or args).
-
-**Example**:
 ```python
 import asyncio
 from chattool.tools.cert.cert_updater import SSLCertUpdater
-from chattool.utils import setup_logger
 
 async def main():
     updater = SSLCertUpdater(
@@ -44,27 +29,19 @@ async def main():
         email="admin@example.com",
         dns_type="aliyun",
         cert_dir="./certs",
-        access_key_id="...",      # Optional, defaults to env var
-        access_key_secret="..."   # Optional, defaults to env var
+        access_key_id="...",       # or set via env var
+        access_key_secret="..."    # or set via env var
     )
     success = await updater.run_once()
-    if success:
-        print("Certificate generated successfully!")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 
-### Route 2: CLI
+**Required env vars (Aliyun)**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET`
 
-Use the `chattool` command-line interface to request certificates directly.
+## Route 2: CLI
 
-**Configuration**:
-- Set env vars `ALIBABA_CLOUD_ACCESS_KEY_ID` and `ALIBABA_CLOUD_ACCESS_KEY_SECRET` (for Aliyun).
-
-**Example**:
 ```bash
-# Generate certificate
 chattool dns cert-update \
     -d example.com -d "*.example.com" \
     -e admin@example.com \
@@ -72,19 +49,16 @@ chattool dns cert-update \
     --cert-dir ./my-certs
 ```
 
-### Route 3: Server-Client
+## Route 3: Server-Client
 
-Start an HTTP server to handle certificate requests and call it remotely via the client tool. Supports multi-tenant isolation (Token-based).
-
-**Step 1: Start Server**
+**Start server** (with auth token):
 ```bash
-# Start on server, set auth token
 chattool serve cert --token "my-secret-token" --provider aliyun
 ```
 
-**Step 2: Client Call**
+**Client operations**:
 ```bash
-# Apply for certificate (Client side)
+# Request certificate
 chattool client cert apply \
     -d example.com -d "*.example.com" \
     --token "my-secret-token" \
@@ -97,18 +71,10 @@ chattool client cert list --token "my-secret-token" --server http://<server-ip>:
 chattool client cert download example.com --token "my-secret-token" --server http://<server-ip>:8000
 ```
 
-### Route 4: MCP Protocol
+## Route 4: MCP Protocol
 
-Call tools via MCP protocol if the ChatTool MCP Server is running.
+**Tool name**: `dns_cert_update`
 
-**Tool Name**: `dns_cert_update`
-
-**Arguments**:
-- `domains`: List[str] (e.g., `["example.com"]`)
-- `email`: str
-- `provider`: str ("aliyun" or "tencent")
-
-**Example (JSON-RPC)**:
 ```json
 {
   "jsonrpc": "2.0",
@@ -124,3 +90,5 @@ Call tools via MCP protocol if the ChatTool MCP Server is running.
   "id": 1
 }
 ```
+
+**Supported providers**: `aliyun`, `tencent`

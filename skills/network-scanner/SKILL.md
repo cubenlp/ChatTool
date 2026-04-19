@@ -1,68 +1,55 @@
 ---
 name: "network-scanner"
-description: "Professional network scanning utility for discovering active hosts and open ports within a network segment."
+description: "Discover active hosts and open ports within a network segment using ping sweeps and TCP port scans. Use when the user asks to scan a network, find active devices, check open ports, audit services, or map hosts on a subnet."
 version: 0.1.0
 ---
 
 # Network Scanner
 
-The Network Scanner skill provides essential network discovery capabilities, allowing you to identify active hosts and check for open services (ports) within a specified network range. This is useful for network administration, security auditing, and service discovery.
-
-## Capabilities
-
-- **Ping Sweep (Active Host Discovery)**: 
-  - Scans a specified network segment (CIDR notation, e.g., `192.168.1.0/24`) using ICMP echo requests.
-  - Identifies which IP addresses are currently active (online).
-  - Supports high concurrency for fast scanning of large subnets.
-
-- **Port Scanning (Service Discovery)**:
-  - Scans a list of target IP addresses for a specific open TCP port.
-  - Useful for finding machines running specific services (e.g., SSH on port 22, Web on port 80/443).
-  - Can be chained with the Ping Sweep to first find active hosts and then check for services.
+Identify active hosts and open services within a network range using concurrent ping sweeps and TCP port scans.
 
 ## Tools
 
 ### `network_ping_scan`
-Scans a network segment to find active hosts.
+Scan a network segment to find active hosts via ICMP echo requests.
 
-- **Parameters**:
-  - `network_segment` (required): The target network in CIDR notation (e.g., `10.0.0.0/24`).
-  - `concurrency` (optional): Number of parallel threads to use (default: 50). Higher values are faster but consume more system resources.
+**Parameters**:
+- `network_segment` (required): Target network in CIDR notation (e.g., `10.0.0.0/24`).
+- `concurrency` (optional): Parallel threads (default: 50). Higher values scan faster but use more resources.
 
 ### `network_port_scan`
-Checks a list of hosts for a specific open port.
+Check a list of hosts for a specific open TCP port.
 
-- **Parameters**:
-  - `hosts` (required): A list of IP addresses to scan.
-  - `port` (optional): The TCP port number to check (default: 22).
-  - `concurrency` (optional): Number of parallel threads (default: 50).
+**Parameters**:
+- `hosts` (required): List of IP addresses to scan.
+- `port` (optional): TCP port number to check (default: 22).
+- `concurrency` (optional): Parallel threads (default: 50).
 
-## Usage Examples
+## Workflows
 
-### Scenario 1: Find all active devices on the local network
-"Scan the 192.168.1.0/24 network to see which devices are online."
-
+### Find all active devices on a subnet
 ```python
 active_hosts = network_ping_scan("192.168.1.0/24")
 print(f"Found {len(active_hosts)} active devices: {active_hosts}")
 ```
 
-### Scenario 2: Find all SSH servers
-"Find all servers with SSH open in the 10.0.1.0/24 subnet."
-
+### Find all SSH servers on a subnet
 ```python
-# Step 1: Find active hosts first to save time
+# Step 1: Discover live hosts
 active_hosts = network_ping_scan("10.0.1.0/24")
 
-# Step 2: Check port 22 on active hosts
+# Step 2: Check port 22 on live hosts
 ssh_servers = network_port_scan(active_hosts, port=22)
 print(f"SSH Servers: {ssh_servers}")
 ```
 
-### Scenario 3: Check a specific list of servers for a web service
-"Check if 192.168.1.10 and 192.168.1.11 have port 8080 open."
-
+### Check specific hosts for a web service port
 ```python
 targets = ["192.168.1.10", "192.168.1.11"]
 web_servers = network_port_scan(targets, port=8080)
 ```
+
+## Tips
+
+- Chain `network_ping_scan` → `network_port_scan` to limit port scan scope to live hosts only.
+- Lower `concurrency` if the scan causes network instability or drops.
