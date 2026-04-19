@@ -111,7 +111,10 @@ const hasUncheckedNextSteps = (text: string) => {
     .some((line) => /^\s*-\s*\[ \]/.test(line))
 }
 
-const validateCompletion = (text: string) => {
+const validateCompletion = (text: string, iteration: number) => {
+  if (iteration <= 0) {
+    return { valid: false, reason: "bootstrap iteration cannot complete" }
+  }
   if (!COMPLETE_RE.test(stripCodeFences(text))) {
     return { valid: false, reason: "missing completion tag" }
   }
@@ -297,8 +300,12 @@ const buildLoopPrompt = (state: State, projectPath: string, iteration: number, m
     "STATUS: IN_PROGRESS",
     "```",
     "",
-    "- You MUST include either STATUS: IN_PROGRESS or STATUS: COMPLETE on its own line in every response.",
-    "- You MUST NOT output <complete>DONE</complete> if there are any unchecked items (- [ ]) in Next Steps.",
+    mode === "bootstrap"
+      ? "- In this bootstrap iteration, you MUST use STATUS: IN_PROGRESS and you MUST NOT output STATUS: COMPLETE or <complete>DONE</complete>."
+      : "- You MUST include either STATUS: IN_PROGRESS or STATUS: COMPLETE on its own line in every response.",
+    mode === "bootstrap"
+      ? "- Use the bootstrap iteration to start doing the work and establish the first structured Next Steps list."
+      : "- You MUST NOT output <complete>DONE</complete> if there are any unchecked items (- [ ]) in Next Steps.",
     "- Only when every PRD requirement is satisfied and Next Steps is empty may you output both:",
     "  STATUS: COMPLETE",
     "  <complete>DONE</complete>",
@@ -414,7 +421,7 @@ const chatloop: Plugin = async (ctx) => {
       await appendEvent(projectPath, sessionId, "DEBUG", "chatloop.idle.last_text", `source=${source} chars=${lastText.length}`)
 
       if (state.iteration > 0 && COMPLETE_RE.test(stripCodeFences(lastText))) {
-        const validation = validateCompletion(lastText)
+        const validation = validateCompletion(lastText, state.iteration)
         if (validation.valid) {
           await appendEvent(projectPath, sessionId, "INFO", "chatloop.complete", `source=${source} iteration=${state.iteration}`)
           await clearState(projectPath)
@@ -494,9 +501,15 @@ const chatloop: Plugin = async (ctx) => {
       lastContinuationAt = 0
       await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.start", `project=${projectPath} cwd=${resolve(ctx.directory)} maxIterations=${maxIterations}`)
       await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.start.prompt", `mode=bootstrap prd=${entryPath} original_task=${state.originalTask ? "yes" : "no"}`)
-      toast(`ChatLoop activated (${maxIterations} iterations)`, "success")
+      const prompt = buildLoopPrompt(state, projectPath, 0, "bootstrap")
+      await ctx.client.session.promptAsync({
+        path: { id: context.sessionID },
+        body: { parts: [{ type: "text", text: prompt }] },
+      })
+      lastContinuationAt = Date.now()
+      await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.start.prompt_sent", `iteration=0/${maxIterations}`)
 
-      return buildLoopPrompt(state, projectPath, 0, "bootstrap")
+      return ""
     },
   })
 

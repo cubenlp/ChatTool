@@ -138,6 +138,8 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 /chatloop 按当前 PRD 开发 arxiv-explore 工具。需要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。只有当完成标准真的满足且 Next Steps 为空时，再输出 STATUS: COMPLETE 和 <complete>DONE</complete>。
 ```
 
+注意：首轮 bootstrap iteration 只允许进入 `STATUS: IN_PROGRESS`，不允许直接输出 `STATUS: COMPLETE` 或 `<complete>DONE</complete>`。
+
 不建议只输入很短的 `/chatloop ?`。更好的方式是给一条清晰任务指令，让第一轮就覆盖主链路。
 
 ## 6. 启动后会发生什么
@@ -150,7 +152,7 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 4. 在 project 根目录下的 `.opencode/` 目录追加事件记录：`chatloop.events.log`
 5. 把你的初始消息保留为 `Original task`，但首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则
 6. 每当模型进入 idle，重新发一条带同样 `PRD` 约束与结构化进度要求的 continuation prompt
-7. 只有当模型同时输出 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，才停止 continuation
+7. 首轮 bootstrap iteration 不允许完成；只有从后续 continuation 开始，且模型同时输出 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，才停止 continuation
 
 换句话说，`chatloop` 不依赖之前的聊天上下文持续滚动，而是不断回到 `PRD.md` 这个主入口。
 
