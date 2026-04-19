@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - [2026-04-20] `chattool gh` 已重构为分层实现：CLI 入口收口到 `gh pr ...` / `gh run ...` 嵌套命令树，主要命令业务从 `src/chattool/tools/github/cli.py` 迁出到独立命令实现层，请求访问收口为显式 `get_*` / `post_*` / `patch_*` 函数，`GitHubClient` 同步瘦身为围绕这些提取后能力的薄包装；保留了 repo-scoped token 优先级、`set-token`、`repo-perms`、缺参自动补问、`pr checks --wait`、`pr merge --check` 等 ChatTool 定制行为
 
 ### Fixed
+- [2026-04-20] `chatloop` 插件现在在首次执行 `/chatloop ...` 时不再额外弹出启动完成提示，也不再把 bootstrap PRD 提示作为工具返回文本直接回显；改为异步把首轮 PRD contract 注入当前 session，避免模型把首轮启动误判为“一轮已经结束”
 - [2026-04-20] `chattool setup workspace --with-opencode-loop` / `setup opencode --plugin chatloop` 附带的 `chatloop` 插件现在会在启动首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则，不再把 `/chatloop <message>` 原样转发给模型；同时引入更强的 completion gate，要求每轮输出 `## Completed`、`## Next Steps` 与 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`，只有在 `Next Steps` 清空、`STATUS: COMPLETE` 与 `<complete>DONE</complete>` 同时满足时才停止 continuation
 - `chattool cc start` 现在会捕获启动异常和非零退出码，并把失败原因直接输出给用户；默认连续失败 5 次后才停止重试，避免 cc-connect 因偶发异常直接变成不可用状态
 - `chattool setup nodejs`、`setup codex`、`setup opencode`、`setup claude`、`setup lark-cli`、`setup cc-connect`、`setup frp`、`setup docker` 与 `chattool dns cert-update` 现在统一支持 `-l/--log-level`；复杂等待型命令的阶段日志可按 `DEBUG/INFO/WARNING/ERROR` 控制，而 `setup alias` 这类本地即时配置命令继续保持简洁输出
