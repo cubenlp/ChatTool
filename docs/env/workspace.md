@@ -105,7 +105,7 @@ projects/MM-DD-<project-name>/
   - `command/chatloop-status.md`
   - `command/chatloop-help.md`
   - `command/chatloop-stop.md`
-- 该版本适合把 `PRD.md` 作为唯一入口，并通过显式 `/chatloop ...` 触发 fresh-start continuation 的工作流
+- 该版本适合先完善 `PRD.md`，再通过显式 `/chatloop ...` 触发 fresh-start continuation 的工作流
 - `chatloop` 可从任意 project 子目录触发，会自动向上寻找最近的 `PRD.md`
 - 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 project 根目录 `chatloop.events.log`
 - 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和事件文件
@@ -155,3 +155,9 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 - `MEMORY.md`：跨 session 高优先级上下文
 
 如果是已有 workspace，优先保留现有 `AGENTS.md` / `MEMORY.md`，再通过新的 `README.md` 和 `projects/` 结构逐步迁移。
+
+## 8. Quickstart
+
+如果你想看一遍从创建 `PRD.md`、新建 project、再到显式触发 `/chatloop ...` 的完整示例，可参考：
+
+- [chatloop-quickstart.md](chatloop-quickstart.md)

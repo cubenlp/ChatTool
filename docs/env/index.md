@@ -57,6 +57,12 @@ chattool setup opencode --install-only --plugin chatloop
 
 详细文档：[workspace.md](workspace.md)
 
+### ChatLoop Quickstart
+
+如果你想从零开始体验一次完整的 `PRD.md -> /chatloop -> fresh-start continuation` 流程，可参考：
+
+- [chatloop-quickstart.md](chatloop-quickstart.md)
+
 ### Lark CLI 配置
 
 使用 `setup lark-cli` 快速安装官方 `lark-cli`，并复用 ChatTool 现有的 Feishu 配置。

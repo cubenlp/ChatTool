@@ -110,3 +110,7 @@ chattool setup opencode --plugin chatloop
 ```text
 ~/.config/opencode/opencode.json
 ```
+
+如果你想看一遍从安装 OpenCode / chatloop 到创建 `PRD.md` 并启动 loop 的完整示例，可参考：
+
+- [chatloop-quickstart.md](chatloop-quickstart.md)

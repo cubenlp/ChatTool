@@ -4,7 +4,7 @@
 
 当前版本面向 OpenCode `chatloop`：
 
-- 前期对话先专注生成 `PRD.md`
+- 前期对话先专注生成和完善 `PRD.md`
 - 只有显式触发 `/chatloop ...` 后，loop 插件才会围绕 `PRD.md` 工作；模型每次停下后都会 fresh start，再从头阅读 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
 
 ## 什么时候新开一个 project
