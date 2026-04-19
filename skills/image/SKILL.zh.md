@@ -1,51 +1,59 @@
 ---
 name: "image"
-description: "使用 ChatTool 调用多平台 AI 生图能力（Pollinations、SiliconFlow、Tongyi、Hugging Face、Liblib）。"
+description: "通过 ChatTool 调用多家模型服务，根据文本提示词生成 AI 图片。用户提到创建图片、生成插画、渲染场景，或使用 Flux、Stable Diffusion、Tongyi 等文生图模型时使用。"
 version: 0.1.0
 ---
 
-# Image 生图助手
+# Image Generation
 
-该技能用于统一处理 AI 图片生成任务，支持多平台模型查询与出图。
+根据文本提示词生成图片，支持 Pollinations、SiliconFlow、Tongyi、Hugging Face、Liblib 等多个平台。
 
-## 能力
+## 工作流
 
-- **列出模型**：查看指定平台可用文生图模型。
-- **生成图片**：根据提示词生成图片，并按平台能力设置尺寸/模型参数。
-- **平台切换**：在不同平台之间选择更合适的成本、速度和风格。
+1. 需要时先查看模型列表。
+2. 使用选定平台执行 `generate "<prompt>"`。
+3. 如果效果不理想，再调整提示词、模型、尺寸或风格。
 
-## 常用命令
+## 各平台命令
 
-### Pollinations
-
-- `chattool image pollinations list-models`
-- `chattool image pollinations generate "a cyberpunk cat"`
-- `chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512 --height 512`
+### Pollinations（无需 API Key）
+```bash
+chattool image pollinations list-models
+chattool image pollinations generate "a cyberpunk cat"
+chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512 --height 512
+```
 
 ### SiliconFlow
+```bash
+chattool image siliconflow list-models
+chattool image siliconflow generate "a cute dog"
+chattool image siliconflow generate "a cute dog" --model "black-forest-labs/FLUX.1-schnell" --size "1024x1024"
+```
 
-- `chattool image siliconflow list-models`
-- `chattool image siliconflow generate "a cute dog"`
-- `chattool image siliconflow generate "a cute dog" --model "black-forest-labs/FLUX.1-schnell" --size "1024x1024"`
-
-### Liblib
-
-- `chattool image liblib list-models`
-- `chattool image liblib generate "A cute dog" --model-id liblib-sdxl-model -o dog_liblib.png`
-
-### Tongyi
-
-- `chattool image tongyi generate "一只在屋顶晒太阳的赛博朋克猫" --style "<auto>" --size "1024*1024" -o cat_tongyi.png`
+### Tongyi（阿里云）
+```bash
+chattool image tongyi generate "a cyberpunk cat on a rooftop" --style "<auto>" --size "1024*1024" -o cat_tongyi.png
+```
 
 ### Hugging Face
+```bash
+chattool image huggingface generate "A futuristic city at night, neon lights" -o city_hf.png
+```
 
-- `chattool image huggingface generate "A futuristic city at night, neon lights" -o city_hf.png`
+### Liblib
+```bash
+chattool image liblib list-models
+chattool image liblib generate "A cute dog" --model-id liblib-sdxl-model -o dog_liblib.png
+```
 
-## 配置要求
+## 配置
 
-请先通过 `chatenv init` 或 `.env` 配置对应平台密钥（如 `DASHSCOPE_API_KEY`、`HUGGINGFACE_HUB_TOKEN`、`LIBLIB_ACCESS_KEY`、`POLLINATIONS_API_KEY`、`SILICONFLOW_API_KEY`）。
+通过 `chatenv init` 或 `.env` 设置平台密钥：
 
-## 使用建议
-
-- 先用 `list-models` 确认模型可用性，再进行生成。
-- 若结果不理想，优先调整提示词、模型和尺寸，而不是直接更换平台。
+| 平台 | 环境变量 |
+| :--- | :--- |
+| SiliconFlow | `SILICONFLOW_API_KEY` |
+| Tongyi | `DASHSCOPE_API_KEY` |
+| Hugging Face | `HUGGINGFACE_HUB_TOKEN` |
+| Liblib | `LIBLIB_ACCESS_KEY` |
+| Pollinations | `POLLINATIONS_API_KEY`（可选） |
