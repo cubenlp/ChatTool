@@ -104,6 +104,7 @@ chattool setup opencode --plugin chatloop
 - 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `.opencode/chatloop.events.log`
 - `chatloop` 首轮和每轮 continuation 都会强制注入 `PRD.md` 路径与读取要求
 - 每轮都要求输出 `## Completed`、`## Next Steps` 和 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`
+- bootstrap 首轮不允许直接完成；只有进入后续 continuation 后，completion gate 才会生效
 - 只有同时满足 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，插件才会停止 continuation
 
 ## 5. 配置文件位置

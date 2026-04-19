@@ -1,7 +1,7 @@
 ---
 name: chattool-gh
 description: 使用 `chattool gh` 完成 PR 创建、更新、查看、CI 状态检查与维护，并确保正文 Markdown 正确渲染。
-version: 0.3.1
+version: 0.4.0
 ---
 
 # ChatTool GitHub 帮助（中文）
@@ -33,7 +33,7 @@ cat > /tmp/pr_body.md <<'EOF'
 - command 2
 EOF
 
-chattool gh pr-create \
+chattool gh pr create \
   --repo owner/repo \
   --base master \
   --head your-branch \
@@ -45,7 +45,7 @@ chattool gh pr-create \
 
 当范围变化时，及时同步 PR 正文：
 ```
-chattool gh pr-update \
+chattool gh pr edit \
   --repo owner/repo \
   --number 123 \
   --body-file /tmp/pr_body.md
@@ -54,7 +54,7 @@ chattool gh pr-update \
 也可以顺手改标题、状态或基线分支：
 
 ```
-chattool gh pr-update \
+chattool gh pr edit \
   --repo owner/repo \
   --number 123 \
   --title "feat: refine xyz" \
@@ -64,16 +64,16 @@ chattool gh pr-update \
 ## 查看 / 列表 / 检查
 
 ```
-chattool gh pr-list --repo owner/repo
-chattool gh pr-view --repo owner/repo --number 123
-chattool gh pr-check --repo owner/repo --number 123
-chattool gh pr-check --repo owner/repo --number 123 --wait
-chattool gh pr-check --repo owner/repo --number 123 --wait --interval 10 --timeout 600
-chattool gh run-view --repo owner/repo --run-id 23494900414
-chattool gh job-logs --repo owner/repo --job-id 68373094563
+chattool gh pr list --repo owner/repo
+chattool gh pr view --repo owner/repo --number 123
+chattool gh pr checks --repo owner/repo --number 123
+chattool gh pr checks --repo owner/repo --number 123 --wait
+chattool gh pr checks --repo owner/repo --number 123 --wait --interval 10 --timeout 600
+chattool gh run view --repo owner/repo --run-id 23494900414
+chattool gh run logs --repo owner/repo --job-id 68373094563
 ```
 
-`pr-check` 适合在 push 之后或 CI 异常时使用，会汇总：
+`pr checks` 适合在 push 之后或 CI 异常时使用，会汇总：
 - combined status
 - check runs
 - workflow runs
@@ -86,31 +86,31 @@ chattool gh job-logs --repo owner/repo --job-id 68373094563
 在活跃 PR 工作流里，默认推荐直接使用：
 
 ```bash
-chattool gh pr-check --repo owner/repo --number 123 --wait
+chattool gh pr checks --repo owner/repo --number 123 --wait
 ```
 
-只有在你明确只想看一眼当前快照时，才使用不带 `--wait` 的 `pr-check`。
+只有在你明确只想看一眼当前快照时，才使用不带 `--wait` 的 `pr checks`。
 
 需要机器可读结果时：
 
 ```
-chattool gh pr-check --repo owner/repo --number 123 --json-output
+chattool gh pr checks --repo owner/repo --number 123 --json-output
 ```
 
 ## 评论 / 合并
 
 ```
-chattool gh pr-comment --repo owner/repo --number 123 --body "Looks good"
-chattool gh pr-merge --repo owner/repo --number 123 --method squash
-chattool gh pr-merge --repo owner/repo --number 123 --method squash --check
+chattool gh pr comment --repo owner/repo --number 123 --body "Looks good"
+chattool gh pr merge --repo owner/repo --number 123 --method squash
+chattool gh pr merge --repo owner/repo --number 123 --method squash --check
 ```
 
 ## 规范
 
 - 始终用 `--body-file`，避免 `\n` 字符串导致的乱码。
 - 保持 PR 文本结构化（`Summary`、`Testing`）。
-- 需要看 PR 的 CI 状态时，优先用 `pr-check`，不要手工来回翻 GitHub Actions 页面。
-- 如果 CI 还在运行，优先用 `pr-check --wait` 持续等待，不要手动重复执行状态命令。
+- 需要看 PR 的 CI 状态时，优先用 `pr checks`，不要手工来回翻 GitHub Actions 页面。
+- 如果 CI 还在运行，优先用 `pr checks --wait` 持续等待，不要手动重复执行状态命令。
 - 提交评审 / MR 前，先从目标主分支更新并处理冲突，不要把可避免的合并债务留给评审阶段。
-- 如果 CI 已经报红，先用 `pr-check` 定位，再用 `run-view` / `job-logs` 下钻，不要在网页上盲猜。
+- 如果 CI 已经报红，先用 `pr checks` 定位，再用 `run view` / `run logs` 下钻，不要在网页上盲猜。
 - 扩展 `chattool gh` 时，优先参考 `docs/client.md` 里列出的 GitHub REST API 与 PyGithub 文档。

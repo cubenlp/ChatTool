@@ -60,7 +60,7 @@ version: 0.4.1
 6. **一直推进到 PR/MR 阶段**  
    - 确保分支已经 commit 并 push  
    - 用 `chattool gh` 执行 GitHub PR 相关操作  
-   - 默认使用 `chattool gh pr-create --body-file ...` 建 PR  
+   - 默认使用 `chattool gh pr create --body-file ...` 建 PR  
    - 若范围变化，继续更新 PR 内容  
    - 任务默认停在 PR/MR 阶段，而不是停在本地提交
 

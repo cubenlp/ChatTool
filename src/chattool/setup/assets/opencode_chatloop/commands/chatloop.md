@@ -25,5 +25,6 @@ Debugging:
 
 Completion rule:
 
+- bootstrap iteration is never allowed to complete; the first response must stay `STATUS: IN_PROGRESS` and must not emit `<complete>DONE</complete>`
 - if the PRD is satisfied, the model must output both `STATUS: COMPLETE` and `<complete>DONE</complete>`
 - if unchecked `- [ ]` items remain in `## Next Steps`, ChatLoop will reject completion and continue looping

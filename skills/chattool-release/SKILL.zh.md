@@ -72,9 +72,9 @@ git tag --list 'v*'
 git ls-remote --tags origin 'v*'
 python -m build
 python -m twine check dist/*
-chattool gh pr-view --repo cubenlp/ChatTool --number <pr>
-chattool gh pr-check --repo cubenlp/ChatTool --number <pr> --wait
-chattool gh run-view --repo cubenlp/ChatTool --run-id <id>
+chattool gh pr view --repo cubenlp/ChatTool --number <pr>
+chattool gh pr checks --repo cubenlp/ChatTool --number <pr> --wait
+chattool gh run view --repo cubenlp/ChatTool --run-id <id>
 python - <<'PY'
 import json, urllib.request
 print(json.load(urllib.request.urlopen('https://pypi.org/pypi/chattool/json'))['info']['version'])
@@ -85,6 +85,6 @@ PY
 
 - 明确区分“已具备发版条件”和“已经正式发版”。
 - 使用具体版本号、commit、tag、workflow id。
-- 在 merge 或打 tag 前，优先用 `chattool gh pr-check --wait` 等 CI 到终态，再做发版判断。
+- 在 merge 或打 tag 前，优先用 `chattool gh pr checks --wait` 等 CI 到终态，再做发版判断。
 - 如果某个 tag 只会重跑 workflow 而不会产出新的 PyPI 包，要明确指出这一点。
 - 如果当前时机不该发版，要先指出，再停止危险动作。
