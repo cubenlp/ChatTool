@@ -1,42 +1,27 @@
 ---
 name: cert-manager
-description: 一个使用 DNS 验证（Let's Encrypt）进行自动化 SSL 证书生成和管理的综合工具集。该技能支持多种使用途径，包括直接代码导入、命令行界面（CLI）、客户端-服务器架构和 MCP 协议集成。
+description: "通过 Let's Encrypt 的 DNS 验证自动生成和管理 SSL/TLS 证书。用户提到创建、续期、管理 SSL 证书，配置 HTTPS，设置 Let's Encrypt，或自动化签发某个域名证书时使用。"
 version: 0.1.0
 ---
 
-# Cert Manager Skill (证书管理技能)
+# Cert Manager
 
-## 描述
+通过四种集成方式，自动化完成基于 DNS 验证的 SSL 证书申请与续期。
 
-本技能提供使用 DNS 验证（Let's Encrypt）的自动化 SSL 证书生成和管理功能。它通过多种使用途径提供灵活性，允许您根据具体的开发或部署场景选择最佳方法。
+## 路线选择
 
-## 使用途径
-
-根据您的场景选择最合适的途径：
-
-| 途径 | 场景 | 核心工具 |
+| 路线 | 适用场景 | 入口 |
 | :--- | :--- | :--- |
-| **1. 代码导入** | Python 脚本开发，集成到其他应用中 | `chattool.tools.cert.cert_updater.SSLCertUpdater` |
-| **2. CLI** | 本地机器，Shell 脚本自动化，简单运维 | `chattool dns cert-update` |
-| **3. 服务器-客户端** | 远程管理，异步任务，多租户，分布式 | `chattool serve cert` (Server) <br> `chattool client cert` (Client) |
-| **4. MCP** | AI Agent 集成，通用工具调用 | `dns_cert_update` (通过 MCP Server) |
+| **代码导入** | Python 脚本、应用内集成 | `chattool.tools.cert.cert_updater.SSLCertUpdater` |
+| **CLI** | Shell 脚本、本地运维 | `chattool dns cert-update` |
+| **Server-Client** | 远程管理、分布式、多租户 | `chattool serve cert` + `chattool client cert` |
+| **MCP** | AI agent 工具调用 | `dns_cert_update` |
 
----
+## 路线 1：代码导入
 
-## 详细说明
-
-### 途径 1: 代码导入
-
-在 Python 代码中直接导入并使用 `SSLCertUpdater` 类。
-
-**配置**:
-- 配置 DNS 提供商 AccessKey/SecretKey（通过环境变量或参数）。
-
-**示例**:
 ```python
 import asyncio
 from chattool.tools.cert.cert_updater import SSLCertUpdater
-from chattool.utils import setup_logger
 
 async def main():
     updater = SSLCertUpdater(
@@ -44,27 +29,19 @@ async def main():
         email="admin@example.com",
         dns_type="aliyun",
         cert_dir="./certs",
-        access_key_id="...",      # 可选，默认为环境变量
-        access_key_secret="..."   # 可选，默认为环境变量
+        access_key_id="...",       # 或通过环境变量提供
+        access_key_secret="..."    # 或通过环境变量提供
     )
     success = await updater.run_once()
-    if success:
-        print("Certificate generated successfully!")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 
-### 途径 2: CLI
+**阿里云必需环境变量**：`ALIBABA_CLOUD_ACCESS_KEY_ID`、`ALIBABA_CLOUD_ACCESS_KEY_SECRET`
 
-使用 `chattool` 命令行界面直接请求证书。
+## 路线 2：CLI
 
-**配置**:
-- 设置环境变量 `ALIBABA_CLOUD_ACCESS_KEY_ID` 和 `ALIBABA_CLOUD_ACCESS_KEY_SECRET`（针对阿里云）。
-
-**示例**:
 ```bash
-# 生成证书
 chattool dns cert-update \
     -d example.com -d "*.example.com" \
     -e admin@example.com \
@@ -72,19 +49,16 @@ chattool dns cert-update \
     --cert-dir ./my-certs
 ```
 
-### 途径 3: 服务器-客户端
+## 路线 3：Server-Client
 
-启动 HTTP 服务器处理证书请求，并通过客户端工具远程调用。支持多租户隔离（基于 Token）。
-
-**步骤 1: 启动服务器**
+**启动服务端**：
 ```bash
-# 在服务器启动，设置认证 token
 chattool serve cert --token "my-secret-token" --provider aliyun
 ```
 
-**步骤 2: 客户端调用**
+**客户端操作**：
 ```bash
-# 申请证书（客户端）
+# 申请证书
 chattool client cert apply \
     -d example.com -d "*.example.com" \
     --token "my-secret-token" \
@@ -97,18 +71,10 @@ chattool client cert list --token "my-secret-token" --server http://<server-ip>:
 chattool client cert download example.com --token "my-secret-token" --server http://<server-ip>:8000
 ```
 
-### 途径 4: MCP 协议
+## 路线 4：MCP
 
-如果 ChatTool MCP Server 正在运行，则通过 MCP 协议调用工具。
+**工具名**：`dns_cert_update`
 
-**工具名称**: `dns_cert_update`
-
-**参数**:
-- `domains`: List[str] (例如 `["example.com"]`)
-- `email`: str
-- `provider`: str ("aliyun" 或 "tencent")
-
-**示例 (JSON-RPC)**:
 ```json
 {
   "jsonrpc": "2.0",
@@ -124,3 +90,5 @@ chattool client cert download example.com --token "my-secret-token" --server htt
   "id": 1
 }
 ```
+
+**支持的 provider**：`aliyun`、`tencent`
