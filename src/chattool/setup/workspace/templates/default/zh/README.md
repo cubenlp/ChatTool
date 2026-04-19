@@ -9,3 +9,5 @@
 - 需要修改的源码仓库默认保留在 `core/`
 - `projects/` 内只保留当前工作需要的协议文件、草稿和参考
 - 如果某个 project 需要更短的源码访问路径，可在 project 内按需手动创建到 `core/<repo-name>` 的符号链接，但不作为默认自动行为
+- 跨多个 project 可复用的长期参考材料，优先沉淀到 workspace 根目录 `reference/`
+- 跨多个 project 的整理约定与维护规范，优先沉淀到 `docs/themes/`

@@ -48,6 +48,12 @@ MM-DD-<project-name>/
 - 如果当前 project 需要更短的访问路径，可手动在 project 内创建符号链接，例如 `ln -s ../../core/ChatTool ./ChatTool`
 - 该符号链接是按需行为，不作为默认模板自动生成
 
+## 与 workspace-level `reference/` 的关系
+
+- project 内的 `reference/` 只放本次任务局部参考、样例和阶段归档。
+- 如果某类参考材料已经明显跨多个 project 可复用，应提升到 workspace 根目录 `reference/`。
+- 如果某类参考材料长期依托某个源码仓库，可在 workspace-level `reference/` 中保存“任务起手参考”，再在具体 project 下按需链接 `core/<repo-name>`。
+
 ## 子目录演化
 
 如果一个 project 后续自然长出子任务，不需要预先引入固定的项目管理层级。

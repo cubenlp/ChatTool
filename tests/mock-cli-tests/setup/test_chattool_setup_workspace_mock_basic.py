@@ -40,6 +40,7 @@ def test_setup_workspace_prompts_for_missing_profile_and_dir(
     assert selected["workspace"] is not None
     assert (tmp_path / "workspace" / "core").exists()
     assert (tmp_path / "workspace" / "projects").exists()
+    assert (tmp_path / "workspace" / "reference").exists()
     assert (tmp_path / "workspace" / "skills").exists()
     assert (tmp_path / "workspace" / "public").exists()
     assert (tmp_path / "workspace" / "README.md").exists()
@@ -237,14 +238,18 @@ def test_setup_workspace_uses_projects_model(tmp_path, runner):
 
     assert result.exit_code == 0
     assert (workspace_dir / "projects" / "README.md").exists()
+    assert (workspace_dir / "reference" / "README.md").exists()
     assert not (workspace_dir / "reports" / "README.md").exists()
     assert not (workspace_dir / "playgrounds" / "README.md").exists()
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    reference = (workspace_dir / "reference" / "README.md").read_text(encoding="utf-8")
     assert "projects/" in agents
+    assert "reference/" in agents
     assert "reports/" not in agents
     assert "projects/" in memory
     assert "reference/" not in memory
+    assert "跨多个 project" in reference
 
 
 def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path, runner):
@@ -310,8 +315,14 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    reference = (workspace_dir / "reference" / "README.md").read_text(encoding="utf-8")
+    theme = (workspace_dir / "docs" / "themes" / "changelog.md").read_text(
+        encoding="utf-8"
+    )
     assert "当前 workspace 已启用 OpenCode loop-aware 模式" in agents
     assert "显式触发 `/chatloop ...`" in readme
     assert "项目根目录：`projects/`" in memory
+    assert "跨多个 project" in reference
+    assert "CHANGELOG.md" in theme
     assert "OpenCode home:" in result.output
     assert ".opencode/ directory" in result.output

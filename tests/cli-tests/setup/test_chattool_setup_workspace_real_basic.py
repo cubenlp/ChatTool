@@ -29,21 +29,30 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert (workspace_dir / "AGENTS.md").exists()
     assert (workspace_dir / "MEMORY.md").exists()
     assert (workspace_dir / "projects" / "README.md").exists()
+    assert (workspace_dir / "reference" / "README.md").exists()
     assert (workspace_dir / "core").exists()
     assert (workspace_dir / "docs" / "README.md").exists()
     assert (workspace_dir / "docs" / "memory" / "README.md").exists()
     assert (workspace_dir / "docs" / "skills" / "README.md").exists()
+    assert (workspace_dir / "docs" / "themes" / "README.md").exists()
+    assert (workspace_dir / "docs" / "themes" / "changelog.md").exists()
     assert (workspace_dir / "docs" / "tools" / "README.md").exists()
+    assert (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.md").exists()
+    assert (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.zh.md").exists()
 
     readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
     projects = (workspace_dir / "projects" / "README.md").read_text(encoding="utf-8")
+    reference = (workspace_dir / "reference" / "README.md").read_text(encoding="utf-8")
+    themes = (workspace_dir / "docs" / "themes" / "README.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
     assert "## 写入规则" in agents
     assert "- 所有实际工作统一放到 `projects/` 下。" in agents
     assert "- project 默认使用最小 `PRD.md` 工作流，不预先写死复杂目录层级。" in agents
     assert "projects/MM-DD-<project-name>/" in agents
+    assert "reference/" in agents
+    assert "docs/themes/" in agents
     assert "projects/MM-DD-<task-name>/" not in agents
     assert "tasks/<task-name>/" not in agents
     assert "docs/memory/YYYY-MM-DD-status.md" in agents
@@ -51,9 +60,13 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert "docs/" in agents
     assert "`projects/` 作为实际工作的执行容器" in readme
     assert "符号链接" in readme
+    assert "reference/" in readme
     assert "PRD.md" in projects
     assert "TASK.md" not in projects
     assert "review.md" not in projects
+    assert "workspace-level `reference/`" in projects
+    assert "跨多个 project" in reference
+    assert "按主题整理" in themes
     assert "## 当前 Workspace" in memory
     assert "- 核心仓库目录：`core/`" in memory
     assert "- 项目根目录：`projects/`" in memory

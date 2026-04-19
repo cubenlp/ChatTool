@@ -9,3 +9,5 @@ Conventions:
 - source repositories stay under `core/` by default
 - `projects/` only keeps the protocol files, drafts, and references needed for the current work
 - if a project needs a shorter repo path, create an on-demand symlink to `core/<repo-name>` inside that project instead of copying the repo
+- reusable references across multiple projects should be promoted into the workspace-level `reference/`
+- long-lived maintenance conventions should be promoted into `docs/themes/`
