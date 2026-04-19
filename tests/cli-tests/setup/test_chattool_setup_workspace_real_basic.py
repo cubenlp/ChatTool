@@ -38,24 +38,22 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    projects = (workspace_dir / "projects" / "README.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
     assert "## 写入规则" in agents
     assert "- 所有实际工作统一放到 `projects/` 下。" in agents
-    assert (
-        "- review 由 loop 在模型准备停下时触发；默认完整做完后再统一汇报结果。"
-        in agents
-    )
-    assert (
-        "- 如果是开发任务，每个阶段都要先测试通过、文档完善，再根据 `review.md` 定义的规则做校验与验收收尾。"
-        in agents
-    )
-    assert "projects/MM-DD-<task-name>/" in agents
+    assert "- project 默认使用最小 `PRD.md` 工作流，不预先写死复杂目录层级。" in agents
     assert "projects/MM-DD-<project-name>/" in agents
-    assert "tasks/<task-name>/" in agents
+    assert "projects/MM-DD-<task-name>/" not in agents
+    assert "tasks/<task-name>/" not in agents
     assert "docs/memory/YYYY-MM-DD-status.md" in agents
     assert "core/" in agents
     assert "docs/" in agents
     assert "`projects/` 作为实际工作的执行容器" in readme
+    assert "符号链接" in readme
+    assert "PRD.md" in projects
+    assert "TASK.md" not in projects
+    assert "review.md" not in projects
     assert "## 当前 Workspace" in memory
     assert "- 核心仓库目录：`core/`" in memory
     assert "- 项目根目录：`projects/`" in memory

@@ -9,6 +9,7 @@
 - 当前 workspace 已启用 OpenCode loop-aware 模式：外层协议负责帮助模型理解规范，内层 `chatloop` 只围绕 `PRD.md` 做 fresh-start continuation。
 - 前期对话先专注生成和完善 `PRD.md`；执行阶段默认让模型围绕 `PRD.md` 推进。
 - 如果有辅助上下文，可使用 `memory.md` 和 `progress.md`，但它们不是主入口。
+- 如果当前 project 需要更短的源码路径，可在 project 内按需手动创建到 `core/<repo-name>` 的符号链接，但不作为默认自动行为。
 
 具体的 project 目录结构与命名规则，统一看 `projects/README.md`。
 
@@ -42,7 +43,7 @@ Workspace/
 2. 识别当前要改的仓库到 `core/`，并进入目标 project。
 3. 先补齐 `PRD.md`，再开始 loop 或执行。
 4. 草稿、实验和局部参考都放在当前 project 内部。
-5. `chatloop` 在模型准备停下时会 fresh start，让模型重新阅读 `PRD.md`，必要时再读 `memory.md` / `progress.md`。
+5. 只有显式触发 `/chatloop ...` 时，`chatloop` 才会在模型准备停下时 fresh start，让模型重新阅读 `PRD.md`，必要时再读 `memory.md` / `progress.md`。
 6. 收尾时完成汇报，并在需要时更新 `MEMORY.md`。
 
 ## 写入规则

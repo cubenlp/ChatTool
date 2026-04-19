@@ -347,7 +347,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--install-only",),
                 kwargs={
                     "is_flag": True,
-                    "help": "Only install or upgrade the CLI without writing config files.",
+                    "help": "Only install or upgrade the CLI and skip provider/model prompts; plugin presets may still update OpenCode config.",
                 },
             ),
         ),
@@ -388,8 +388,8 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--plugin",),
                 kwargs={
                     "default": None,
-                    "type": click.Choice(["auto-loop"]),
-                    "help": "Optionally enable an OpenCode plugin preset such as opencode-auto-loop.",
+                    "type": click.Choice(["auto-loop", "chatloop"]),
+                    "help": "Optionally enable an OpenCode plugin preset such as opencode-auto-loop or the global PRD-driven chatloop.",
                 },
             ),
             SetupOptionElement(
@@ -500,7 +500,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--with-opencode-loop/--no-opencode-loop",),
                 kwargs={
                     "default": False,
-                    "help": "Use the OpenCode loop-aware workspace template and install local chatloop assets.",
+                    "help": "Use the OpenCode loop-aware workspace template and install the global chatloop plugin and slash commands for OpenCode.",
                 },
             ),
         ),

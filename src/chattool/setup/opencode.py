@@ -19,6 +19,7 @@ from chattool.interaction import (
     resolve_value,
 )
 from chattool.setup.mode_prompt import resolve_install_only_mode
+from chattool.setup.opencode_chatloop import install_chatloop_assets, resolve_opencode_home
 from chattool.setup.nodejs import (
     ensure_nodejs_requirement,
     run_npm_command,
@@ -149,6 +150,43 @@ def _load_existing_opencode_config(config_path, provider_id):
     return existing, config_data
 
 
+def _write_opencode_config(config_path: Path, config_payload: dict) -> None:
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        json.dumps(config_payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    config_path.chmod(0o600)
+    logger.info(f"Wrote config file: {config_path}")
+
+
+def _append_plugin(config_payload: dict, plugin_entry: str) -> None:
+    existing_plugins = config_payload.get("plugin")
+    if not isinstance(existing_plugins, list):
+        existing_plugins = []
+    if plugin_entry not in existing_plugins:
+        existing_plugins.append(plugin_entry)
+    config_payload["plugin"] = existing_plugins
+
+
+def _apply_plugin_preset(config_payload: dict, plugin: str | None, opencode_home: Path) -> dict | None:
+    if not plugin:
+        return None
+
+    if plugin == "chatloop":
+        installed = install_chatloop_assets(opencode_home)
+        _append_plugin(config_payload, str(installed["plugin_entry"]))
+        return {
+            "name": plugin,
+            "plugin_label": str(installed["plugin_entry"]),
+            **installed,
+        }
+
+    plugin_name = PLUGIN_PRESETS[plugin]
+    _append_plugin(config_payload, plugin_name)
+    return {"name": plugin, "plugin_label": plugin_name}
+
+
 def setup_opencode(
     base_url=None,
     api_key=None,
@@ -160,7 +198,7 @@ def setup_opencode(
     log_level="INFO",
 ):
     _configure_logger(log_level)
-    config_dir = Path.home() / ".config" / "opencode"
+    config_dir = resolve_opencode_home()
     config_path = config_dir / "opencode.json"
     provider_id = DEFAULT_PROVIDER_ID
     existing, config_data = _load_existing_opencode_config(config_path, provider_id)
@@ -262,7 +300,18 @@ def setup_opencode(
                 if result.stderr:
                     click.echo(result.stderr.strip(), err=True)
                 raise click.Abort()
+        plugin_result = None
+        if plugin:
+            config_payload = config_data if isinstance(config_data, dict) else {}
+            config_payload["$schema"] = "https://opencode.ai/config.json"
+            plugin_result = _apply_plugin_preset(config_payload, plugin, config_dir)
+            _write_opencode_config(config_path, config_payload)
         click.echo("OpenCode CLI install completed.")
+        if plugin_result:
+            click.echo(f"Enabled OpenCode plugin preset: {plugin_result['plugin_label']}")
+            if plugin == "chatloop":
+                click.echo(f"ChatLoop plugin: {plugin_result['plugin_dir']}")
+                click.echo(f"ChatLoop commands: {plugin_result['commands_dir']}")
         return
 
     if need_prompt:
@@ -285,6 +334,10 @@ def setup_opencode(
                     create_choice(
                         "opencode-auto-loop",
                         "auto-loop",
+                    ),
+                    create_choice(
+                        "chatloop (global PRD-driven loop)",
+                        "chatloop",
                     )
                 ],
                 default_values=[],
@@ -294,7 +347,10 @@ def setup_opencode(
             if selected_plugins == BACK_VALUE:
                 return
             if selected_plugins:
-                plugin = "auto-loop"
+                if len(selected_plugins) > 1:
+                    click.echo("Select at most one plugin preset.", err=True)
+                    raise click.Abort()
+                plugin = selected_plugins[0]
 
     if not (base_url and api_key and model):
         logger.error("Missing base_url, api_key, or model")
@@ -338,26 +394,16 @@ def setup_opencode(
 
     config_payload["model"] = f"{provider_id}/{model}"
 
-    if plugin:
-        plugin_name = PLUGIN_PRESETS[plugin]
-        existing_plugins = config_payload.get("plugin")
-        if not isinstance(existing_plugins, list):
-            existing_plugins = []
-        if plugin_name not in existing_plugins:
-            existing_plugins.append(plugin_name)
-        config_payload["plugin"] = existing_plugins
+    plugin_result = _apply_plugin_preset(config_payload, plugin, config_dir)
 
-    config_dir.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(
-        json.dumps(config_payload, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    config_path.chmod(0o600)
-    logger.info(f"Wrote config file: {config_path}")
+    _write_opencode_config(config_path, config_payload)
 
     click.echo("OpenCode setup completed.")
     click.echo(f"Config: {config_path}")
     if env_ref:
         click.echo(f"Reused ChatTool OpenAI config: {env_ref}")
-    if plugin:
-        click.echo(f"Enabled OpenCode plugin preset: {PLUGIN_PRESETS[plugin]}")
+    if plugin_result:
+        click.echo(f"Enabled OpenCode plugin preset: {plugin_result['plugin_label']}")
+        if plugin == "chatloop":
+            click.echo(f"ChatLoop plugin: {plugin_result['plugin_dir']}")
+            click.echo(f"ChatLoop commands: {plugin_result['commands_dir']}")

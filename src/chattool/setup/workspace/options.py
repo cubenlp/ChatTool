@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import os
 import shutil
 import subprocess
 
@@ -14,8 +13,8 @@ from chattool.interaction import (
     ask_text,
     create_choice,
 )
+from chattool.setup.opencode_chatloop import install_chatloop_assets
 from chattool.utils import mask_secret
-from chattool.utils.pathing import write_text_file
 
 
 CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
@@ -84,43 +83,15 @@ def _copy_skill_tree(src: Path, dst: Path) -> list[str]:
         shutil.copytree(skill_dir, target_dir)
         copied.append(skill_dir.name)
     return copied
-
-
-def _copy_tree(src: Path, dst: Path) -> None:
-    if not src.exists():
-        return
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    if dst.exists():
-        if dst.is_file() or dst.is_symlink():
-            dst.unlink()
-        else:
-            shutil.rmtree(dst)
-    shutil.copytree(src, dst)
-
-
 def apply_opencode_loop_option(workspace_dir: Path) -> dict:
-    assets_root = Path(__file__).resolve().parent.parent / "assets" / "opencode_chatloop"
-    if not assets_root.exists():
-        raise click.ClickException(f"Missing opencode chatloop assets: {assets_root}")
-
-    opencode_dir = workspace_dir / ".opencode"
-    plugin_dst = opencode_dir / "plugins" / "chatloop"
-    commands_dst = opencode_dir / "command"
-    _copy_tree(assets_root / "plugins" / "chatloop", plugin_dst)
-    commands_dst.mkdir(parents=True, exist_ok=True)
-    for command_file in (assets_root / "commands").glob("*.md"):
-        shutil.copy2(command_file, commands_dst / command_file.name)
-
-    write_text_file(
-        opencode_dir / "opencode.jsonc",
-        '{\n  "$schema": "https://opencode.ai/config.json",\n  "plugin": [\n    "file://{{WORKSPACE}}/.opencode/plugins/chatloop/index.ts"\n  ]\n}\n'.replace("{{WORKSPACE}}", str(workspace_dir)),
-        force=True,
-    )
+    installed = install_chatloop_assets()
     return {
         "name": "opencode_loop",
-        "plugin_dir": plugin_dst,
-        "commands_dir": commands_dst,
-        "config_file": opencode_dir / "opencode.jsonc",
+        "workspace_dir": workspace_dir,
+        "opencode_home": installed["opencode_home"],
+        "plugin_dir": installed["plugin_dir"],
+        "commands_dir": installed["commands_dir"],
+        "plugin_entry": installed["plugin_entry"],
     }
 
 

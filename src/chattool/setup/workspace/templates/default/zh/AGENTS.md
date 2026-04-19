@@ -6,9 +6,9 @@
 
 - workspace 根目录文件用于辅助创建和约束 project；真正执行任务时，应进入对应 project 目录埋头推进。
 - 所有实际工作统一放到 `projects/` 下。
-- 默认使用单任务 project；只有在确实需要多个协同任务时，才升级为多任务 project。
-- review 由 loop 在模型准备停下时触发；默认完整做完后再统一汇报结果。
-- 如果是开发任务，每个阶段都要先测试通过、文档完善，再根据 `review.md` 定义的规则做校验与验收收尾。
+- project 默认使用最小 `PRD.md` 工作流，不预先写死复杂目录层级。
+- `PRD.md` 只记录稳定需求、范围、约束和完成标准；进展细节写入 `progress.md`。
+- 需求不清晰时，先补问题，再执行。
 
 具体的 project 目录结构与命名规则，统一看 `projects/README.md`。
 
@@ -40,18 +40,16 @@ Workspace/
 
 1. 开始前先读 `MEMORY.md`。
 2. 识别当前要改的仓库到 `core/`，并进入目标 project。
-3. 先补齐 project 协议文件，再开始 loop 或执行。
-4. 草稿、实验和局部参考都放在当前 project 或 task 内部。
-5. review 文件负责定义验证口径和验收后需要写入的结果文件。
+3. 先补齐 `PRD.md`，再开始执行。
+4. 草稿、实验和局部参考都放在当前 project 内部。
+5. 如需从 project 根目录直接访问源码仓库，可按需手动创建到 `core/<repo-name>` 的符号链接，但不要复制仓库。
 6. 收尾时完成汇报，并在需要时更新 `MEMORY.md`。
 
 ## 写入规则
 
 | 情况 | 写入位置 |
 |-----------|----------|
-| 单任务 project 工作 | `projects/MM-DD-<task-name>/` |
-| 多任务 project 根 | `projects/MM-DD-<project-name>/` |
-| 子任务工作 | `projects/MM-DD-<project-name>/tasks/<task-name>/` |
+| 任意实际工作单元 | `projects/MM-DD-<project-name>/` |
 | 需要修改的源码仓库 | `core/<repo-name>/` |
 | 状态快照 / 长期上下文 | `docs/memory/YYYY-MM-DD-status.md` |
 | 工具使用发现 | `docs/tools/<toolname>.md` |

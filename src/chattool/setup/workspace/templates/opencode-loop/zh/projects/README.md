@@ -5,7 +5,7 @@
 当前版本面向 OpenCode `chatloop`：
 
 - 前期对话先专注生成 `PRD.md`
-- loop 插件只围绕 `PRD.md` 工作；模型每次停下后都会 fresh start，再从头阅读 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
+- 只有显式触发 `/chatloop ...` 后，loop 插件才会围绕 `PRD.md` 工作；模型每次停下后都会 fresh start，再从头阅读 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
 
 ## 什么时候新开一个 project
 
@@ -48,6 +48,19 @@ MM-DD-<project-name>/
 - `PRD.md` 是唯一主入口
 - `memory.md` / `progress.md` 是辅助上下文
 - `chatloop` 每次停下后都会从 `PRD.md` 重新开始理解任务，而不是简单 continue
+
+## 源码仓库访问
+
+- 真实源码仓库默认保留在 `core/`
+- 如果当前 project 需要更短的访问路径，可手动在 project 内创建符号链接，例如 `ln -s ../../core/ChatTool ./ChatTool`
+- 该符号链接是按需行为，不作为默认模板自动生成
+
+## 调试与停止
+
+- `/chatloop-status` 可查看当前解析到的 project 根目录、状态文件和日志文件
+- `chatloop` 的状态文件写入当前 project 根目录下的 `.opencode/chatloop.local.md`
+- 日志写入当前 project 根目录下的 `.opencode/logs/<session-id>.log`
+- 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，让插件停止 continuation
 
 ## 子目录拆分
 

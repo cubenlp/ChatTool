@@ -7,4 +7,9 @@
 当前版本已启用 OpenCode loop-aware 模式：
 
 - 外层协议负责帮助模型理解文档含义、需求和规范
-- 内层 `chatloop` 负责在模型准备停下时重新进入基于 `PRD.md` 的 fresh-start loop
+- 内层 `chatloop` 只会在显式触发 `/chatloop ...` 后介入，并在模型准备停下时重新进入基于 `PRD.md` 的 fresh-start loop
+
+另外：
+
+- 需要修改的源码仓库默认保留在 `core/`
+- 如果某个 project 需要更短的源码访问路径，可在 project 内按需手动创建到 `core/<repo-name>` 的符号链接，但不作为默认自动行为

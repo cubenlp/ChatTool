@@ -262,6 +262,35 @@ def test_setup_opencode_adds_auto_loop_plugin(tmp_path, monkeypatch, runner):
     assert payload["model"] == "opencode/explicit-model"
 
 
+def test_setup_opencode_install_only_can_install_chatloop(tmp_path, monkeypatch, runner):
+    home_dir = tmp_path / "home"
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        ["setup", "opencode", "-I", "--install-only", "--plugin", "chatloop"],
+    )
+
+    assert result.exit_code == 0
+    config_path = home_dir / ".config" / "opencode" / "opencode.json"
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    plugin_file = (home_dir / ".config" / "opencode" / "plugins" / "chatloop" / "index.ts").resolve()
+    assert payload["plugin"] == [f"file://{plugin_file}"]
+    assert plugin_file.exists()
+    assert (home_dir / ".config" / "opencode" / "command" / "chatloop.md").exists()
+    assert (home_dir / ".config" / "opencode" / "command" / "chatloop-status.md").exists()
+    assert f"Enabled OpenCode plugin preset: file://{plugin_file}" in result.output
+
+
 def test_setup_opencode_interactive_can_select_auto_loop_plugin(
     tmp_path, monkeypatch, runner
 ):
