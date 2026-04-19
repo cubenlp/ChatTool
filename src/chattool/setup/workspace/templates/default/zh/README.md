@@ -3,3 +3,9 @@
 人类-AI 协作 workspace 根目录。
 
 当前 workspace 使用 `projects/` 作为实际工作的执行容器。workspace 根目录文件负责提供协议和上下文，project 内文件负责驱动执行。
+
+约定：
+
+- 需要修改的源码仓库默认保留在 `core/`
+- `projects/` 内只保留当前工作需要的协议文件、草稿和参考
+- 如果某个 project 需要更短的源码访问路径，可在 project 内按需手动创建到 `core/<repo-name>` 的符号链接，但不作为默认自动行为

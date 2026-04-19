@@ -6,9 +6,9 @@
 
 - Workspace-level files are for project authoring and guidance; actual execution should happen inside the target project directory.
 - Use `projects/` as the top-level container for all active work.
-- Default to a single-task project. Upgrade to a multi-task project only when the work clearly needs multiple coordinated tasks.
-- This workspace is loop-aware for OpenCode: outer protocol files explain meaning and rules; inner loop only triggers `review.md` when the model is ready to stop.
-- For development tasks, each stage must pass its tests and update the docs before moving on; `review.md` defines validation and acceptance artifacts.
+- This workspace is loop-aware for OpenCode: outer protocol files explain the rules, while inner `chatloop` only runs after an explicit `/chatloop ...` trigger.
+- Focus early conversation on refining `PRD.md`; execution should follow `PRD.md` as the primary entry file.
+- If a project needs a shorter repo path, create an on-demand symlink to `core/<repo-name>` instead of copying the repository.
 
 See `projects/README.md` for concrete project structures and naming rules.
 
@@ -42,16 +42,14 @@ This outer workspace keeps collaboration artifacts outside the core repositories
 2. Identify the repo to change under `core/` and the target project under `projects/`.
 3. Generate or refine project protocol files before starting execution.
 4. Keep drafts and local references inside the current project rather than workspace-global buckets.
-5. Let review files define validation and acceptance artifacts; loop should not decide normal execution context on its own.
+5. Only after `/chatloop ...` is triggered should ChatLoop take over idle-time fresh-start continuation from `PRD.md`.
 6. At the end, finish the report and update `MEMORY.md` if durable context changed.
 
 ## Write Rules
 
 | Situation | Write To |
 |-----------|----------|
-| Single-task project work | `projects/MM-DD-<task-name>/` |
-| Multi-task project root | `projects/MM-DD-<project-name>/` |
-| Subtask work | `projects/MM-DD-<project-name>/tasks/<task-name>/` |
+| Any active work unit | `projects/MM-DD-<project-name>/` |
 | Repositories to change | `core/<repo-name>/` |
 | Durable context snapshots | `docs/memory/YYYY-MM-DD-status.md` |
 | Tool notes | `docs/tools/<toolname>.md` |

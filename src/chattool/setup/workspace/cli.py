@@ -178,7 +178,7 @@ def setup_workspace(
 
     applied = []
     if option_settings["opencode_loop"]["enabled"]:
-        setup_opencode(interactive=False, install_only=True)
+        setup_opencode(interactive=False, install_only=True, plugin="chatloop")
         applied.append(workspace_options.apply_opencode_loop_option(workspace_path))
     if option_settings["chattool"]["enabled"]:
         applied.append(
@@ -221,6 +221,7 @@ def setup_workspace(
             click.echo(f"Repo action: {item['repo_action']}")
             click.echo(f"Public link: {item['public_link']}")
         if item["name"] == "opencode_loop":
-            click.echo(f"OpenCode loop config: {item['config_file']}")
-            click.echo(f"OpenCode loop plugin: {item['plugin_dir']}")
-            click.echo(f"OpenCode loop commands: {item['commands_dir']}")
+            click.echo(f"OpenCode home: {item['opencode_home']}")
+            click.echo(f"ChatLoop plugin: {item['plugin_dir']}")
+            click.echo(f"ChatLoop commands: {item['commands_dir']}")
+            click.echo("ChatLoop state is written under each project's .opencode/ directory, and event records are appended to chatloop.events.log in the project root when /chatloop runs.")

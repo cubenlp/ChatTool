@@ -264,8 +264,21 @@ def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path, runne
     ) == "legacy agents\n"
 
 
-def test_setup_workspace_with_opencode_loop_installs_local_assets(tmp_path, runner):
+def test_setup_workspace_with_opencode_loop_installs_local_assets(
+    tmp_path, monkeypatch, runner
+):
     workspace_dir = tmp_path / "workspace"
+    opencode_home = tmp_path / "opencode-home"
+
+    monkeypatch.setenv("OPENCODE_HOME", str(opencode_home))
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
 
     result = runner.invoke(
         cli,
@@ -279,13 +292,17 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(tmp_path, runn
     )
 
     assert result.exit_code == 0
-    assert (workspace_dir / ".opencode" / "opencode.jsonc").exists()
-    assert (workspace_dir / ".opencode" / "plugins" / "chatloop" / "index.ts").exists()
-    assert (workspace_dir / ".opencode" / "command" / "chatloop.md").exists()
-    assert not (workspace_dir / ".opencode" / "command" / "chatloop-project.md").exists()
+    assert not (workspace_dir / ".opencode" / "opencode.jsonc").exists()
+    assert (opencode_home / "plugins" / "chatloop" / "index.ts").exists()
+    assert (opencode_home / "command" / "chatloop.md").exists()
+    assert (opencode_home / "command" / "chatloop-status.md").exists()
+    config = (opencode_home / "opencode.json").read_text(encoding="utf-8")
+    assert str((opencode_home / "plugins" / "chatloop" / "index.ts").resolve()) in config
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
     assert "当前 workspace 已启用 OpenCode loop-aware 模式" in agents
-    assert "OpenCode loop-aware 模式" in readme
+    assert "显式触发 `/chatloop ...`" in readme
     assert "项目根目录：`projects/`" in memory
+    assert "OpenCode home:" in result.output
+    assert "chatloop.events.log" in result.output

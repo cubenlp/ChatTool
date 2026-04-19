@@ -16,7 +16,7 @@
 
 其中：
 
-- `projects/`：所有实际进行中的 project 容器根目录；单任务 project 和多任务 project 都从这里展开
+- `projects/`：所有实际进行中的 project 容器根目录；默认从最小 `PRD.md` project 开始
 - `core/`：集中放需要加入 workspace 的源码仓库
 - `skills/`：共享 skills 目录，默认放在 workspace 根目录
 - `public/`：用于部署公开网站和相关发布内容
@@ -38,7 +38,7 @@ chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-op
 - `PROFILE`：可选，当前仅支持 `base`
 - `WORKSPACE_DIR`：可选，默认当前目录
 - `--language`：模板语言，默认 `zh`，也可显式传 `en`
-- `--with-opencode-loop`：启用 OpenCode loop-aware 模板版本，并安装本地 `chatloop` plugin / commands 资产
+- `--with-opencode-loop`：启用 OpenCode loop-aware 模板版本，并把全局 `chatloop` plugin / slash commands 安装到 OpenCode home
 - `--force`：覆盖已生成文件
 - `--dry-run`：只打印将创建的目录与文件，不写入磁盘
 - `-i / -I`：强制交互 / 禁止交互
@@ -77,13 +77,19 @@ projects/MM-DD-<project-name>/
 
 如果后续工作自然长出子部分，可以继续在子目录里放新的 `PRD.md`，而不是预先引入复杂项目级别管理结构。
 
+源码仓库访问约定：
+
+- 真实源码仓库默认保留在 `core/`
+- 如果当前 project 需要更短的访问路径，可手动在 project 内创建到 `core/<repo-name>` 的符号链接
+- 该符号链接是按需行为，不作为模板默认自动生成
+
 ### 设计原则
 
 - workspace 根目录文件用于 general-use 协议与跨 session 上下文
 - 实际执行时，应该进入具体 `project` 目录埋头推进
 - `PRD.md` 是唯一主入口，用于定义任务含义、需求、范围、约束和完成标准
 - `memory.md` / `progress.md` 用于补充当前上下文与进展
-- `chatloop` 默认在 idle 时 fresh start，重新读取 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
+- 只有显式触发 `/chatloop ...` 时，`chatloop` 才会在 idle 时 fresh start，重新读取 `PRD.md`（以及必要的 `memory.md` / `progress.md`）
 
 ## 4. 可选配置项
 
@@ -93,13 +99,17 @@ projects/MM-DD-<project-name>/
 
 - 使用 `--with-opencode-loop` 时，会切换到 loop-aware workspace 模板版本
 - 同时会自动执行一次 OpenCode CLI 的纯安装（等价于 `chattool setup opencode --install-only`）
-- 同时安装：
-  - `.opencode/opencode.jsonc`
-  - `.opencode/plugins/chatloop/`
-  - `.opencode/command/chatloop.md`
-  - `.opencode/command/chatloop-help.md`
-  - `.opencode/command/chatloop-stop.md`
-- 该版本适合当前把 `PRD.md` 作为唯一入口，并把每次 idle 后的 fresh-start continuation 交给 OpenCode `chatloop` 的工作流
+- 同时把 `chatloop` 全局安装到 OpenCode home（默认 `~/.config/opencode/`，也可通过 `OPENCODE_HOME` 改写），包括：
+  - `plugins/chatloop/`
+  - `command/chatloop.md`
+  - `command/chatloop-status.md`
+  - `command/chatloop-help.md`
+  - `command/chatloop-stop.md`
+- 该版本适合先完善 `PRD.md`，再通过显式 `/chatloop ...` 触发 fresh-start continuation 的工作流
+- `chatloop` 可从任意 project 子目录触发，会自动向上寻找最近的 `PRD.md`
+- 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 project 根目录 `chatloop.events.log`
+- 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和事件文件
+- 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，插件会据此停止 continuation
 
 ### ChatTool
 
@@ -120,7 +130,7 @@ projects/MM-DD-<project-name>/
 - 额外仓库和发布能力通过“可选配置项”叠加
 - 不再为每个场景分叉新的 workspace 命令
 - 默认完整做完后再统一汇报结果
-- 如果是开发任务，每个阶段要先测试通过、完善文档，再按 `review.md` 的规则完成校验与收尾
+- 如果是开发任务，每个阶段要先测试通过、完善文档，再按当前 project 的完成标准收尾
 
 ## 6. dry-run
 
@@ -145,3 +155,9 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 - `MEMORY.md`：跨 session 高优先级上下文
 
 如果是已有 workspace，优先保留现有 `AGENTS.md` / `MEMORY.md`，再通过新的 `README.md` 和 `projects/` 结构逐步迁移。
+
+## 8. Quickstart
+
+如果你想看一遍从创建 `PRD.md`、新建 project、再到显式触发 `/chatloop ...` 的完整示例，可参考：
+
+- [chatloop-quickstart.md](chatloop-quickstart.md)

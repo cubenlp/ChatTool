@@ -21,6 +21,20 @@ chattool setup nodejs
 chattool setup opencode --install-only
 ```
 
+如果你还想顺手把全局 `chatloop` plugin 和 slash commands 装到 OpenCode home，可执行：
+
+```bash
+chattool setup opencode --install-only --plugin chatloop
+```
+
+这条命令会：
+
+- 安装或升级 OpenCode CLI
+- 把 `chatloop` plugin / commands 写入 OpenCode home（默认 `~/.config/opencode/`）
+- 在 `opencode.json` 的 `plugin` 数组里追加对应的 `file://.../plugins/chatloop/index.ts`
+
+它不会要求你额外输入 `base_url` / `api_key` / `model`。
+
 ## 2. 交互式配置
 
 ```bash
@@ -38,6 +52,7 @@ chattool setup opencode
 ```bash
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini" --plugin auto-loop
+chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini" --plugin chatloop
 ```
 
 如需更详细地查看依赖检测、npm 安装和配置写入阶段，可附加：
@@ -69,13 +84,24 @@ chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
 
 ## 4. 可选插件预设
 
-如果你希望在 OpenCode 配置里顺手启用现成的 `opencode-auto-loop` 插件，可显式附加：
+如果你希望在 OpenCode 配置里顺手启用插件，可显式附加：
 
 ```bash
 chattool setup opencode --plugin auto-loop
+chattool setup opencode --plugin chatloop
 ```
 
-该选项会把 `opencode-auto-loop` 追加写入 OpenCode 配置文件中的 `plugin` 数组；若已存在则不会重复追加。
+其中：
+
+- `auto-loop`：把 `opencode-auto-loop` 追加写入 OpenCode 配置文件中的 `plugin` 数组
+- `chatloop`：安装全局 `chatloop` 资产，并把对应的本地 `file://.../plugins/chatloop/index.ts` 追加写入 `plugin` 数组
+
+`chatloop` 安装完成后，常用调试方式是：
+
+- 执行 `/chatloop-help` 查看工作流说明
+- 执行 `/chatloop-status` 查看当前 project 根目录、状态文件和事件文件
+- 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `chatloop.events.log`
+- 当任务完成时，让模型输出 `<complete>DONE</complete>` 停止 continuation
 
 ## 5. 配置文件位置
 
@@ -84,3 +110,7 @@ chattool setup opencode --plugin auto-loop
 ```text
 ~/.config/opencode/opencode.json
 ```
+
+如果你想看一遍从安装 OpenCode / chatloop 到创建 `PRD.md` 并启动 loop 的完整示例，可参考：
+
+- [chatloop-quickstart.md](chatloop-quickstart.md)

@@ -12,10 +12,11 @@ type State = {
 }
 
 const STATE_FILE = "chatloop.local.md"
+const EVENTS_FILE = "chatloop.events.log"
 const COMPLETE_RE = /<complete>DONE<\/complete>/i
 
-const statePath = (directory: string) => join(directory, ".opencode", STATE_FILE)
-const logPath = (directory: string, sessionId: string) => join(directory, ".opencode", "logs", `${sessionId}.log`)
+const statePath = (projectPath: string) => join(projectPath, ".opencode", STATE_FILE)
+const eventsPath = (projectPath: string) => join(projectPath, EVENTS_FILE)
 
 const parseStoredString = (value?: string) => {
   if (!value) return undefined
@@ -26,9 +27,9 @@ const parseStoredString = (value?: string) => {
   }
 }
 
-const readState = async (directory: string): Promise<State> => {
+const readState = async (projectPath: string): Promise<State> => {
   try {
-    const text = await readFile(statePath(directory), "utf-8")
+    const text = await readFile(statePath(projectPath), "utf-8")
     const body = text.split(/^---$/m)[2] ?? ""
     const active = /active:\s*true/.test(text)
     const sessionId = text.match(/sessionId:\s*(.+)$/m)?.[1]?.trim()
@@ -49,17 +50,17 @@ const readState = async (directory: string): Promise<State> => {
   }
 }
 
-const writeState = async (directory: string, state: State) => {
-  await mkdir(dirname(statePath(directory)), { recursive: true })
+const writeState = async (projectPath: string, state: State) => {
+  await mkdir(dirname(statePath(projectPath)), { recursive: true })
   await writeFile(
-    statePath(directory),
+    statePath(projectPath),
     `---\nactive: ${state.active}\niteration: ${state.iteration}\nmaxIterations: ${state.maxIterations}\n${state.sessionId ? `sessionId: ${state.sessionId}\n` : ""}${state.projectPath ? `projectPath: ${state.projectPath}\n` : ""}${state.initialMessage ? `initialMessage: ${JSON.stringify(state.initialMessage)}\n` : ""}---\n\n${state.projectPath ?? ""}`,
     "utf-8",
   )
 }
 
-const clearState = async (directory: string) => {
-  await unlink(statePath(directory)).catch(() => {})
+const clearState = async (projectPath: string) => {
+  await unlink(statePath(projectPath)).catch(() => {})
 }
 
 const exists = async (path: string) => {
@@ -71,12 +72,27 @@ const exists = async (path: string) => {
   }
 }
 
-const normalizeProjectPath = (directory: string) => resolve(directory)
+const resolveProjectPath = async (directory: string) => {
+  let current = resolve(directory)
+  while (true) {
+    const prd = join(current, "PRD.md")
+    if (await exists(prd)) {
+      return { projectPath: current, prdPath: prd }
+    }
+    const parent = dirname(current)
+    if (parent === current) {
+      throw new Error(`No PRD.md found in ${resolve(directory)} or its parent directories. ChatLoop requires a project root with PRD.md.`)
+    }
+    current = parent
+  }
+}
 
-const requirePrd = async (projectPath: string) => {
-  const prd = join(projectPath, "PRD.md")
-  if (!(await exists(prd))) throw new Error(`No PRD.md found in ${projectPath}. ChatLoop requires a project directory with PRD.md.`)
-  return prd
+const tryResolveProjectPath = async (directory: string) => {
+  try {
+    return await resolveProjectPath(directory)
+  } catch {
+    return undefined
+  }
 }
 
 const getLastAssistantText = async (client: any, sessionId: string) => {
@@ -94,10 +110,10 @@ const getLastAssistantText = async (client: any, sessionId: string) => {
     .join("\n")
 }
 
-const appendLog = async (directory: string, sessionId: string, level: string, event: string, detail: string) => {
-  const target = logPath(directory, sessionId)
+const appendEvent = async (projectPath: string, sessionId: string, level: string, event: string, detail: string) => {
+  const target = eventsPath(projectPath)
   await mkdir(dirname(target), { recursive: true })
-  const line = `${new Date().toISOString()} | ${level} | ${event} | ${detail}\n`
+  const line = `${new Date().toISOString()} | ${level.padEnd(5)} | ${event} | session=${sessionId} | ${detail}\n`
   await appendFile(target, line, "utf-8")
 }
 
@@ -127,6 +143,46 @@ const sendPrompt = async (client: any, sessionId: string, prompt: string) => {
   })
 }
 
+const formatStatus = async (directory: string, sessionId?: string) => {
+  try {
+    const { projectPath, prdPath } = await resolveProjectPath(directory)
+    const state = await readState(projectPath)
+    const lines = [
+      "ChatLoop status:",
+      "- Loaded: yes (this command is available)",
+      `- Project root: ${projectPath}`,
+      `- PRD entry: ${prdPath}`,
+      `- State file: ${statePath(projectPath)}`,
+      `- Events file: ${eventsPath(projectPath)}`,
+      `- Completion marker: <complete>DONE</complete>`,
+      `- Active: ${state.active ? "yes" : "no"}`,
+    ]
+    if (state.sessionId) {
+      lines.push(`- Last session: ${state.sessionId}`)
+    }
+    if (sessionId) {
+      lines.push(`- Current session: ${sessionId}`)
+    }
+    if (state.projectPath) {
+      lines.push(`- Stored project root: ${state.projectPath}`)
+    }
+    if (state.active) {
+      lines.push(`- Iteration: ${state.iteration}/${state.maxIterations}`)
+    }
+    lines.push("- Use /chatloop to start, /chatloop-stop to stop, /chatloop-help for workflow details.")
+    return lines.join("\n")
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return [
+      "ChatLoop status:",
+      "- Loaded: yes (this command is available)",
+      `- Active project: not found`,
+      `- Reason: ${message}`,
+      "- Run /chatloop inside a project directory that contains PRD.md or a subdirectory beneath it.",
+    ].join("\n")
+  }
+}
+
 const chatloop: Plugin = async (ctx) => {
   const start = tool({
     description: "Start PRD-driven chat loop in the current directory and send the user's message verbatim as the initial instruction",
@@ -135,8 +191,7 @@ const chatloop: Plugin = async (ctx) => {
       maxIterations: tool.schema.number().optional().describe("Maximum loop iterations"),
     },
     async execute({ message = "", maxIterations = 20 }, context) {
-      const projectPath = normalizeProjectPath(ctx.directory)
-      await requirePrd(projectPath)
+      const { projectPath, prdPath } = await resolveProjectPath(ctx.directory)
       const state: State = {
         active: true,
         sessionId: context.sessionID,
@@ -145,17 +200,24 @@ const chatloop: Plugin = async (ctx) => {
         iteration: 1,
         maxIterations,
       }
-      await writeState(ctx.directory, state)
-      await appendLog(ctx.directory, context.sessionID, "INFO", "start", `path=${projectPath} maxIterations=${maxIterations}`)
+      await writeState(projectPath, state)
+      await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.start", `project=${projectPath} cwd=${resolve(ctx.directory)} maxIterations=${maxIterations}`)
       if (message.trim()) {
         await sendPrompt(ctx.client, context.sessionID, message)
-        await appendLog(ctx.directory, context.sessionID, "INFO", "initial_message", "forwarded user message verbatim")
+        await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.initial_message", "forwarded user message verbatim")
       } else {
         const prompt = await buildFreshStartPrompt(projectPath, 1)
         await sendPrompt(ctx.client, context.sessionID, prompt)
-        await appendLog(ctx.directory, context.sessionID, "INFO", "initial_prompt", "started with PRD fresh-start prompt")
+        await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.initial_prompt", "started with PRD fresh-start prompt")
       }
-      return `ChatLoop started for ${projectPath}.`
+      return [
+        "ChatLoop started.",
+        `- Project root: ${projectPath}`,
+        `- PRD entry: ${prdPath}`,
+        `- State file: ${statePath(projectPath)}`,
+        `- Events file: ${eventsPath(projectPath)}`,
+        `- Completion marker: <complete>DONE</complete>`,
+      ].join("\n")
     },
   })
 
@@ -163,10 +225,13 @@ const chatloop: Plugin = async (ctx) => {
     description: "Stop chat loop",
     args: {},
     async execute(_args, context) {
-      const state = await readState(ctx.directory)
+      const resolved = await tryResolveProjectPath(ctx.directory)
+      if (!resolved) return "No active ChatLoop project found from the current directory."
+      const { projectPath } = resolved
+      const state = await readState(projectPath)
       if (state.sessionId && state.sessionId !== context.sessionID) return "No active ChatLoop in this session."
-      await clearState(ctx.directory)
-      if (context.sessionID) await appendLog(ctx.directory, context.sessionID, "INFO", "stop", "stopped by user")
+      await clearState(projectPath)
+      if (context.sessionID) await appendEvent(projectPath, context.sessionID, "INFO", "chatloop.stop", "stopped by user")
       return "ChatLoop stopped."
     },
   })
@@ -177,43 +242,56 @@ const chatloop: Plugin = async (ctx) => {
     async execute() {
       return [
         "ChatLoop usage:",
-        "- /chatloop <message> starts a PRD-driven loop in the current directory.",
-        "- The current directory must contain PRD.md.",
+        "- /chatloop <message> starts a PRD-driven loop in the current directory or the nearest parent that contains PRD.md.",
         "- The initial user message is forwarded verbatim when provided.",
         "- On each idle checkpoint, ChatLoop restarts from scratch by asking the model to re-read PRD.md and optional memory/progress files.",
         "- If the task is complete, the model must output <complete>DONE</complete>.",
-        "- Logs are written to .opencode/logs/<session-id>.log.",
+        "- State is written to .opencode/chatloop.local.md under the resolved project root.",
+        "- Event records are appended to chatloop.events.log in the resolved project root.",
+        "- Use /chatloop-status to verify the resolved project root, state file, and events file.",
       ].join("\n")
+    },
+  })
+
+  const status = tool({
+    description: "Show chatloop status and debug paths",
+    args: {},
+    async execute(_args, context) {
+      return formatStatus(ctx.directory, context.sessionID)
     },
   })
 
   return {
     tool: {
       chatloop: start,
+      "chatloop-status": status,
       "chatloop-stop": stop,
       "chatloop-help": help,
     },
     event: async ({ event }) => {
       if (event.type !== "session.idle") return
-      const state = await readState(ctx.directory)
+      const resolved = await tryResolveProjectPath(ctx.directory)
+      if (!resolved) return
+      const { projectPath } = resolved
+      const state = await readState(projectPath)
       if (!state.active || !state.sessionId || state.sessionId !== event.properties.sessionID) return
       if (state.iteration >= state.maxIterations) {
-        await appendLog(ctx.directory, event.properties.sessionID, "WARN", "max_iterations", `iteration=${state.iteration}`)
-        await clearState(ctx.directory)
+        await appendEvent(projectPath, event.properties.sessionID, "WARN", "chatloop.max_iterations", `iteration=${state.iteration}`)
+        await clearState(projectPath)
         return
       }
 
       const lastText = await getLastAssistantText(ctx.client, event.properties.sessionID)
       if (COMPLETE_RE.test(lastText)) {
-        await appendLog(ctx.directory, event.properties.sessionID, "INFO", "complete", "assistant emitted completion marker")
-        await clearState(ctx.directory)
+        await appendEvent(projectPath, event.properties.sessionID, "INFO", "chatloop.complete", "assistant emitted completion marker")
+        await clearState(projectPath)
         return
       }
 
       const next = { ...state, iteration: state.iteration + 1 }
-      await writeState(ctx.directory, next)
-      const prompt = await buildFreshStartPrompt(state.projectPath || ctx.directory, next.iteration, state.initialMessage)
-      await appendLog(ctx.directory, event.properties.sessionID, "INFO", "idle", `restarting fresh iteration=${next.iteration}`)
+      await writeState(projectPath, next)
+      const prompt = await buildFreshStartPrompt(state.projectPath || projectPath, next.iteration, state.initialMessage)
+      await appendEvent(projectPath, event.properties.sessionID, "INFO", "chatloop.idle", `restarting fresh iteration=${next.iteration}`)
       await sendPrompt(ctx.client, event.properties.sessionID, prompt)
     },
   }
