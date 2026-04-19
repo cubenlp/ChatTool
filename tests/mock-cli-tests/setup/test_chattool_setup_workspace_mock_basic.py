@@ -305,3 +305,4 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
     assert "显式触发 `/chatloop ...`" in readme
     assert "项目根目录：`projects/`" in memory
     assert "OpenCode home:" in result.output
+    assert "chatloop.events.log" in result.output

@@ -107,8 +107,8 @@ projects/MM-DD-<project-name>/
   - `command/chatloop-stop.md`
 - 该版本适合把 `PRD.md` 作为唯一入口，并通过显式 `/chatloop ...` 触发 fresh-start continuation 的工作流
 - `chatloop` 可从任意 project 子目录触发，会自动向上寻找最近的 `PRD.md`
-- 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，日志写入 `.opencode/logs/<session-id>.log`
-- 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和日志文件
+- 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 project 根目录 `chatloop.events.log`
+- 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和事件文件
 - 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，插件会据此停止 continuation
 
 ### ChatTool

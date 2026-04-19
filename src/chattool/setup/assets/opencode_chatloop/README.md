@@ -15,4 +15,4 @@ Current model:
 - project root is resolved from the current directory upward until a `PRD.md` is found, so `/chatloop` can start from any project subdirectory
 - completion is signaled by `<complete>DONE</complete>`
 - state is written to `.opencode/chatloop.local.md` under the resolved project root
-- logs are written to `.opencode/logs/<session-id>.log` under the resolved project root
+- event records are appended to `chatloop.events.log` in the resolved project root

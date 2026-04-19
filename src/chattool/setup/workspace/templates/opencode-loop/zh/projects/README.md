@@ -57,9 +57,9 @@ MM-DD-<project-name>/
 
 ## 调试与停止
 
-- `/chatloop-status` 可查看当前解析到的 project 根目录、状态文件和日志文件
+- `/chatloop-status` 可查看当前解析到的 project 根目录、状态文件和事件文件
 - `chatloop` 的状态文件写入当前 project 根目录下的 `.opencode/chatloop.local.md`
-- 日志写入当前 project 根目录下的 `.opencode/logs/<session-id>.log`
+- 事件记录直接追加到当前 project 根目录下的 `chatloop.events.log`
 - 当完成标准已满足时，模型应输出 `<complete>DONE</complete>`，让插件停止 continuation
 
 ## 子目录拆分

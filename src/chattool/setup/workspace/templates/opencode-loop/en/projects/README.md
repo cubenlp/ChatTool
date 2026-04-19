@@ -53,9 +53,9 @@ Use this for research, one-off development, focused cleanup, and other work that
 
 ## Debugging And Stop Conditions
 
-- `/chatloop-status` shows the resolved project root, state file, and log file
+- `/chatloop-status` shows the resolved project root, state file, and events file
 - ChatLoop state is written to `.opencode/chatloop.local.md` under the resolved project root
-- logs are written to `.opencode/logs/<session-id>.log` under the resolved project root
+- event records are appended to `chatloop.events.log` in the resolved project root
 - once completion criteria are satisfied, the model must emit `<complete>DONE</complete>` so the plugin stops continuing
 
 ## Subdirectory growth

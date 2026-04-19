@@ -99,8 +99,8 @@ chattool setup opencode --plugin chatloop
 `chatloop` 安装完成后，常用调试方式是：
 
 - 执行 `/chatloop-help` 查看工作流说明
-- 执行 `/chatloop-status` 查看当前 project 根目录、状态文件和日志文件
-- 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `.opencode/logs/<session-id>.log`
+- 执行 `/chatloop-status` 查看当前 project 根目录、状态文件和事件文件
+- 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `chatloop.events.log`
 - 当任务完成时，让模型输出 `<complete>DONE</complete>` 停止 continuation
 
 ## 5. 配置文件位置

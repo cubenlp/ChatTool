@@ -224,4 +224,4 @@ def setup_workspace(
             click.echo(f"OpenCode home: {item['opencode_home']}")
             click.echo(f"ChatLoop plugin: {item['plugin_dir']}")
             click.echo(f"ChatLoop commands: {item['commands_dir']}")
-            click.echo("ChatLoop state and logs are created inside each project's .opencode/ directory when /chatloop runs.")
+            click.echo("ChatLoop state is written under each project's .opencode/ directory, and event records are appended to chatloop.events.log in the project root when /chatloop runs.")

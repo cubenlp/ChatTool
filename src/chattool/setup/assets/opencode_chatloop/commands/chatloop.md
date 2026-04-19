@@ -18,9 +18,9 @@ Requirements:
 
 Debugging:
 
-- use `/chatloop-status` to inspect the resolved project root, state file, and log file
+- use `/chatloop-status` to inspect the resolved project root, state file, and events file
 - state is written to `.opencode/chatloop.local.md` under the resolved project root
-- logs are written to `.opencode/logs/<session-id>.log` under the resolved project root
+- event records are appended to `chatloop.events.log` in the resolved project root
 
 Completion rule:
 
