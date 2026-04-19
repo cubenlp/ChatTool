@@ -64,14 +64,14 @@
 
 ### GitHub
 
-- `chattool gh pr-create`
-- `chattool gh pr-view`
-- `chattool gh pr-check`
-- `chattool gh run-view`
-- `chattool gh job-logs`
-- `chattool gh pr-comment`
-- `chattool gh pr-merge`
-- `chattool gh pr-update`
+- `chattool gh pr create`
+- `chattool gh pr view`
+- `chattool gh pr checks`
+- `chattool gh run view`
+- `chattool gh run logs`
+- `chattool gh pr comment`
+- `chattool gh pr merge`
+- `chattool gh pr edit`
 
 行为：
 
