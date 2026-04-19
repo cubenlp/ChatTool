@@ -1,231 +1,67 @@
 # test_chattool_gh_basic
 
-测试 `chattool gh` 的 mock 基础链路，覆盖帮助信息、PR 检查、缺参自动补问与合并前校验流程。
+测试 `chattool gh` 的新命令树 mock 基础链路，覆盖 `gh pr ...` / `gh run ...` 帮助信息、缺参自动补问、`--wait` / `--check` 参数透传，以及 `set-token` / `repo-perms` 的保留行为。
 
 ## 元信息
 
-- 命令：`chattool gh <command> [args]`
-- 目的：验证 GitHub CLI 编排层在 fake client 下的状态输出与拒绝合并逻辑。
+- 命令：`chattool gh <group> <command> [args]`
+- 目的：验证新的嵌套入口 `pr` / `run` 可用，同时保留 ChatTool 的交互补问与 token 配置行为。
 - 标签：`cli`、`mock`
-- 前置条件：无真实 GitHub token 或远端仓库依赖；通过 fake GitHub client 返回固定 PR / CI 数据。
-- 环境准备：使用 `CliRunner` 调用统一入口 `chattool`，并 monkeypatch `chattool.tools.github.cli` 中的客户端解析函数。
+- 前置条件：无真实 GitHub token 或远端仓库依赖；通过 monkeypatch 替换命令实现层。
+- 环境准备：使用 `CliRunner` 调用统一入口 `chattool`。
 - 回滚：只读 mock 测试，无需回滚。
 
 ## 用例 1：帮助信息可达
 
-- 初始环境准备：
-  - 无。
-- 相关文件：
-  - 无
-
 预期过程和结果：
-  1. 执行 `chattool gh --help`，预期输出包含 `pr-check` 与 `pr-merge`。
+1. 执行 `chattool gh --help`，输出包含 `pr`、`run`、`repo-perms`、`set-token`。
+2. 执行 `chattool gh pr --help`，输出包含 `create`、`list`、`view`、`checks`、`comment`、`merge`、`edit`。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool gh --help
+chattool gh pr --help
 ```
 
-## 用例 2：检查 PR 的 CI 状态
-
-- 初始环境准备：
-  - fake GitHub client 返回固定的 PR、combined status、check runs 和 workflow runs。
-- 相关文件：
-  - 无
+## 用例 2：高频命令缺参时自动补问
 
 预期过程和结果：
-  1. 执行 `chattool gh pr-check --number <id>`，预期输出 PR 的 combined status、check runs 和 workflow runs。
+1. 执行 `chattool gh pr view`，自动补问 PR number。
+2. 执行 `chattool gh pr create`，自动补问 `base` / `head` / `title`。
+3. 执行 `chattool gh pr comment`，自动补问 PR number 和 comment body。
+4. 执行 `chattool gh pr merge`，自动补问 PR number。
+5. 执行 `chattool gh run view` / `chattool gh run logs`，分别自动补问 run id / job id。
+6. 对同类命令传 `-I` 时，直接报缺参错误，不进入交互。
 
-参考执行脚本（伪代码）：
-
-```sh
-chattool gh pr-check --number 1
-```
-
-## 用例 2a：高频命令缺参时自动补问
-
-- 初始环境准备：
-  - patch 交互可用状态与 `ask_text`。
-  - fake GitHub client 返回固定 PR / repo / merge 结果。
-- 相关文件：
-  - 无
+## 用例 3：`--wait` 和 `--check` 走新入口
 
 预期过程和结果：
-  1. 执行 `chattool gh pr-view`，预期自动补问 PR number。
-  2. 执行 `chattool gh pr-create`，预期自动补问 `base` / `head` / `title`。
-  3. 执行 `chattool gh pr-comment`，预期自动补问 PR number 和 comment body。
-  4. 执行 `chattool gh pr-merge`，预期自动补问 PR number。
-  5. 执行 `chattool gh run-view` / `job-logs`，预期分别自动补问 run id / job id。
-  6. 执行上述命令并加 `-I` 时，预期直接报错，不进入交互。
+1. 执行 `chattool gh pr checks --number 138 --wait --interval 10 --timeout 600`。
+2. CLI 应把 `wait=True`、`interval=10`、`timeout=600` 传给命令实现层。
+3. 执行 `chattool gh pr merge --number 138 --check`。
+4. CLI 应把 `check=True` 传给命令实现层。
 
-## 用例 3：阻止失败状态下的合并
-
-- 初始环境准备：
-  - fake GitHub client 返回失败的 check runs 与 workflow runs。
-- 相关文件：
-  - 无
+## 用例 4：repo-perms 继续可用
 
 预期过程和结果：
-  1. 执行 `chattool gh pr-merge --number <id> --method merge --confirm --check`。
-  2. 若 fake CI 结果中存在失败项，CLI 应拒绝合并并提示先执行 `pr-check`。
-  3. fake `merge()` 不应被调用。
+1. 执行 `chattool gh repo-perms --repo owner/repo`，输出仓库权限与 capability 摘要。
+2. 执行 `chattool gh repo-perms --repo owner/repo --json-output --full-json`，输出 JSON 且带原始仓库 payload。
 
-参考执行脚本（伪代码）：
-
-```sh
-chattool gh pr-merge --number 1 --method merge --confirm --check
-```
-
-## 用例 4：为当前 GitHub 仓库配置 HTTPS token
-
-- 初始环境准备：
-  - 在临时目录初始化一个 git 仓库。
-  - `origin` 指向一个 GitHub 仓库 URL。
-  - mock 掉 `git config --global credential.helper store` 与 `git credential approve`。
-- 相关文件：
-  - 无。
+## 用例 5：set-token 保留当前仓库 token 配置行为
 
 预期过程和结果：
-  1. 执行 `chattool gh set-token --token <pat>`。
-  2. CLI 应从当前仓库 remote 自动解析出 `owner/name`。
-  3. 应以带 path 的 GitHub HTTPS 凭据形式写入该仓库的 token，仅针对当前仓库。
+1. 执行 `chattool gh set-token --token <pat>`，CLI 从当前 git remote 推断 GitHub 仓库并写入 repo-scoped HTTPS credential。
+2. 传 `--save-env` 时，同时更新 ChatTool GitHub env。
+3. 当前 remote 不是 GitHub 时，命令应拒绝执行。
+4. `origin` 不是 GitHub 但其他 remote 是 GitHub 时，应自动回退到可识别的 GitHub remote。
+5. TTY 下未传 token 时，可交互输入 token。
+6. remote URL 无 `.git` 后缀时，应保留原 path，不强行追加 `.git`。
 
-参考执行脚本（伪代码）：
-
-```sh
-init temp git repo with github origin
-run chattool gh set-token --token ghp_xxx
-assert git credential approve receives protocol/host/path/username/password
-```
-
-## 用例 5：当前仓库不是 GitHub remote 时拒绝配置
-
-- 初始环境准备：
-  - 在临时目录初始化一个 git 仓库。
-  - `origin` 指向非 GitHub URL。
-- 相关文件：
-  - 无。
+## 用例 6：repo-scoped exact token 规则未回归
 
 预期过程和结果：
-  1. 执行 `chattool gh set-token --token <pat>`。
-  2. CLI 应报错说明当前仓库没有可识别的 GitHub remote。
-
-参考执行脚本（伪代码）：
-
-```sh
-init temp git repo with non-github origin
-run chattool gh set-token --token ghp_xxx
-assert command fails with non-github remote message
-```
-
-## 用例 6：`origin` 不是 GitHub，但其它 remote 是 GitHub 时应自动回退
-
-- 初始环境准备：
-  - 在临时目录初始化一个 git 仓库。
-  - `origin` 指向非 GitHub remote。
-  - 另一个 remote（例如 `upstream`）指向 GitHub。
-- 相关文件：
-  - 无。
-
-预期过程和结果：
-  1. 执行 `chattool gh set-token --token <pat>`。
-  2. CLI 应跳过非 GitHub 的 `origin`，并自动使用可识别的 GitHub remote。
-
-参考执行脚本（伪代码）：
-
-```sh
-init temp git repo with gitlab origin and github upstream
-run chattool gh set-token --token ghp_xxx
-assert credential path uses upstream github repo
-```
-
-## 用例 7：TTY 下缺少 token 时应允许临时输入
-
-- 初始环境准备：
-  - 当前 git 仓库存在 GitHub remote。
-  - 不传 `--token`，也不设置 `GITHUB_ACCESS_TOKEN`。
-  - mock 交互输入一个临时 token。
-- 相关文件：
-  - 无。
-
-预期过程和结果：
-  1. 执行 `chattool gh set-token`。
-  2. 如果当前终端可交互，CLI 应提示输入 token，而不是直接报错退出。
-  3. 输入后应继续完成当前仓库的 HTTPS credential 配置。
-
-参考执行脚本（伪代码）：
-
-```sh
-mock github remote and interactive token prompt
-run chattool gh set-token
-enter ghp_xxx
-assert git credential approve uses prompted token
-```
-
-## 用例 8：查看 token 对仓库的权限列表
-
-- 初始环境准备：
-  - fake GitHub repo API 返回固定的 `permissions` 字段。
-- 相关文件：
-  - 无。
-
-预期过程和结果：
-  1. 执行 `chattool gh repo-perms --repo owner/repo --token <pat>`。
-  2. CLI 应输出该仓库的 `permissions` 字段，至少包括 `pull`、`push`、`admin`。
-  3. CLI 还应基于这些权限给出一个简短的 capability 摘要，例如是否可读 PR、是否可合并 PR、是否可查看 checks / actions。
-
-参考执行脚本（伪代码）：
-
-```sh
-mock GET /repos/owner/repo payload with permissions
-run chattool gh repo-perms --repo owner/repo --token ghp_xxx
-assert output contains pull push admin permissions
-```
-
-## 用例 8b：`repo-perms --json-output --full-json` 可输出完整仓库 payload
-
-- 初始环境准备：
-  - fake GitHub repo API 返回固定仓库 JSON。
-- 相关文件：
-  - 无。
-
-预期过程和结果：
-  1. 执行 `chattool gh repo-perms --repo owner/repo --json-output --full-json`。
-  2. 输出 JSON 中除 `permissions` 和 `capabilities` 外，还应包含原始 `repository` payload。
-
-## 用例 2b：combined status 因权限不足失败时，`pr-check` 应降级继续
-
-- 初始环境准备：
-  - fake GitHub client 在 `get_combined_status()` 时抛 403 类错误。
-  - `check_runs` 和 `workflow_runs` 仍然可读。
-- 相关文件：
-  - 无。
-
-预期过程和结果：
-  1. 执行 `chattool gh pr-check --number <id>`。
-  2. CLI 不应因为 combined status 读取失败而整体退出。
-  3. 输出中应显示 `Combined status: unavailable`，并附带 note。
-  4. check runs 和 workflow runs 仍应继续展示。
-
-## 用例 9：repo-scoped 校验模式下，credential 不精确匹配时不应误用其他 token
-
-- 初始环境准备：
-  - `.git-credential` 中存在另一个 GitHub 仓库 path 的 token，但没有当前仓库 path 的精确条目。
-- 相关文件：
-  - 无。
-
-预期过程和结果：
-  1. 当命令明确要求当前仓库的精确 credential path 时，不应回退误用其他 GitHub 仓库的 token。
-  2. 这条规则主要用于 repo-scoped 校验和 `chattool gh set-token` 的当前仓库凭据处理。
-
-参考执行脚本（伪代码）：
-
-```sh
-mock git credential store with github.com/other/repo only
-call resolve_token(..., exact_only=True)
-assert result is empty
-```
+1. 当命令要求 `exact_only=True` 时，如果 credential store 里只有其它 GitHub repo 的 token，不应误用它。
 
 ## 清理 / 回滚
 

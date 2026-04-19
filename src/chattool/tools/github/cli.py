@@ -1,7 +1,6 @@
 import json
-import time
+
 import click
-from typing import Optional
 
 from chattool.interaction import (
     BACK_VALUE,
@@ -13,38 +12,29 @@ from chattool.interaction import (
     resolve_command_inputs,
 )
 from chattool.utils import mask_secret
-from chattool.tools.github.api import (
-    configure_github_https_token,
-    get_client,
-    github_api_get_json,
-    github_api_get_text,
-    resolve_repo,
-    resolve_repo_from_git_remote,
-    resolve_token,
-    save_github_token_to_env,
+from chattool.tools.github.api import resolve_token
+from chattool.tools.github.commands import (
+    check_pr,
+    comment_pr,
+    create_pr,
+    edit_pr,
+    merge_pr,
+    repo_perms,
+    resolve_repo_and_credential_path,
+    set_token,
+    view_job_logs,
+    view_pr,
+    view_run,
+    list_prs,
 )
-
-
-def _derive_repo_capabilities(permissions: dict) -> dict:
-    pull = bool(permissions.get("pull"))
-    push = bool(permissions.get("push"))
-    admin = bool(permissions.get("admin"))
-    maintain = bool(permissions.get("maintain"))
-    triage = bool(permissions.get("triage"))
-    return {
-        "can_read_pr": pull,
-        "can_comment_pr": triage or push or maintain or admin,
-        "can_merge_pr": push or maintain or admin,
-        "can_view_checks": pull,
-        "can_view_actions": pull,
-    }
-
-
-def _resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, str]:
-    if repo:
-        normalized = resolve_repo(repo)
-        return normalized, f"{normalized}.git"
-    return resolve_repo_from_git_remote()
+from chattool.tools.github.render import (
+    echo_pr_checks,
+    echo_pr_list,
+    echo_pr_view,
+    echo_workflow_job,
+    echo_workflow_run,
+    format_optional,
+)
 
 
 PR_CREATE_SCHEMA = CommandSchema(
@@ -65,17 +55,13 @@ PR_NUMBER_SCHEMA = CommandSchema(
 
 RUN_ID_SCHEMA = CommandSchema(
     name="gh-run-id",
-    fields=(
-        CommandField("run_id", prompt="workflow run id", kind="int", required=True),
-    ),
+    fields=(CommandField("run_id", prompt="workflow run id", kind="int", required=True),),
 )
 
 
 JOB_ID_SCHEMA = CommandSchema(
     name="gh-job-id",
-    fields=(
-        CommandField("job_id", prompt="workflow job id", kind="int", required=True),
-    ),
+    fields=(CommandField("job_id", prompt="workflow job id", kind="int", required=True),),
 )
 
 
@@ -90,20 +76,23 @@ PR_COMMENT_SCHEMA = CommandSchema(
 
 @click.group(name="gh")
 def cli():
-    """GitHub helpers (PR, issues)."""
-    pass
+    """GitHub helpers (PR, actions)."""
 
 
-@cli.command(name="pr-create")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
-@click.option("--base", required=False, help="Base branch (e.g., main, vibe-master).")
-@click.option(
-    "--head", required=False, help="Head branch (e.g., feature-branch or owner:branch)."
-)
+@cli.group(name="pr")
+def pr_group():
+    """Pull request helpers."""
+
+
+@cli.group(name="run")
+def run_group():
+    """GitHub Actions helpers."""
+
+
+@pr_group.command(name="create")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--base", required=False, help="Base branch (e.g., main).")
+@click.option("--head", required=False, help="Head branch or owner:branch.")
 @click.option("--title", required=False, help="Pull request title.")
 @click.option("--body", default="", help="Pull request body.")
 @click.option(
@@ -111,180 +100,73 @@ def cli():
     type=click.Path(exists=True, dir_okay=False),
     help="Read PR body from file (overrides --body).",
 )
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to the git credential entry for the current repository.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
 def pr_create(repo, base, head, title, body, body_file, token, interactive):
     """Create a GitHub pull request."""
-    from github import Github
-    from github.GithubException import GithubException
-
     inputs = resolve_command_inputs(
         schema=PR_CREATE_SCHEMA,
         provided={"base": base, "head": head, "title": title},
         interactive=interactive,
-        usage="Usage: chattool gh pr-create [--repo TEXT] --base TEXT --head TEXT --title TEXT [-i|-I]",
+        usage="Usage: chattool gh pr create [--repo TEXT] --base TEXT --head TEXT --title TEXT [-i|-I]",
     )
-    base = inputs["base"]
-    head = inputs["head"]
-    title = inputs["title"]
-
     if body_file:
         with open(body_file, "r", encoding="utf-8") as handle:
             body = handle.read()
+    payload = create_pr(
+        repo,
+        inputs["base"],
+        inputs["head"],
+        inputs["title"],
+        body,
+        token,
+    )
+    click.echo(f"PR created: {payload['url']}")
 
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, require_token=True, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        pr = repo_obj.create_pull(title=title, body=body, base=base, head=head)
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
 
-    click.echo(f"PR created: {pr.html_url}")
-
-
-@cli.command(name="pr-list")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@pr_group.command(name="list")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option(
     "--state",
     default="open",
     type=click.Choice(["open", "closed", "all"]),
     show_default=True,
 )
-@click.option(
-    "--limit", default=20, type=int, show_default=True, help="Max PRs to show."
-)
+@click.option("--limit", default=20, type=int, show_default=True, help="Max PRs to show.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to the git credential entry for the current repository.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 def pr_list(repo, state, limit, json_output, token):
     """List pull requests."""
-    from github import Github
-    from github.GithubException import GithubException
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        pulls = repo_obj.get_pulls(state=state, sort="updated", direction="desc")
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
-
-    items = []
-    for pr in pulls:
-        items.append(
-            {
-                "number": pr.number,
-                "title": pr.title,
-                "state": pr.state,
-                "url": pr.html_url,
-                "author": pr.user.login if pr.user else None,
-                "updated_at": pr.updated_at.isoformat() if pr.updated_at else None,
-                "base": pr.base.ref if pr.base else None,
-                "head": pr.head.ref if pr.head else None,
-            }
-        )
-        if len(items) >= limit:
-            break
-
+    items = list_prs(repo, state, limit, token)
     if json_output:
         click.echo(json.dumps(items, ensure_ascii=False, indent=2))
         return
-
-    if not items:
-        click.echo("No pull requests found.")
-        return
-
-    for item in items:
-        click.echo(
-            f"#{item['number']} [{item['state']}] {item['title']} ({item['author']})"
-        )
-        click.echo(f"  {item['url']}")
+    echo_pr_list(items)
 
 
-@cli.command(name="pr-view")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@pr_group.command(name="view")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to the git credential entry for the current repository.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
 def pr_view(repo, number, json_output, token, interactive):
     """Show pull request details."""
-    from github import Github
-    from github.GithubException import GithubException
-
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chattool gh pr-view [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chattool gh pr view [--repo TEXT] --number INTEGER [-i|-I]",
     )
-    number = inputs["number"]
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        pr = repo_obj.get_pull(number)
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
-
-    payload = {
-        "number": pr.number,
-        "title": pr.title,
-        "state": pr.state,
-        "url": pr.html_url,
-        "author": pr.user.login if pr.user else None,
-        "created_at": pr.created_at.isoformat() if pr.created_at else None,
-        "updated_at": pr.updated_at.isoformat() if pr.updated_at else None,
-        "merged_at": pr.merged_at.isoformat() if pr.merged_at else None,
-        "base": pr.base.ref if pr.base else None,
-        "head": pr.head.ref if pr.head else None,
-        "mergeable": getattr(pr, "mergeable", None),
-        "mergeable_state": getattr(pr, "mergeable_state", None),
-    }
-
+    payload = view_pr(repo, inputs["number"], token)
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-
-    click.echo(f"#{payload['number']} [{payload['state']}] {payload['title']}")
-    click.echo(f"Author: {payload['author']}")
-    click.echo(f"URL: {payload['url']}")
-    click.echo(f"Base: {payload['base']}  Head: {payload['head']}")
-    click.echo(
-        f"Mergeable: {_format_optional(payload['mergeable'])}  "
-        f"Merge State: {_format_optional(payload['mergeable_state'])}"
-    )
-    click.echo(f"Created: {payload['created_at']}  Updated: {payload['updated_at']}")
-    click.echo(f"Merged: {payload['merged_at']}")
+    echo_pr_view(payload)
 
 
-@cli.command(name="pr-check")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@pr_group.command(name="checks")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option(
     "--check-limit",
@@ -317,16 +199,12 @@ def pr_view(repo, number, json_output, token, interactive):
     "--timeout",
     default=None,
     type=click.FloatRange(min=1e-9),
-    help="Optional max wait time in seconds. By default, wait forever.",
+    help="Optional max wait time in seconds.",
 )
 @click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def pr_check(
+def pr_checks(
     repo,
     number,
     check_limit,
@@ -339,212 +217,48 @@ def pr_check(
     interactive,
 ):
     """Show CI/check status for a pull request."""
-    from github.GithubException import GithubException
-
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chattool gh pr-check [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chattool gh pr checks [--repo TEXT] --number INTEGER [-i|-I]",
     )
-    number = inputs["number"]
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        started_at = time.monotonic()
-        while True:
-            pr = repo_obj.get_pull(number)
-            commit = repo_obj.get_commit(pr.head.sha)
-            payload = _build_pr_check_payload(
-                pr,
-                commit,
-                repo_obj,
-                check_limit=check_limit,
-                workflow_limit=workflow_limit,
-            )
-            if not wait_for_completion or not _has_incomplete_pr_checks(payload):
-                break
-            if timeout is not None and (time.monotonic() - started_at) >= timeout:
-                raise click.ClickException(
-                    f"Timed out after {timeout:g}s waiting for PR #{number} checks to finish."
-                )
-            click.echo(
-                f"Waiting for PR #{number} checks to finish; polling again in {interval:g}s...",
-                err=True,
-            )
-            time.sleep(interval)
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
-
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
-        return
-
-    _echo_pr_check_payload(payload)
-
-
-@cli.command(name="run-view")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
-@click.option("--run-id", required=False, type=int, help="Workflow run id.")
-@click.option(
-    "--job-limit", default=50, type=int, show_default=True, help="Max jobs to show."
-)
-@click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
-@add_interactive_option
-def run_view(repo, run_id, job_limit, json_output, token, interactive):
-    """Show a workflow run and its jobs."""
-    inputs = resolve_command_inputs(
-        schema=RUN_ID_SCHEMA,
-        provided={"run_id": run_id},
-        interactive=interactive,
-        usage="Usage: chattool gh run-view [--repo TEXT] --run-id INTEGER [-i|-I]",
-    )
-    run_id = inputs["run_id"]
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    token = resolve_token(token, credential_path=credential_path)
-
-    run_payload = github_api_get_json(repo, f"/actions/runs/{run_id}", token)
-    jobs_payload = github_api_get_json(
+    payload = check_pr(
         repo,
-        f"/actions/runs/{run_id}/jobs",
+        inputs["number"],
+        check_limit,
+        workflow_limit,
+        wait_for_completion,
+        interval,
+        timeout,
         token,
-        params={"per_page": min(max(job_limit, 1), 100)},
     )
-    payload = _build_workflow_run_payload(
-        run_payload, jobs_payload, job_limit=job_limit
-    )
-
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-
-    _echo_workflow_run_payload(payload)
-
-
-@cli.command(name="job-logs")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
-@click.option("--job-id", required=False, type=int, help="Workflow job id.")
-@click.option(
-    "--tail",
-    default=200,
-    type=click.IntRange(min=0),
-    show_default=True,
-    help="Show only the last N lines. Use 0 to print the full log.",
-)
-@click.option(
-    "--output",
-    type=click.Path(dir_okay=False, writable=True),
-    default=None,
-    help="Write the full log to a local file.",
-)
-@click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
-@add_interactive_option
-def job_logs(repo, job_id, tail, output, json_output, token, interactive):
-    """Show logs for a workflow job."""
-    inputs = resolve_command_inputs(
-        schema=JOB_ID_SCHEMA,
-        provided={"job_id": job_id},
-        interactive=interactive,
-        usage="Usage: chattool gh job-logs [--repo TEXT] --job-id INTEGER [-i|-I]",
-    )
-    job_id = inputs["job_id"]
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    token = resolve_token(token, credential_path=credential_path)
-
-    job_payload = github_api_get_json(repo, f"/actions/jobs/{job_id}", token)
-    logs_text = github_api_get_text(repo, f"/actions/jobs/{job_id}/logs", token)
-    rendered_log = _tail_text(logs_text, tail)
-
-    if output:
-        with open(output, "w", encoding="utf-8") as handle:
-            handle.write(logs_text)
-
-    payload = {
-        "job": _build_workflow_job_payload(job_payload),
-        "tail": tail,
-        "output_path": output,
-        "log": logs_text if json_output else rendered_log,
-    }
-
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
-        return
-
-    _echo_workflow_job_payload(payload["job"])
-    if output:
-        click.echo(f"Saved full log to: {output}")
-    click.echo("Log:")
-    click.echo(rendered_log)
+    echo_pr_checks(payload)
 
 
-@cli.command(name="pr-comment")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@pr_group.command(name="comment")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option("--body", required=False, help="Comment body.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
 def pr_comment(repo, number, body, token, interactive):
     """Add a comment to a pull request."""
-    from github import Github
-    from github.GithubException import GithubException
-
     inputs = resolve_command_inputs(
         schema=PR_COMMENT_SCHEMA,
         provided={"number": number, "body": body},
         interactive=interactive,
-        usage="Usage: chattool gh pr-comment [--repo TEXT] --number INTEGER --body TEXT [-i|-I]",
+        usage="Usage: chattool gh pr comment [--repo TEXT] --number INTEGER --body TEXT [-i|-I]",
     )
-    number = inputs["number"]
-    body = inputs["body"]
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, require_token=True, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        pr = repo_obj.get_pull(number)
-        comment = pr.create_issue_comment(body)
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
-
-    click.echo(f"Comment created: {comment.html_url}")
+    payload = comment_pr(repo, inputs["number"], inputs["body"], token)
+    click.echo(f"Comment created: {payload['url']}")
 
 
-@cli.command(name="pr-merge")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@pr_group.command(name="merge")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option(
     "--method",
@@ -560,71 +274,30 @@ def pr_comment(repo, number, body, token, interactive):
     is_flag=True,
     help="Check CI status before merging and abort if checks are not green.",
 )
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def pr_merge(
-    repo, number, method, title, message, check_before_merge, token, interactive
-):
+def pr_merge(repo, number, method, title, message, check_before_merge, token, interactive):
     """Merge a pull request."""
-    from github import Github
-    from github.GithubException import GithubException
-
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chattool gh pr-merge [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chattool gh pr merge [--repo TEXT] --number INTEGER [-i|-I]",
     )
-    number = inputs["number"]
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, require_token=True, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        pr = repo_obj.get_pull(number)
-        if check_before_merge:
-            commit = repo_obj.get_commit(pr.head.sha)
-            check_payload = _build_pr_check_payload(
-                pr,
-                commit,
-                repo_obj,
-                check_limit=20,
-                workflow_limit=10,
-            )
-            blockers = _collect_merge_blockers(check_payload)
-            if blockers:
-                details = "\n".join(f"- {item}" for item in blockers)
-                raise click.ClickException(
-                    "Refusing to merge because CI checks are not green:\n"
-                    f"{details}\n"
-                    f"Run `chattool gh pr-check --number {number}` for details, "
-                    "or rerun without `--check` if you intentionally want to merge anyway."
-                )
-        payload = {"merge_method": method}
-        if title is not None:
-            payload["commit_title"] = title
-        if message is not None:
-            payload["commit_message"] = message
-        result = pr.merge(**payload)
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
-
-    if not result.merged:
-        raise click.ClickException(f"Merge failed: {result.message}")
-
-    click.echo(f"PR merged: {pr.html_url}")
+    payload = merge_pr(
+        repo,
+        inputs["number"],
+        method,
+        title,
+        message,
+        check_before_merge,
+        token,
+    )
+    click.echo(f"PR merged: {payload['url']}")
 
 
-@cli.command(name="pr-update")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@pr_group.command(name="edit")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option("--number", required=False, type=int, help="Pull request number.")
 @click.option("--title", default=None, help="New pull request title.")
 @click.option("--body", default=None, help="New pull request body.")
@@ -633,130 +306,130 @@ def pr_merge(
     type=click.Path(exists=True, dir_okay=False),
     help="Read PR body from file (overrides --body).",
 )
-@click.option(
-    "--state", default=None, type=click.Choice(["open", "closed"]), help="Set PR state."
-)
+@click.option("--state", default=None, type=click.Choice(["open", "closed"]))
 @click.option("--base", default=None, help="Change base branch.")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
+@click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def pr_update(repo, number, title, body, body_file, state, base, token, interactive):
-    """Update pull request metadata (title/body/state/base)."""
-    from github import Github
-    from github.GithubException import GithubException
-
+def pr_edit(repo, number, title, body, body_file, state, base, token, interactive):
+    """Update pull request metadata."""
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chattool gh pr-update [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chattool gh pr edit [--repo TEXT] --number INTEGER [-i|-I]",
     )
-    number = inputs["number"]
-
     if body_file:
         with open(body_file, "r", encoding="utf-8") as handle:
             body = handle.read()
+    payload = edit_pr(repo, inputs["number"], title, body, state, base, token)
+    click.echo(f"PR updated: {payload['url']}")
 
-    if title is None and body is None and state is None and base is None:
-        raise click.ClickException(
-            "No updates provided. Use --title/--body/--state/--base."
+
+@run_group.command(name="view")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--run-id", required=False, type=int, help="Workflow run id.")
+@click.option("--job-limit", default=50, type=int, show_default=True, help="Max jobs to show.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+@add_interactive_option
+def run_view(repo, run_id, job_limit, json_output, token, interactive):
+    """Show a workflow run and its jobs."""
+    inputs = resolve_command_inputs(
+        schema=RUN_ID_SCHEMA,
+        provided={"run_id": run_id},
+        interactive=interactive,
+        usage="Usage: chattool gh run view [--repo TEXT] --run-id INTEGER [-i|-I]",
+    )
+    payload = view_run(repo, inputs["run_id"], job_limit, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    echo_workflow_run(payload)
+
+
+@run_group.command(name="logs")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--job-id", required=False, type=int, help="Workflow job id.")
+@click.option(
+    "--tail",
+    default=200,
+    type=click.IntRange(min=0),
+    show_default=True,
+    help="Show only the last N lines. Use 0 for the full log.",
+)
+@click.option(
+    "--output",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Write the full log to a local file.",
+)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+@add_interactive_option
+def run_logs(repo, job_id, tail, output, json_output, token, interactive):
+    """Show logs for a workflow job."""
+    inputs = resolve_command_inputs(
+        schema=JOB_ID_SCHEMA,
+        provided={"job_id": job_id},
+        interactive=interactive,
+        usage="Usage: chattool gh run logs [--repo TEXT] --job-id INTEGER [-i|-I]",
+    )
+    payload = view_job_logs(repo, inputs["job_id"], tail, output, token)
+    if json_output:
+        click.echo(
+            json.dumps(
+                {
+                    "job": payload["job"],
+                    "tail": payload["tail"],
+                    "output_path": payload["output_path"],
+                    "log": payload["log"],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
         )
-
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    client = get_client(token, require_token=True, credential_path=credential_path)
-    try:
-        repo_obj = client.get_repo(repo)
-        pr = repo_obj.get_pull(number)
-        payload = {}
-        if title is not None:
-            payload["title"] = title
-        if body is not None:
-            payload["body"] = body
-        if state is not None:
-            payload["state"] = state
-        if base is not None:
-            payload["base"] = base
-        pr.edit(**payload)
-    except GithubException as exc:
-        raise click.ClickException(f"GitHub API error: {exc}") from exc
-
-    click.echo(f"PR updated: {pr.html_url}")
+        return
+    echo_workflow_job(payload["job"])
+    if output:
+        click.echo(f"Saved full log to: {output}")
+    click.echo("Log:")
+    click.echo(payload["rendered_log"])
 
 
 @cli.command(name="repo-perms")
-@click.option(
-    "--repo",
-    required=False,
-    help="Repository in owner/name form. Defaults to the current GitHub remote.",
-)
+@click.option("--repo", required=False, help="Repository in owner/name form.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option(
-    "--full-json",
-    is_flag=True,
-    help="Include the full repository payload in JSON output.",
-)
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
-def repo_perms(repo, json_output, full_json, token):
+@click.option("--full-json", is_flag=True, help="Include the full repository payload.")
+@click.option("--token", default=None, help="GitHub token.")
+def repo_permissions(repo, json_output, full_json, token):
     """Show repository permissions for the current token."""
-    repo, credential_path = _resolve_repo_and_credential_path(repo)
-    token = resolve_token(token, credential_path=credential_path)
-    payload = github_api_get_json(repo, "", token)
-    permissions = payload.get("permissions") or {}
-    result = {
-        "repo": payload.get("full_name") or repo,
-        "private": payload.get("private"),
-        "visibility": payload.get("visibility"),
-        "permissions": permissions,
-        "capabilities": _derive_repo_capabilities(permissions),
-    }
-    if full_json:
-        result["repository"] = payload
-
+    payload = repo_perms(repo, full_json, token)
     if json_output:
-        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-
-    click.echo(f"Repo: {result['repo']}")
-    click.echo(f"Private: {_format_optional(result['private'])}")
-    click.echo(f"Visibility: {_format_optional(result['visibility'])}")
+    click.echo(f"Repo: {payload['repo']}")
+    click.echo(f"Private: {format_optional(payload['private'])}")
+    click.echo(f"Visibility: {format_optional(payload['visibility'])}")
     click.echo("Permissions:")
-    if not permissions:
+    if not payload["permissions"]:
         click.echo("  - none returned")
     else:
-        for key in sorted(permissions):
-            click.echo(f"  - {key}: {permissions[key]}")
-
+        for key in sorted(payload["permissions"]):
+            click.echo(f"  - {key}: {payload['permissions'][key]}")
     click.echo("Capabilities:")
-    for key, value in result["capabilities"].items():
+    for key, value in payload["capabilities"].items():
         click.echo(f"  - {key}: {value}")
 
 
 @cli.command(name="set-token")
-@click.option(
-    "--token",
-    default=None,
-    help="GitHub token. Defaults to git credentials for the current repo, then GITHUB_ACCESS_TOKEN.",
-)
-@click.option(
-    "--save-env",
-    is_flag=True,
-    help="Also save the token into ChatTool GitHub env config.",
-)
-def set_token(token, save_env):
+@click.option("--token", default=None, help="GitHub token.")
+@click.option("--save-env", is_flag=True, help="Also save the token into ChatTool env config.")
+def set_repo_token(token, save_env):
     """Configure HTTPS credentials for the current GitHub repository."""
-    repo, credential_path = resolve_repo_from_git_remote()
-    resolved_token = resolve_token(
-        token,
-        credential_path=credential_path,
-        exact_only=True,
-    ) or resolve_token(token, credential_path=credential_path)
+    repo, credential_path = resolve_repo_and_credential_path(None)
+    resolved_token = resolve_token(token, credential_path=credential_path, exact_only=True)
+    if resolved_token is None:
+        resolved_token = resolve_token(token, credential_path=credential_path)
     if is_interactive_available():
         prompt_label = "github_token"
         if resolved_token:
@@ -767,326 +440,7 @@ def set_token(token, save_env):
         entered = str(token_input).strip()
         if entered:
             resolved_token = entered
-    if not resolved_token:
-        raise click.ClickException(
-            "Missing token. Provide --token or configure a GitHub credential for the current repository."
-        )
-
-    configure_github_https_token(credential_path, resolved_token)
-    if save_env:
-        save_github_token_to_env(resolved_token)
-    click.echo(f"Configured Git HTTPS token for {repo}.")
-    if save_env:
+    result = set_token(resolved_token, save_env)
+    click.echo(f"Configured Git HTTPS token for {result['repo']}.")
+    if result["saved_env"]:
         click.echo("Saved token to ChatTool GitHub env config.")
-
-
-def _build_pr_check_payload(
-    pr, commit, repo_obj, check_limit: int, workflow_limit: int
-) -> dict:
-    statuses = []
-    try:
-        combined_status = commit.get_combined_status()
-        for status in combined_status.statuses:
-            statuses.append(
-                {
-                    "context": status.context,
-                    "state": status.state,
-                    "description": status.description,
-                    "target_url": status.target_url,
-                    "updated_at": _isoformat(status.updated_at),
-                }
-            )
-        combined_status_payload = {
-            "state": combined_status.state,
-            "sha": combined_status.sha,
-            "total_count": combined_status.total_count,
-            "statuses": statuses,
-        }
-    except Exception as exc:
-        combined_status_payload = {
-            "state": "unavailable",
-            "sha": getattr(pr.head, "sha", None),
-            "total_count": 0,
-            "statuses": [],
-            "error": str(exc),
-        }
-
-    check_runs = []
-    for check_run in commit.get_check_runs():
-        check_runs.append(
-            {
-                "name": check_run.name,
-                "status": check_run.status,
-                "conclusion": check_run.conclusion,
-                "details_url": check_run.details_url,
-                "html_url": getattr(check_run, "html_url", None),
-                "app": check_run.app.name if getattr(check_run, "app", None) else None,
-                "started_at": _isoformat(check_run.started_at),
-                "completed_at": _isoformat(check_run.completed_at),
-            }
-        )
-        if len(check_runs) >= check_limit:
-            break
-
-    workflow_runs = []
-    for workflow_run in repo_obj.get_workflow_runs(head_sha=pr.head.sha):
-        workflow_runs.append(
-            {
-                "name": workflow_run.name,
-                "display_title": workflow_run.display_title,
-                "event": workflow_run.event,
-                "status": workflow_run.status,
-                "conclusion": workflow_run.conclusion,
-                "html_url": workflow_run.html_url,
-                "created_at": _isoformat(workflow_run.created_at),
-                "updated_at": _isoformat(workflow_run.updated_at),
-                "run_started_at": _isoformat(
-                    getattr(workflow_run, "run_started_at", None)
-                ),
-                "head_branch": workflow_run.head_branch,
-                "head_sha": workflow_run.head_sha,
-                "run_number": workflow_run.run_number,
-            }
-        )
-        if len(workflow_runs) >= workflow_limit:
-            break
-
-    return {
-        "number": pr.number,
-        "title": pr.title,
-        "state": pr.state,
-        "url": pr.html_url,
-        "author": pr.user.login if pr.user else None,
-        "base": pr.base.ref if pr.base else None,
-        "head": pr.head.ref if pr.head else None,
-        "head_sha": pr.head.sha if pr.head else None,
-        "mergeable": getattr(pr, "mergeable", None),
-        "mergeable_state": getattr(pr, "mergeable_state", None),
-        "combined_status": combined_status_payload,
-        "check_runs": check_runs,
-        "workflow_runs": workflow_runs,
-    }
-
-
-def _build_workflow_run_payload(
-    run_payload: dict, jobs_payload: dict, job_limit: int
-) -> dict:
-    jobs = [
-        _build_workflow_job_payload(job_payload)
-        for job_payload in jobs_payload.get("jobs", [])[:job_limit]
-    ]
-    return {
-        "id": run_payload["id"],
-        "name": run_payload.get("name"),
-        "display_title": run_payload.get("display_title"),
-        "event": run_payload.get("event"),
-        "status": run_payload.get("status"),
-        "conclusion": run_payload.get("conclusion"),
-        "html_url": run_payload.get("html_url"),
-        "created_at": run_payload.get("created_at"),
-        "updated_at": run_payload.get("updated_at"),
-        "run_started_at": run_payload.get("run_started_at"),
-        "head_branch": run_payload.get("head_branch"),
-        "head_sha": run_payload.get("head_sha"),
-        "run_number": run_payload.get("run_number"),
-        "jobs": jobs,
-        "jobs_total_count": jobs_payload.get("total_count", len(jobs)),
-    }
-
-
-def _build_workflow_job_payload(job_payload: dict) -> dict:
-    return {
-        "id": job_payload["id"],
-        "name": job_payload.get("name"),
-        "status": job_payload.get("status"),
-        "conclusion": job_payload.get("conclusion"),
-        "html_url": job_payload.get("html_url"),
-        "runner_name": job_payload.get("runner_name"),
-        "runner_group_name": job_payload.get("runner_group_name"),
-        "labels": job_payload.get("labels") or [],
-        "started_at": job_payload.get("started_at"),
-        "completed_at": job_payload.get("completed_at"),
-        "steps": [
-            {
-                "number": step.get("number"),
-                "name": step.get("name"),
-                "status": step.get("status"),
-                "conclusion": step.get("conclusion"),
-            }
-            for step in job_payload.get("steps", [])
-        ],
-    }
-
-
-def _echo_pr_check_payload(payload: dict) -> None:
-    click.echo(f"#{payload['number']} [{payload['state']}] {payload['title']}")
-    click.echo(f"Author: {payload['author']}")
-    click.echo(f"URL: {payload['url']}")
-    click.echo(f"Base: {payload['base']}  Head: {payload['head']}")
-    click.echo(f"Head SHA: {payload['head_sha']}")
-    click.echo(
-        f"Mergeable: {_format_optional(payload['mergeable'])}  "
-        f"Merge State: {_format_optional(payload['mergeable_state'])}"
-    )
-
-    combined = payload["combined_status"]
-    click.echo(
-        f"Combined status: {combined['state']} "
-        f"({combined['total_count']} status{'es' if combined['total_count'] != 1 else ''})"
-    )
-    if combined.get("error"):
-        click.echo(f"  note: {combined['error']}")
-
-    if combined["statuses"]:
-        click.echo("Statuses:")
-        for status in combined["statuses"]:
-            desc = f" - {status['description']}" if status["description"] else ""
-            click.echo(f"  - {status['context']}: {status['state']}{desc}")
-            if status["target_url"]:
-                click.echo(f"    {status['target_url']}")
-    else:
-        click.echo("Statuses: none")
-
-    if payload["check_runs"]:
-        click.echo("Check runs:")
-        for check_run in payload["check_runs"]:
-            conclusion = check_run["conclusion"] or "-"
-            app = f" [{check_run['app']}]" if check_run["app"] else ""
-            click.echo(
-                f"  - {check_run['name']}: {check_run['status']}/{conclusion}{app}"
-            )
-            if check_run["details_url"]:
-                click.echo(f"    {check_run['details_url']}")
-    else:
-        click.echo("Check runs: none")
-
-    if payload["workflow_runs"]:
-        click.echo("Workflow runs:")
-        for workflow_run in payload["workflow_runs"]:
-            conclusion = workflow_run["conclusion"] or "-"
-            click.echo(
-                f"  - {workflow_run['name']}: {workflow_run['status']}/{conclusion} "
-                f"(event={workflow_run['event']}, run={workflow_run['run_number']})"
-            )
-            if workflow_run["html_url"]:
-                click.echo(f"    {workflow_run['html_url']}")
-    else:
-        click.echo("Workflow runs: none")
-
-
-def _echo_workflow_run_payload(payload: dict) -> None:
-    conclusion = payload["conclusion"] or "-"
-    click.echo(
-        f"Run #{payload['run_number']} (id={payload['id']}): "
-        f"{payload['status']}/{conclusion}"
-    )
-    click.echo(f"Name: {payload['name']}")
-    click.echo(f"Title: {payload['display_title']}")
-    click.echo(f"Event: {payload['event']}")
-    click.echo(f"URL: {payload['html_url']}")
-    click.echo(f"Branch: {payload['head_branch']}")
-    click.echo(f"Head SHA: {payload['head_sha']}")
-
-    if payload["jobs"]:
-        click.echo(
-            f"Jobs ({len(payload['jobs'])}/{payload['jobs_total_count']} shown):"
-        )
-        for job in payload["jobs"]:
-            _echo_workflow_job_payload(job, prefix="  - ")
-    else:
-        click.echo("Jobs: none")
-
-
-def _echo_workflow_job_payload(payload: dict, prefix: str = "") -> None:
-    conclusion = payload["conclusion"] or "-"
-    click.echo(
-        f"{prefix}{payload['name']} (id={payload['id']}): {payload['status']}/{conclusion}"
-    )
-    if payload["html_url"]:
-        click.echo(f"{prefix}  {payload['html_url']}")
-    runner_bits = [
-        bit for bit in [payload["runner_name"], payload["runner_group_name"]] if bit
-    ]
-    if runner_bits:
-        click.echo(f"{prefix}  runner: {' / '.join(runner_bits)}")
-    if payload["labels"]:
-        click.echo(f"{prefix}  labels: {', '.join(payload['labels'])}")
-    if payload["steps"]:
-        click.echo(f"{prefix}  steps:")
-        for step in payload["steps"]:
-            step_conclusion = step["conclusion"] or "-"
-            click.echo(
-                f"{prefix}    - [{step['number']}] {step['name']}: {step['status']}/{step_conclusion}"
-            )
-
-
-def _collect_merge_blockers(payload: dict) -> list[str]:
-    blockers: list[str] = []
-
-    if payload["mergeable"] is False:
-        blockers.append("pull request is not mergeable against the current base branch")
-
-    merge_state = payload["mergeable_state"]
-    if merge_state in {"dirty", "blocked", "behind", "draft", "unknown"}:
-        blockers.append(f"pull request merge state is {merge_state}")
-
-    for status in payload["combined_status"]["statuses"]:
-        if status["state"] != "success":
-            blockers.append(f"status {status['context']} is {status['state']}")
-
-    for check_run in payload["check_runs"]:
-        status = check_run["status"]
-        conclusion = check_run["conclusion"]
-        if status != "completed":
-            blockers.append(f"check run {check_run['name']} is {status}")
-            continue
-        if conclusion not in {"success", "neutral", "skipped"}:
-            blockers.append(
-                f"check run {check_run['name']} concluded {conclusion or 'unknown'}"
-            )
-
-    for workflow_run in payload["workflow_runs"]:
-        status = workflow_run["status"]
-        conclusion = workflow_run["conclusion"]
-        if status != "completed":
-            blockers.append(f"workflow {workflow_run['name']} is {status}")
-            continue
-        if conclusion not in {"success", "neutral", "skipped"}:
-            blockers.append(
-                f"workflow {workflow_run['name']} concluded {conclusion or 'unknown'}"
-            )
-
-    return blockers
-
-
-def _has_incomplete_pr_checks(payload: dict) -> bool:
-    for status in payload["combined_status"]["statuses"]:
-        if status["state"] in {"pending"}:
-            return True
-
-    for check_run in payload["check_runs"]:
-        if check_run["status"] != "completed":
-            return True
-
-    for workflow_run in payload["workflow_runs"]:
-        if workflow_run["status"] != "completed":
-            return True
-
-    return False
-
-
-def _isoformat(value) -> Optional[str]:
-    return value.isoformat() if value else None
-
-
-def _format_optional(value) -> str:
-    return "-" if value is None else str(value)
-
-
-def _tail_text(text: str, tail: int) -> str:
-    if tail == 0:
-        return text
-    lines = text.splitlines()
-    if len(lines) <= tail:
-        return text
-    return "\n".join(lines[-tail:])

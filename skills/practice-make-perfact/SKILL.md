@@ -55,7 +55,7 @@ Core idea: finish the task first, then explicitly enter a cleanup and extraction
 6. Carry the task through PR/MR stage
    - Ensure the branch is committed and pushed.
    - Use `chattool gh` for GitHub PR operations.
-   - Prefer `chattool gh pr-create --body-file ...` to open the PR.
+   - Prefer `chattool gh pr create --body-file ...` to open the PR.
    - Update the PR body when the scope changes.
    - Continue until the work is in PR/MR stage, not just local commit stage.
 
