@@ -100,6 +100,8 @@ chattool setup opencode --plugin chatloop
 `chatloop` 安装完成后，常用调试方式是：
 
 - 执行 `/chatloop-help` 查看工作流说明
+- 执行 `/chatloop-ralph ...` 启动 refresh-session 风格的 Ralph loop
+- 执行 `/chatloop-next` 把当前任务整理成交接态，为下一个需求讨论做准备
 - 执行 `/chatloop-project` 查看当前解析到的 project 根目录和文件路径
 - 执行 `/chatloop-status` 查看当前 project 根目录、状态文件和事件文件
 - 查看当前 project 下的 `.opencode/chatloop.local.md` 和 `.opencode/chatloop.events.log`

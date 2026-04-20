@@ -5,6 +5,8 @@ This directory stores the local OpenCode `chatloop` plugin and slash commands th
 Current commands:
 
 - `/chatloop`
+- `/chatloop-ralph`
+- `/chatloop-next`
 - `/chatloop-project`
 - `/chatloop-status`
 - `/chatloop-help`

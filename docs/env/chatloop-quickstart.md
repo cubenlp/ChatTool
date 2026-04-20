@@ -23,6 +23,8 @@ chattool setup opencode --install-only --plugin chatloop
 
 ```text
 /chatloop-help
+/chatloop-ralph 按当前 PRD 推进任务
+/chatloop-next
 /chatloop-project
 /chatloop-status
 ```
@@ -141,6 +143,17 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 
 注意：首轮 bootstrap iteration 只允许进入 `STATUS: IN_PROGRESS`，不允许直接输出 `STATUS: COMPLETE` 或 `<complete>DONE</complete>`。
 
+如果你想要更接近 Ralph Loop 的“每轮 refresh session”模式，可以改用：
+
+```text
+/chatloop-ralph 按当前 PRD 开发 arxiv-explore 工具。需要时参考 memory.md 和 progress.md；每轮输出 ## Completed、## Next Steps 和 STATUS: IN_PROGRESS / STATUS: COMPLETE。
+```
+
+它和普通 `/chatloop` 的差别是：
+
+- `/chatloop`：在同一个 session 中 continuation
+- `/chatloop-ralph`：每次 continuation 都会创建一个新的 session，再把 TUI 切到那个新 session
+
 不建议只输入很短的 `/chatloop ?`。更好的方式是给一条清晰任务指令，让第一轮就覆盖主链路。
 
 ## 6. 启动后会发生什么
@@ -202,6 +215,24 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 
 ```text
 /chatloop-project
+```
+
+如果当前任务已经完成，想把项目整理成“方便继续讨论下一个需求”的状态，可以执行：
+
+```text
+/chatloop-next
+```
+
+它的目标是：
+
+- 把当前任务的长期输出收口到项目内 `reference/`
+- 更新 `memory.md` / `progress.md`
+- 把 `PRD.md` 准备成下一轮需求讨论的入口
+
+如果要走 refresh 模式：
+
+```text
+/chatloop-ralph 按当前 PRD 推进任务
 ```
 
 查看帮助：

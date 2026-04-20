@@ -120,9 +120,11 @@ workspace-level 参考约定：
 - 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 `.opencode/chatloop.events.log`
 - 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和事件文件
 - `chatloop` 启动首轮就会强制注入 `PRD.md` 路径与读取要求，而不是简单原样转发用户消息
+- `/chatloop` 在同一个 session 中 continuation；`/chatloop-ralph` 则在每次 continuation 时创建新的 refreshed session，更接近 Ralph Loop 风格
 - 每轮都要求输出 `## Completed`、`## Next Steps` 和 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`
 - bootstrap 首轮不允许直接完成；只有进入后续 continuation 后，completion gate 才会生效
 - 可通过 `/chatloop-project` 直接查看当前解析到的 project 根目录与 `PRD.md` / state / events 路径
+- 可通过 `/chatloop-next` 把当前任务输出收口到 project 内 `reference/`，并把 `memory.md` / `progress.md` / `PRD.md` 整理成下一轮需求讨论入口
 - 只有同时满足 `STATUS: COMPLETE`、`<complete>DONE</complete>` 且 `Next Steps` 没有未完成项时，插件才会停止 continuation
 
 ### ChatTool

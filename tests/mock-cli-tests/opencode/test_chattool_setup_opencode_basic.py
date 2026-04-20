@@ -294,6 +294,8 @@ def test_setup_opencode_install_only_can_install_chatloop(tmp_path, monkeypatch,
     assert (plugin_dir / "index.ts").exists()
     assert (plugin_dir / "package.json").exists()
     assert (home_dir / ".config" / "opencode" / "command" / "chatloop.md").exists()
+    assert (home_dir / ".config" / "opencode" / "command" / "chatloop-ralph.md").exists()
+    assert (home_dir / ".config" / "opencode" / "command" / "chatloop-next.md").exists()
     assert (home_dir / ".config" / "opencode" / "command" / "chatloop-project.md").exists()
     assert (home_dir / ".config" / "opencode" / "command" / "chatloop-status.md").exists()
     assert captured["args"] == ["install", "--omit=dev", "--no-audit", "--no-fund"]

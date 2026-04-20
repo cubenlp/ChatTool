@@ -11,6 +11,7 @@ type State = {
   nextSteps?: string
   lastEvent?: string
   lastReason?: string
+  mode?: "standard" | "ralph"
   iteration: number
   maxIterations: number
 }
@@ -147,6 +148,7 @@ const serializeState = (state: State) => {
     state.projectPath ? `projectPath: ${state.projectPath}` : "",
     state.lastEvent ? `lastEvent: ${state.lastEvent}` : "",
     state.lastReason ? `lastReason: ${JSON.stringify(state.lastReason)}` : "",
+    state.mode ? `mode: ${state.mode}` : "",
     "---",
   ].filter(Boolean)
 
@@ -176,11 +178,12 @@ const readState = async (projectPath: string): Promise<State> => {
       nextSteps: extractSection("Next Steps", body),
       lastEvent: parseFrontmatterValue(text, "lastEvent"),
       lastReason: normalizeMultiline(parseFrontmatterValue(text, "lastReason")?.replace(/^"|"$/g, "")),
+      mode: (parseFrontmatterValue(text, "mode") as State["mode"]) ?? "standard",
       iteration: Number(text.match(/iteration:\s*(\d+)/m)?.[1] ?? 0),
       maxIterations: Number(text.match(/maxIterations:\s*(\d+)/m)?.[1] ?? 20),
     }
   } catch {
-    return { active: false, iteration: 0, maxIterations: 20, projectPath }
+    return { active: false, iteration: 0, maxIterations: 20, projectPath, mode: "standard" }
   }
 }
 
@@ -278,6 +281,10 @@ const buildLoopPrompt = (state: State, projectPath: string, iteration: number, m
       : mode === "compacted"
         ? "Session context was compacted. Re-read the PRD and continue from the latest structured progress below."
         : "Continue working on the task. Do not stop unless the completion gate is truly satisfied."
+  const refreshRule =
+    state.mode === "ralph"
+      ? "- This is Ralph refresh mode: each continuation runs in a newly refreshed session, so rely on PRD.md and the structured progress below instead of old chat history."
+      : ""
 
   return [
     title,
@@ -293,6 +300,7 @@ const buildLoopPrompt = (state: State, projectPath: string, iteration: number, m
     "- Do NOT call the chatloop tool again. The plugin handles continuation automatically.",
     "- Do NOT call /chatloop-status or explain that ChatLoop started unless the user explicitly asked for diagnostics.",
     "- Start acting on the repository immediately instead of summarizing the loop setup.",
+    refreshRule,
     "- Pick up from the next incomplete step below and keep moving toward the PRD completion criteria.",
     "- Before going idle each iteration, output structured progress in this exact shape:",
     "",
@@ -358,6 +366,7 @@ const formatStatus = async (directory: string, sessionId?: string) => {
       `- Structured next steps pending: ${pending}`,
       state.lastEvent ? `- Last lifecycle event: ${state.lastEvent}` : "",
       state.lastReason ? `- Last lifecycle reason: ${state.lastReason}` : "",
+      `- Mode: ${state.mode ?? "standard"}`,
       state.sessionId ? `- State session: ${state.sessionId}` : "",
       sessionId ? `- Current session: ${sessionId}` : "",
       sessionId ? `- Current session matches state: ${sessionMatches}` : "",
@@ -389,6 +398,7 @@ const formatProject = async (directory: string, sessionId?: string) => {
       `- Events file: ${eventsPath(projectPath)}`,
       `- Active: ${state.active ? "yes" : "no"}`,
       `- Iteration: ${state.iteration}/${state.maxIterations}`,
+      `- Mode: ${state.mode ?? "standard"}`,
       state.originalTask ? `- Original task: ${state.originalTask}` : "- Original task: (derived from PRD only)",
       sessionId ? `- Current session: ${sessionId}` : "",
     ]
@@ -414,6 +424,36 @@ const chatloop: Plugin = async (ctx) => {
       })
     } catch {
       // Non-critical UI feedback only.
+    }
+  }
+
+  const createRefreshedSession = async (projectPath: string, previousSessionId: string, state: State, iteration: number) => {
+    const created = await ctx.client.session.create({
+      directory: projectPath,
+      title: `ChatLoop Ralph ${iteration}/${state.maxIterations}`,
+    })
+    const nextSession = (created as { data?: { id?: string } }).data
+    if (!nextSession?.id) {
+      throw new Error("Failed to create refreshed session for chatloop-ralph")
+    }
+    await ctx.client.tui.selectSession({
+      directory: projectPath,
+      sessionID: nextSession.id,
+    })
+    await appendEvent(projectPath, nextSession.id, "INFO", "chatloop.ralph.session_selected", `from=${previousSessionId} to=${nextSession.id}`)
+    return nextSession.id
+  }
+
+  const cleanupPreviousSession = async (projectPath: string, previousSessionId: string, currentSessionId: string) => {
+    if (previousSessionId === currentSessionId) return
+    try {
+      await ctx.client.session.delete({
+        directory: projectPath,
+        sessionID: previousSessionId,
+      })
+      await appendEvent(projectPath, currentSessionId, "INFO", "chatloop.ralph.session_deleted", `deleted=${previousSessionId}`)
+    } catch (error) {
+      await appendEvent(projectPath, currentSessionId, "WARN", "chatloop.ralph.session_delete_failed", `session=${previousSessionId} ${describeError(error)}`)
     }
   }
 
@@ -486,24 +526,34 @@ const chatloop: Plugin = async (ctx) => {
         lastEvent: "chatloop.idle",
         lastReason: `source=${source}`,
       }
+      const targetSessionId =
+        state.mode === "ralph"
+          ? await createRefreshedSession(projectPath, sessionId, nextState, nextState.iteration)
+          : sessionId
+      nextState.sessionId = targetSessionId
       await writeState(projectPath, nextState)
       await appendEvent(
         projectPath,
-        sessionId,
+        targetSessionId,
         "DEBUG",
         "chatloop.state.updated",
         `source=${source} iteration=${nextState.iteration}/${nextState.maxIterations} completed=${nextState.completed ? "yes" : "no"} next_steps=${nextState.nextSteps ? "yes" : "no"}`,
       )
 
       const prompt = buildLoopPrompt(nextState, projectPath, nextState.iteration, "continue")
-      await appendEvent(projectPath, sessionId, "INFO", "chatloop.idle", `source=${source} sending continuation iteration=${nextState.iteration}`)
+      await appendEvent(projectPath, targetSessionId, "INFO", "chatloop.idle", `source=${source} sending continuation iteration=${nextState.iteration}`)
       await ctx.client.session.promptAsync({
-        path: { id: sessionId },
+        path: { id: targetSessionId },
         body: { parts: [{ type: "text", text: prompt }] },
       })
       lastContinuationAt = Date.now()
-      await appendEvent(projectPath, sessionId, "DEBUG", "chatloop.idle.prompt_sent", `source=${source} iteration=${nextState.iteration}`)
-      toast(`ChatLoop iteration ${nextState.iteration}/${nextState.maxIterations}`, "info")
+      await appendEvent(projectPath, targetSessionId, "DEBUG", "chatloop.idle.prompt_sent", `source=${source} iteration=${nextState.iteration}`)
+      if (state.mode === "ralph") {
+        await cleanupPreviousSession(projectPath, sessionId, targetSessionId)
+        toast(`ChatLoop Ralph refresh ${nextState.iteration}/${nextState.maxIterations}`, "info")
+      } else {
+        toast(`ChatLoop iteration ${nextState.iteration}/${nextState.maxIterations}`, "info")
+      }
     } catch (error) {
       await appendEvent(projectPath, sessionId, "ERROR", "chatloop.idle.error", `source=${source} ${describeError(error)}`)
       toast(`ChatLoop: idle continuation failed — ${describeError(error)}`, "error")
@@ -554,6 +604,62 @@ const chatloop: Plugin = async (ctx) => {
     },
   })
 
+  const startRalph = tool({
+    description: "Start a PRD-aware refresh loop that creates a fresh session on every continuation",
+    args: {
+      message: tool.schema.string().optional().describe("Original task text to preserve alongside the PRD contract"),
+      maxIterations: tool.schema.number().optional().describe("Maximum loop iterations"),
+    },
+    async execute({ message = "", maxIterations = 20 }, context) {
+      const { projectPath, prdPath: entryPath } = await resolveProjectPath(ctx.directory)
+      const existingState = await readState(projectPath)
+      if (existingState.active && existingState.sessionId === context.sessionID) {
+        await appendEvent(projectPath, context.sessionID, "WARN", "chatloop.ralph.start.ignored", `reason=already_active iteration=${existingState.iteration}/${existingState.maxIterations}`)
+        toast(`ChatLoop Ralph already active (${existingState.iteration}/${existingState.maxIterations})`, "warning")
+        return `ChatLoop Ralph is ALREADY ACTIVE (${existingState.iteration}/${existingState.maxIterations}). Stop it first with /chatloop-stop if you want a new refresh loop.`
+      }
+
+      const created = await ctx.client.session.create({
+        directory: projectPath,
+        title: "ChatLoop Ralph bootstrap",
+      })
+      const bootstrapSession = (created as { data?: { id?: string } }).data
+      if (!bootstrapSession?.id) {
+        throw new Error("Failed to create bootstrap session for chatloop-ralph")
+      }
+
+      const state: State = {
+        active: true,
+        sessionId: bootstrapSession.id,
+        projectPath,
+        originalTask: normalizeMultiline(message),
+        lastEvent: "chatloop.ralph.start",
+        lastReason: "bootstrap-refresh",
+        mode: "ralph",
+        iteration: 0,
+        maxIterations,
+      }
+      await writeState(projectPath, state)
+      handlingIdle = false
+      lastContinuationAt = 0
+      await appendEvent(projectPath, bootstrapSession.id, "INFO", "chatloop.ralph.start", `project=${projectPath} cwd=${resolve(ctx.directory)} maxIterations=${maxIterations}`)
+      await appendEvent(projectPath, bootstrapSession.id, "INFO", "chatloop.ralph.start.prompt", `mode=bootstrap prd=${entryPath} original_task=${state.originalTask ? "yes" : "no"}`)
+      const prompt = buildLoopPrompt(state, projectPath, 0, "bootstrap")
+      await ctx.client.tui.selectSession({
+        directory: projectPath,
+        sessionID: bootstrapSession.id,
+      })
+      await ctx.client.session.promptAsync({
+        path: { id: bootstrapSession.id },
+        body: { parts: [{ type: "text", text: prompt }] },
+      })
+      lastContinuationAt = Date.now()
+      await appendEvent(projectPath, bootstrapSession.id, "INFO", "chatloop.ralph.start.prompt_sent", `iteration=0/${maxIterations}`)
+      toast(`ChatLoop Ralph activated (${maxIterations} iterations)`, "success")
+      return ""
+    },
+  })
+
   const stop = tool({
     description: "Stop chat loop",
     args: {},
@@ -578,6 +684,7 @@ const chatloop: Plugin = async (ctx) => {
       return [
         "ChatLoop usage:",
         "- /chatloop <message> starts a PRD-aware auto-continuation loop in the current directory or the nearest parent that contains PRD.md.",
+        "- /chatloop-ralph <message> starts a PRD-aware refresh loop that creates a fresh session on every continuation and switches the TUI to that new session.",
         "- The initial message is preserved as the original task, but startup ALWAYS injects the PRD contract, project path, and PRD entry path.",
         "- On each idle checkpoint, ChatLoop auto-continues with structured progress, completion validation, and the same PRD contract.",
         "- Every iteration must include ## Completed, ## Next Steps, and either STATUS: IN_PROGRESS or STATUS: COMPLETE.",
@@ -609,6 +716,7 @@ const chatloop: Plugin = async (ctx) => {
   return {
     tool: {
       chatloop: start,
+      "chatloop-ralph": startRalph,
       "chatloop-project": project,
       "chatloop-status": status,
       "chatloop-stop": stop,

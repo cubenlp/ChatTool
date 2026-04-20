@@ -307,6 +307,8 @@ def test_setup_workspace_with_opencode_loop_installs_global_assets(
     assert (opencode_home / "plugins" / "chatloop" / "index.ts").exists()
     assert (opencode_home / "plugins" / "chatloop" / "package.json").exists()
     assert (opencode_home / "command" / "chatloop.md").exists()
+    assert (opencode_home / "command" / "chatloop-ralph.md").exists()
+    assert (opencode_home / "command" / "chatloop-next.md").exists()
     assert (opencode_home / "command" / "chatloop-project.md").exists()
     assert (opencode_home / "command" / "chatloop-status.md").exists()
     config = (opencode_home / "opencode.json").read_text(encoding="utf-8")
