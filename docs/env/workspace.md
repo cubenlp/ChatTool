@@ -116,7 +116,7 @@ workspace-level 参考约定：
   - `command/chatloop-help.md`
   - `command/chatloop-stop.md`
 - 该版本适合先完善 `PRD.md`，再通过显式 `/chatloop ...` 触发 fresh-start continuation 的工作流
-- `chatloop` 可从任意 project 子目录触发，会自动向上寻找最近的 `PRD.md`
+- `chatloop` 当前要求执行目录自身直接存在 `PRD.md`；如果要在子目录运行 loop，就把 `PRD.md` 落到该子目录本身
 - 运行后，状态文件写入当前 project 根目录 `.opencode/chatloop.local.md`，事件记录直接追加到 `.opencode/chatloop.events.log`
 - 可通过 `/chatloop-status` 查看当前解析到的 project 根目录、状态文件和事件文件
 - `chatloop` 启动首轮就会强制注入 `PRD.md` 路径与读取要求，而不是简单原样转发用户消息

@@ -29,7 +29,7 @@ chattool setup opencode --install-only --plugin chatloop
 /chatloop-status
 ```
 
-如果当前目录还不是 project，`/chatloop-status` 会提示没有找到 `PRD.md`，这是正常的。
+如果当前目录本身还没有 `PRD.md`，`/chatloop-status` 会提示当前目录不符合要求，这是正常的。
 
 ## 2. 创建 workspace
 
@@ -160,8 +160,8 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 
 `/chatloop ...` 触发后，插件会做这些事：
 
-1. 从当前目录向上寻找最近的 `PRD.md`
-2. 把这个目录视为当前 project 根目录
+1. 检查当前目录本身是否存在 `PRD.md`
+2. 把当前目录视为当前 project 根目录
 3. 在 project 根目录下写状态文件：`.opencode/chatloop.local.md`
 4. 在 project 根目录下的 `.opencode/` 目录追加事件记录：`chatloop.events.log`
 5. 把你的初始消息保留为 `Original task`，但首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则

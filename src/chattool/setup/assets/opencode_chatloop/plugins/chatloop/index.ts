@@ -206,18 +206,12 @@ const exists = async (path: string) => {
 }
 
 const resolveProjectPath = async (directory: string) => {
-  let current = resolve(directory)
-  while (true) {
-    const prd = prdPath(current)
-    if (await exists(prd)) {
-      return { projectPath: current, prdPath: prd }
-    }
-    const parent = dirname(current)
-    if (parent === current) {
-      throw new Error(`No PRD.md found in ${resolve(directory)} or its parent directories. ChatLoop requires a project root with PRD.md.`)
-    }
-    current = parent
+  const projectPath = resolve(directory)
+  const prd = prdPath(projectPath)
+  if (await exists(prd)) {
+    return { projectPath, prdPath: prd }
   }
+  throw new Error(`No PRD.md found directly in ${projectPath}. ChatLoop now requires the current directory itself to contain PRD.md.`)
 }
 
 const tryResolveProjectPath = async (directory: string) => {
@@ -381,7 +375,7 @@ const formatStatus = async (directory: string, sessionId?: string) => {
       "- Loaded: yes (this command is available)",
       "- Active project: not found",
       `- Reason: ${describeError(error)}`,
-      "- Run /chatloop inside a project directory that contains PRD.md or a subdirectory beneath it.",
+      "- Run /chatloop inside a directory that directly contains PRD.md.",
     ].join("\n")
   }
 }
@@ -424,6 +418,16 @@ const chatloop: Plugin = async (ctx) => {
       })
     } catch {
       // Non-critical UI feedback only.
+    }
+  }
+
+  const requireProjectPath = async () => {
+    try {
+      return await resolveProjectPath(ctx.directory)
+    } catch (error) {
+      const message = describeError(error)
+      toast(message, "error")
+      throw error
     }
   }
 
@@ -569,7 +573,7 @@ const chatloop: Plugin = async (ctx) => {
       maxIterations: tool.schema.number().optional().describe("Maximum loop iterations"),
     },
     async execute({ message = "", maxIterations = 20 }, context) {
-      const { projectPath, prdPath: entryPath } = await resolveProjectPath(ctx.directory)
+      const { projectPath, prdPath: entryPath } = await requireProjectPath()
       const existingState = await readState(projectPath)
       if (existingState.active && existingState.sessionId === context.sessionID) {
         await appendEvent(projectPath, context.sessionID, "WARN", "chatloop.start.ignored", `reason=already_active iteration=${existingState.iteration}/${existingState.maxIterations}`)
@@ -611,7 +615,7 @@ const chatloop: Plugin = async (ctx) => {
       maxIterations: tool.schema.number().optional().describe("Maximum loop iterations"),
     },
     async execute({ message = "", maxIterations = 20 }, context) {
-      const { projectPath, prdPath: entryPath } = await resolveProjectPath(ctx.directory)
+      const { projectPath, prdPath: entryPath } = await requireProjectPath()
       const existingState = await readState(projectPath)
       if (existingState.active && existingState.sessionId === context.sessionID) {
         await appendEvent(projectPath, context.sessionID, "WARN", "chatloop.ralph.start.ignored", `reason=already_active iteration=${existingState.iteration}/${existingState.maxIterations}`)
@@ -683,7 +687,7 @@ const chatloop: Plugin = async (ctx) => {
     async execute() {
       return [
         "ChatLoop usage:",
-        "- /chatloop <message> starts a PRD-aware auto-continuation loop in the current directory or the nearest parent that contains PRD.md.",
+        "- /chatloop <message> starts a PRD-aware auto-continuation loop only when the current directory itself contains PRD.md.",
         "- /chatloop-ralph <message> starts a PRD-aware refresh loop that creates a fresh session on every continuation and switches the TUI to that new session.",
         "- The initial message is preserved as the original task, but startup ALWAYS injects the PRD contract, project path, and PRD entry path.",
         "- On each idle checkpoint, ChatLoop auto-continues with structured progress, completion validation, and the same PRD contract.",

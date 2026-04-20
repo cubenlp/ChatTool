@@ -12,7 +12,7 @@ Call the `chatloop-ralph` tool with:
 
 Requirements:
 
-- the current directory or one of its parents must contain `PRD.md`
+- the current directory itself must contain `PRD.md`
 - startup creates a fresh session and switches the TUI to it
 - each later continuation runs in another newly refreshed session
 - rely on `PRD.md`, `memory.md`, `progress.md`, and structured progress instead of old chat history

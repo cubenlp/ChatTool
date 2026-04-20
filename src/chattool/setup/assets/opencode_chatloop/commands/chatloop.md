@@ -12,7 +12,7 @@ Call the `chatloop` tool with:
 
 Requirements:
 
-- the current directory or one of its parents must contain `PRD.md`
+- the current directory itself must contain `PRD.md`
 - if a message is provided, it is preserved as the original task, but startup still injects the full PRD contract, project path, and `PRD.md` path
 - every iteration must include `## Completed`, `## Next Steps`, and either `STATUS: IN_PROGRESS` or `STATUS: COMPLETE`
 - after each idle checkpoint, ChatLoop restarts from a PRD-aware continuation prompt instead of relying on raw conversation context
