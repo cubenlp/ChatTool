@@ -28,3 +28,7 @@ def test_chattool_top_level_help_entries(runner):
     assert result.exit_code == 0
     assert "currently focused on arXiv" in result.output
     assert "github, wordpress" not in result.output
+
+    result = runner.invoke(cli, ["opencode", "--help"])
+    assert result.exit_code == 0
+    assert "Manage OpenCode sessions through a PTY wrapper." in result.output

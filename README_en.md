@@ -176,6 +176,7 @@ chattool nginx -i
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
 | Setup | `chattool setup codex/claude/opencode` | Install or upgrade common agent CLIs; supports `--install-only` for pure install/upgrade flows without writing config |
+| OpenCode Session Mgmt | `chattool opencode` | By default directly launches a PTY-wrapped `opencode` session; also supports secondary `observe`, action-driven `run`, and JSONL log `summarize` |
 | Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-opencode-loop` for a loop-aware OpenCode workspace variant |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |

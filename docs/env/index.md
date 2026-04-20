@@ -33,6 +33,21 @@ chattool setup opencode --install-only
 
 详细文档：[opencode.md](opencode.md)
 
+如果你想从 ChatTool 外层直接启动被 PTY 包裹的 OpenCode，会话主入口现在就是：
+
+```bash
+chattool opencode
+chattool opencode --cwd .
+```
+
+如果你还需要显式观察其他命令、做控制动作验证或汇总日志，再使用：
+
+```bash
+chattool opencode observe -- opencode
+chattool opencode run --action "send_sigint:2.0" -- opencode
+chattool opencode summarize ./.chattool/opencode/session-*.jsonl
+```
+
 ### Docker 环境检查
 
 使用 `setup docker` 检查 Docker / Docker Compose / docker 组状态。

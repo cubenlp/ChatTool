@@ -121,3 +121,116 @@ chattool setup opencode --plugin chatloop
 如果你想看一遍从安装 OpenCode / chatloop 到创建 `PRD.md` 并启动 loop 的完整示例，可参考：
 
 - [chatloop-quickstart.md](chatloop-quickstart.md)
+
+## 6. OpenCode 会话管理（`chattool opencode`）
+
+除了安装和写配置，ChatTool 现在还提供一个运行期 PTY wrapper，用来从 OpenCode 进程外观察或控制交互会话。
+
+### 直接启动 wrapped `opencode`
+
+如果你的目标是“像 `reference/pty-controller-poc/poc.py` 一样，执行后立刻进入被 PTY 包裹的 `opencode` 会话”，最直接的用法就是：
+
+```bash
+chattool opencode
+```
+
+它会：
+
+- 直接启动被 PTY 包裹的 `opencode`
+- 透传当前终端输入输出
+- 自动同步 winsize
+- 默认把 JSONL 事件日志写到 `./.chattool/opencode/`
+
+如果你想指定工作目录或超时时间：
+
+```bash
+chattool opencode --cwd .
+chattool opencode --cwd . --timeout 30
+```
+
+这就是当前推荐的第一入口，也是和 `poc.py` 最接近的启动方式。
+
+### 只读观察模式
+
+如果你想包起一个真实 CLI，但不主动注入输入或中断，可使用：
+
+```bash
+chattool opencode observe -- opencode
+```
+
+常见变体：
+
+```bash
+# 观察一次 one-shot opencode run，并把日志写到指定文件
+chattool opencode observe \
+  --log-path ./stage1-opencode-run.jsonl \
+  --timeout 30 \
+  --mirror-output \
+  -- opencode run "请只回复 OK 然后结束"
+
+# 显式写出 wrapped command 的等价形式
+chattool opencode observe --cwd . -- opencode
+```
+
+这一模式会记录：
+
+- `session.start` / `session.end`
+- `session.status`（如 `running`、`idle`、`exited`）
+- `session.input` / `session.output`
+- `session.resize`
+
+同时保证不会因为 ChatTool 自己的 `--action` 安排而偷偷向目标进程注入控制动作。
+
+### 控制模式
+
+如果你要验证外部控制动作，可使用：
+
+```bash
+chattool opencode run \
+  --action "send_text:0.1:print('hello')" \
+  --action "send_enter:0.2" \
+  --action "send_eof:0.8" \
+  -- python3 -i -q
+```
+
+当前最小动作集合为：
+
+- `send_text`
+- `send_enter`
+- `send_sigint`
+- `send_eof`
+
+`run` 模式要求显式传入至少一个 `--action`；如果你只是想看会话，不做主动控制，请使用 `observe`。
+
+### 日志汇总
+
+每次运行默认会把 JSONL 事件日志写到当前目录的 `.chattool/opencode/` 下，也可以显式指定 `--log-path`。日志生成后可用：
+
+```bash
+chattool opencode summarize ./stage1-opencode-run.jsonl
+```
+
+它会输出：
+
+- 各类事件计数
+- 状态流转
+- 控制动作列表
+- 少量输入输出样本
+
+### 最常用启动方式
+
+如果你只是想直接开始用，通常是下面三条：
+
+```bash
+# 1) 安装或升级 OpenCode CLI
+chattool setup opencode --install-only
+
+# 2) 直接启动被包裹的 opencode 会话（推荐第一入口）
+chattool opencode --cwd .
+
+# 3) 需要显式观察其他命令时再用 observe
+chattool opencode observe -- python3 -i -q
+
+# 4) 观察完后快速总结日志
+chattool opencode summarize ./.chattool/opencode/<latest>.jsonl
+```
