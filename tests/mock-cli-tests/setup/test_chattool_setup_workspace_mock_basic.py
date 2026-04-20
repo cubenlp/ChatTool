@@ -269,7 +269,7 @@ def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path, runne
     ) == "legacy agents\n"
 
 
-def test_setup_workspace_with_opencode_loop_installs_local_assets(
+def test_setup_workspace_with_opencode_loop_installs_global_assets(
     tmp_path, monkeypatch, runner
 ):
     workspace_dir = tmp_path / "workspace"
@@ -307,6 +307,7 @@ def test_setup_workspace_with_opencode_loop_installs_local_assets(
     assert (opencode_home / "plugins" / "chatloop" / "index.ts").exists()
     assert (opencode_home / "plugins" / "chatloop" / "package.json").exists()
     assert (opencode_home / "command" / "chatloop.md").exists()
+    assert (opencode_home / "command" / "chatloop-project.md").exists()
     assert (opencode_home / "command" / "chatloop-status.md").exists()
     config = (opencode_home / "opencode.json").read_text(encoding="utf-8")
     assert (opencode_home / "plugins" / "chatloop").resolve().as_uri() in config
