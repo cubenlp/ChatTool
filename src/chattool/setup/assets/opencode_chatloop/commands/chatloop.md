@@ -19,6 +19,7 @@ Requirements:
 
 Debugging:
 
+- use `/chatloop-project` to inspect the resolved project root and the exact PRD / state / events file paths
 - use `/chatloop-status` to inspect the resolved project root, state file, and events file
 - state is written to `.opencode/chatloop.local.md` under the resolved project root
 - event records are appended to `.opencode/chatloop.events.log` under the resolved project root

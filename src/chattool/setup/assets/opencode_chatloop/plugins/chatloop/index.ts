@@ -9,6 +9,8 @@ type State = {
   originalTask?: string
   completed?: string
   nextSteps?: string
+  lastEvent?: string
+  lastReason?: string
   iteration: number
   maxIterations: number
 }
@@ -143,6 +145,8 @@ const serializeState = (state: State) => {
     `maxIterations: ${state.maxIterations}`,
     state.sessionId ? `sessionId: ${state.sessionId}` : "",
     state.projectPath ? `projectPath: ${state.projectPath}` : "",
+    state.lastEvent ? `lastEvent: ${state.lastEvent}` : "",
+    state.lastReason ? `lastReason: ${JSON.stringify(state.lastReason)}` : "",
     "---",
   ].filter(Boolean)
 
@@ -170,6 +174,8 @@ const readState = async (projectPath: string): Promise<State> => {
       originalTask: extractSection("Original Task", body),
       completed: extractSection("Completed", body),
       nextSteps: extractSection("Next Steps", body),
+      lastEvent: parseFrontmatterValue(text, "lastEvent"),
+      lastReason: normalizeMultiline(parseFrontmatterValue(text, "lastReason")?.replace(/^"|"$/g, "")),
       iteration: Number(text.match(/iteration:\s*(\d+)/m)?.[1] ?? 0),
       maxIterations: Number(text.match(/maxIterations:\s*(\d+)/m)?.[1] ?? 20),
     }
@@ -350,6 +356,8 @@ const formatStatus = async (directory: string, sessionId?: string) => {
       `- Armed for continuation: ${armed ? "yes" : "no"}`,
       `- Iteration: ${state.iteration}/${state.maxIterations}`,
       `- Structured next steps pending: ${pending}`,
+      state.lastEvent ? `- Last lifecycle event: ${state.lastEvent}` : "",
+      state.lastReason ? `- Last lifecycle reason: ${state.lastReason}` : "",
       state.sessionId ? `- State session: ${state.sessionId}` : "",
       sessionId ? `- Current session: ${sessionId}` : "",
       sessionId ? `- Current session matches state: ${sessionMatches}` : "",
@@ -365,6 +373,32 @@ const formatStatus = async (directory: string, sessionId?: string) => {
       "- Active project: not found",
       `- Reason: ${describeError(error)}`,
       "- Run /chatloop inside a project directory that contains PRD.md or a subdirectory beneath it.",
+    ].join("\n")
+  }
+}
+
+const formatProject = async (directory: string, sessionId?: string) => {
+  try {
+    const { projectPath, prdPath: entryPath } = await resolveProjectPath(directory)
+    const state = await readState(projectPath)
+    return [
+      "ChatLoop project:",
+      `- Project root: ${projectPath}`,
+      `- PRD entry: ${entryPath}`,
+      `- State file: ${statePath(projectPath)}`,
+      `- Events file: ${eventsPath(projectPath)}`,
+      `- Active: ${state.active ? "yes" : "no"}`,
+      `- Iteration: ${state.iteration}/${state.maxIterations}`,
+      state.originalTask ? `- Original task: ${state.originalTask}` : "- Original task: (derived from PRD only)",
+      sessionId ? `- Current session: ${sessionId}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n")
+  } catch (error) {
+    return [
+      "ChatLoop project:",
+      "- Active project: not found",
+      `- Reason: ${describeError(error)}`,
     ].join("\n")
   }
 }
@@ -423,17 +457,20 @@ const chatloop: Plugin = async (ctx) => {
       if (state.iteration > 0 && COMPLETE_RE.test(stripCodeFences(lastText))) {
         const validation = validateCompletion(lastText, state.iteration)
         if (validation.valid) {
+          await writeState(projectPath, { ...state, lastEvent: "chatloop.complete", lastReason: `source=${source}` })
           await appendEvent(projectPath, sessionId, "INFO", "chatloop.complete", `source=${source} iteration=${state.iteration}`)
           await clearState(projectPath)
           lastContinuationAt = 0
           toast(`ChatLoop completed after ${state.iteration} iteration(s)`, "success")
           return
         }
+        await writeState(projectPath, { ...state, lastEvent: "chatloop.complete.rejected", lastReason: validation.reason })
         await appendEvent(projectPath, sessionId, "WARN", "chatloop.complete.rejected", `source=${source} reason=${validation.reason}`)
         toast(`ChatLoop: completion rejected — ${validation.reason}`, "warning")
       }
 
       if (state.iteration >= state.maxIterations) {
+        await writeState(projectPath, { ...state, lastEvent: "chatloop.max_iterations", lastReason: `source=${source}` })
         await appendEvent(projectPath, sessionId, "WARN", "chatloop.max_iterations", `source=${source} iteration=${state.iteration}`)
         await clearState(projectPath)
         lastContinuationAt = 0
@@ -446,6 +483,8 @@ const chatloop: Plugin = async (ctx) => {
         iteration: state.iteration + 1,
         completed: mergeCompleted(state.completed, extractCompleted(lastText)),
         nextSteps: extractNextSteps(lastText) ?? state.nextSteps,
+        lastEvent: "chatloop.idle",
+        lastReason: `source=${source}`,
       }
       await writeState(projectPath, nextState)
       await appendEvent(
@@ -493,6 +532,8 @@ const chatloop: Plugin = async (ctx) => {
         sessionId: context.sessionID,
         projectPath,
         originalTask: normalizeMultiline(message),
+        lastEvent: "chatloop.start",
+        lastReason: "bootstrap",
         iteration: 0,
         maxIterations,
       }
@@ -543,8 +584,17 @@ const chatloop: Plugin = async (ctx) => {
         "- ChatLoop only stops when STATUS: COMPLETE and <complete>DONE</complete> are both present and Next Steps has no unchecked items.",
         "- State is written to .opencode/chatloop.local.md under the resolved project root.",
         "- Event records are appended to .opencode/chatloop.events.log under the resolved project root.",
+        "- Use /chatloop-project to inspect the resolved project root and exact file paths.",
         "- Use /chatloop-status to verify the resolved project root, state file, events file, and whether the current session is armed for continuation.",
       ].join("\n")
+    },
+  })
+
+  const project = tool({
+    description: "Show the resolved chatloop project and file paths",
+    args: {},
+    async execute(_args, context) {
+      return formatProject(ctx.directory, context.sessionID)
     },
   })
 
@@ -559,6 +609,7 @@ const chatloop: Plugin = async (ctx) => {
   return {
     tool: {
       chatloop: start,
+      "chatloop-project": project,
       "chatloop-status": status,
       "chatloop-stop": stop,
       "chatloop-help": help,
@@ -611,7 +662,7 @@ const chatloop: Plugin = async (ctx) => {
           await appendEvent(projectPath, sessionId, "ERROR", "chatloop.observe.session.error", describeError((event as any).properties?.error))
           const state = await readState(projectPath)
           if (state.active && (!state.sessionId || !sessionId || state.sessionId === sessionId)) {
-            await writeState(projectPath, { ...state, active: false })
+            await writeState(projectPath, { ...state, active: false, lastEvent: "chatloop.pause", lastReason: "session.error" })
             handlingIdle = false
             lastContinuationAt = 0
             await appendEvent(projectPath, sessionId, "WARN", "chatloop.pause", `reason=session.error iteration=${state.iteration}`)

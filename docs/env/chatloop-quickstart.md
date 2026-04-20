@@ -23,6 +23,7 @@ chattool setup opencode --install-only --plugin chatloop
 
 ```text
 /chatloop-help
+/chatloop-project
 /chatloop-status
 ```
 
@@ -171,6 +172,7 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 - `State file`
 - `Events file`
 - 当前是否 active
+- 最近一次 lifecycle event / reason
 
 你还可以直接查看 project 根目录下的：
 
@@ -194,6 +196,12 @@ ln -s ../../core/ChatTool ~/workspace/arxiv-demo/projects/04-20-arxiv-explore-to
 
 ```text
 /chatloop-status
+```
+
+查看当前解析到的 project 路径：
+
+```text
+/chatloop-project
 ```
 
 查看帮助：
