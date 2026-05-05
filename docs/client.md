@@ -15,7 +15,7 @@ CLI按功能分为几个命令组：
 - **`lark`**: 保留的飞书最小调试命令（`info` / `send` / `chat`）。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
-- **`setup`**: 环境初始化与依赖安装（Node.js / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
+- **`setup`**: 环境初始化与依赖安装（Node.js / zsh / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
 ### chatenv
@@ -266,7 +266,39 @@ chattool setup hermes --agent-dir ./hermes --webui-dir ./hermes-webui --start-we
 
 当前实现默认安装轻量 extras：`messaging,cli,pty,cron,feishu,web,acp,mcp`，避免 Hermes 官方 `.[all]` 中 RL/voice 等非必需依赖拖慢或阻塞基础安装。
 
-### 0.7 Workspace (`setup workspace`)
+### 0.7 Zsh (`setup zsh`)
+
+参考 QuickSetup-Ubuntu 的 zsh 初始化方式，配置 `zsh`、oh-my-zsh、常用插件、powerlevel10k 主题以及 `~/.zsh_aliases`：
+
+```bash
+chattool setup zsh
+chattool setup zsh --no-omz
+chattool setup zsh -i
+```
+
+默认行为：
+
+- 按 QuickSetup 脚本顺序检查本机是否存在 `git` 与 `zsh`；如果缺失，直接退出并提示 `sudo apt install git -y` 或 `sudo apt install zsh -y`，不代替用户执行安装。
+- 安装或复用 `~/.oh-my-zsh`，并默认全选脚本同款插件：`git`、`sudo`、`z`、`zsh-syntax-highlighting`、`zsh-autosuggestions`、`zsh-completions`；传 `-i` 时会用候选框选择插件，方便后续扩展更多插件。
+- 将 QuickSetup 当前 `scripts/config/zsh_aliases` 风格完整常用 alias 与 ChatTool alias 写入 `~/.zsh_aliases` 的 managed block。
+- 在 `~/.zshrc` 中写入 managed source block：如果 `~/.zsh_aliases` 存在则自动加载。
+- 默认在 `~/.bash_profile` 写入 managed handoff，复用 QuickSetup 的 `exec $(which zsh) -l` 思路；不需要该行为可传 `--no-login-shell`。
+
+常用参数：
+
+- `-i`：进入交互模式，先用 checkbox 展示基础配置项（oh-my-zsh、aliases、login shell，按当前默认值预勾选），若启用 oh-my-zsh 再进入插件 checkbox（默认全选脚本同款插件）；不传 `-i` 时基础参数都走默认值，不自动进入交互。
+- `--no-omz`：只配置 alias 和 zsh login handoff，不安装或修改 oh-my-zsh。
+- `--no-aliases`：只配置 zsh/oh-my-zsh，不写 alias。
+- `--no-login-shell`：不写入 `~/.bash_profile` handoff。
+- `--log-level DEBUG`：查看更详细的阶段日志。
+
+完成后可以运行：
+
+```bash
+source ~/.zshrc
+```
+
+### 0.8 Workspace (`setup workspace`)
 
 如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 多任务并发面 + 知识沉淀”工作区，可以用：
 
