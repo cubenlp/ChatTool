@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Sequence
 import click
 
+from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
 from chattool.setup.chrome import setup_chrome_driver
 from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex
@@ -227,7 +228,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
         ),
@@ -242,7 +243,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
             SetupOptionElement(
@@ -285,7 +286,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
         ),
@@ -307,7 +308,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
         ),
@@ -322,7 +323,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
         ),
@@ -337,7 +338,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
         ),
@@ -352,7 +353,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
             SetupOptionElement(
@@ -399,7 +400,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
             SetupOptionElement(
@@ -448,7 +449,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
             SetupOptionElement(
@@ -486,7 +487,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
             SetupOptionElement(
@@ -579,7 +580,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--interactive/--no-interactive", "-i/-I"),
                 kwargs={
                     "default": None,
-                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                    "help": INTERACTIVE_OPTION_HELP,
                 },
             ),
             SetupOptionElement(

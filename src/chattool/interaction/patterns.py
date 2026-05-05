@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from .prompt import ask_text
+from chattool.chatstyle.mask import prompt_sensitive_value
+from chattool.chatstyle.prompt import ask_text
 
 
 def resolve_value(*candidates: Any) -> Any:
@@ -21,20 +22,6 @@ def resolve_value(*candidates: Any) -> Any:
             continue
         return candidate
     return None
-
-
-def prompt_sensitive_value(
-    label: str, current_value: str | None, mask_fn
-) -> str | None:
-    """Prompt for a sensitive value while allowing Enter to keep the current one."""
-
-    prompt_label = label
-    if current_value:
-        prompt_label = f"{label} (current: {mask_fn(current_value)}, enter to keep)"
-    entered = ask_text(prompt_label, password=True)
-    if entered:
-        return entered
-    return current_value
 
 
 def prompt_text_value(

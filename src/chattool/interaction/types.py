@@ -1,5 +1,13 @@
-"""Shared constants for CLI interaction."""
+"""Compatibility shim for shared interaction constants."""
 
-BACK_VALUE = "__BACK__"
-CHECKBOX_SELECTED_INDICATOR = "[x]"
-CHECKBOX_UNSELECTED_INDICATOR = "[ ]"
+from chattool.chatstyle.constants import (
+    BACK_VALUE,
+    CHECKBOX_SELECTED_INDICATOR,
+    CHECKBOX_UNSELECTED_INDICATOR,
+)
+
+__all__ = [
+    "BACK_VALUE",
+    "CHECKBOX_SELECTED_INDICATOR",
+    "CHECKBOX_UNSELECTED_INDICATOR",
+]

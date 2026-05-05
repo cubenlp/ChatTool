@@ -7,8 +7,10 @@ from typing import Any, Callable, Iterable, Sequence
 
 import click
 
+from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
+from chattool.chatstyle import prompt as prompt_runtime
+
 from .policy import abort_if_force_without_tty, resolve_interactive_mode
-from .prompt import ask_confirm, ask_path, ask_select, ask_text
 
 
 ValueValidator = Callable[[Any, dict[str, Any]], str | None]
@@ -22,8 +24,24 @@ def add_interactive_option(func):
         "interactive",
         "-i/-I",
         default=None,
-        help="Auto prompt on missing args, -i forces interactive, -I disables it.",
+        help=INTERACTIVE_OPTION_HELP,
     )(func)
+
+
+def ask_text(*args, **kwargs):
+    return prompt_runtime.ask_text(*args, **kwargs)
+
+
+def ask_path(*args, **kwargs):
+    return prompt_runtime.ask_path(*args, **kwargs)
+
+
+def ask_confirm(*args, **kwargs):
+    return prompt_runtime.ask_confirm(*args, **kwargs)
+
+
+def ask_select(*args, **kwargs):
+    return prompt_runtime.ask_select(*args, **kwargs)
 
 
 @dataclass(frozen=True)

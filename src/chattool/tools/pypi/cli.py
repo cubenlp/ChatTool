@@ -5,6 +5,7 @@ import subprocess
 
 import click
 
+from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
 from chattool.interaction import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
@@ -181,7 +182,7 @@ def cli():
     "interactive",
     "-i/-I",
     default=None,
-    help="Auto prompt on missing args, -i forces interactive, -I disables it.",
+    help=INTERACTIVE_OPTION_HELP,
 )
 def init(
     template_arg: str | None,
