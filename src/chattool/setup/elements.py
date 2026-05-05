@@ -8,6 +8,7 @@ from chattool.setup.codex import setup_codex
 from chattool.setup.cc_connect import setup_cc_connect
 from chattool.setup.docker import setup_docker
 from chattool.setup.frp import setup_frp
+from chattool.setup.hermes import setup_hermes
 from chattool.setup.lark_cli import setup_lark_cli
 from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
@@ -108,6 +109,42 @@ def lark_cli_setup(app_id, app_secret, brand, env, interactive, log_level):
         app_secret=app_secret,
         brand=brand,
         env_ref=env,
+        interactive=interactive,
+        log_level=log_level,
+    )
+
+
+def hermes_setup(
+    agent_dir,
+    webui_dir,
+    env,
+    feishu_env,
+    api_key,
+    base_url,
+    model,
+    skip_feishu,
+    with_webui,
+    start_webui,
+    install_only,
+    extras,
+    dry_run,
+    interactive,
+    log_level,
+):
+    setup_hermes(
+        agent_dir=agent_dir,
+        webui_dir=webui_dir,
+        openai_env=env,
+        feishu_env=feishu_env,
+        api_key=api_key,
+        base_url=base_url,
+        model=model,
+        skip_feishu=skip_feishu,
+        with_webui=with_webui,
+        start_webui=start_webui,
+        install_only=install_only,
+        extras=extras,
+        dry_run=dry_run,
         interactive=interactive,
         log_level=log_level,
     )
@@ -436,6 +473,83 @@ SETUP_COMMAND_ELEMENTS = (
                     "default": None,
                     "help": "Load Feishu config from a .env file path or saved Feishu profile name.",
                 },
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="hermes",
+        help="Setup Hermes Agent and optional Hermes WebUI.",
+        callback=hermes_setup,
+        options=(
+            LOG_LEVEL_OPTION,
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={
+                    "default": None,
+                    "help": "Auto prompt on missing args, -i forces interactive, -I disables it.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--agent-dir",),
+                kwargs={"default": None, "help": "Hermes Agent checkout path."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webui-dir",),
+                kwargs={"default": None, "help": "Hermes WebUI checkout path."},
+            ),
+            SetupOptionElement(
+                param_decls=("-e", "--env"),
+                kwargs={
+                    "default": None,
+                    "help": "Load OpenAI config from a .env file path or saved OpenAI profile name.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--feishu-env",),
+                kwargs={
+                    "default": None,
+                    "help": "Load Feishu config from a .env file path or saved Feishu profile name.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--api-key", "--key"),
+                kwargs={"default": None, "help": "OpenAI-compatible API key."},
+            ),
+            SetupOptionElement(
+                param_decls=("--base-url", "--url"),
+                kwargs={"default": None, "help": "OpenAI-compatible base URL."},
+            ),
+            SetupOptionElement(
+                param_decls=("--model",),
+                kwargs={"default": None, "help": "Hermes default model."},
+            ),
+            SetupOptionElement(
+                param_decls=("--skip-feishu",),
+                kwargs={"is_flag": True, "help": "Do not import ChatTool Feishu config."},
+            ),
+            SetupOptionElement(
+                param_decls=("--with-webui/--no-webui",),
+                kwargs={"default": True, "help": "Also prepare Hermes WebUI config."},
+            ),
+            SetupOptionElement(
+                param_decls=("--start-webui",),
+                kwargs={"is_flag": True, "help": "Start Hermes WebUI after setup."},
+            ),
+            SetupOptionElement(
+                param_decls=("--install-only",),
+                kwargs={"is_flag": True, "help": "Install Hermes without writing model or Feishu config."},
+            ),
+            SetupOptionElement(
+                param_decls=("--extras",),
+                kwargs={
+                    "default": "messaging,cli,pty,cron,feishu,web,acp,mcp",
+                    "show_default": True,
+                    "help": "Hermes extras to install with uv pip install -e.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--dry-run",),
+                kwargs={"is_flag": True, "help": "Print planned actions without writing files or running installs."},
             ),
         ),
     ),
