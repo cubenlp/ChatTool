@@ -90,8 +90,8 @@
 - 必要参数不完整时，自动触发 interactive。
 - `-i` 强制 interactive，`-I` 强制非 interactive；参数不全时抛错。
 - 参数提示读取默认值并显示脱敏内容（密钥必须 mask）。
-- 所有新的 CLI 风格、prompt、choice、mask 与 setup 展示能力统一沉到 `src/chattool/chatstyle/`；命令 schema 与参数编排继续走 `src/chattool/interaction/command_schema.py`。
-- 新 CLI 命令默认应优先使用 `src/chattool/interaction/command_schema.py` 提供的 `CommandField`、`CommandSchema`、`CommandConstraint`、`resolve_command_inputs()` 与 `add_interactive_option()`，不要在每个命令里重复手写 `missing_required`、TTY 判断和逐项 `ask_text()`。
+- 外部 `chatstyle` 是 ChatArch CLI 交互规范的 canonical runtime；ChatTool 内的 `src/chattool/chatstyle/` 与 `src/chattool/interaction/` 只保留 facade/adapter。
+- 新 CLI 命令默认应优先使用 `src/chattool/interaction/command_schema.py` 重新导出的 `CommandField`、`CommandSchema`、`CommandConstraint`、`resolve_command_inputs()` 与 `add_interactive_option()`，不要在每个命令里重复手写 `missing_required`、TTY 判断和逐项 `ask_text()`。
 - 除非参数本身就是纯机械性的、且缺失后不需要恢复，否则不要再把交互可恢复参数直接写成 Click 的 `required=True` 或必填位置参数；这会让命令在进入 callback 之前就被 Click 拦截，统一交互机制无法执行。
 - 命令函数优先只做三件事：接入 Click 参数、调用共享 resolver 拿到完整输入、执行业务逻辑。缺参补问和约束校验应尽量声明在 schema 里。
 - 多字段依赖关系优先用 `CommandConstraint` 表达，例如“`full_domain` 或 `domain + rr` 二选一”；不要在 callback 里散落多段 if/else 校验。
