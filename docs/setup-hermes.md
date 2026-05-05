@@ -1,95 +1,95 @@
 # chattool setup hermes
 
-`chattool setup hermes` installs Hermes Agent, optionally prepares Hermes WebUI, and writes Hermes configuration from ChatTool typed env profiles.
+`chattool setup hermes` 用于安装 Hermes Agent，可选准备或启动 Hermes WebUI，并把 ChatTool typed env 中已有的 OpenAI / Feishu 配置写入 Hermes。
 
-## What It Installs
+## 安装内容
 
-Default targets:
+默认安装目标：
 
-- Agent checkout: `./hermes` when run from a project containing that directory, otherwise `~/.hermes/hermes-agent`.
-- WebUI checkout: `./hermes-webui` when run from a project containing that directory, otherwise `~/.hermes/hermes-webui`.
-- Runtime: `venv` inside the Hermes Agent checkout.
-- CLI link: `~/.local/bin/hermes` -> `<agent-dir>/venv/bin/hermes`.
-- State and credentials: `~/.hermes/`.
+- Agent 源码：如果当前目录已有 `./hermes`，则使用 `./hermes`；否则使用 `~/.hermes/hermes-agent`。
+- WebUI 源码：如果当前目录已有 `./hermes-webui`，则使用 `./hermes-webui`；否则使用 `~/.hermes/hermes-webui`。
+- Python 运行环境：Hermes Agent 源码目录下的 `venv`。
+- CLI 入口：`~/.local/bin/hermes`，指向 `<agent-dir>/venv/bin/hermes`。
+- 状态与密钥目录：`~/.hermes/`。
 
-Default Hermes extras are intentionally lightweight:
+默认安装的是轻量 Hermes extras：
 
 ```text
 messaging,cli,pty,cron,feishu,web,acp,mcp
 ```
 
-This avoids the heavier official `.[all]` path, which includes optional RL, voice, browser, and other dependencies that are not required for a basic Agent + WebUI + Feishu setup.
+这样可以避开官方 `.[all]` 路径中的可选 RL、voice、browser 等重依赖；这些能力不是基础 Agent + WebUI + Feishu 配置的必要条件。
 
-## Configuration Sources
+## 配置来源
 
-OpenAI-compatible model settings are resolved from:
+OpenAI-compatible 模型配置按以下优先级解析：
 
-1. Explicit CLI flags: `--api-key`, `--base-url`, `--model`.
-2. `-e/--env`: OpenAI `.env` path or saved OpenAI profile name.
-3. Current shell environment.
-4. Active ChatTool OpenAI typed env.
-5. Defaults: `https://api.openai.com/v1`, `gpt-5.4-mini`.
+1. 显式 CLI 参数：`--api-key`、`--base-url`、`--model`。
+2. `-e/--env`：OpenAI `.env` 文件路径，或已保存的 OpenAI profile 名称。
+3. 当前 shell 环境变量。
+4. ChatTool 当前激活的 OpenAI typed env。
+5. 默认值：`https://api.openai.com/v1`、`gpt-5.4-mini`。
 
-Feishu settings are resolved from:
+Feishu 配置按以下优先级解析：
 
-1. `--feishu-env`: Feishu `.env` path or saved Feishu profile name.
-2. Current shell environment.
-3. Active ChatTool Feishu typed env.
+1. `--feishu-env`：Feishu `.env` 文件路径，或已保存的 Feishu profile 名称。
+2. 当前 shell 环境变量。
+3. ChatTool 当前激活的 Feishu typed env。
 
-The command writes:
+命令会写入：
 
-- `~/.hermes/.env` for credentials and provider env vars.
-- `~/.hermes/config.yaml` for model, provider, and terminal defaults.
-- `<webui-dir>/.env` for WebUI discovery and local binding.
+- `~/.hermes/.env`：密钥、OpenAI-compatible endpoint、Feishu gateway 环境变量。
+- `~/.hermes/config.yaml`：默认模型、provider、terminal 等 Hermes 配置。
+- `<webui-dir>/.env`：WebUI 自动发现 Agent、Python、状态目录和本地端口所需配置。
 
-Secrets are written locally and should not be committed.
+密钥只写入本机文件，不应提交到 Git 仓库。
 
-## Usage
+## 使用方式
 
-Preview actions without writing files:
+只预览计划，不写文件、不执行安装：
 
 ```bash
 chattool setup hermes --dry-run -I
 ```
 
-Install in the current research project and reuse active ChatTool env profiles:
+在当前 research project 内安装，并复用 ChatTool 当前激活的 typed env：
 
 ```bash
 chattool setup hermes --agent-dir ./hermes --webui-dir ./hermes-webui
 ```
 
-Use named profiles:
+显式指定 OpenAI / Feishu profile：
 
 ```bash
 chattool setup hermes -e apple --feishu-env rexwzh
 ```
 
-Install and start WebUI:
+安装并启动 WebUI：
 
 ```bash
 chattool setup hermes --agent-dir ./hermes --webui-dir ./hermes-webui --start-webui
 ```
 
-Only install dependencies and CLI link, without writing model or Feishu config:
+只安装依赖和 CLI 链接，不写模型或 Feishu 配置：
 
 ```bash
 chattool setup hermes --install-only
 ```
 
-## WebUI Binding Model
+## WebUI 与 Agent 的绑定关系
 
-A single Hermes WebUI server process binds to one Hermes Agent runtime via:
+一个 Hermes WebUI server 进程启动时绑定一套 Hermes Agent runtime，主要由这些变量决定：
 
 - `HERMES_WEBUI_AGENT_DIR`
 - `HERMES_WEBUI_PYTHON`
 - `HERMES_HOME`
 - `HERMES_CONFIG_PATH`
 
-That WebUI can still contain multiple sessions, workspaces, and profiles. To run multiple isolated Hermes backends, start multiple WebUI processes on different ports with different `HERMES_HOME` / `HERMES_WEBUI_AGENT_DIR` values.
+因此默认模型是“一套 WebUI 绑定一套 Hermes Agent runtime”。同一个 WebUI 内仍然可以有多个 sessions、workspaces 和 profiles。如果需要多套相互隔离的 Hermes 后端，可以启动多个 WebUI 进程，并为每个进程设置不同的端口、`HERMES_HOME` 和 `HERMES_WEBUI_AGENT_DIR`。
 
-## Verification
+## 验证命令
 
-After setup:
+安装后建议执行：
 
 ```bash
 hermes version
@@ -99,4 +99,9 @@ hermes -z 'Reply with exactly: HERMES_OK' --ignore-rules
 curl --noproxy '*' http://127.0.0.1:8787/health
 ```
 
-If a local proxy is configured, use `--noproxy '*'` or set `NO_PROXY=127.0.0.1,localhost` for local WebUI health checks.
+如果本机配置了 HTTP 代理，本地 WebUI 健康检查建议使用 `--noproxy '*'`，或设置：
+
+```bash
+export NO_PROXY=127.0.0.1,localhost
+export no_proxy=127.0.0.1,localhost
+```
