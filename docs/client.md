@@ -245,7 +245,28 @@ chattool setup docker --log-level DEBUG
 chattool setup docker --sudo -i
 ```
 
-### 0.6 Workspace (`setup workspace`)
+### 0.6 Hermes (`setup hermes`)
+
+安装 Hermes Agent，并可选准备 Hermes WebUI 配置。默认会复用 ChatTool 的 OpenAI typed env；如果存在 Feishu typed env，也会映射到 Hermes gateway 使用的 `~/.hermes/.env`。
+
+```bash
+chattool setup hermes
+chattool setup hermes -e apple --feishu-env rexwzh
+chattool setup hermes --agent-dir ./hermes --webui-dir ./hermes-webui --start-webui
+```
+
+常用参数：
+
+- `-e/--env`：OpenAI 配置来源，支持 `.env` 文件路径或保存的 OpenAI profile 名。
+- `--feishu-env`：Feishu 配置来源，支持 `.env` 文件路径或保存的 Feishu profile 名。
+- `--install-only`：只安装 Hermes，不写入模型或 Feishu 配置。
+- `--with-webui/--no-webui`：是否准备 WebUI `.env`。
+- `--start-webui`：安装后启动 WebUI，默认地址 `http://127.0.0.1:8787`。
+- `--dry-run -I`：只打印计划，不执行 clone/install/write。
+
+当前实现默认安装轻量 extras：`messaging,cli,pty,cron,feishu,web,acp,mcp`，避免 Hermes 官方 `.[all]` 中 RL/voice 等非必需依赖拖慢或阻塞基础安装。
+
+### 0.7 Workspace (`setup workspace`)
 
 如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 多任务并发面 + 知识沉淀”工作区，可以用：
 

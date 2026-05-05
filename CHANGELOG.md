@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
+- `chattool setup hermes` 新增 Hermes Agent/WebUI 安装入口，可复用 ChatTool OpenAI typed env 与 Feishu typed env，写入 `~/.hermes/.env` / `~/.hermes/config.yaml`，并支持 `--dry-run`、`--install-only`、`--start-webui`。
 - [2026-04-20] `chatloop` 新增 `/chatloop-project`，用于直接查看当前解析到的 project 根目录、`PRD.md` 路径、状态文件与事件日志路径；`/chatloop-status` 同步补充最近一次 lifecycle event / reason，减少仅靠日志排查的需要
 - [2026-04-20] `chattool setup workspace` 生成的协作脚手架现在默认包含 workspace 级 `reference/`、`docs/themes/` 与 `skills/workspace-maintenance/`，用于长期参考沉淀、按主题维护约定和定期整理 `projects/`
 - [2026-04-20] 新增 `docs/env/chatloop-quickstart.md`，用 `arxiv-explore` 示例串起从创建 `PRD.md`、初始化 workspace、显式触发 `/chatloop ...` 到使用 `.opencode/chatloop.events.log` 调试的完整入门流程；`docs/env/index.md`、`workspace.md`、`opencode.md` 同步增加入口链接
