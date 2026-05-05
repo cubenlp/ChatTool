@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+- [2026-05-05] 新增 `chattool.chatstyle` CLI 风格层，集中承载 prompt、choice、output、mask、setup 展示与 `-i/-I` 共享文案；旧 `chattool.interaction` prompt / choice / render / constants 入口保留为兼容 shim，`CommandSchema` 继续留在 `chattool.interaction.command_schema` 负责参数编排。
+
 ### Changed
 - [2026-04-20] `chattool gh` 已重构为分层实现：CLI 入口收口到 `gh pr ...` / `gh run ...` 嵌套命令树，主要命令业务从 `src/chattool/tools/github/cli.py` 迁出到独立命令实现层，请求访问收口为显式 `get_*` / `post_*` / `patch_*` 函数，`GitHubClient` 同步瘦身为围绕这些提取后能力的薄包装；保留了 repo-scoped token 优先级、`set-token`、`repo-perms`、缺参自动补问、`pr checks --wait`、`pr merge --check` 等 ChatTool 定制行为
 
