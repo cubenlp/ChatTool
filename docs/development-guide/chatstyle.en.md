@@ -19,7 +19,7 @@ Chinese version: [chatstyle.md](chatstyle.md).
 - `chatstyle.core`
   - Shared constants such as `BACK_VALUE`, checkbox indicators, and `INTERACTIVE_OPTION_HELP`.
 - `chattool.interaction`
-  - ChatTool command-side adapters that continue exporting `ask_*`, `create_choice()`, `CommandSchema`, and `add_interactive_option()`, while delegating implementation to external `chatstyle`.
+  - ChatTool command-side adapter package entrypoint that continues exporting `ask_*`, `create_choice()`, `CommandSchema`, and `add_interactive_option()`. Pure shared capabilities are re-exported directly from external `chatstyle`; only `command_schema` / `policy` keep ChatTool-side parameter-source, usage, and test patch-point logic.
 
 ## Command Schema
 
@@ -86,7 +86,7 @@ explicit args > -e/--env > tool default config > system env > ChatTool .env > de
 
 ## Migration Boundary
 
-The local `chattool.chatstyle` module has been removed. The `chattool.interaction` prompt, choice, render, constants, and command schema modules are ChatTool command-side adapters over external `chatstyle`. New reusable style behavior must be added to the external ChatStyle project first; ChatTool should add adapters only when it needs project policy, usage, or test patch points.
+The local `chattool.chatstyle` module has been removed. The `chattool.interaction` package entrypoint remains as the ChatTool command-side adapter over external `chatstyle`; pure forwarding submodules such as prompt, choice, render, and constants are no longer kept locally. New reusable style behavior must be added to the external ChatStyle project first; ChatTool should add adapters only when it needs project policy, usage, or test patch points.
 
 ## CLI Test Expectations
 

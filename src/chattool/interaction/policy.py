@@ -3,11 +3,10 @@
 import click
 
 from chatstyle import FORCE_INTERACTIVE_NO_TTY_MESSAGE
+from chatstyle import is_interactive_available as _is_interactive_available
 
 
 def is_interactive_available():
-    from .prompt import is_interactive_available as _is_interactive_available
-
     return _is_interactive_available()
 
 

@@ -19,7 +19,7 @@
 - `chatstyle.core`
   - `BACK_VALUE`、checkbox indicator、`INTERACTIVE_OPTION_HELP` 等共享常量。
 - `chattool.interaction`
-  - ChatTool 命令侧 adapter，继续导出 `ask_*`、`create_choice()`、`CommandSchema` 和 `add_interactive_option()`，但实现委托给外部 `chatstyle`。
+  - ChatTool 命令侧 adapter 包入口，继续导出 `ask_*`、`create_choice()`、`CommandSchema` 和 `add_interactive_option()`。纯公共能力直接从外部 `chatstyle` 转出；只有 `command_schema` / `policy` 保留 ChatTool 侧参数来源、usage 和测试 patch 点逻辑。
 
 ## Command Schema
 
@@ -86,7 +86,7 @@ setup 命令从多个来源解析值时，应一致记录和展示优先级：
 
 ## 迁移边界
 
-`chattool.chatstyle` 本地模块已删除。`chattool.interaction` prompt、choice、render、constants 和 command schema 模块是 ChatTool 命令侧 adapter，内部委托外部 `chatstyle`。新的可复用风格能力必须先加到外部 ChatStyle 项目；ChatTool 只在需要接入本项目 policy、usage 或测试 patch 点时增加 adapter。
+`chattool.chatstyle` 本地模块已删除。`chattool.interaction` 包入口保留为 ChatTool 命令侧 adapter，内部委托外部 `chatstyle`；不再保留 prompt、choice、render、constants 这类纯转发子模块。新的可复用风格能力必须先加到外部 ChatStyle 项目；ChatTool 只在需要接入本项目 policy、usage 或测试 patch 点时增加 adapter。
 
 ## CLI 测试要求
 
