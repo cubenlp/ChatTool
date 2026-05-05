@@ -205,7 +205,7 @@ def _ensure_repos(agent_dir: Path, webui_dir: Path, with_webui: bool, dry_run: b
 
 def _install_agent(agent_dir: Path, extras: str, dry_run: bool) -> None:
     uv = shutil.which("uv") or str(Path.home() / ".local" / "bin" / "uv")
-    if not Path(uv).exists() and shutil.which("uv") is None:
+    if not dry_run and not Path(uv).exists() and shutil.which("uv") is None:
         raise click.ClickException("uv not found. Install uv first: https://docs.astral.sh/uv/")
     python = _venv_python(agent_dir)
     if not python.exists():
