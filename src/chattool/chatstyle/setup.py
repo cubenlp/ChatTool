@@ -1,47 +1,43 @@
-"""Setup-stage display helpers."""
+"""Compatibility setup-stage helpers backed by external :mod:`chatstyle` flow."""
 
-from __future__ import annotations
-
-from collections.abc import Iterable
-
-import click
-
-from .output import _render_heading, _render_note
-
+from chatstyle import (
+    render_config_priority,
+    render_failure,
+    render_flow_start,
+    render_stage,
+    render_success,
+    render_suggested_commands,
+    render_warning,
+)
 
 def setup_start(name: str) -> None:
-    _render_heading("Setup", f"Start {name} setup")
+    render_flow_start(name, title="Setup")
 
 
 def setup_stage(message: str) -> None:
-    click.echo(message, err=True)
+    render_stage(message)
 
 
 def setup_success(message: str) -> None:
-    click.echo(message)
+    render_success(message)
 
 
 def setup_warning(message: str) -> None:
-    click.echo(message, err=True)
+    render_warning(message)
 
 
 def setup_failure(message: str) -> None:
-    click.echo(message, err=True)
+    render_failure(message)
 
 
-def setup_suggested_commands(commands: Iterable[str], *, heading: str | None = None) -> None:
+def setup_suggested_commands(commands, *, heading: str | None = None) -> None:
     """Print commands users should run manually when setup cannot execute them."""
 
-    if heading:
-        _render_heading("Suggested Commands", heading)
-    else:
-        _render_heading("Suggested Commands")
-    for command in commands:
-        click.echo(command)
+    render_suggested_commands(commands, description=heading)
 
 
-def setup_config_priority(items: Iterable[str]) -> None:
-    _render_note("Config priority: " + " > ".join(items))
+def setup_config_priority(items) -> None:
+    render_config_priority(items)
 
 
 __all__ = [
