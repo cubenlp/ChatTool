@@ -50,7 +50,7 @@ chattool pypi init -I
   - 准备临时目录。
 - 相关文件：
   - `<tmp>/demo-pkg/DEVELOP.md`
-  - `<tmp>/demo-pkg/setup.md`
+  - `<tmp>/demo-pkg/src/demo_pkg/cli.py`
 
 预期过程和结果：
 1. 在交互可用条件下执行 `chattool pypi init`，并把 `template` 选择为 `cli-style`。
@@ -61,7 +61,7 @@ chattool pypi init -I
 ```sh
 chattool pypi init
 select template = cli-style
-assert scaffold contains DEVELOP.md and setup.md
+assert scaffold contains DEVELOP.md and ChatStyle-backed cli.py
 ```
 
 ## 清理 / 回滚

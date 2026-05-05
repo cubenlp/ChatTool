@@ -23,7 +23,7 @@ pip install "chattool[pypi]"
 - `--project-dir` 默认为当前目录
 - `--dist-dir` 默认为 `<project-dir>/dist`
 - `build` 默认同时构建 `sdist` 和 `wheel`
-- `init --python` 默认为 `>=3.9`
+- `init --python` 默认为 default 模板的 `>=3.9`；`cli-style` 模板未显式传 `--python` 时默认 `>=3.10`
 - `init --license` 默认为 `MIT`，会写入完整 LICENSE 模板；内置 `MIT`、`Apache-2.0`、`BSD-3-Clause`、`GPL-3.0-only` 和 `Proprietary`
 - `upload` 不接管仓库、凭证和交互，直接复用原始 `twine upload` 默认行为
 - `init --version` 可直接设置模板初始版本，`probe` 会解析 dynamic version 的真实值
@@ -70,6 +70,6 @@ chattool pypi upload --project-dir .
 - `tests/test_version.py`
 
 其中 `tests/conftest.py` 会自动把 `src/` 加入导入路径，因此生成后可以直接运行 `python -m pytest -q`。
-生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`。
+default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`cli-style` 模板依赖 `chatstyle`，默认写入 `requires-python = ">=3.10"`。
 
-`chattool pypi init cli-style <name>` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、PyPI 发布占位 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatTool 规范创建 `tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。
+`chattool pypi init cli-style <name>` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、PyPI 发布占位 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatStyle 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。

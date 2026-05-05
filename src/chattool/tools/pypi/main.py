@@ -353,7 +353,9 @@ def _build_cli_style_pyproject_content(
     return "\n".join(lines)
 
 
-def _build_cli_style_readme(package_name: str, description: str) -> str:
+def _build_cli_style_readme(
+    package_name: str, module_name: str, description: str
+) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -381,9 +383,19 @@ def _build_cli_style_readme(package_name: str, description: str) -> str:
             ## 快速开始
 
             ```bash
+            pip install -e ".[dev]"
+            {module_name} hello ChatArch
             python -m pytest -q
             python -m build
             ```
+
+            ## CLI 规范
+
+            这个模板默认依赖 `chatstyle`，新的命令应优先使用：
+
+            - `CommandSchema` / `CommandField` 描述输入。
+            - `add_interactive_option()` 提供统一 `-i/-I`。
+            - `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
 
             ## 目录结构
 
@@ -395,14 +407,16 @@ def _build_cli_style_readme(package_name: str, description: str) -> str:
 
             ## 开发说明
 
-            扩展脚手架前，先阅读 `DEVELOP.md` 和 `setup.md`。
+            扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
             """
         ).strip()
         + "\n"
     )
 
 
-def _build_cli_style_readme_en(package_name: str, description: str) -> str:
+def _build_cli_style_readme_en(
+    package_name: str, module_name: str, description: str
+) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -430,9 +444,19 @@ def _build_cli_style_readme_en(package_name: str, description: str) -> str:
             ## Quick Start
 
             ```bash
+            pip install -e ".[dev]"
+            {module_name} hello ChatArch
             python -m pytest -q
             python -m build
             ```
+
+            ## CLI Contract
+
+            This template depends on `chatstyle`. New commands should prefer:
+
+            - `CommandSchema` / `CommandField` for inputs.
+            - `add_interactive_option()` for the shared `-i/-I` switch.
+            - `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
 
             ## Layout
 
@@ -444,7 +468,7 @@ def _build_cli_style_readme_en(package_name: str, description: str) -> str:
 
             ## Development Notes
 
-            See `DEVELOP.md` and `setup.md` before expanding the scaffold.
+            See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
             """
         ).strip()
         + "\n"
@@ -459,6 +483,8 @@ def _build_cli_style_develop_md() -> str:
 
             ## CLI Rules
 
+            - Use `chatstyle` as the canonical CLI interaction runtime.
+            - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
             - Missing required args should auto-enter interactive mode when recoverable.
             - `-i` forces interactive mode; `-I` disables prompting and must fail fast.
             - Prompt defaults must match actual execution defaults.
@@ -483,37 +509,78 @@ def _build_cli_style_develop_md() -> str:
     )
 
 
-def _build_cli_style_setup_md(package_name: str) -> str:
+def _build_cli_style_changelog() -> str:
+    return "# Changelog\n\n## YYYY-MM-DD\n\n### Added\n\n### Changed\n\n### Fixed\n"
+
+
+def _build_cli_style_cli_py(module_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
-            # Setup
+            \"\"\"CLI entrypoint for {module_name}.\"\"\"
 
-            This scaffold was generated from the `cli-style` template.
+            import click
+            from chatstyle import (
+                CommandField,
+                CommandSchema,
+                add_interactive_option,
+                render_success,
+                resolve_command_inputs,
+            )
 
-            Use this file as the first handoff note for the model or developer after initialization.
 
-            ## Initial Checklist
+            HELLO_SCHEMA = CommandSchema(
+                name="hello",
+                fields=(CommandField("name", prompt="name", required=True),),
+            )
 
-            1. Confirm the project goal and target users.
-            2. Update `README.md` to match the actual package purpose.
-            3. Decide whether this package needs a CLI, library API, or both.
-            4. Add or remove folders from the scaffold as needed.
-            5. Expand tests using the doc-first conventions in `tests/cli-tests/` and `tests/mock-cli-tests/`.
 
-            ## Suggested Next Edits
+            @click.group()
+            def main() -> None:
+                \"\"\"{module_name} command line interface.\"\"\"
 
-            - Replace the placeholder description for `{package_name}`.
-            - Add concrete commands or module structure.
-            - Add CI steps that match the real project needs.
+
+            @main.command()
+            @click.argument("name", required=False)
+            @add_interactive_option
+            def hello(name: str | None, interactive: bool | None) -> None:
+                \"\"\"Print a greeting with ChatStyle-backed input resolution.\"\"\"
+
+                values = resolve_command_inputs(
+                    schema=HELLO_SCHEMA,
+                    provided={{"name": name}},
+                    interactive=interactive,
+                    usage="Usage: {module_name} hello [NAME]",
+                )
+                render_success(f"Hello, {{values['name']}}!")
+
+
+            if __name__ == "__main__":
+                main()
             """
         ).strip()
         + "\n"
     )
 
 
-def _build_cli_style_changelog() -> str:
-    return "# Changelog\n\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Fixed\n"
+def _build_cli_style_test_cli_py(module_name: str) -> str:
+    return (
+        textwrap.dedent(
+            f"""
+            from click.testing import CliRunner
+
+            from {module_name}.cli import main
+
+
+            def test_hello_command_accepts_explicit_name():
+                result = CliRunner().invoke(main, ["hello", "ChatArch"])
+
+                assert result.exit_code == 0
+                assert "Hello, ChatArch!" in result.output
+            """
+        ).strip()
+        + "\n"
+    )
 
 
 def _build_cli_style_docs_index(package_name: str) -> str:
@@ -612,6 +679,8 @@ def scaffold_package(
     package_name = package_name.strip()
     if not package_name:
         raise PyPICommandError("Package name is required.")
+    if template == "cli-style" and requires_python == ">=3.9":
+        requires_python = ">=3.10"
 
     module_name = normalize_module_name(package_name)
     project_dir = Path(project_dir)
@@ -707,13 +776,12 @@ def scaffold_package(
                     email=email,
                 ),
                 project_dir / "README.md": _build_cli_style_readme(
-                    package_name, description
+                    package_name, module_name, description
                 ),
                 project_dir / "README.en.md": _build_cli_style_readme_en(
-                    package_name, description
+                    package_name, module_name, description
                 ),
                 project_dir / "DEVELOP.md": _build_cli_style_develop_md(),
-                project_dir / "setup.md": _build_cli_style_setup_md(package_name),
                 project_dir / "CHANGELOG.md": _build_cli_style_changelog(),
                 project_dir / "AGENTS.md": _build_cli_style_agends_md(),
                 project_dir / "mkdocs.yml": _build_cli_style_mkdocs_yml(
@@ -737,6 +805,8 @@ def scaffold_package(
                 tests_dir
                 / "code-tests"
                 / "README.md": "# Code Tests\n\nNon-CLI code tests live here.\n",
+                src_dir / "cli.py": _build_cli_style_cli_py(module_name),
+                tests_dir / "test_cli.py": _build_cli_style_test_cli_py(module_name),
                 project_dir / ".github" / "workflows" / "ci.yml": textwrap.dedent(
                     """
                     name: CI

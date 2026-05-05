@@ -247,6 +247,26 @@ def test_scaffold_package_generated_project_pytest_passes(tmp_path):
     assert "1 passed" in process.stdout
 
 
+def test_scaffold_cli_style_defaults_to_python_310_and_chatstyle(tmp_path):
+    project_dir = tmp_path / "mychat-cli"
+
+    scaffold_package(
+        package_name="mychat-cli",
+        project_dir=project_dir,
+        description="My chat CLI package",
+        template="cli-style",
+    )
+
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'requires-python = ">=3.10"' in pyproject_text
+    assert '"chatstyle"' in pyproject_text
+    assert "CommandSchema" in cli_text
+
+
 def test_scaffold_package_supports_custom_initial_version(tmp_path):
     project_dir = tmp_path / "mychat"
 
@@ -272,14 +292,9 @@ def test_check_repository_conflicts_detects_existing_release():
             return 200, {}
         raise AssertionError(url)
 
-    checks = check_repository_conflicts(
-        "demo-pkg",
-        "0.1.0",
-        repository="pypi",
-        fetcher=fake_fetcher,
-    )
+    checks = check_repository_conflicts("demo-pkg", repository="pypi", fetcher=fake_fetcher)
 
-    assert checks[0].status == "warn"
+    assert checks[0].status == "fail"
     assert checks[1].status == "fail"
 
 

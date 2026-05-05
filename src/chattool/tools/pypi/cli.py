@@ -80,6 +80,7 @@ def _resolve_init_inputs(
     author: str | None,
     email: str | None,
     project_dir: Path | None,
+    template: str = "default",
 ) -> tuple[str, str | None, str, str, str, str | None, str | None, Path]:
     package_name = _normalize_optional_text(name)
     if not package_name and project_dir is not None and project_dir.name:
@@ -94,12 +95,28 @@ def _resolve_init_inputs(
         package_name,
         _normalize_optional_text(description) or f"{package_name} package",
         initial_version or "0.1.0",
-        requires_python or ">=3.9",
+        requires_python or _default_requires_python(template),
         license_name or "MIT",
         _normalize_optional_text(author),
         _normalize_optional_text(email),
         target_dir,
     )
+
+
+def _default_requires_python(template: str) -> str:
+    if template == "cli-style":
+        return ">=3.10"
+    return ">=3.9"
+
+
+def _option_was_default(name: str) -> bool:
+    ctx = click.get_current_context(silent=True)
+    if not ctx:
+        return False
+    try:
+        return ctx.get_parameter_source(name) == click.core.ParameterSource.DEFAULT
+    except Exception:
+        return False
 
 
 def _is_name_missing(name: str | None, project_dir: Path | None) -> bool:
@@ -202,6 +219,8 @@ def init(
         template = template_arg
     elif template_arg and not name:
         name = template_arg
+    if _option_was_default("requires_python"):
+        requires_python = _default_requires_python(template)
 
     missing_required = _is_name_missing(name, project_dir)
     usage = (
@@ -256,9 +275,9 @@ def init(
             or f"{normalized_name} package",
         )
         initial_version = ask_text("version", default=initial_version or "0.1.0")
-        requires_python = ask_text(
-            "requires_python", default=requires_python or ">=3.9"
-        )
+        if _option_was_default("requires_python"):
+            requires_python = _default_requires_python(template)
+        requires_python = ask_text("requires_python", default=requires_python)
         license_name = ask_text("license", default=license_name or "MIT")
         author = ask_text(
             "author",
@@ -291,6 +310,7 @@ def init(
         author=author,
         email=email,
         project_dir=project_dir,
+        template=template,
     )
     try:
         result = scaffold_package(
