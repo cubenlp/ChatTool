@@ -2,10 +2,11 @@
 
 import click
 
+from chatstyle import FORCE_INTERACTIVE_NO_TTY_MESSAGE
+from chatstyle import is_interactive_available as _is_interactive_available
+
 
 def is_interactive_available():
-    from .prompt import is_interactive_available as _is_interactive_available
-
     return _is_interactive_available()
 
 
@@ -34,10 +35,7 @@ def resolve_interactive_mode(interactive, auto_prompt_condition):
 
 def abort_if_force_without_tty(force_interactive, can_prompt, usage):
     if force_interactive and not can_prompt:
-        click.echo(
-            "Interactive mode was requested, but no TTY is available in current terminal.",
-            err=True,
-        )
+        click.echo(FORCE_INTERACTIVE_NO_TTY_MESSAGE, err=True)
         click.echo(usage, err=True)
         raise click.Abort()
 

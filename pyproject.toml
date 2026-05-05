@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Toolkit for Chat API"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
@@ -23,6 +23,7 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
+    "chatstyle>=0.1.0",
     "requests>=2.20",
     "python-dotenv>=0.17.0",
     "colorama",

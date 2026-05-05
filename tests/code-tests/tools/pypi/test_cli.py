@@ -196,3 +196,39 @@ def test_probe_command_reports_repository_conflicts(monkeypatch, tmp_path):
     assert result.exit_code == 0
     assert "[WARN] repository.project: demo-pkg already exists" in result.output
     assert "[OK] repository.version: demo-pkg==0.1.0 is available" in result.output
+
+
+def test_probe_command_accepts_package_name_argument(monkeypatch, tmp_path):
+    runner = CliRunner()
+    captured = {}
+
+    def fake_check_repository_conflicts(package_name, **kwargs):
+        captured["args"] = (package_name, kwargs)
+        return [
+            type(
+                "Check",
+                (),
+                {
+                    "status": "ok",
+                    "label": "package name",
+                    "detail": "demo-pkg is available",
+                    "hint": None,
+                },
+            )()
+        ]
+
+    monkeypatch.setattr(
+        pypi_cli,
+        "check_repository_conflicts",
+        fake_check_repository_conflicts,
+    )
+
+    result = runner.invoke(
+        pypi_cli.cli,
+        ["probe", "demo-pkg", "--project-dir", str(tmp_path)],
+    )
+
+    assert result.exit_code == 0
+    assert captured["args"][0] == "demo-pkg"
+    assert captured["args"][1]["repository"] == "pypi"
+    assert "[OK] package name: demo-pkg is available" in result.output

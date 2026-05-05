@@ -19,6 +19,90 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 DEFAULT_DIST_DIRNAME = "dist"
+LICENSE_TEMPLATES = {
+    "MIT": """MIT License
+
+Copyright (c) {year} {author}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+""",
+    "Apache-2.0": """Apache License
+Version 2.0, January 2004
+https://www.apache.org/licenses/
+
+Copyright {year} {author}
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+""",
+    "BSD-3-Clause": """BSD 3-Clause License
+
+Copyright (c) {year}, {author}
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE.
+""",
+    "GPL-3.0-only": """GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) {year} {author}
+
+This project is licensed under the GNU General Public License version 3.
+See https://www.gnu.org/licenses/gpl-3.0.en.html for the full license text.
+""",
+    "Proprietary": """Proprietary License
+
+Copyright (c) {year} {author}. All rights reserved.
+
+This software is proprietary and confidential. Unauthorized copying,
+distribution, modification, or use of this software is prohibited without
+prior written permission.
+""",
+}
 
 
 class PyPICommandError(RuntimeError):
@@ -134,6 +218,18 @@ def _toml_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def _license_template_content(license_name: str, author: str | None) -> str:
+    from datetime import date
+
+    normalized = license_name.strip() or "MIT"
+    template = LICENSE_TEMPLATES.get(normalized)
+    if template is None:
+        template = LICENSE_TEMPLATES["Proprietary"]
+        if normalized.lower() not in {"proprietary", "unlicensed"}:
+            return f"{normalized}\n\nCopyright (c) {date.today().year} {author or 'PROJECT OWNER'}.\n"
+    return template.format(year=date.today().year, author=author or "PROJECT OWNER")
+
+
 def _ensure_empty_or_missing(project_dir: Path) -> None:
     if not project_dir.exists():
         return
@@ -218,7 +314,7 @@ def _build_cli_style_pyproject_content(
         'readme = "README.md"',
         f'requires-python = "{_toml_escape(requires_python)}"',
         f'license = "{_toml_escape(license_name)}"',
-        'dependencies = ["click>=8.0", "chatstyle"]',
+        'dependencies = ["click>=8.0", "chatstyle>=0.1.0"]',
     ]
     if author and email:
         lines.append(
@@ -239,6 +335,10 @@ def _build_cli_style_pyproject_content(
             "[project.scripts]",
             f'{module_name} = "{module_name}.cli:main"',
             "",
+            "[project.optional-dependencies]",
+            'dev = ["build", "pytest"]',
+            'docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mike>=2.0.0"]',
+            "",
             "[tool.setuptools.dynamic]",
             f'version = {{attr = "{module_name}.__version__"}}',
             "",
@@ -253,10 +353,90 @@ def _build_cli_style_pyproject_content(
     return "\n".join(lines)
 
 
-def _build_cli_style_readme(package_name: str, description: str) -> str:
+def _build_cli_style_readme(
+    package_name: str, module_name: str, description: str
+) -> str:
     return (
         textwrap.dedent(
             f"""
+            <div align="center">
+                <a href="https://pypi.python.org/pypi/{package_name}">
+                    <img src="https://img.shields.io/pypi/v/{package_name}.svg" alt="PyPI version" />
+                </a>
+                <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">
+                    <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />
+                </a>
+                <a href="https://OWNER.github.io/REPO">
+                    <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
+                </a>
+            </div>
+
+            <div align="center">
+
+            [English](README.en.md) | [简体中文](README.md)
+            </div>
+
+            # {package_name}
+
+            {description}
+
+            ## 快速开始
+
+            ```bash
+            pip install -e ".[dev]"
+            {module_name} hello ChatArch
+            python -m pytest -q
+            python -m build
+            ```
+
+            ## CLI 规范
+
+            这个模板默认依赖 `chatstyle>=0.1.0`，新的命令应优先使用：
+
+            - `CommandSchema` / `CommandField` 描述输入。
+            - `add_interactive_option()` 提供统一 `-i/-I`。
+            - `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
+
+            ## 目录结构
+
+            - `src/`：包源码
+            - `tests/code-tests/`：代码测试和历史测试迁移
+            - `tests/cli-tests/`：真实 CLI 测试，doc-first
+            - `tests/mock-cli-tests/`：mock/fake CLI 测试，doc-first
+            - `docs/`：长期维护文档，由 mkdocs 构建
+
+            ## 开发说明
+
+            扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
+            """
+        ).strip()
+        + "\n"
+    )
+
+
+def _build_cli_style_readme_en(
+    package_name: str, module_name: str, description: str
+) -> str:
+    return (
+        textwrap.dedent(
+            f"""
+            <div align="center">
+                <a href="https://pypi.python.org/pypi/{package_name}">
+                    <img src="https://img.shields.io/pypi/v/{package_name}.svg" alt="PyPI version" />
+                </a>
+                <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">
+                    <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />
+                </a>
+                <a href="https://OWNER.github.io/REPO">
+                    <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
+                </a>
+            </div>
+
+            <div align="center">
+
+            [English](README.en.md) | [简体中文](README.md)
+            </div>
+
             # {package_name}
 
             {description}
@@ -264,9 +444,19 @@ def _build_cli_style_readme(package_name: str, description: str) -> str:
             ## Quick Start
 
             ```bash
+            pip install -e ".[dev]"
+            {module_name} hello ChatArch
             python -m pytest -q
             python -m build
             ```
+
+            ## CLI Contract
+
+            This template depends on `chatstyle>=0.1.0`. New commands should prefer:
+
+            - `CommandSchema` / `CommandField` for inputs.
+            - `add_interactive_option()` for the shared `-i/-I` switch.
+            - `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
 
             ## Layout
 
@@ -274,11 +464,11 @@ def _build_cli_style_readme(package_name: str, description: str) -> str:
             - `tests/code-tests/`: code tests and migrated historical tests
             - `tests/cli-tests/`: real CLI tests, doc-first
             - `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first
-            - `docs/`: long-lived project docs
+            - `docs/`: long-lived project docs built by mkdocs
 
             ## Development Notes
 
-            See `DEVELOP.md` and `setup.md` before expanding the scaffold.
+            See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
             """
         ).strip()
         + "\n"
@@ -293,6 +483,8 @@ def _build_cli_style_develop_md() -> str:
 
             ## CLI Rules
 
+            - Use `chatstyle>=0.1.0` as the canonical CLI interaction runtime.
+            - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
             - Missing required args should auto-enter interactive mode when recoverable.
             - `-i` forces interactive mode; `-I` disables prompting and must fail fast.
             - Prompt defaults must match actual execution defaults.
@@ -317,41 +509,141 @@ def _build_cli_style_develop_md() -> str:
     )
 
 
-def _build_cli_style_setup_md(package_name: str) -> str:
+def _build_cli_style_changelog() -> str:
+    return "# Changelog\n\n## YYYY-MM-DD\n\n### Added\n\n### Changed\n\n### Fixed\n"
+
+
+def _build_cli_style_cli_py(module_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
-            # Setup
+            \"\"\"CLI entrypoint for {module_name}.\"\"\"
 
-            This scaffold was generated from the `cli-style` template.
+            import click
+            from chatstyle import (
+                CommandField,
+                CommandSchema,
+                add_interactive_option,
+                render_success,
+                resolve_command_inputs,
+            )
 
-            Use this file as the first handoff note for the model or developer after initialization.
 
-            ## Initial Checklist
+            HELLO_SCHEMA = CommandSchema(
+                name="hello",
+                fields=(CommandField("name", prompt="name", required=True),),
+            )
 
-            1. Confirm the project goal and target users.
-            2. Update `README.md` to match the actual package purpose.
-            3. Decide whether this package needs a CLI, library API, or both.
-            4. Add or remove folders from the scaffold as needed.
-            5. Expand tests using the doc-first conventions in `tests/cli-tests/` and `tests/mock-cli-tests/`.
 
-            ## Suggested Next Edits
+            @click.group()
+            def main() -> None:
+                \"\"\"{module_name} command line interface.\"\"\"
 
-            - Replace the placeholder description for `{package_name}`.
-            - Add concrete commands or module structure.
-            - Add CI steps that match the real project needs.
+
+            @main.command()
+            @click.argument("name", required=False)
+            @add_interactive_option
+            def hello(name: str | None, interactive: bool | None) -> None:
+                \"\"\"Print a greeting with ChatStyle-backed input resolution.\"\"\"
+
+                values = resolve_command_inputs(
+                    schema=HELLO_SCHEMA,
+                    provided={{"name": name}},
+                    interactive=interactive,
+                    usage="Usage: {module_name} hello [NAME]",
+                )
+                render_success(f"Hello, {{values['name']}}!")
+
+
+            if __name__ == "__main__":
+                main()
             """
         ).strip()
         + "\n"
     )
 
 
-def _build_cli_style_changelog() -> str:
-    return "# Changelog\n\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Fixed\n"
+def _build_cli_style_test_cli_py(module_name: str) -> str:
+    return (
+        textwrap.dedent(
+            f"""
+            from click.testing import CliRunner
+
+            from {module_name}.cli import main
+
+
+            def test_hello_command_accepts_explicit_name():
+                result = CliRunner().invoke(main, ["hello", "ChatArch"])
+
+                assert result.exit_code == 0
+                assert "Hello, ChatArch!" in result.output
+            """
+        ).strip()
+        + "\n"
+    )
 
 
 def _build_cli_style_docs_index(package_name: str) -> str:
-    return f"# Docs\n\nLong-lived documentation for `{package_name}` lives here.\n"
+    return (
+        textwrap.dedent(
+            f"""
+            # {package_name} 文档
+
+            这里收纳 `{package_name}` 的长期维护文档。
+
+            ## 本地预览
+
+            ```bash
+            pip install -e ".[docs]"
+            mkdocs serve
+            ```
+
+            英文版见：[index.en.md](index.en.md)。
+            """
+        ).strip()
+        + "\n"
+    )
+
+
+def _build_cli_style_docs_index_en(package_name: str) -> str:
+    return (
+        textwrap.dedent(
+            f"""
+            # {package_name} Docs
+
+            Long-lived documentation for `{package_name}` lives here.
+
+            ## Local Preview
+
+            ```bash
+            pip install -e ".[docs]"
+            mkdocs serve
+            ```
+
+            Chinese version: [index.md](index.md).
+            """
+        ).strip()
+        + "\n"
+    )
+
+
+def _build_cli_style_mkdocs_yml(package_name: str) -> str:
+    return (
+        textwrap.dedent(
+            f"""
+            site_name: {package_name} 文档
+            site_url: https://OWNER.github.io/REPO
+            repo_url: https://github.com/OWNER/REPO
+            theme:
+              name: material
+              language: zh
+            nav:
+              - 首页: index.md
+              - English: index.en.md
+            """
+        ).strip()
+        + "\n"
+    )
 
 
 def _build_cli_style_agends_md() -> str:
@@ -387,6 +679,8 @@ def scaffold_package(
     package_name = package_name.strip()
     if not package_name:
         raise PyPICommandError("Package name is required.")
+    if template == "cli-style" and requires_python == ">=3.9":
+        requires_python = ">=3.10"
 
     module_name = normalize_module_name(package_name)
     project_dir = Path(project_dir)
@@ -425,7 +719,7 @@ def scaffold_package(
             ```
         """).strip()
         + "\n",
-        project_dir / "LICENSE": f"{license_name}\n",
+        project_dir / "LICENSE": _license_template_content(license_name, author),
         project_dir / ".gitignore": textwrap.dedent("""
             __pycache__/
             .pytest_cache/
@@ -465,9 +759,10 @@ def scaffold_package(
     }
 
     if template == "cli-style":
-        (project_dir / "cli-tests").mkdir(parents=True, exist_ok=True)
-        (project_dir / "mock-cli-tests").mkdir(parents=True, exist_ok=True)
         (project_dir / "docs").mkdir(parents=True, exist_ok=True)
+        (tests_dir / "cli-tests").mkdir(parents=True, exist_ok=True)
+        (tests_dir / "mock-cli-tests").mkdir(parents=True, exist_ok=True)
+        (tests_dir / "code-tests").mkdir(parents=True, exist_ok=True)
         (project_dir / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
         file_map.update(
             {
@@ -481,21 +776,37 @@ def scaffold_package(
                     email=email,
                 ),
                 project_dir / "README.md": _build_cli_style_readme(
-                    package_name, description
+                    package_name, module_name, description
+                ),
+                project_dir / "README.en.md": _build_cli_style_readme_en(
+                    package_name, module_name, description
                 ),
                 project_dir / "DEVELOP.md": _build_cli_style_develop_md(),
-                project_dir / "setup.md": _build_cli_style_setup_md(package_name),
                 project_dir / "CHANGELOG.md": _build_cli_style_changelog(),
                 project_dir / "AGENTS.md": _build_cli_style_agends_md(),
+                project_dir / "mkdocs.yml": _build_cli_style_mkdocs_yml(
+                    package_name
+                ),
                 project_dir / "docs" / "README.md": _build_cli_style_docs_index(
                     package_name
                 ),
-                project_dir
+                project_dir / "docs" / "index.md": _build_cli_style_docs_index(
+                    package_name
+                ),
+                project_dir / "docs" / "index.en.md": _build_cli_style_docs_index_en(
+                    package_name
+                ),
+                tests_dir
                 / "cli-tests"
                 / "README.md": "# CLI Tests\n\nReal CLI tests live here.\n",
-                project_dir
+                tests_dir
                 / "mock-cli-tests"
                 / "README.md": "# Mock CLI Tests\n\nMock/fake CLI tests live here.\n",
+                tests_dir
+                / "code-tests"
+                / "README.md": "# Code Tests\n\nNon-CLI code tests live here.\n",
+                src_dir / "cli.py": _build_cli_style_cli_py(module_name),
+                tests_dir / "test_cli.py": _build_cli_style_test_cli_py(module_name),
                 project_dir / ".github" / "workflows" / "ci.yml": textwrap.dedent(
                     """
                     name: CI
@@ -512,13 +823,18 @@ def scaffold_package(
                         runs-on: ubuntu-latest
                         steps:
                           - uses: actions/checkout@v4
+                          - name: Configure Git Credentials
+                            run: |
+                              git config user.name github-actions[bot]
+                              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
                           - uses: actions/setup-python@v5
                             with:
                               python-version: "3.11"
-                          - run: python -m pip install --upgrade pip build pytest
-                          - run: python -m pip install -e .
+                          - run: python -m pip install --upgrade pip
+                          - run: python -m pip install -e ".[dev,docs]"
                           - run: python -m pytest -q
                           - run: python -m build
+                          - run: mkdocs build --strict
                     """
                 ).strip()
                 + "\n",
@@ -542,6 +858,93 @@ def scaffold_package(
                           - run: |
                               echo "Publish workflow scaffold only."
                               echo "Add trusted publishing or credentials before real release."
+                    """
+                ).strip()
+                + "\n",
+                project_dir / ".github" / "workflows" / "deploy.yaml": textwrap.dedent(
+                    """
+                    name: Deploy Docs
+
+                    on:
+                      push:
+                        branches:
+                          - main
+                          - master
+
+                    permissions:
+                      contents: write
+
+                    jobs:
+                      deploy:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+                          - uses: actions/setup-python@v5
+                            with:
+                              python-version: "3.11"
+                          - run: python -m pip install --upgrade pip
+                          - run: python -m pip install -e ".[docs]"
+                          - run: mkdocs gh-deploy --force
+                    """
+                ).strip()
+                + "\n",
+                project_dir / ".github" / "workflows" / "preview.yaml": textwrap.dedent(
+                    """
+                    name: Preview Docs
+
+                    on:
+                      pull_request:
+                        branches:
+                          - main
+                          - master
+
+                    permissions:
+                      contents: write
+                      pull-requests: write
+
+                    jobs:
+                      deploy:
+                        runs-on: ubuntu-latest
+                        if: ${{ !github.event.pull_request.head.repo.fork }}
+                        steps:
+                          - uses: actions/checkout@v4
+                          - name: Configure Git Credentials
+                            run: |
+                              git config user.name github-actions[bot]
+                              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+                          - uses: actions/setup-python@v5
+                            with:
+                              python-version: "3.11"
+                          - run: python -m pip install --upgrade pip
+                          - run: python -m pip install -e ".[docs]"
+                          - run: |
+                              git fetch origin
+                              mike deploy dev -p --allow-empty
+                              owner="${GITHUB_REPOSITORY_OWNER}"
+                              repo="${GITHUB_REPOSITORY#*/}"
+                              preview_url="https://${owner}.github.io/${repo}/dev/"
+                              echo "Preview URL: ${preview_url}" >> "$GITHUB_STEP_SUMMARY"
+
+                          - name: Comment PR with Preview Link
+                            uses: actions/github-script@v6
+                            with:
+                              script: |
+                                const { payload, repo } = context;
+                                const previewLink = `https://${repo.owner}.github.io/${repo.repo}/dev/`;
+                                const comments = await github.rest.issues.listComments({
+                                  owner: repo.owner,
+                                  repo: repo.repo,
+                                  issue_number: payload.number,
+                                });
+                                const existingComment = comments.data.find(comment => comment.body.includes(previewLink));
+                                if (!existingComment) {
+                                  await github.rest.issues.createComment({
+                                    owner: repo.owner,
+                                    repo: repo.repo,
+                                    issue_number: payload.number,
+                                    body: `Preview available at: ${previewLink}`,
+                                  });
+                                }
                     """
                 ).strip()
                 + "\n",

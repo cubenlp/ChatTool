@@ -12,7 +12,7 @@ def test_chattool_pypi_probe_detects_existing_project_name():
 
     result = runner.invoke(
         cli,
-        ["pypi", "probe", "--name", "mychat"],
+        ["pypi", "probe", "mychat"],
     )
 
     if result.exit_code != 0 and "Repository query failed" in result.output:

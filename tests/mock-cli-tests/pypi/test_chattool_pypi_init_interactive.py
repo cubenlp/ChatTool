@@ -14,7 +14,7 @@ def test_chattool_pypi_init_prompts_when_name_missing(tmp_path, monkeypatch, run
         "project_dir": str(tmp_path / "demo-pkg"),
         "description": "demo-pkg package",
         "version": "0.1.0",
-        "requires_python": ">=3.9",
+        "requires_python": ">=3.10",
         "license": "MIT",
         "author": "",
         "email": "",
@@ -92,8 +92,15 @@ def test_chattool_pypi_init_cli_style_template_interactive(
 
     assert result.exit_code == 0
     assert (tmp_path / "demo-pkg" / "DEVELOP.md").exists()
-    assert (tmp_path / "demo-pkg" / "setup.md").exists()
+    assert not (tmp_path / "demo-pkg" / "setup.md").exists()
+    assert (tmp_path / "demo-pkg" / "src" / "demo_pkg" / "cli.py").exists()
+    assert (tmp_path / "demo-pkg" / "README.en.md").exists()
+    assert (tmp_path / "demo-pkg" / "mkdocs.yml").exists()
+    assert (tmp_path / "demo-pkg" / "docs" / "index.md").exists()
+    assert (tmp_path / "demo-pkg" / "docs" / "index.en.md").exists()
     assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "ci.yml").exists()
+    assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "deploy.yaml").exists()
+    assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "preview.yaml").exists()
 
 
 def test_chattool_pypi_init_stops_early_when_project_dir_not_empty(

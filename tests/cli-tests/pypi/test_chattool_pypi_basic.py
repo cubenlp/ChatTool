@@ -104,6 +104,7 @@ def test_chattool_pypi_basic(tmp_path):
     assert init.exit_code == 0
     assert (project_dir / "src" / "mychat" / "__init__.py").exists()
     assert (project_dir / "tests" / "conftest.py").exists()
+    assert "MIT License" in (project_dir / "LICENSE").read_text(encoding="utf-8")
     assert 'requires-python = ">=3.9"' in (project_dir / "pyproject.toml").read_text(
         encoding="utf-8"
     )
@@ -152,8 +153,9 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
         [
             "pypi",
             "init",
-            "cli-style",
             "mychat-cli",
+            "-t",
+            "cli-style",
             "--project-dir",
             str(project_dir),
         ],
@@ -161,13 +163,33 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
 
     assert result.exit_code == 0
     assert (project_dir / "DEVELOP.md").exists()
-    assert (project_dir / "setup.md").exists()
     assert (project_dir / "CHANGELOG.md").exists()
     assert (project_dir / "AGENTS.md").exists()
+    assert (project_dir / "src" / "mychat_cli" / "cli.py").exists()
+    assert (project_dir / "tests" / "test_cli.py").exists()
     assert (project_dir / "docs" / "README.md").exists()
-    assert (project_dir / "cli-tests" / "README.md").exists()
-    assert (project_dir / "mock-cli-tests" / "README.md").exists()
+    assert (project_dir / "docs" / "index.md").exists()
+    assert (project_dir / "docs" / "index.en.md").exists()
+    assert (project_dir / "README.en.md").exists()
+    assert (project_dir / "mkdocs.yml").exists()
+    assert (project_dir / "tests" / "cli-tests" / "README.md").exists()
+    assert (project_dir / "tests" / "mock-cli-tests" / "README.md").exists()
+    assert (project_dir / "tests" / "code-tests" / "README.md").exists()
     assert (project_dir / ".github" / "workflows" / "ci.yml").exists()
     assert (project_dir / ".github" / "workflows" / "publish.yml").exists()
+    assert (project_dir / ".github" / "workflows" / "deploy.yaml").exists()
+    assert (project_dir / ".github" / "workflows" / "preview.yaml").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"chatstyle"' in pyproject_text
+    assert '"chatstyle>=0.1.0"' in pyproject_text
+    assert 'requires-python = ">=3.10"' in pyproject_text
+    assert 'docs = ["mkdocs' in pyproject_text
+    cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(
+        encoding="utf-8"
+    )
+    assert "from chatstyle import" in cli_text
+    assert "CommandSchema" in cli_text
+    readme_text = (project_dir / "README.md").read_text(encoding="utf-8")
+    assert "img.shields.io/pypi/v/mychat-cli.svg" in readme_text
+    assert "actions/workflows/ci.yml/badge.svg" in readme_text
+    assert "docs-mkdocs" in readme_text
+    assert "CommandSchema" in readme_text

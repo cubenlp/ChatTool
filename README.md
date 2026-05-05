@@ -173,19 +173,19 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
 ```bash
 chattool pypi init mychat
-chattool pypi init cli-style mycli
+chattool pypi init mycli -t cli-style
 chatpypi mychat
 ```
 
 `chatpypi` 现在是更直接的快捷入口：传入普通首参数时，会自动按 `chattool pypi init <name>` 处理；如果首参数本身就是 `init/build/check/upload/probe` 之一，则保持原样透传给 `chattool pypi`。
 
-默认生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`。
+默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`cli-style` 模板依赖 `chatstyle>=0.1.0`，默认写入 `requires-python = ">=3.10"`。
 
-`cli-style` 模板会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle` 作为可复用 CLI 运行时。
+`cli-style` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 作为可复用 CLI 运行时。
 
 `chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
 
-其中 `chattool pypi probe` 现在默认面向正式 `pypi`，按精确项目名检查名称是否已被占用；若命中现有项目，会顺手输出少量项目摘要信息，便于快速判断是否需要换名。
+其中 `chattool pypi probe <name>` 现在默认面向正式 `pypi`，按精确项目名检查名称是否已被占用；若命中现有项目，会顺手输出少量项目摘要信息，便于快速判断是否需要换名。
 
 ## 开源协议
 

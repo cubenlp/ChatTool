@@ -64,8 +64,8 @@ ChatTool 的主要使用方式不是直接调用内部模块，而是通过 `cha
 
 仓库里这点体现得很明确：
 
-- [src/chattool/client/main.py](../../src/chattool/client/main.py) 统一聚合 `env`、`dns`、`serve`、`network`、`mcp`、`lark`、`image`、`gh`、`browser`、`zulip`、`skill`、`setup`、`cc`、`docker` 等子命令。
-- [pyproject.toml](../../pyproject.toml) 直接暴露 `chattool`、`chatenv`、`chatskill` 三类入口。
+- `src/chattool/client/main.py` 统一聚合 `env`、`dns`、`serve`、`network`、`mcp`、`lark`、`image`、`gh`、`browser`、`zulip`、`skill`、`setup`、`cc`、`docker` 等子命令。
+- `pyproject.toml` 直接暴露 `chattool`、`chatenv`、`chatskill` 三类入口。
 - `tests/cli-tests/` 与 `tests/mock-cli-tests/` 都采用 doc-first 机制，说明 CLI 被视为一等公民，而不是实现之后顺带补一个壳。
 
 这意味着 ChatTool 的典型路径是：

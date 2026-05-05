@@ -5,6 +5,7 @@ import subprocess
 
 import click
 
+from chatstyle import INTERACTIVE_OPTION_HELP
 from chattool.interaction import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
@@ -79,6 +80,7 @@ def _resolve_init_inputs(
     author: str | None,
     email: str | None,
     project_dir: Path | None,
+    template: str = "default",
 ) -> tuple[str, str | None, str, str, str, str | None, str | None, Path]:
     package_name = _normalize_optional_text(name)
     if not package_name and project_dir is not None and project_dir.name:
@@ -93,12 +95,28 @@ def _resolve_init_inputs(
         package_name,
         _normalize_optional_text(description) or f"{package_name} package",
         initial_version or "0.1.0",
-        requires_python or ">=3.9",
+        requires_python or _default_requires_python(template),
         license_name or "MIT",
         _normalize_optional_text(author),
         _normalize_optional_text(email),
         target_dir,
     )
+
+
+def _default_requires_python(template: str) -> str:
+    if template == "cli-style":
+        return ">=3.10"
+    return ">=3.9"
+
+
+def _option_was_default(name: str) -> bool:
+    ctx = click.get_current_context(silent=True)
+    if not ctx:
+        return False
+    try:
+        return ctx.get_parameter_source(name) == click.core.ParameterSource.DEFAULT
+    except Exception:
+        return False
 
 
 def _is_name_missing(name: str | None, project_dir: Path | None) -> bool:
@@ -144,8 +162,15 @@ def cli():
 
 
 @cli.command(name="init")
-@click.argument("template_arg", required=False)
 @click.argument("name", required=False)
+@click.option(
+    "-t",
+    "--template",
+    type=click.Choice(["default", "cli-style"]),
+    default="default",
+    show_default=True,
+    help="Project scaffold template.",
+)
 @click.option("--email", default=None, help="Author email to record in pyproject.toml.")
 @click.option("--author", default=None, help="Author name to record in pyproject.toml.")
 @click.option(
@@ -153,7 +178,7 @@ def cli():
     "license_name",
     default="MIT",
     show_default=True,
-    help="Project license label.",
+    help="Project license template: MIT, Apache-2.0, BSD-3-Clause, GPL-3.0-only, or Proprietary.",
 )
 @click.option(
     "--version",
@@ -181,11 +206,11 @@ def cli():
     "interactive",
     "-i/-I",
     default=None,
-    help="Auto prompt on missing args, -i forces interactive, -I disables it.",
+    help=INTERACTIVE_OPTION_HELP,
 )
 def init(
-    template_arg: str | None,
     name: str | None,
+    template: str,
     description: str | None,
     initial_version: str,
     requires_python: str,
@@ -196,17 +221,14 @@ def init(
     interactive: bool | None,
 ):
     """Scaffold a minimal src-layout Python package."""
-    template = "default"
-    if template_arg in {"default", "cli-style"}:
-        template = template_arg
-    elif template_arg and not name:
-        name = template_arg
+    if _option_was_default("requires_python"):
+        requires_python = _default_requires_python(template)
 
     missing_required = _is_name_missing(name, project_dir)
     usage = (
-        "Usage: chattool pypi init [default|cli-style] [NAME] [--project-dir PATH] [--description TEXT] "
-        "[--version TEXT] [--python TEXT] [--license TEXT] [--author TEXT] "
-        "[--email TEXT] [-i|-I]"
+        "Usage: chattool pypi init [NAME] [-t default|cli-style] [--project-dir PATH] "
+        "[--description TEXT] [--version TEXT] [--python TEXT] [--license TEXT] "
+        "[--author TEXT] [--email TEXT] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, _, need_prompt = (
         resolve_interactive_mode(
@@ -255,9 +277,9 @@ def init(
             or f"{normalized_name} package",
         )
         initial_version = ask_text("version", default=initial_version or "0.1.0")
-        requires_python = ask_text(
-            "requires_python", default=requires_python or ">=3.9"
-        )
+        if _option_was_default("requires_python"):
+            requires_python = _default_requires_python(template)
+        requires_python = ask_text("requires_python", default=requires_python)
         license_name = ask_text("license", default=license_name or "MIT")
         author = ask_text(
             "author",
@@ -290,6 +312,7 @@ def init(
         author=author,
         email=email,
         project_dir=project_dir,
+        template=template,
     )
     try:
         result = scaffold_package(
@@ -384,12 +407,7 @@ def upload(project_dir: Path, dist_dir: Path | None, skip_existing: bool):
 
 
 @cli.command(name="probe")
-@click.option(
-    "--name",
-    "package_name",
-    default=None,
-    help="Override the package name used for repository conflict checks.",
-)
+@click.argument("package_name", required=False)
 @click.option(
     "--repository-url",
     default=None,
@@ -427,7 +445,7 @@ def probe(
     )
     if not target_name:
         raise click.ClickException(
-            "Package name is required. Pass --name or provide a readable pyproject.toml."
+            "Package name is required. Pass NAME or provide a readable pyproject.toml."
         )
 
     try:

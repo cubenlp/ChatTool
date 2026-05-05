@@ -7,9 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- [2026-05-06] 准备 `6.7.0` 版本：ChatTool 依赖外部 ChatStyle，清理本地 CLI style facade，并同步 `chattool pypi init <name> -t cli-style` 模板与 `probe <name>` 入口。
 - [2026-05-06] 新增 `chattool setup zsh`，可配置 zsh / git / oh-my-zsh / powerlevel10k，`-i` 时先以默认值候选框选择 zsh 基础配置项，再以默认全选候选框选择 oh-my-zsh 插件，并把 QuickSetup 当前 `zsh_aliases` 风格完整常用 alias 与 ChatTool alias 写入 `~/.zsh_aliases`；系统依赖只做存在性检查，缺少 `zsh` / `git` 时直接退出并提示对应 `sudo apt install ... -y`。
+- [2026-05-06] ChatTool 本地迁移到外部 `chatstyle` runtime：删除 `chattool.chatstyle` 本地风格层，并移除 `chattool.interaction` 下 prompt、choice、render、constants 等纯转发子模块；`chattool.interaction` 只保留命令侧 adapter 入口、policy、command schema 和 warnings，prompt、choice、output、mask、flow 和 command schema 的通用实现由独立 ChatStyle 项目承载。
+- [2026-05-05] 抽取 ChatArch CLI 风格层：集中定义 prompt、choice、output、mask、render 展示与 `-i/-I` 共享文案；`chattool.interaction` prompt / choice / render / constants 入口保留为 ChatTool adapter，`CommandSchema` 通过 `chattool.interaction.command_schema` 负责参数编排。
+- [2026-05-05] `chattool pypi init <name> -t cli-style` 模板新增默认中文 README/docs、`.en.md` 英文副本、mkdocs 配置、docs deploy/preview workflow、README 顶部 PyPI/Actions/docs 徽章，并为 `--license` 内置 MIT、Apache-2.0、BSD-3-Clause、GPL-3.0-only 和 Proprietary 模板。
 
 ### Changed
+- [2026-05-06] ChatTool 依赖外部 `chatstyle>=0.1.0` 后，公开 Python 下限同步为 `>=3.10`，避免与 ChatStyle 包元数据冲突。
+- [2026-05-06] `chattool pypi probe` 支持把包名作为首个位置参数传入，例如 `chattool pypi probe chatstyle`，不再要求使用 `--name` 前缀。
 - [2026-04-20] `chattool gh` 已重构为分层实现：CLI 入口收口到 `gh pr ...` / `gh run ...` 嵌套命令树，主要命令业务从 `src/chattool/tools/github/cli.py` 迁出到独立命令实现层，请求访问收口为显式 `get_*` / `post_*` / `patch_*` 函数，`GitHubClient` 同步瘦身为围绕这些提取后能力的薄包装；保留了 repo-scoped token 优先级、`set-token`、`repo-perms`、缺参自动补问、`pr checks --wait`、`pr merge --check` 等 ChatTool 定制行为
 
 ### Fixed
@@ -48,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup workspace` 现在会把“review 由 loop 在模型准备停下时触发，默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档，再按 `review.md` 规则完成校验与收尾
 - `chattool setup workspace` 新增 `--with-opencode-loop` 模板版本：启用后会安装本地 OpenCode `chatloop` plugin / commands 资产，并切换到 loop-aware workspace 模板
 - `src/chattool/setup/assets/opencode_chatloop/` 现收纳 ChatTool 管理的 OpenCode `chatloop` 安装源，包括 plugin、slash commands 与最小说明文档
-- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
+- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`.github/workflows/` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 - `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖

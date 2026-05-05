@@ -15,6 +15,7 @@ from typing import Iterable
 
 import click
 
+from chatstyle import INTERACTIVE_OPTION_HELP
 from chattool.interaction import ask_confirm, ask_text
 
 
@@ -420,7 +421,7 @@ def _run_with_retries(
     "--interactive/--no-interactive",
     "-i/-I",
     default=None,
-    help="Auto prompt on missing args, -i forces interactive, -I disables it.",
+    help=INTERACTIVE_OPTION_HELP,
 )
 def setup(interactive: bool | None) -> None:
     """安装/检查 cc-connect 依赖（`chattool setup cc-connect` 的别名）。"""
@@ -458,7 +459,7 @@ def setup(interactive: bool | None) -> None:
     "--interactive/--no-interactive",
     "-i/-I",
     default=None,
-    help="Auto prompt on missing args, -i forces interactive, -I disables it.",
+    help=INTERACTIVE_OPTION_HELP,
 )
 def init(
     project: str | None,

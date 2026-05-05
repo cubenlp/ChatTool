@@ -19,12 +19,12 @@
   - 无。
 
 预期过程和结果：
-  1. 执行 `chattool pypi probe --name mychat`，预期输出精确项目名检查结果。
+  1. 执行 `chattool pypi probe mychat`，预期输出精确项目名检查结果。
   2. 对于已存在的 `mychat` 包名，预期结果直接表明该名称已被占用，不适合作为新包名。
   3. 若命中已有项目，预期输出中可补充少量项目摘要信息，例如最新版本或摘要。
 
 参考执行脚本（伪代码）：
 
 ```sh
-chattool pypi probe --name mychat
+chattool pypi probe mychat
 ```
