@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Sequence
 import click
 
-from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
+from chatstyle import INTERACTIVE_OPTION_HELP
 from chattool.setup.chrome import setup_chrome_driver
 from chattool.setup.claude import setup_claude
 from chattool.setup.codex import setup_codex

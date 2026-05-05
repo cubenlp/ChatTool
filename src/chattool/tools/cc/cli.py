@@ -15,7 +15,7 @@ from typing import Iterable
 
 import click
 
-from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
+from chatstyle import INTERACTIVE_OPTION_HELP
 from chattool.interaction import ask_confirm, ask_text
 
 

@@ -3,8 +3,9 @@ from __future__ import annotations
 import click
 from click.testing import CliRunner
 
-from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
-from chattool.chatstyle.mask import mask_secret as chatstyle_mask_secret
+from chatstyle import INTERACTIVE_OPTION_HELP
+from chatstyle import ask_text as chatstyle_ask_text
+from chatstyle import mask_secret as chatstyle_mask_secret
 from chattool.interaction import (
     BACK_VALUE,
     CommandField,
@@ -16,9 +17,7 @@ from chattool.interaction import (
 from chattool.utils import mask_secret as utils_mask_secret
 
 
-def test_chatstyle_keeps_interaction_compatibility_exports():
-    from chattool.chatstyle.prompt import ask_text as chatstyle_ask_text
-
+def test_chattool_interaction_uses_external_chatstyle_exports():
     assert ask_text is chatstyle_ask_text
     assert BACK_VALUE == "__BACK__"
 

@@ -5,7 +5,7 @@ import subprocess
 
 import click
 
-from chattool.chatstyle.constants import INTERACTIVE_OPTION_HELP
+from chatstyle import INTERACTIVE_OPTION_HELP
 from chattool.interaction import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,

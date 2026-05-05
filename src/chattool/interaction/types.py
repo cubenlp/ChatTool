@@ -1,6 +1,6 @@
-"""Compatibility shim for shared interaction constants."""
+"""Shared interaction constants delegated to external :mod:`chatstyle`."""
 
-from chattool.chatstyle.constants import (
+from chatstyle import (
     BACK_VALUE,
     CHECKBOX_SELECTED_INDICATOR,
     CHECKBOX_UNSELECTED_INDICATOR,

@@ -2,7 +2,7 @@
 
 import click
 
-from chattool.chatstyle.constants import FORCE_INTERACTIVE_NO_TTY_MESSAGE
+from chatstyle import FORCE_INTERACTIVE_NO_TTY_MESSAGE
 
 
 def is_interactive_available():

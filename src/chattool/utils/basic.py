@@ -97,6 +97,6 @@ def mask_secret(api_key: str) -> str:
     Returns:
         str: The masked secret key.
     """
-    from chattool.chatstyle.mask import mask_secret as _mask_secret
+    from chatstyle import mask_secret as _mask_secret
 
     return _mask_secret(api_key)

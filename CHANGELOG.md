@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 - [2026-05-06] 新增 `chattool setup zsh`，可配置 zsh / git / oh-my-zsh / powerlevel10k，`-i` 时先以默认值候选框选择 zsh 基础配置项，再以默认全选候选框选择 oh-my-zsh 插件，并把 QuickSetup 当前 `zsh_aliases` 风格完整常用 alias 与 ChatTool alias 写入 `~/.zsh_aliases`；系统依赖只做存在性检查，缺少 `zsh` / `git` 时直接退出并提示对应 `sudo apt install ... -y`。
-- [2026-05-06] ChatTool 本地迁移到外部 `chatstyle` runtime：`chattool.chatstyle` 与 `chattool.interaction` 保留为 facade/adapter，prompt、choice、output、mask、flow 和 command schema 的通用实现由独立 ChatStyle 项目承载。
-- [2026-05-05] 新增 `chattool.chatstyle` CLI 风格层，集中承载 prompt、choice、output、mask、setup 展示与 `-i/-I` 共享文案；旧 `chattool.interaction` prompt / choice / render / constants 入口保留为兼容 shim，`CommandSchema` 继续留在 `chattool.interaction.command_schema` 负责参数编排。
+- [2026-05-06] ChatTool 本地迁移到外部 `chatstyle` runtime：删除 `chattool.chatstyle` 本地风格层，`chattool.interaction` 只保留 ChatTool 命令侧 adapter，prompt、choice、output、mask、flow 和 command schema 的通用实现由独立 ChatStyle 项目承载。
+- [2026-05-05] 抽取 ChatArch CLI 风格层：集中定义 prompt、choice、output、mask、render 展示与 `-i/-I` 共享文案；`chattool.interaction` prompt / choice / render / constants 入口保留为 ChatTool adapter，`CommandSchema` 通过 `chattool.interaction.command_schema` 负责参数编排。
 - [2026-05-05] `chattool pypi init cli-style` 模板新增默认中文 README/docs、`.en.md` 英文副本、mkdocs 配置、docs deploy/preview workflow、README 顶部 PyPI/Actions/docs 徽章，并为 `--license` 内置 MIT、Apache-2.0、BSD-3-Clause、GPL-3.0-only 和 Proprietary 模板。
 
 ### Changed
