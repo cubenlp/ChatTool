@@ -72,4 +72,4 @@ chattool pypi upload --project-dir .
 其中 `tests/conftest.py` 会自动把 `src/` 加入导入路径，因此生成后可以直接运行 `python -m pytest -q`。
 default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`cli-style` 模板依赖 `chatstyle>=0.1.0`，默认写入 `requires-python = ">=3.10"`。
 
-`chattool pypi init cli-style <name>` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、PyPI 发布占位 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatStyle 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。
+`chattool pypi init <name> -t cli-style` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、PyPI 发布占位 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatStyle 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。

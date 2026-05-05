@@ -173,7 +173,7 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
 ```bash
 chattool pypi init mychat
-chattool pypi init cli-style mycli
+chattool pypi init mycli -t cli-style
 chatpypi mychat
 ```
 

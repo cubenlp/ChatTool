@@ -162,8 +162,15 @@ def cli():
 
 
 @cli.command(name="init")
-@click.argument("template_arg", required=False)
 @click.argument("name", required=False)
+@click.option(
+    "-t",
+    "--template",
+    type=click.Choice(["default", "cli-style"]),
+    default="default",
+    show_default=True,
+    help="Project scaffold template.",
+)
 @click.option("--email", default=None, help="Author email to record in pyproject.toml.")
 @click.option("--author", default=None, help="Author name to record in pyproject.toml.")
 @click.option(
@@ -202,8 +209,8 @@ def cli():
     help=INTERACTIVE_OPTION_HELP,
 )
 def init(
-    template_arg: str | None,
     name: str | None,
+    template: str,
     description: str | None,
     initial_version: str,
     requires_python: str,
@@ -214,19 +221,14 @@ def init(
     interactive: bool | None,
 ):
     """Scaffold a minimal src-layout Python package."""
-    template = "default"
-    if template_arg in {"default", "cli-style"}:
-        template = template_arg
-    elif template_arg and not name:
-        name = template_arg
     if _option_was_default("requires_python"):
         requires_python = _default_requires_python(template)
 
     missing_required = _is_name_missing(name, project_dir)
     usage = (
-        "Usage: chattool pypi init [default|cli-style] [NAME] [--project-dir PATH] [--description TEXT] "
-        "[--version TEXT] [--python TEXT] [--license TEXT] [--author TEXT] "
-        "[--email TEXT] [-i|-I]"
+        "Usage: chattool pypi init [NAME] [-t default|cli-style] [--project-dir PATH] "
+        "[--description TEXT] [--version TEXT] [--python TEXT] [--license TEXT] "
+        "[--author TEXT] [--email TEXT] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, _, need_prompt = (
         resolve_interactive_mode(

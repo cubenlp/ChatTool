@@ -31,7 +31,7 @@
   - `<tmp>/mychat-cli/`
 
 预期过程和结果：
-  1. 执行 `chattool pypi init cli-style mychat-cli --project-dir <tmp>/mychat-cli`。
+  1. 执行 `chattool pypi init mychat-cli -t cli-style --project-dir <tmp>/mychat-cli`。
   2. 预期额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`src/<module>/cli.py`、`docs/README.md`、`docs/index.md`、`docs/index.en.md`、`tests/cli-tests/README.md`、`tests/mock-cli-tests/README.md`、`tests/code-tests/README.md`。
   3. 预期生成 `.github/workflows/ci.yml`、`publish.yml`、`deploy.yaml`、`preview.yaml`。
   4. 默认 README 使用中文，并在开头包含 PyPI version、GitHub Actions 和 mkdocs docs badge；英文内容放在 `.en.md` 文件中。
@@ -41,7 +41,7 @@
 
 ```sh
 chattool pypi init mychat --project-dir /tmp/mychat
-chattool pypi init cli-style mychat-cli --project-dir /tmp/mychat-cli
+chattool pypi init mychat-cli -t cli-style --project-dir /tmp/mychat-cli
 ```
 
 ## 用例 2：build/check 验证最小包结构

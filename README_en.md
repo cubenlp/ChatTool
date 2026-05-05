@@ -184,7 +184,7 @@ chattool nginx -i
 
 ```bash
 chattool pypi init mychat
-chattool pypi init cli-style mycli
+chattool pypi init mycli -t cli-style
 chattool pypi probe mychat
 chatpypi mychat
 ```
