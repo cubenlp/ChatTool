@@ -405,12 +405,7 @@ def upload(project_dir: Path, dist_dir: Path | None, skip_existing: bool):
 
 
 @cli.command(name="probe")
-@click.option(
-    "--name",
-    "package_name",
-    default=None,
-    help="Override the package name used for repository conflict checks.",
-)
+@click.argument("package_name", required=False)
 @click.option(
     "--repository-url",
     default=None,
@@ -448,7 +443,7 @@ def probe(
     )
     if not target_name:
         raise click.ClickException(
-            "Package name is required. Pass --name or provide a readable pyproject.toml."
+            "Package name is required. Pass NAME or provide a readable pyproject.toml."
         )
 
     try:

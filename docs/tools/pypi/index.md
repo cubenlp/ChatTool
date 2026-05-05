@@ -45,7 +45,7 @@ chattool pypi check
 chattool pypi upload
 chattool pypi upload --skip-existing
 chattool pypi probe --repository pypi
-chattool pypi probe --name mychat --repository pypi
+chattool pypi probe mychat --repository pypi
 ```
 
 ## 快速建包

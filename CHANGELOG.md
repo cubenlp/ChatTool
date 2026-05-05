@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 - [2026-05-06] ChatTool 依赖外部 `chatstyle>=0.1.0` 后，公开 Python 下限同步为 `>=3.10`，避免与 ChatStyle 包元数据冲突。
+- [2026-05-06] `chattool pypi probe` 支持把包名作为首个位置参数传入，例如 `chattool pypi probe chatstyle`，不再要求使用 `--name` 前缀。
 - [2026-04-20] `chattool gh` 已重构为分层实现：CLI 入口收口到 `gh pr ...` / `gh run ...` 嵌套命令树，主要命令业务从 `src/chattool/tools/github/cli.py` 迁出到独立命令实现层，请求访问收口为显式 `get_*` / `post_*` / `patch_*` 函数，`GitHubClient` 同步瘦身为围绕这些提取后能力的薄包装；保留了 repo-scoped token 优先级、`set-token`、`repo-perms`、缺参自动补问、`pr checks --wait`、`pr merge --check` 等 ChatTool 定制行为
 
 ### Fixed
@@ -52,7 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - `chattool setup workspace` 现在会把“review 由 loop 在模型准备停下时触发，默认完整做完后再统一汇报结果”写入新生成的 workspace 协议；开发任务还会明确要求每个阶段先测试通过、更新文档，再按 `review.md` 规则完成校验与收尾
 - `chattool setup workspace` 新增 `--with-opencode-loop` 模板版本：启用后会安装本地 OpenCode `chatloop` plugin / commands 资产，并切换到 loop-aware workspace 模板
 - `src/chattool/setup/assets/opencode_chatloop/` 现收纳 ChatTool 管理的 OpenCode `chatloop` 安装源，包括 plugin、slash commands 与最小说明文档
-- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`setup.md`、`CHANGELOG.md`、`AGENTS.md` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
+- `chattool pypi init` 新增 `--template default|cli-style`；其中 `cli-style` 会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`.github/workflows/` 以及 `docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 的基础说明文件，作为更贴近 ChatTool 当前 CLI/文档/测试/自动化规范的初始仓库模板
 - `chattool setup opencode` 现支持 `-e/--env`，可显式复用 ChatTool 的 OpenAI 配置来源；支持 `.env` 文件路径或 `OpenAI` profile 名称，并按 `显式参数 > -e 指定的 OpenAI 配置 > 当前 OpenAI 配置 > 现有 opencode 配置 > 默认值` 回退
 - 新增 `chattool setup workspace [PROFILE] [WORKSPACE_DIR]`，用于在核心项目外围初始化人类-AI 协作工作区骨架；支持 `base` profile、默认中文模板、显式 `--language en`、`--dry-run` 与已完成 `setup.md` 的保护覆盖语义
 - `chattool docker nas` 新增 NAS 静态文件服务模板，生成 compose 与 env 示例占位模板；镜像、路径、端口与 URL 前缀需由用户显式填写或通过 `--set` 覆盖

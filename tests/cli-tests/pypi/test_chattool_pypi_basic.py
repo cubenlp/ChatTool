@@ -179,7 +179,7 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
     assert (project_dir / ".github" / "workflows" / "deploy.yaml").exists()
     assert (project_dir / ".github" / "workflows" / "preview.yaml").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"chatstyle"' in pyproject_text
+    assert '"chatstyle>=0.1.0"' in pyproject_text
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert 'docs = ["mkdocs' in pyproject_text
     cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(

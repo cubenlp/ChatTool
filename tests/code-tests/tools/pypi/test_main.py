@@ -263,7 +263,7 @@ def test_scaffold_cli_style_defaults_to_python_310_and_chatstyle(tmp_path):
     )
 
     assert 'requires-python = ">=3.10"' in pyproject_text
-    assert '"chatstyle"' in pyproject_text
+    assert '"chatstyle>=0.1.0"' in pyproject_text
     assert "CommandSchema" in cli_text
 
 

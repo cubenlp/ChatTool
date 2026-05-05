@@ -314,7 +314,7 @@ def _build_cli_style_pyproject_content(
         'readme = "README.md"',
         f'requires-python = "{_toml_escape(requires_python)}"',
         f'license = "{_toml_escape(license_name)}"',
-        'dependencies = ["click>=8.0", "chatstyle"]',
+        'dependencies = ["click>=8.0", "chatstyle>=0.1.0"]',
     ]
     if author and email:
         lines.append(
