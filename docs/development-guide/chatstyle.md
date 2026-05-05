@@ -1,25 +1,27 @@
 # ChatStyle
 
-`chattool.chatstyle` is the shared CLI style layer for ChatTool. It centralizes reusable prompt primitives, choice helpers, output style, sensitive-value masking, setup-stage display helpers, and shared interaction copy. Business commands should describe fields and behavior; they should not reimplement TTY checks, prompt backends, masking, or `-i/-I` help text.
+`chattool.chatstyle` 是 ChatTool 的共享 CLI 风格层。它集中承载可复用的 prompt 原语、choice helper、输出样式、敏感值脱敏、setup 阶段展示 helper 和统一交互文案。业务命令只应描述字段、参数和业务行为，不应重复实现 TTY 检查、prompt backend、mask 规则或 `-i/-I` help 文案。
 
-## Module Boundary
+英文版见：[chatstyle.en.md](chatstyle.en.md)。
+
+## 模块边界
 
 - `chattool.chatstyle.output`
-  - headings, notes, Rich/click fallback rendering, and common display helpers.
+  - 标题、提示、Rich/click fallback 渲染，以及通用展示 helper。
 - `chattool.chatstyle.prompt`
-  - `ask_text()`, `ask_path()`, `ask_confirm()`, `ask_select()`, `ask_checkbox()`, `ask_checkbox_with_controls()`, and TTY availability.
+  - `ask_text()`、`ask_path()`、`ask_confirm()`、`ask_select()`、`ask_checkbox()`、`ask_checkbox_with_controls()` 和 TTY 可用性检测。
 - `chattool.chatstyle.choice`
-  - `create_choice()`, `get_separator()`, choice normalization, and questionary style.
+  - `create_choice()`、`get_separator()`、choice 归一化和 questionary 样式。
 - `chattool.chatstyle.mask`
-  - `mask_secret()`, current-secret display, and sensitive prompt behavior where Enter keeps the current value.
+  - `mask_secret()`、当前敏感值展示，以及“回车保留当前值”的敏感输入行为。
 - `chattool.chatstyle.setup`
-  - setup-stage display helpers for start, stage, success, warning, failure, suggested commands, and config priority.
+  - setup 阶段展示 helper：开始、阶段、成功、警告、失败、建议命令和配置优先级。
 - `chattool.chatstyle.constants`
-  - shared constants such as `BACK_VALUE`, checkbox indicators, and `INTERACTIVE_OPTION_HELP`.
+  - `BACK_VALUE`、checkbox indicator、`INTERACTIVE_OPTION_HELP` 等共享常量。
 
-## Command Schema Stays In Interaction
+## Command Schema 仍保留在 Interaction
 
-`chattool.interaction.command_schema` remains the command input orchestration layer. Continue using:
+`chattool.interaction.command_schema` 仍是命令输入编排层。继续使用：
 
 - `CommandField`
 - `CommandSchema`
@@ -27,75 +29,75 @@
 - `resolve_command_inputs()`
 - `add_interactive_option()`
 
-Use `CommandSchema` for new commands with recoverable missing arguments. Do not move schema dataclasses or resolver flow into `chatstyle` in this migration stage.
+对缺参后可恢复的命令，继续优先使用 `CommandSchema`。本迁移阶段不要把 schema dataclass 或 resolver 主流程搬到 `chatstyle`。
 
-## Prompt Usage
+## Prompt 使用规范
 
-New shared prompt behavior belongs in `chattool.chatstyle.prompt`. Existing imports from `chattool.interaction.prompt` remain supported as compatibility shims.
+新的共享 prompt 行为应先放到 `chattool.chatstyle.prompt`。旧的 `chattool.interaction.prompt` import 仍作为兼容 shim 保留。
 
-Prefer schema-driven prompting for command arguments. Use direct prompt primitives only for flows that are inherently page-like or wizard-like, such as category selection, setup mode selection, or checkbox selection.
+命令参数补问优先使用 schema 驱动。只有流程本身就是页面式或向导式时，才直接调用 prompt 原语，例如分类选择、setup 模式选择或 checkbox 多选。
 
-Sensitive fields should use password input and masked current-value display. Use `chattool.chatstyle.mask.prompt_sensitive_value()` when Enter should keep the existing value.
+敏感字段应使用 password input，并以 mask 形式展示当前值。若回车应保留已有值，使用 `chattool.chatstyle.mask.prompt_sensitive_value()`。
 
-## Interactive Policy
+## Interactive 策略
 
-Use `@add_interactive_option` from `chattool.interaction.command_schema` for normal commands. It wires:
+普通命令继续使用 `chattool.interaction.command_schema` 提供的 `@add_interactive_option`。它会接入：
 
 ```text
 --interactive/--no-interactive
 -i/-I
 ```
 
-The help text comes from `chattool.chatstyle.constants.INTERACTIVE_OPTION_HELP`.
+help 文案来自 `chattool.chatstyle.constants.INTERACTIVE_OPTION_HELP`。
 
-Semantics:
+语义保持不变：
 
-- missing required values may auto-prompt when a TTY is available
-- `-i` forces the current command's interactive flow
-- `-I` fully disables interactive prompting
-- forced interactive mode without TTY must fail with a shared human-readable message
+- 缺少必要值且 TTY 可用时，可以自动进入交互补问。
+- `-i` 强制进入当前命令的交互流程。
+- `-I` 完全禁用交互。
+- 强制交互但没有 TTY 时，必须用统一的人类可读错误提示失败。
 
-## Output Style
+## 输出风格
 
-Use `chattool.chatstyle.output` for reusable display patterns. Business modules may still print domain-specific results directly, but common headings, notes, summaries, and error display should not be reinvented per command.
+可复用展示模式使用 `chattool.chatstyle.output`。业务模块仍可直接打印领域结果，但通用标题、提示、摘要和错误展示不应在每个命令里重复发明。
 
-When Rich is unavailable, helpers must fall back to plain Click output.
+Rich 不可用时，helper 必须 fallback 到纯 Click 输出。
 
-## Setup Style
+## Setup 风格
 
-Setup commands should expose observable stages:
+setup 命令应暴露可观察阶段：
 
-- start
-- dependency detection
-- install or external operation
-- config write
-- validation
-- completion or failure reason
+- 开始
+- 依赖检测
+- 安装或外部操作
+- 配置写入
+- 验证
+- 完成或失败原因
 
-If a setup flow requires sudo, it must provide an explicit `--sudo` switch. Without `--sudo`, print suggested commands instead of executing them. Use `chattool.chatstyle.setup.setup_suggested_commands()` for this display.
+如果 setup 流程涉及 sudo，必须提供显式 `--sudo` 开关。未传 `--sudo` 时，只打印建议命令，不直接执行。建议命令展示使用 `chattool.chatstyle.setup.setup_suggested_commands()`。
 
-When a setup command resolves values from multiple sources, document and show the priority consistently:
+setup 命令从多个来源解析值时，应一致记录和展示优先级：
 
 ```text
-explicit args > -e/--env > tool default config > system env > ChatTool .env > default
+显式参数 > -e/--env > 工具默认配置位置 > 系统环境变量 > ChatTool .env > 默认值
 ```
 
-## Compatibility During Migration
+## 迁移期兼容
 
-The old `chattool.interaction` prompt, choice, render, and constants modules are compatibility shims over `chattool.chatstyle`. Existing command imports and tests should continue to work. New reusable style behavior should be added under `chattool.chatstyle` first, then exposed through compatibility shims only when needed.
+旧的 `chattool.interaction` prompt、choice、render 和 constants 模块已变成指向 `chattool.chatstyle` 的兼容 shim。已有命令 import 和测试应继续可用。新的可复用风格能力应先加到 `chattool.chatstyle`，只有需要兼容旧入口时再通过 shim 暴露。
 
-## CLI Test Expectations
+## CLI 测试要求
 
-CLI behavior remains doc-first:
+CLI 行为继续保持 doc-first：
 
-- real CLI tests live in `tests/cli-tests`
-- mock CLI orchestration tests live in `tests/mock-cli-tests`
-- mock paths that patch `chattool.interaction.command_schema.ask_text` remain valid during migration
+- 真实 CLI 测试放在 `tests/cli-tests`
+- mock CLI 编排测试放在 `tests/mock-cli-tests`
+- 迁移期内，patch `chattool.interaction.command_schema.ask_text` 这类旧 mock 路径仍有效
 
-When adding or changing CLI interactions, verify:
+新增或修改 CLI 交互时，必须验证：
 
-- missing arguments enter interactive only when allowed
-- `-i` and `-I` keep their documented behavior
-- default values shown in prompts match actual execution
-- sensitive values are masked in display and hidden during input
-- non-TTY errors are readable and actionable
+- 缺参只在允许时进入 interactive
+- `-i` 与 `-I` 保持文档语义
+- prompt 展示的默认值与实际执行一致
+- 敏感值展示时脱敏，输入时不回显
+- 非 TTY 错误可读且可操作

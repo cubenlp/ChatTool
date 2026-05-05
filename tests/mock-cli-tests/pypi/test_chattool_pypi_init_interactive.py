@@ -93,7 +93,13 @@ def test_chattool_pypi_init_cli_style_template_interactive(
     assert result.exit_code == 0
     assert (tmp_path / "demo-pkg" / "DEVELOP.md").exists()
     assert (tmp_path / "demo-pkg" / "setup.md").exists()
+    assert (tmp_path / "demo-pkg" / "README.en.md").exists()
+    assert (tmp_path / "demo-pkg" / "mkdocs.yml").exists()
+    assert (tmp_path / "demo-pkg" / "docs" / "index.md").exists()
+    assert (tmp_path / "demo-pkg" / "docs" / "index.en.md").exists()
     assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "ci.yml").exists()
+    assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "deploy.yaml").exists()
+    assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "preview.yaml").exists()
 
 
 def test_chattool_pypi_init_stops_early_when_project_dir_not_empty(

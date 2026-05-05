@@ -154,7 +154,7 @@ def cli():
     "license_name",
     default="MIT",
     show_default=True,
-    help="Project license label.",
+    help="Project license template: MIT, Apache-2.0, BSD-3-Clause, GPL-3.0-only, or Proprietary.",
 )
 @click.option(
     "--version",

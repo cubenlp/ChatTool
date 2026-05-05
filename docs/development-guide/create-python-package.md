@@ -48,6 +48,8 @@ mychat/
 - 版本号来自 `src/mychat/__init__.py` 中的 `__version__`，通过 `tool.setuptools.dynamic` 暴露。
 - `tests/conftest.py` 会自动把 `src/` 加入导入路径，保证新项目能直接运行 `python -m pytest -q`。
 - 初始 README 已包含 `chattool pypi build/check` 的最短验证命令。
+- `LICENSE` 会根据 `--license` 写入模板内容；内置 `MIT`、`Apache-2.0`、`BSD-3-Clause`、`GPL-3.0-only` 和 `Proprietary`。
+- `cli-style` 模板会额外生成默认中文文档、`.en.md` 英文副本、mkdocs 配置、docs deploy/preview workflow，以及 `tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。
 
 ## 适用场景
 
