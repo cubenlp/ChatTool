@@ -1,4 +1,4 @@
-"""Compatibility adapter for external :mod:`chatstyle` command schemas."""
+"""ChatTool policy adapter for external :mod:`chatstyle` command schemas."""
 
 from chatstyle import (
     CommandConstraint,

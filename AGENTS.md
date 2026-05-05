@@ -37,7 +37,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - 必要参数缺失时自动触发 interactive 模式
 - `-i` 强制开启交互，`-I` 强制关闭（参数不全则报错）
 - 参数默认值从环境变量读取，敏感值在提示中自动 mask
-- 外部 `chatstyle` 是 CLI 交互规范的 canonical runtime；`src/chattool/interaction/` 和 `src/chattool/chatstyle/` 只保留 ChatTool 侧 facade/adapter。
+- 外部 `chatstyle` 是 CLI 交互规范的 canonical runtime；ChatTool 不再维护 `src/chattool/chatstyle/` 本地风格层，`src/chattool/interaction/` 只保留命令侧 adapter 入口、policy、command schema 和 warnings。
 - 新 CLI 默认优先使用 `src/chattool/interaction/command_schema.py` 重新导出的 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，不要在每个命令里重复手写缺参判断、TTY 检查和 prompt 流程
 - 对可恢复缺参，避免直接使用 Click 的 `required=True` 或必填位置参数；否则会在 callback 执行前被 Click 拦截，统一交互机制无法运行
 - 进入 interactive 后，补全当前任务相关的关键参数

@@ -90,7 +90,7 @@
 - 必要参数不完整时，自动触发 interactive。
 - `-i` 强制 interactive，`-I` 强制非 interactive；参数不全时抛错。
 - 参数提示读取默认值并显示脱敏内容（密钥必须 mask）。
-- 外部 `chatstyle` 是 ChatArch CLI 交互规范的 canonical runtime；ChatTool 内的 `src/chattool/chatstyle/` 与 `src/chattool/interaction/` 只保留 facade/adapter。
+- 外部 `chatstyle` 是 ChatArch CLI 交互规范的 canonical runtime；ChatTool 不再维护 `src/chattool/chatstyle/` 本地风格层，`src/chattool/interaction/` 只保留命令侧 adapter 入口、policy、command schema 和 warnings。
 - 新 CLI 命令默认应优先使用 `src/chattool/interaction/command_schema.py` 重新导出的 `CommandField`、`CommandSchema`、`CommandConstraint`、`resolve_command_inputs()` 与 `add_interactive_option()`，不要在每个命令里重复手写 `missing_required`、TTY 判断和逐项 `ask_text()`。
 - 除非参数本身就是纯机械性的、且缺失后不需要恢复，否则不要再把交互可恢复参数直接写成 Click 的 `required=True` 或必填位置参数；这会让命令在进入 callback 之前就被 Click 拦截，统一交互机制无法执行。
 - 命令函数优先只做三件事：接入 Click 参数、调用共享 resolver 拿到完整输入、执行业务逻辑。缺参补问和约束校验应尽量声明在 schema 里。
@@ -295,7 +295,7 @@ INFO: Start opencode setup
 
 - [目录职责说明](directory-responsibilities.md)：目录边界、依赖方向与归位规则。
 - [架构概览与设计特点](architecture-overview.md)：分层结构、设计目标、能力沉淀路径与架构优势。
-- [ChatStyle](chatstyle.md)：CLI 风格、prompt、mask、setup 输出与 command schema 边界。
+- [ChatStyle](chatstyle.md)：CLI 风格、prompt、mask、render 输出与 command schema 边界。
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。
 - [CLI 交互统一设计](../design/chattool-cli-interaction-design.md)：统一 interactive 策略、TUI 模块边界与迁移顺序。
 - [Mock CLI Tests](mock-cli-tests.md)：mock CLI 测试的目录边界、doc-first 规则与使用边界。

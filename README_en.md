@@ -32,7 +32,7 @@ A Python toolkit integrating LLM chat, Feishu/Lark bots, DNS management, SSL cer
 pip install chattool --upgrade
 ```
 
-Minimum supported Python version: `3.9`.
+Minimum supported Python version: `3.10`.
 
 ## Features
 
@@ -179,6 +179,19 @@ chattool nginx -i
 | Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-opencode-loop` for a loop-aware OpenCode workspace variant |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
+
+## PyPI Package Scaffolding
+
+```bash
+chattool pypi init mychat
+chattool pypi init cli-style mycli
+chattool pypi probe mychat
+chatpypi mychat
+```
+
+The default template writes `requires-python = ">=3.9"`. The `cli-style` template writes `requires-python = ">=3.10"`, depends on `chatstyle>=0.1.0`, and adds `README.en.md`, `mkdocs.yml`, docs, tests, and GitHub workflow scaffolding.
+
+`chattool pypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata when the name already exists.
 
 ## License
 

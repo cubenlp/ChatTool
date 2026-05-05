@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- [2026-05-06] 准备 `6.7.0` 版本：ChatTool 依赖外部 ChatStyle，清理本地 CLI style facade，并同步 `chattool pypi init cli-style` 模板与 `probe <name>` 入口。
 - [2026-05-06] 新增 `chattool setup zsh`，可配置 zsh / git / oh-my-zsh / powerlevel10k，`-i` 时先以默认值候选框选择 zsh 基础配置项，再以默认全选候选框选择 oh-my-zsh 插件，并把 QuickSetup 当前 `zsh_aliases` 风格完整常用 alias 与 ChatTool alias 写入 `~/.zsh_aliases`；系统依赖只做存在性检查，缺少 `zsh` / `git` 时直接退出并提示对应 `sudo apt install ... -y`。
 - [2026-05-06] ChatTool 本地迁移到外部 `chatstyle` runtime：删除 `chattool.chatstyle` 本地风格层，并移除 `chattool.interaction` 下 prompt、choice、render、constants 等纯转发子模块；`chattool.interaction` 只保留命令侧 adapter 入口、policy、command schema 和 warnings，prompt、choice、output、mask、flow 和 command schema 的通用实现由独立 ChatStyle 项目承载。
 - [2026-05-05] 抽取 ChatArch CLI 风格层：集中定义 prompt、choice、output、mask、render 展示与 `-i/-I` 共享文案；`chattool.interaction` prompt / choice / render / constants 入口保留为 ChatTool adapter，`CommandSchema` 通过 `chattool.interaction.command_schema` 负责参数编排。
