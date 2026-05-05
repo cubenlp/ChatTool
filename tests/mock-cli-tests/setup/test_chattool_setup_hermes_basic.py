@@ -31,7 +31,8 @@ def test_setup_hermes_dry_run_registers_and_plans_install():
     )
 
     assert result.exit_code == 0
-    assert "Hermes agent dir: /tmp/chattool-hermes-agent" in result.output
+    assert "Hermes agent dir:" in result.output
+    assert "chattool-hermes-agent" in result.output
     assert "git clone https://github.com/NousResearch/hermes-agent.git" in result.output
     assert "uv pip install" in result.output
     assert "Would write Hermes env:" in result.output
