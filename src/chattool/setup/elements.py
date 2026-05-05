@@ -12,6 +12,7 @@ from chattool.setup.hermes import setup_hermes
 from chattool.setup.lark_cli import setup_lark_cli
 from chattool.setup.opencode import setup_opencode
 from chattool.setup.alias import setup_alias
+from chattool.setup.zsh import setup_zsh
 from chattool.setup.nodejs import setup_nodejs
 from chattool.setup.workspace import setup_workspace
 
@@ -52,6 +53,16 @@ def docker_setup(sudo, interactive, log_level):
 
 def alias_setup(shell, dry_run):
     setup_alias(shell=shell, dry_run=dry_run)
+
+
+def zsh_setup(omz, aliases, login_shell, interactive, log_level):
+    setup_zsh(
+        interactive=interactive,
+        install_omz=omz,
+        aliases=aliases,
+        login_shell=login_shell,
+        log_level=log_level,
+    )
 
 
 def codex_setup(api_key, base_url, model, env, interactive, install_only, log_level):
@@ -206,6 +217,42 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "is_flag": True,
                     "help": "Preview alias changes without writing to shell rc file.",
+                },
+            ),
+        ),
+    ),
+    SetupCommandElement(
+        name="zsh",
+        help="Setup zsh, oh-my-zsh, plugins, theme, and shell aliases.",
+        callback=zsh_setup,
+        options=(
+            LOG_LEVEL_OPTION,
+            SetupOptionElement(
+                param_decls=("--omz/--no-omz",),
+                kwargs={
+                    "default": True,
+                    "help": "Install/configure oh-my-zsh plugins and powerlevel10k theme.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--aliases/--no-aliases",),
+                kwargs={
+                    "default": True,
+                    "help": "Write managed aliases to ~/.zsh_aliases and source it from ~/.zshrc.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--login-shell/--no-login-shell",),
+                kwargs={
+                    "default": True,
+                    "help": "Manage ~/.bash_profile handoff that execs zsh -l.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--interactive/--no-interactive", "-i/-I"),
+                kwargs={
+                    "default": None,
+                    "help": "-i opens optional setup choices, -I disables prompts.",
                 },
             ),
         ),
