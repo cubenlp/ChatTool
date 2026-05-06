@@ -14,7 +14,11 @@ def runner():
 
 
 def test_dns_help_commands(runner):
+    result = runner.invoke(cli, ["dns", "list", "--help"])
+    assert result.exit_code == 0
     result = runner.invoke(cli, ["dns", "get", "--help"])
+    assert result.exit_code == 0
+    result = runner.invoke(cli, ["dns", "delete", "--help"])
     assert result.exit_code == 0
     result = runner.invoke(cli, ["dns", "ddns", "--help"])
     assert result.exit_code == 0
@@ -169,6 +173,72 @@ def test_dns_get_set_parsing(runner):
 
         result = runner.invoke(cli, ["dns", "get", "test.example.com"])
         assert result.exit_code == 0
+
+
+def test_dns_list_domains(runner):
+    with patch("chattool.tools.dns.cli.create_dns_client") as MockFactory:
+        client = MockFactory.return_value
+        client.describe_domains.return_value = [
+            {
+                "DomainName": "example.com",
+                "DomainId": "d-1",
+                "Status": "ENABLE",
+                "RecordCount": 3,
+                "Remark": "demo",
+            }
+        ]
+
+        result = runner.invoke(
+            cli,
+            ["dns", "list", "--provider", "tencent", "--page", "2", "--page-size", "5"],
+        )
+
+    assert result.exit_code == 0
+    MockFactory.assert_called_once()
+    client.describe_domains.assert_called_once_with(page_number=2, page_size=5)
+    assert "DNS域名 (tencent)" in result.output
+    assert "example.com" in result.output
+
+
+def test_dns_delete_record_filters_and_deletes(runner):
+    with patch("chattool.tools.dns.cli.create_dns_client") as MockFactory:
+        client = MockFactory.return_value
+        client.describe_domain_records.return_value = [
+            {
+                "RecordId": "1",
+                "RR": "test",
+                "Type": "A",
+                "Value": "1.2.3.4",
+                "TTL": 600,
+            },
+            {
+                "RecordId": "2",
+                "RR": "test",
+                "Type": "A",
+                "Value": "5.6.7.8",
+                "TTL": 600,
+            },
+        ]
+        client.delete_domain_record.return_value = True
+
+        result = runner.invoke(
+            cli,
+            ["dns", "delete", "test.example.com", "-t", "A", "-v", "1.2.3.4", "-I"],
+        )
+
+    assert result.exit_code == 0
+    client.describe_domain_records.assert_called_once_with(
+        "example.com", subdomain="test", record_type="A"
+    )
+    client.delete_domain_record.assert_called_once_with("1", domain_name="example.com")
+    assert "删除成功: 1 条记录" in result.output
+
+
+def test_dns_delete_requires_record_type_when_interaction_disabled(runner):
+    result = runner.invoke(cli, ["dns", "delete", "test.example.com", "-I"])
+
+    assert result.exit_code != 0
+    assert "必须提供要删除的记录类型" in result.output
 
 
 def test_dns_cert_apply_passes_new_interface_options(runner, monkeypatch):

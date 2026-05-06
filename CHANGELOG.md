@@ -2,11 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project follows [Semantic Versioning](https://semver.org/).
+本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
-## [Unreleased]
+## 2026-05-07
+- `chattool dns` 新增 `list` 域名列表命令和 `delete` 记录删除命令，覆盖 provider 已有的域名枚举与记录删除能力。
+- `CHANGELOG.md` 取消待发布分组，改为按日期追加更新记录。
 
-### Added
+## 2026-05-06
 - [2026-05-06] 新增 `chatenv paste` / `chattool env paste`，可粘贴或从 stdin 导入 `chatenv cat -t <type> --no-mask` 输出和 `.env` 风格文本，自动识别已注册配置 key，并在交互中询问可选 profile name 后按类型写入 active `.env` 或同名 profile，覆盖前会展示概要并要求确认。
 - [2026-05-06] 准备 `6.7.0` 版本：ChatTool 依赖外部 ChatStyle，清理本地 CLI style facade，并同步 `chattool pypi init <name> -t cli-style` 模板与 `probe <name>` 入口。
 - [2026-05-06] 新增 `chattool setup zsh`，可配置 zsh / git / oh-my-zsh / powerlevel10k，`-i` 时先以默认值候选框选择 zsh 基础配置项，再以默认全选候选框选择 oh-my-zsh 插件，并把 QuickSetup 当前 `zsh_aliases` 风格完整常用 alias 与 ChatTool alias 写入 `~/.zsh_aliases`；系统依赖只做存在性检查，缺少 `zsh` / `git` 时直接退出并提示对应 `sudo apt install ... -y`。

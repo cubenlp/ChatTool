@@ -1,6 +1,6 @@
 # test_chattool_dns_basic
 
-测试 `chattool dns` 的 mock 基础链路，覆盖默认交互入口、ddns/get/set/cert 的命令流程与参数解析。
+测试 `chattool dns` 的 mock 基础链路，覆盖默认交互入口、list/get/set/delete/ddns/cert 的命令流程与参数解析。
 
 ## 元信息
 
@@ -19,16 +19,20 @@
   - 无
 
 预期过程和结果：
-  1. 执行 `chattool dns get --help`，预期输出命令说明。
-  2. 执行 `chattool dns ddns --help`，预期输出命令说明。
-  3. 执行 `chattool dns cert --help`，预期输出 `apply` 和 `check`。
-  4. 执行 `chattool dns cert apply --help`，预期输出命令说明。
-  5. 执行 `chattool dns cert check --help`，预期输出命令说明。
+  1. 执行 `chattool dns list --help`，预期输出命令说明。
+  2. 执行 `chattool dns get --help`，预期输出命令说明。
+  3. 执行 `chattool dns delete --help`，预期输出命令说明。
+  4. 执行 `chattool dns ddns --help`，预期输出命令说明。
+  5. 执行 `chattool dns cert --help`，预期输出 `apply` 和 `check`。
+  6. 执行 `chattool dns cert apply --help`，预期输出命令说明。
+  7. 执行 `chattool dns cert check --help`，预期输出命令说明。
 
 参考执行脚本（伪代码）：
 
 ```sh
+chattool dns list --help
 chattool dns get --help
+chattool dns delete --help
 chattool dns ddns --help
 chattool dns cert --help
 chattool dns cert apply --help
@@ -112,6 +116,26 @@ chattool dns get
 chattool dns cert apply -d example.com -e admin@example.com --provider tencent --force -I
 chattool dns cert apply -d example.com -I
 chattool dns cert-update --help
+```
+
+## 用例 6：域名列表和删除记录
+
+- 初始环境准备：
+  - patch `create_dns_client`，避免真实访问云厂商。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+1. 执行 `chattool dns list --provider tencent --page 2 --page-size 5`，预期调用 provider 的 `describe_domains(page_number=2, page_size=5)` 并输出域名表。
+2. 执行 `chattool dns delete test.example.com -t A -v 1.2.3.4 -I`，预期先查询记录，再只删除匹配 value 的记录。
+3. 执行 `chattool dns delete test.example.com -I`，预期因缺少 `--type` 报错，避免误删整组记录。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool dns list --provider tencent --page 2 --page-size 5
+chattool dns delete test.example.com -t A -v 1.2.3.4 -I
+chattool dns delete test.example.com -I
 ```
 
 ## 清理 / 回滚

@@ -18,6 +18,14 @@ class TestDNSIntegration:
         assert result.exit_code == 0
         assert 'Show DNS record details.' in result.output
 
+        result = runner.invoke(cli, ['dns', 'list', '--help'])
+        assert result.exit_code == 0
+        assert 'List DNS domains' in result.output
+
+        result = runner.invoke(cli, ['dns', 'delete', '--help'])
+        assert result.exit_code == 0
+        assert 'Delete DNS records' in result.output
+
     def test_dns_ddns_help(self, runner):
         """Test dns ddns help command"""
         result = runner.invoke(cli, ['dns', 'ddns', '--help'])

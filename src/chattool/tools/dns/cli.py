@@ -36,9 +36,11 @@ def cli(ctx):
     selected = ask_select(
         "选择 DNS 命令",
         choices=[
+            "list - 查看域名列表",
             "ddns - 动态更新 DNS 记录",
             "set - 创建或更新 DNS 记录",
             "get - 查询 DNS 记录",
+            "delete - 删除 DNS 记录",
             "cert - 证书管理",
         ],
     )
@@ -124,6 +126,34 @@ DNS_SET_SCHEMA = CommandSchema(
 )
 
 
+DNS_DELETE_SCHEMA = CommandSchema(
+    name="dns-delete",
+    fields=(
+        CommandField(
+            "domain",
+            prompt="domain",
+            required=True,
+            missing_message="必须提供 full_domain 或同时提供 -d 和 -r，并指定 --type。",
+        ),
+        CommandField(
+            "rr",
+            prompt="rr",
+            required=True,
+            default="@",
+            prompt_if_missing=True,
+            missing_message="必须提供 full_domain 或同时提供 -d 和 -r，并指定 --type。",
+        ),
+        CommandField(
+            "record_type",
+            prompt="type",
+            required=True,
+            missing_message="必须提供要删除的记录类型，例如 -t A。",
+        ),
+    ),
+    constraints=(CommandConstraint(_validate_dns_domain_pair),),
+)
+
+
 DNS_GET_SCHEMA = CommandSchema(
     name="dns-get",
     fields=(
@@ -134,6 +164,76 @@ DNS_GET_SCHEMA = CommandSchema(
     ),
     constraints=(CommandConstraint(_validate_dns_domain_only),),
 )
+
+
+def _print_domain_table(domains, provider):
+    if not domains:
+        click.echo("未找到域名")
+        return
+
+    click.echo(f"DNS域名 ({provider}):")
+    click.echo(
+        f"{'DomainName':<30} {'DomainId':<18} {'Status':<10} {'Records':<8} {'Remark'}"
+    )
+    click.echo("-" * 90)
+    for domain in domains:
+        click.echo(
+            f"{domain.get('DomainName', '-'):<30} "
+            f"{str(domain.get('DomainId', '-')):<18} "
+            f"{str(domain.get('Status', '-')):<10} "
+            f"{str(domain.get('RecordCount', '-')):<8} "
+            f"{domain.get('Remark', '-') or '-'}"
+        )
+
+
+def _print_record_table(records, provider):
+    if not records:
+        click.echo("未找到匹配的记录")
+        return
+
+    click.echo(f"DNS记录 ({provider}):")
+    click.echo(
+        f"{'ID':<20} {'RR':<15} {'Type':<8} {'Value':<30} {'TTL':<6} {'Status'}"
+    )
+    click.echo("-" * 90)
+    for record in records:
+        click.echo(
+            f"{record['RecordId']:<20} "
+            f"{record['RR']:<15} "
+            f"{record['Type']:<8} "
+            f"{record['Value']:<30} "
+            f"{record['TTL']:<6} "
+            f"{record.get('Status', '-')}"
+        )
+
+
+@cli.command(name="list")
+@click.option(
+    "--provider",
+    "-p",
+    default="aliyun",
+    type=click.Choice(["aliyun", "tencent"]),
+    help="DNS提供商 (默认: aliyun)",
+)
+@click.option("--page", "page_number", default=1, show_default=True, help="页码")
+@click.option(
+    "--page-size", default=20, show_default=True, help="每页数量，具体上限由云厂商决定"
+)
+def list_domains(provider, page_number, page_size):
+    """List DNS domains in the provider account."""
+    logger = setup_logger("dns_list", log_level="INFO", format_type="simple")
+    try:
+        client = create_dns_client(provider, logger=logger)
+        domains = client.describe_domains(
+            page_number=page_number,
+            page_size=page_size,
+        )
+        _print_domain_table(domains, provider)
+    except click.ClickException:
+        raise
+    except Exception as e:
+        logger.error(f"获取DNS域名列表失败: {e}")
+        raise click.ClickException(f"获取DNS域名列表失败: {e}")
 
 
 @cli.command()
@@ -357,25 +457,74 @@ def get_record(full_domain, domain, rr, record_type, provider, interactive):
         records = client.describe_domain_records(
             domain, subdomain=rr, record_type=record_type
         )
-
-        if records:
-            click.echo(f"DNS记录 ({provider}):")
-            click.echo(
-                f"{'ID':<20} {'RR':<15} {'Type':<8} {'Value':<30} {'TTL':<6} {'Status'}"
-            )
-            click.echo("-" * 90)
-            for r in records:
-                click.echo(
-                    f"{r['RecordId']:<20} {r['RR']:<15} {r['Type']:<8} {r['Value']:<30} {r['TTL']:<6} {r.get('Status', '-')}"
-                )
-        else:
-            click.echo("未找到匹配的记录")
+        _print_record_table(records, provider)
 
     except click.ClickException:
         raise
     except Exception as e:
         logger.error(f"获取DNS记录失败: {e}")
         raise click.ClickException(f"获取DNS记录失败: {e}")
+
+
+@cli.command(name="delete")
+@click.argument("full_domain", required=False)
+@click.option("--domain", "-d", help="域名")
+@click.option("--rr", "-r", help="主机记录")
+@click.option("--type", "-t", "record_type", required=False, help="记录类型")
+@click.option("--value", "-v", required=False, help="记录值过滤")
+@click.option(
+    "--provider",
+    "-p",
+    default="aliyun",
+    type=click.Choice(["aliyun", "tencent"]),
+    help="DNS提供商 (默认: aliyun)",
+)
+@add_interactive_option
+def delete_record(full_domain, domain, rr, record_type, value, provider, interactive):
+    """Delete DNS records by domain, host record, type, and optional value."""
+    domain, rr = _resolve_domain_inputs(full_domain, domain, rr)
+    inputs = resolve_command_inputs(
+        schema=DNS_DELETE_SCHEMA,
+        provided={"domain": domain, "rr": rr, "record_type": record_type},
+        interactive=interactive,
+        usage="Usage: chattool dns delete [FULL_DOMAIN] --type TYPE [--value TEXT] [--provider aliyun|tencent] [-i|-I]",
+    )
+    domain = inputs["domain"]
+    rr = inputs["rr"]
+    record_type = inputs["record_type"]
+
+    logger = setup_logger("dns_delete", log_level="INFO", format_type="simple")
+    try:
+        client = create_dns_client(provider, logger=logger)
+        records = client.describe_domain_records(
+            domain, subdomain=rr, record_type=record_type
+        )
+        matches = [
+            record
+            for record in records
+            if record.get("Type") == record_type
+            and (value is None or record.get("Value") == value)
+        ]
+        if not matches:
+            click.echo("未找到匹配的记录")
+            return
+
+        deleted_count = 0
+        for record in matches:
+            if client.delete_domain_record(record["RecordId"], domain_name=domain):
+                deleted_count += 1
+
+        if deleted_count == len(matches):
+            click.echo(f"删除成功: {deleted_count} 条记录")
+            return
+        raise click.ClickException(
+            f"删除部分失败: {deleted_count}/{len(matches)} 条记录已删除"
+        )
+    except click.ClickException:
+        raise
+    except Exception as e:
+        logger.error(f"删除DNS记录失败: {e}")
+        raise click.ClickException(f"删除DNS记录失败: {e}")
 
 
 @cli.command(name="hook-auth", hidden=True)

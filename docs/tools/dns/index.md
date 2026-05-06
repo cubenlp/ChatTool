@@ -6,7 +6,7 @@ ChatTool 提供了一套统一的 DNS 管理工具，旨在简化跨云厂商（
 
 - **统一接口**：无论底层是阿里云还是腾讯云，都使用相同的 API 进行操作。
 - **自动配置**：集成 ChatTool 的统一配置系统，支持从 `.env` 文件自动读取凭证。
-- **命令行工具**：提供开箱即用的 DDNS 更新 CLI 工具。
+- **命令行工具**：提供域名列表、记录查询/设置/删除、DDNS 和证书管理 CLI。
 - **异步支持**：提供异步获取公网 IP 的辅助方法。
 
 ## 快速开始
@@ -71,7 +71,7 @@ client.delete_subdomain_records("example.com", "temp")
 
 ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 DNS 记录（常用于 DDNS 场景）以及管理 SSL 证书。
 
-在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns get` / `set` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
+在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns get` / `set` / `delete` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
 
 ### 基本用法
 
@@ -80,6 +80,10 @@ ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 
 ```bash
 # 直接进入 DNS 交互入口
 chattool dns
+
+# 查看账号下的域名列表
+chattool dns list
+chattool dns list --provider tencent --page 1 --page-size 50
 
 # 获取 DNS 记录 (get)
 # 完整域名方式:
@@ -96,7 +100,24 @@ chattool dns set test.example.com -v 1.2.3.4
 chattool dns set
 # 指定类型和 TTL
 chattool dns set test.example.com -v "some-text-value" -t TXT --ttl 300
+
+# 删除 DNS 记录 (delete)
+# 删除 test.example.com 下所有 A 记录
+chattool dns delete test.example.com -t A
+# 只删除匹配 value 的 A 记录
+chattool dns delete test.example.com -t A -v 1.2.3.4
 ```
+
+当前 CLI 对 provider 能力的映射：
+
+| Provider 能力 | CLI |
+| --- | --- |
+| `describe_domains()` | `chattool dns list` |
+| `describe_domain_records()` / `describe_subdomain_records()` | `chattool dns get` |
+| `add_domain_record()` / `update_domain_record()` | `chattool dns set` |
+| `delete_domain_record()` | `chattool dns delete` |
+| `DynamicIPUpdater.run_once()` | `chattool dns ddns` |
+| `SSLCertUpdater.run_once()` | `chattool dns cert apply` |
 
 #### 2. 动态域名更新 (DDNS)
 

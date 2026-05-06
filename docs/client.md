@@ -401,7 +401,19 @@ chattool dns set -d example.com -r _test -t TXT -v "some-value"
 - `--ttl`: TTL 值 (默认: 600)。
 - `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
 
-### 1.3 SSL 证书 (`dns cert`)
+### 1.3 域名列表与删除记录
+
+```bash
+chattool dns list
+chattool dns list --provider tencent --page-size 50
+chattool dns delete test.example.com -t A
+chattool dns delete test.example.com -t A -v 1.2.3.4
+```
+
+- `list` 会调用云厂商域名列表接口，输出 `DomainName`、`DomainId`、`Status`、记录数量和备注。
+- `delete` 需要显式传入 `--type/-t`，避免误删整个主机记录；可选 `--value/-v` 进一步限制删除目标。
+
+### 1.4 SSL 证书 (`dns cert`)
 
 使用 Let's Encrypt 和 DNS 验证自动申请和续期 SSL 证书。
 
