@@ -43,8 +43,8 @@
 
 - `chattool dns ddns`
 - `chattool dns set`
-- `chattool dns get`
-- `chattool dns cert-update`
+- `chattool dns records`
+- `chattool dns cert apply`
 
 行为：
 
@@ -186,14 +186,14 @@
 
 - `docs/client.md`
   - `dns set` 的 `--value`
-  - `dns cert-update`
+  - `dns cert apply`
   - `client cert`
   - `network ping`
   - `gh`
   - `zulip`
   - `env/chatenv` 章节
 - `docs/tools/dns/index.md`
-  - `cert-update` 参数说明是否仍写成“必填”而未说明交互补问
+  - `cert apply` 参数说明是否仍写成“必填”而未说明交互补问
 - `docs/tools/network/index.md`
   - `network ping --network` 是否仍只描述为“必填”
 

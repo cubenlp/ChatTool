@@ -375,13 +375,13 @@ chattool dns ddns public.example.com --ttl 600 --max-retries 5 --retry-delay 10
 
 ### 1.2 记录管理
 
-**获取记录 (`get`):**
+**获取记录 (`records`):**
 ```bash
 # 获取域名的所有记录
-chattool dns get -d example.com
+chattool dns records example.com
 
 # 获取特定记录
-chattool dns get test.example.com
+chattool dns records test.example.com
 ```
 **选项:**
 - `-t, --type`: 记录类型过滤 (例如 `A`, `TXT`, `CNAME`)。
@@ -401,16 +401,31 @@ chattool dns set -d example.com -r _test -t TXT -v "some-value"
 - `--ttl`: TTL 值 (默认: 600)。
 - `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
 
-### 1.3 SSL 证书 (`cert-update`)
+### 1.3 域名列表与删除记录
+
+```bash
+chattool dns list
+chattool dns list --provider tencent --page-size 50
+chattool dns delete test.example.com -t A --yes
+chattool dns delete test.example.com -t A -v 1.2.3.4 --yes
+chattool dns ip
+```
+
+- `list` 会调用云厂商域名列表接口，输出 `DomainName`、`DomainId`、`Status`、记录数量和备注。
+- `delete` 需要显式传入 `--type/-t`，避免误删整个主机记录；可选 `--value/-v` 进一步限制删除目标；非交互删除需要 `--yes`。
+- `ip` 只输出当前探测到的 public/local IP，不初始化 DNS provider。
+
+### 1.4 SSL 证书 (`dns cert`)
 
 使用 Let's Encrypt 和 DNS 验证自动申请和续期 SSL 证书。
 
 ```bash
-chattool dns cert-update -d example.com -d *.example.com -e admin@example.com
-chattool dns cert-update
+chattool dns cert apply -d example.com -d *.example.com -e admin@example.com
+chattool dns cert apply -d example.com
+chattool dns cert check -d example.com
 ```
 
-在交互终端里，缺少域名或邮箱时会自动补问；显式传 `-I` 时才会禁用交互并直接报错。
+在交互终端里，缺少域名或邮箱时会自动补问；邮箱未显式传入时默认读取 `git config user.email`；显式传 `-I` 时才会禁用交互并直接报错。旧入口 `chattool dns cert-update` 已移除。
 
 **输出文件结构:**
 证书将保存在 `<cert-dir>/<domain>/` 目录下，包含以下文件：
@@ -420,11 +435,12 @@ chattool dns cert-update
 - `chain.pem`: 中间证书。
 
 **完整选项说明:**
-- `-d, --domains`: 域名列表 (可多次使用，支持通配符)。
-- `-e, --email`: 用于 Let's Encrypt 注册的邮箱。
+- `-d, --domain`: 域名列表 (可多次使用，支持通配符)。
+- `-e, --email`: 用于 Let's Encrypt 注册的邮箱；未传时读取 `git config user.email`。
 - `-p, --provider`: 用于验证的 DNS 提供商 (`aliyun` 或 `tencent`，默认: `aliyun`)。
 - `--cert-dir`: 证书存储根目录 (默认: `certs`)。
 - `--staging`: 使用 Let's Encrypt 测试环境 (用于测试)。
+- `--force`: 跳过本地过期判断，强制申请/续期。
 - `--log-file`: 日志文件路径 (默认不记录到文件)。
 
 ---

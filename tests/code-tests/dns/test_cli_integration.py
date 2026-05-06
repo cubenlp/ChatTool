@@ -1,7 +1,7 @@
 import pytest
-import os
 from click.testing import CliRunner
 from chattool.client.main import cli
+from chattool.config import AliyunConfig, TencentConfig
 
 @pytest.fixture
 def runner():
@@ -13,27 +13,45 @@ class TestDNSIntegration:
     """DNS CLI Integration Tests - Real Production Tests"""
 
     def test_dns_list_help(self, runner):
-        """Test dns get help command"""
-        result = runner.invoke(cli, ['dns', 'get', '--help'])
+        """Test dns list/records/delete/ip help commands"""
+        result = runner.invoke(cli, ['dns', 'records', '--help'])
         assert result.exit_code == 0
-        assert '获取DNS记录信息' in result.output
+        assert 'Show DNS record details.' in result.output
+
+        result = runner.invoke(cli, ['dns', 'get', '--help'])
+        assert result.exit_code != 0
+
+        result = runner.invoke(cli, ['dns', 'list', '--help'])
+        assert result.exit_code == 0
+        assert 'List DNS domains' in result.output
+
+        result = runner.invoke(cli, ['dns', 'delete', '--help'])
+        assert result.exit_code == 0
+        assert 'Delete DNS records' in result.output
+
+        result = runner.invoke(cli, ['dns', 'ip', '--help'])
+        assert result.exit_code == 0
+        assert 'current public or local IP' in result.output
 
     def test_dns_ddns_help(self, runner):
         """Test dns ddns help command"""
         result = runner.invoke(cli, ['dns', 'ddns', '--help'])
         assert result.exit_code == 0
-        assert '执行动态DNS更新' in result.output
+        assert 'Run dynamic DNS updates' in result.output
 
     def test_dns_cert_help(self, runner):
         """Test dns cert help command"""
-        result = runner.invoke(cli, ['dns', 'cert-update', '--help'])
+        result = runner.invoke(cli, ['dns', 'cert', '--help'])
         assert result.exit_code == 0
-        # assert 'SSL 证书自动更新工具' in result.output # Might vary slightly in text, just check exit code
+        assert 'apply' in result.output
+        assert 'check' in result.output
 
     def test_dns_list_tencent_real(self, runner):
         """Real integration test for Tencent DNS (rexwang.site)"""
+        if not (TencentConfig.TENCENT_SECRET_ID.value and TencentConfig.TENCENT_SECRET_KEY.value):
+            pytest.skip("Tencent DNS credentials are not configured")
         # Ensure we are using the correct provider
-        result = runner.invoke(cli, ['dns', 'get', '-d', 'rexwang.site', '-p', 'tencent'])
+        result = runner.invoke(cli, ['dns', 'records', '-d', 'rexwang.site', '-p', 'tencent'])
         print(f"Tencent Result: {result.output}")
         if result.exit_code != 0:
             pytest.fail(f"Tencent DNS list failed: {result.output}")
@@ -43,8 +61,13 @@ class TestDNSIntegration:
 
     def test_dns_list_aliyun_real(self, runner):
         """Real integration test for Aliyun DNS (qpetlover.cn)"""
+        if not (
+            AliyunConfig.ALIBABA_CLOUD_ACCESS_KEY_ID.value
+            and AliyunConfig.ALIBABA_CLOUD_ACCESS_KEY_SECRET.value
+        ):
+            pytest.skip("Aliyun DNS credentials are not configured")
         # Ensure we are using the correct provider
-        result = runner.invoke(cli, ['dns', 'get', '-d', 'qpetlover.cn', '-p', 'aliyun'])
+        result = runner.invoke(cli, ['dns', 'records', '-d', 'qpetlover.cn', '-p', 'aliyun'])
         print(f"Aliyun Result: {result.output}")
         if result.exit_code != 0:
             pytest.fail(f"Aliyun DNS list failed: {result.output}")

@@ -54,8 +54,8 @@ def _load_attr(module_path: str, attr: str) -> click.Command:
 
 def _load_dns_group() -> click.Command:
     dns_group = _load_attr("chattool.tools.dns.cli", "cli")
-    ssl_cmd = _load_attr("chattool.tools.cert.cli", "main")
-    dns_group.add_command(ssl_cmd, name="cert-update")
+    cert_group = _load_attr("chattool.tools.cert.cli", "cert_cli")
+    dns_group.add_command(cert_group, name="cert")
     return dns_group
 
 

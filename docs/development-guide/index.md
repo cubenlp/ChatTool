@@ -224,7 +224,7 @@ INFO: Start opencode setup
 - 默认日志级别应保持 `INFO`，并优先统一使用 `-l/--log-level` 这一对参数名；不要在相邻命令里混用新的日志参数命名。
 - 当前推荐的典型边界：
   - `chattool setup alias` 这类本地即时配置命令，保持简洁提示即可
-  - `chattool setup nodejs`、`setup codex/opencode/claude/lark-cli`、`setup frp`、`setup docker`、`dns cert-update` 这类复杂等待命令，应有阶段日志，并优先支持 `-l/--log-level`
+  - `chattool setup nodejs`、`setup codex/opencode/claude/lark-cli`、`setup frp`、`setup docker`、`dns cert apply` 这类复杂等待命令，应有阶段日志，并优先支持 `-l/--log-level`
 
 ## 文档组织
 

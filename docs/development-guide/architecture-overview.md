@@ -95,7 +95,7 @@ ChatTool 强调“能力实现”和“能力接入”分离。
 例如 DNS 能力同时支撑：
 
 - `chattool dns ...`
-- `chattool dns cert-update ...`
+- `chattool dns cert apply ...`
 - `tools/dns/mcp.py` 中的 MCP 工具接入
 - 可能进一步被 skills 编排为任务流程
 

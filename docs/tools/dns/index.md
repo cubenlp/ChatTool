@@ -6,7 +6,7 @@ ChatTool 提供了一套统一的 DNS 管理工具，旨在简化跨云厂商（
 
 - **统一接口**：无论底层是阿里云还是腾讯云，都使用相同的 API 进行操作。
 - **自动配置**：集成 ChatTool 的统一配置系统，支持从 `.env` 文件自动读取凭证。
-- **命令行工具**：提供开箱即用的 DDNS 更新 CLI 工具。
+- **命令行工具**：提供域名列表、记录查询/设置/删除、DDNS 和证书管理 CLI。
 - **异步支持**：提供异步获取公网 IP 的辅助方法。
 
 ## 快速开始
@@ -71,7 +71,7 @@ client.delete_subdomain_records("example.com", "temp")
 
 ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 DNS 记录（常用于 DDNS 场景）以及管理 SSL 证书。
 
-在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns get` / `set` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
+在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns records` / `set` / `delete` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
 
 ### 基本用法
 
@@ -81,13 +81,19 @@ ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 
 # 直接进入 DNS 交互入口
 chattool dns
 
-# 获取 DNS 记录 (get)
+# 查看账号下的域名列表
+chattool dns list
+chattool dns list --provider tencent --page 1 --page-size 50
+
+# 获取 DNS 记录 (records)
+# 查看域名下全部记录:
+chattool dns records example.com
 # 完整域名方式:
-chattool dns get test.example.com
+chattool dns records test.example.com
 # 分开指定方式:
-chattool dns get -d example.com -r test
+chattool dns records -d example.com -r test
 # 缺参时自动进入交互补问：
-chattool dns get
+chattool dns records
 
 # 设置 DNS 记录 (set) - 自动处理新增或更新
 # 将 test.example.com 解析到 1.2.3.4
@@ -96,9 +102,38 @@ chattool dns set test.example.com -v 1.2.3.4
 chattool dns set
 # 指定类型和 TTL
 chattool dns set test.example.com -v "some-text-value" -t TXT --ttl 300
+
+# 删除 DNS 记录 (delete)
+# 删除 test.example.com 下所有 A 记录
+chattool dns delete test.example.com -t A --yes
+# 只删除匹配 value 的 A 记录
+chattool dns delete test.example.com -t A -v 1.2.3.4 --yes
 ```
 
-#### 2. 动态域名更新 (DDNS)
+当前 CLI 对 provider 能力的映射：
+
+| Provider 能力 | CLI |
+| --- | --- |
+| `describe_domains()` | `chattool dns list` |
+| `describe_domain_records()` / `describe_subdomain_records()` | `chattool dns records` |
+| `add_domain_record()` / `update_domain_record()` | `chattool dns set` |
+| `delete_domain_record()` | `chattool dns delete` |
+| public/local IP detection | `chattool dns ip` |
+| `DynamicIPUpdater.run_once()` | `chattool dns ddns` |
+| `SSLCertUpdater.run_once()` | `chattool dns cert apply` |
+
+#### 2. 查看当前 IP
+
+```bash
+chattool dns ip
+chattool dns ip --type public
+chattool dns ip --type local
+chattool dns ip --type local --local-ip-cidr 192.168.1.0/24
+```
+
+`dns ip` 只做 IP 探测，不初始化 DNS provider，也不写解析记录。
+
+#### 3. 动态域名更新 (DDNS)
 
 ```bash
 # 1. 公网 IP 更新 (默认)
@@ -131,7 +166,7 @@ chattool dns ddns home.example.com --monitor
 - `--ip-type`: (可选) IP 类型，`public` (默认) 或 `local`
 - `--local-ip-cidr`: (可选) 局域网 IP 过滤网段，仅当 `ip-type=local` 时有效 (如 `192.168.1.0/24`)
 
-#### 3. SSL 证书自动更新
+#### 4. SSL 证书管理
 
 ChatTool 内置了轻量级 ACME v2 客户端，支持通过 DNS-01 挑战自动申请和更新 Let's Encrypt 证书。
 
@@ -142,17 +177,21 @@ ChatTool 内置了轻量级 ACME v2 客户端，支持通过 DNS-01 挑战自动
 
 ```bash
 # 申请证书 (自动处理 DNS 验证)
-chattool dns cert-update -d *.example.com -d example.com -e admin@example.com
+chattool dns cert apply -d *.example.com -d example.com -e admin@example.com
 
 # 指定证书保存目录
-chattool dns cert-update -d *.example.com -e admin@example.com --cert-dir ./certs
+chattool dns cert apply -d *.example.com --cert-dir ./certs
+
+# 只读检查本地证书
+chattool dns cert check -d example.com --cert-dir ./certs
 ```
 
 **参数说明**：
-- `--domains, -d`: 域名列表，支持多次指定。支持泛域名 (如 `*.example.com`)；交互终端里缺少时会自动补问。
-- `--email, -e`: Let's Encrypt 账户邮箱 (用于接收通知)；交互终端里缺少时会自动补问。
+- `--domain, -d`: 域名列表，支持多次指定。支持泛域名 (如 `*.example.com`)；交互终端里缺少时会自动补问。
+- `--email, -e`: Let's Encrypt 账户邮箱 (用于接收通知)；未传时默认读取 `git config user.email`，仍缺少时交互补问或在 `-I` 下报错。
 - `--cert-dir`: (可选) 证书存储根目录 (默认: `certs`)。证书将保存在 `<cert-dir>/<domain>/` 下。
 - `--staging`: (可选) 使用 Let's Encrypt 测试环境 (建议首次测试时使用)。
+- `--force`: (可选) 跳过本地过期判断，强制申请/续期。
 - `-l, --log-level`: (可选) 控制证书更新阶段日志级别，默认 `INFO`；排查问题时可用 `DEBUG`。
 
 ## 扩展指南
@@ -222,12 +261,13 @@ class MyCloudDNSClient(DNSClient):
 | `rr` | str | 主机记录 |
 | `ip_type` | str | `public`（公网）或 `local`（内网） |
 
-### `dns_cert_update`
+### `dns_cert_apply`
 
 自动申请或更新 Let's Encrypt 证书（DNS-01 验证）。
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `domains` | List[str] | 域名列表 |
-| `email` | str | 注册邮箱 |
+| `email` | str | 注册邮箱；为空时尝试读取 `git config user.email` |
 | `staging` | bool | 是否使用测试环境（默认 false） |
+| `force` | bool | 是否强制申请/续期（默认 false） |

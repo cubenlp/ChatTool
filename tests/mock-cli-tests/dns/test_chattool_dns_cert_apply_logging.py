@@ -6,7 +6,7 @@ from chattool.client.main import cli
 pytestmark = pytest.mark.mock_cli
 
 
-def test_dns_cert_update_accepts_log_level_option(monkeypatch, runner):
+def test_dns_cert_apply_accepts_log_level_option(monkeypatch, runner):
     captured = {}
 
     class DummyLogger:
@@ -36,8 +36,9 @@ def test_dns_cert_update_accepts_log_level_option(monkeypatch, runner):
         cli,
         [
             "dns",
-            "cert-update",
-            "--domains",
+            "cert",
+            "apply",
+            "--domain",
             "example.com",
             "--email",
             "admin@example.com",
