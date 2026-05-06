@@ -1,53 +1,56 @@
-# ChatTool Service API Layers
+# ChatTool 服务化接口分层设计
 
-Date: 2026-05-07
-Status: design draft
+日期：2026-05-07
+状态：设计草稿
 
-## Goal
+## 目标
 
-Define a general path for turning a ChatTool capability into multiple entry points without duplicating business logic:
+为 ChatTool 的能力定义一条通用服务化路径，让同一个能力可以被多个入口复用，而不是在 CLI、HTTP 服务、MCP 里重复实现业务逻辑。
 
-1. pure code implementation that produces functions/classes;
-2. local CLI wrapping the packaged functions;
-3. service API wrapping the same packaged functions;
-4. local CLI or MCP calling the service API as a remote backend.
+目标分层是：
 
-The long-term goal is that local CLI and remote API keep the same semantics. A command that supports service execution should only add backend selection and connection options, not invent a second workflow.
+1. 纯代码实现，最终产出函数或类；
+2. 基于打包好的函数封装成本地 CLI；
+3. 基于同一组函数封装成服务 API / 管理页面；
+4. 基于服务 API 再封装成本地 client CLI 或 MCP 工具。
 
-## Why This Matters
+长期目标是：本地 CLI 和远程 API 保持同一套语义。一个支持服务化执行的命令，应该只增加后端选择、连接配置和安全校验，不额外发明第二套工作流。
 
-Some ChatTool capabilities should stay local. Others are better served from a controlled machine:
+## 为什么需要这一层
 
-- DNS and certificate operations need cloud credentials and domain-level policy.
-- Browser/Selenium/GPU conversion tasks need heavy dependencies.
-- Webhook and bot services need long-running processes.
-- Agent/MCP clients may need a stable API backend instead of direct local secrets.
+ChatTool 里有些能力适合留在本地，有些能力更适合放在受控机器上执行：
 
-A service API can become the shared backend for both CLI and MCP while still preserving the simple local CLI experience.
+- DNS 和证书操作需要云厂商密钥，并且需要按域名、动作做权限边界；
+- 浏览器、Selenium、GPU、格式转换等任务可能依赖重型运行环境；
+- Webhook、bot、定时任务需要长期运行的服务进程；
+- Agent / MCP 客户端需要稳定后端，但不应该直接持有云厂商密钥。
 
-## Layer Model
+服务 API 可以成为 CLI 和 MCP 共用的执行后端，同时保留本地 CLI 简洁、可脚本化的体验。
 
-### Layer 1: Code Capability
+## 分层模型
 
-The base layer is a Python function/class with no CLI or HTTP assumptions.
+### 第 1 层：纯代码能力
 
-Examples:
+基础层是没有 CLI、HTTP、MCP 假设的 Python 函数或类。
+
+示例：
 
 - `chattool.tools.dns.create_dns_client()`
 - `chattool.tools.cert.SSLCertUpdater`
-- SVG-to-GIF conversion helpers
+- SVG 转 GIF 的转换函数
 
-Rules:
+约束：
 
-- Keep credentials and policy inputs explicit.
-- Return structured results or raise predictable exceptions.
-- Avoid Click, FastAPI, Rich, or MCP imports in the core capability.
+- 凭证、策略、运行参数显式传入，不隐式读取交互上下文；
+- 返回结构化结果，或抛出可预期、可映射的异常；
+- 核心能力层避免直接依赖 Click、FastAPI、Rich、MCP 等入口层库；
+- 文件写入、确认提示、彩色输出等交互行为由上层包装。
 
-### Layer 2: Local CLI
+### 第 2 层：本地 CLI
 
-CLI adapts user input to the code capability.
+CLI 负责把用户输入适配到纯代码能力。
 
-Examples:
+示例：
 
 ```bash
 chattool dns list
@@ -55,25 +58,25 @@ chattool dns records example.com
 chattool dns cert apply -d example.com
 ```
 
-Rules:
+约束：
 
-- CLI owns human interaction, preview, confirmation, and local filesystem paths.
-- CLI should use the same command shape whether the backend is local or remote.
-- For service-capable commands, local CLI can choose backend from flags or env/profile.
+- CLI 负责人类交互、预览、确认、本地路径解析和输出格式；
+- CLI 的命令形态在本地执行和远程执行时尽量一致；
+- 对支持服务化的命令，后端可以来自 flag、环境变量或 client profile。
 
-Possible backend selection:
+可能的后端选择：
 
 ```bash
-chattool dns list                         # local by default
-chattool dns list --api-base https://...   # remote service
+chattool dns list                          # 默认本地执行
+chattool dns list --api-base https://...    # 指定远程服务
 CHATTOOL_API_BASE=https://... chattool dns list
 ```
 
-### Layer 3: Service API
+### 第 3 层：服务 API / 管理页面
 
-Service API wraps the same code capability and enforces server-side policy.
+服务 API 包装同一组纯代码能力，并在服务端执行权限策略。
 
-Examples:
+示例：
 
 ```bash
 chattool serve dns --provider aliyun --allow-domain example.com --allow cert:apply
@@ -81,48 +84,49 @@ chattool serve cert --host 0.0.0.0 --port 8000
 chattool serve svg2gif --host 0.0.0.0 --port 8000
 ```
 
-Rules:
+约束：
 
-- Service owns credentials, capability whitelist, scope checks, audit logs, and async task state.
-- Service should not expose arbitrary shell or arbitrary Python execution.
-- Service endpoints should return structured JSON and stable error codes.
+- 服务端拥有云厂商凭证、能力白名单、scope 校验、审计日志和异步任务状态；
+- 服务端只暴露被声明的能力，不暴露任意 shell 或任意 Python 执行；
+- 服务 API 返回结构化 JSON、稳定错误码和 request id；
+- 管理页面只是服务 API 的可视化入口，不应该绕过同一套鉴权和策略。
 
-### Layer 4: Remote Client CLI / MCP
+### 第 4 层：远程 client CLI / MCP
 
-Remote client reuses the same user-facing capability but sends the action to a service API.
+远程 client 复用用户熟悉的能力形态，把动作转发给服务 API。
 
-Two shapes can coexist:
+可以并存两种命令形态：
 
 ```bash
 chattool client dns list --profile dns-prod
 chattool dns list --api-base https://dns.example.com
 ```
 
-The first is explicit. The second is convenient when the local command can route to a remote backend.
+前者明确表达“这是远程 client”。后者适合在后端抽象稳定后，让原始 CLI 自动路由到远程后端。
 
-MCP should initially reuse local client profiles instead of implementing a separate auth/profile system:
+MCP 初期不单独维护一套登录和 profile 系统，而是复用本地 client profile 或同一套 client abstraction：
 
 ```text
-Agent -> MCP/Skill -> local ChatTool CLI/client -> remote ChatTool serve API
+Agent -> MCP/Skill -> 本地 ChatTool CLI/client -> 远程 ChatTool serve API
 ```
 
-## CLI and Service Interface Consistency
+## CLI 和服务接口的一致性
 
-For service-capable features, local and remote modes should share the same operation names:
+对可服务化的能力，本地和远程应共享同一组操作名。
 
-| Capability | Local CLI | Service API | Remote CLI |
+| 能力 | 本地 CLI | 服务 API | 远程 CLI |
 | --- | --- | --- | --- |
-| List domains | `chattool dns list` | `GET /dns/domains` | `chattool client dns list` |
-| List records | `chattool dns records example.com` | `GET /dns/domains/{domain}/records` | `chattool client dns records example.com` |
-| Set record | `chattool dns set ...` | `PUT /dns/domains/{domain}/records/{rr}` | `chattool client dns set ...` |
-| Delete record | `chattool dns delete ...` | `DELETE /dns/...` | `chattool client dns delete ...` |
-| Apply cert | `chattool dns cert apply ...` | `POST /cert/apply` | `chattool client cert apply ...` |
+| 域名列表 | `chattool dns list` | `GET /dns/domains` | `chattool client dns list` |
+| 记录列表 | `chattool dns records example.com` | `GET /dns/domains/{domain}/records` | `chattool client dns records example.com` |
+| 设置记录 | `chattool dns set ...` | `PUT /dns/domains/{domain}/records/{rr}` | `chattool client dns set ...` |
+| 删除记录 | `chattool dns delete ...` | `DELETE /dns/...` | `chattool client dns delete ...` |
+| 申请证书 | `chattool dns cert apply ...` | `POST /cert/apply` | `chattool client cert apply ...` |
 
-The CLI remains the main user interface. The service API is an execution backend.
+CLI 仍然是主要用户界面；服务 API 是执行后端。接口设计应优先保证 CLI 语义稳定，再把同一动作映射到 HTTP。
 
-## Environment and Profile Selection
+## 环境变量和 profile 选择
 
-A remote backend can be selected by a small set of connection fields:
+远程后端只需要少量连接字段：
 
 ```text
 CHATTOOL_API_BASE=https://chattool.example.com
@@ -130,13 +134,14 @@ CHATTOOL_API_TOKEN=...
 CHATTOOL_API_PROFILE=dns-prod
 ```
 
-Design preference:
+设计偏好：
 
-- `CHATTOOL_API_BASE` can be a quick override.
-- Named client profiles are better for persistent use.
-- Existing service-specific variables can remain as compatibility aliases.
+- `CHATTOOL_API_BASE` 用于临时覆盖；
+- 长期使用优先落到命名 client profile；
+- 已有服务专用环境变量可以保留为兼容 alias；
+- profile 中保存服务地址、refresh token、短期 access token、scope、过期时间和能力缓存。
 
-Example:
+示例：
 
 ```bash
 chattool client connect dns-prod https://dns.example.com --code 123456
@@ -144,16 +149,16 @@ chattool client use dns-prod
 chattool dns list --remote
 ```
 
-## Service Discovery
+## 服务发现
 
-Every service should expose a small discovery endpoint:
+每个服务都应该暴露小型发现接口：
 
 ```text
 GET /health
 GET /info
 ```
 
-`/info` should include:
+`/info` 返回当前客户端可见的服务、版本、能力和限制：
 
 ```json
 {
@@ -167,30 +172,31 @@ GET /info
 }
 ```
 
-The local client can show this as:
+本地可以展示为：
 
 ```bash
 chattool client capabilities dns-prod
 ```
 
-## Relationship to MCP
+## 和 MCP 的关系
 
-MCP and service API are similar in that both expose capabilities to non-human callers. The difference is ownership:
+MCP 和服务 API 都是在向非人工调用方暴露能力，但职责不同：
 
-- MCP is an Agent protocol adapter.
-- Service API is an execution backend with credentials, policy, and audit.
-- CLI is the stable human and script interface.
+- MCP 是 Agent 协议适配层；
+- 服务 API 是带凭证、策略和审计的执行后端；
+- CLI 是稳定的人类和脚本入口。
 
-The service API can become a backend for both CLI and MCP. In the first phase, do not make MCP own connection/login. Let MCP reuse the same local client profile or call the same client abstraction.
+因此，服务 API 可以同时服务 CLI 和 MCP。第一阶段不要让 MCP 自己拥有独立的连接、登录、刷新机制；MCP 应该调用同一套 client profile 或 client abstraction。
 
-## Phase 1 Abstraction Work
+## 第一阶段抽象工作
 
-Before adding cloud services, define shared abstractions:
+在真正增加云服务之前，先定义这些共享抽象：
 
-- Capability metadata: name, actions, input schema, output schema, scopes.
-- Backend selection: local vs remote.
-- Auth profile: server URL, token, scopes, expiry.
-- Error model: structured error code/message/request id.
-- Audit model: action, target, result, actor, request id.
+- 能力元数据：名称、动作、输入 schema、输出 schema、scope；
+- 后端选择：local vs remote；
+- 鉴权 profile：server URL、refresh token、access token、scope、过期时间；
+- 错误模型：结构化 error code、message、request id；
+- 审计模型：action、target、result、actor、request id；
+- 任务模型：适配证书申请、转换等异步能力。
 
-This lets DNS become the pilot without hard-coding a one-off DNS cloud path.
+这样 DNS 可以作为试点，但不会把服务化路径写成一次性的 DNS 专用逻辑。

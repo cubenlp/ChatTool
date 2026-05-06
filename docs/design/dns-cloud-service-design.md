@@ -1,33 +1,35 @@
-# DNS Cloud Service Design
+# DNS 云端服务设计
 
-Date: 2026-05-07
-Status: design draft
+日期：2026-05-07
+状态：设计草稿
 
-## Goal
+## 目标
 
-Use `chattool dns` as the first service-capable CLI family.
+把 `chattool dns` 作为 ChatTool 服务化能力的第一个试点。
 
-A machine with Aliyun/Tencent DNS credentials runs `chattool serve dns`. Other machines use local `chattool dns ...` or `chattool client dns ...` to call the service without receiving DNS provider credentials.
+拥有 Aliyun / Tencent DNS 密钥的机器运行 `chattool serve dns`。其他机器通过本地 `chattool dns ...` 或 `chattool client dns ...` 调用该服务，从而不需要复制云厂商密钥。
 
-## Target Scenario
+## 目标场景
 
 ```text
-Credential machine:
-  - owns Aliyun/Tencent DNS keys
-  - runs ChatTool DNS service
-  - limits domains and actions
-  - records audit logs
+凭证机器：
+  - 保存 Aliyun / Tencent DNS 密钥
+  - 运行 ChatTool DNS 服务
+  - 限定允许的域名和动作
+  - 记录审计日志
 
-Target machine:
-  - has no cloud DNS keys
-  - connects with ChatTool service token
-  - can discover allowed capabilities
-  - runs familiar CLI commands
+目标机器：
+  - 不保存云 DNS 密钥
+  - 只保存 ChatTool service token
+  - 可以发现服务端开放的能力
+  - 继续使用熟悉的 CLI 命令
 ```
 
-## Desired User Flow
+这个模式主要解决跨设备使用 DNS / 证书能力的问题：服务端集中保存高权限凭证，客户端只拿到受限、可撤销、可过期的访问能力。
 
-### Server Machine
+## 预期用户流程
+
+### 服务端机器
 
 ```bash
 chattool serve dns \
@@ -39,16 +41,16 @@ chattool serve dns \
   --pairing-code
 ```
 
-This starts a service that exposes only selected DNS/cert capabilities.
+这会启动一个只暴露选定 DNS / 证书能力的服务，并输出一次性配对码。
 
-### Target Machine
+### 目标机器
 
 ```bash
 chattool client connect dns-prod https://dns.example.com --code 123456
 chattool client capabilities dns-prod
 ```
 
-Then either explicit client commands:
+之后可以使用显式 client 命令：
 
 ```bash
 chattool client dns list --profile dns-prod
@@ -56,48 +58,50 @@ chattool client dns records example.com --profile dns-prod
 chattool client cert download example.com -o ./certs --profile dns-prod
 ```
 
-Or original CLI routed to remote backend:
+也可以在后端抽象稳定后，让原始 CLI 路由到远程服务：
 
 ```bash
 CHATTOOL_API_BASE=https://dns.example.com chattool dns list
 CHATTOOL_API_BASE=https://dns.example.com chattool dns records example.com
 ```
 
-Longer term, a profile can make this shorter:
+长期 profile 用法可以更短：
 
 ```bash
 chattool client use dns-prod
 chattool dns list --remote
 ```
 
-## Capability Boundary
+## 能力边界
 
-Start with read and cert operations before record mutation.
+第一阶段先做只读和证书相关能力，谨慎开放记录修改。
 
-### Phase 1 Candidate Capabilities
+### 第一阶段候选能力
 
-| Capability | Local CLI | Service API | Scope |
+| 能力 | 本地 CLI | 服务 API | Scope |
 | --- | --- | --- | --- |
-| Service info | `chattool client capabilities` | `GET /info` | `service:info` |
-| Domain list | `chattool dns list` | `GET /dns/domains` | `dns:read` |
-| Record list | `chattool dns records` | `GET /dns/domains/{domain}/records` | `dns:read` |
-| Cert apply | `chattool dns cert apply` | `POST /cert/apply` | `cert:apply` |
-| Cert list/check | `chattool dns cert check` | `GET /cert/domains/{domain}` | `cert:read` |
-| Cert download | `chattool client cert download` | `GET /artifacts/certs/{domain}/{file}` | `artifact:download` |
+| 服务信息 | `chattool client capabilities` | `GET /info` | `service:info` |
+| 域名列表 | `chattool dns list` | `GET /dns/domains` | `dns:read` |
+| 记录列表 | `chattool dns records` | `GET /dns/domains/{domain}/records` | `dns:read` |
+| 申请证书 | `chattool dns cert apply` | `POST /cert/apply` | `cert:apply` |
+| 检查证书 | `chattool dns cert check` | `GET /cert/domains/{domain}` | `cert:read` |
+| 下载证书 | `chattool client cert download` | `GET /artifacts/certs/{domain}/{file}` | `artifact:download` |
 
-### Later Capabilities
+### 后续能力
 
-| Capability | Local CLI | Scope |
+| 能力 | 本地 CLI | Scope |
 | --- | --- | --- |
-| Set record | `chattool dns set` | `dns:write` |
-| Delete record | `chattool dns delete` | `dns:delete` |
-| DDNS update | `chattool dns ddns` | `dns:write` |
+| 设置记录 | `chattool dns set` | `dns:write` |
+| 删除记录 | `chattool dns delete` | `dns:delete` |
+| DDNS 更新 | `chattool dns ddns` | `dns:write` |
 
-## Domain and Action Policy
+记录修改类能力需要更强的 preview、dry-run、confirm 和审计，不建议第一阶段默认开放。
 
-The server should enforce both domain and action limits.
+## 域名和动作策略
 
-Example policy:
+服务端必须同时限制域名和动作。
+
+示例策略：
 
 ```json
 {
@@ -117,16 +121,17 @@ Example policy:
 }
 ```
 
-Rules:
+规则：
 
-- Every request resolves its target domain before execution.
-- The server rejects domains outside policy even if token has broad scopes.
-- Dangerous operations need both scope and policy allow.
-- Local CLI preview is not enough; server must enforce policy.
+- 每个请求执行前都解析目标域名；
+- 域名不在 policy 内时直接拒绝，即使 token scope 很宽；
+- 危险动作必须同时满足 scope 和 policy allow；
+- 本地 CLI 的 preview 只是用户体验，服务端仍必须强制校验；
+- certificate artifact 的下载路径不能允许任意文件读取，只能下载服务端登记的产物。
 
-## Discovery
+## 服务发现
 
-`GET /info` returns what the target machine may do:
+`GET /info` 返回目标机器当前可用的能力：
 
 ```json
 {
@@ -146,13 +151,13 @@ Rules:
 }
 ```
 
-Local command:
+本地命令：
 
 ```bash
 chattool client capabilities dns-prod
 ```
 
-Example output:
+示例输出：
 
 ```text
 Service: dns (aliyun)
@@ -167,32 +172,32 @@ Capabilities:
 Mutations: disabled
 ```
 
-## API Sketch
+## API 草图
 
-### Read APIs
+### 只读接口
 
 ```text
 GET /dns/domains
 GET /dns/domains/{domain}/records?rr=www&type=A
 ```
 
-### Mutation APIs
+### 修改接口
 
 ```text
 PUT    /dns/domains/{domain}/records/{rr}
 DELETE /dns/domains/{domain}/records/{rr}?type=A&value=1.2.3.4
 ```
 
-Mutations should return a preview or dry-run mode before execution:
+修改接口应优先支持 preview / dry-run，再执行：
 
 ```text
 POST /dns/preview/delete
 POST /dns/execute/delete
 ```
 
-This mirrors local CLI safety for `dns delete`.
+这和本地 CLI 的安全体验保持一致。
 
-### Cert APIs
+### 证书接口
 
 ```text
 POST /cert/apply
@@ -200,7 +205,7 @@ GET  /cert/domains/{domain}
 GET  /artifacts/certs/{domain}/{filename}
 ```
 
-Certificate application may be async:
+证书申请可能是异步任务：
 
 ```json
 {
@@ -209,59 +214,61 @@ Certificate application may be async:
 }
 ```
 
-Then:
+随后查询任务：
 
 ```text
 GET /tasks/{task_id}
 ```
 
-## Local CLI Routing
+## 本地 CLI 路由
 
-There are two implementation options.
+有两种实现选择。
 
-### Option A: Explicit Client Group
+### 方案 A：显式 client 命令组
 
 ```bash
 chattool client dns list --profile dns-prod
 ```
 
-Pros:
+优点：
 
-- Clear that execution is remote.
-- No ambiguity with local provider credentials.
-- Easier to implement first.
+- 用户明确知道动作在远程执行；
+- 不会和本地 provider 凭证混淆；
+- 第一阶段实现成本更低。
 
-### Option B: Original CLI with Remote Backend
+### 方案 B：原始 CLI 支持远程后端
 
 ```bash
 CHATTOOL_API_BASE=https://dns.example.com chattool dns list
 chattool dns list --remote --profile dns-prod
 ```
 
-Pros:
+优点：
 
-- Reuses original CLI shape.
-- Easier for users after setup.
-- Aligns with the goal that local and remote interfaces are identical.
+- 复用原始 CLI 形态；
+- 设置好 profile 后使用更自然；
+- 符合“本地和远程接口一致”的长期目标。
 
-Recommendation: implement Option A first, then make Option B a thin router once the backend abstraction is stable.
+建议：先实现方案 A，等 backend abstraction、错误模型和鉴权 profile 稳定后，再把方案 B 做成薄路由层。
 
-## Relationship to MCP
+## 和 MCP 的关系
 
-The DNS service API can serve as a backend for CLI and MCP.
+DNS 服务 API 可以同时作为 CLI 和 MCP 的后端。
 
-Preferred first phase:
+第一阶段推荐：
 
 ```text
-MCP tool -> local client profile -> DNS service API
+MCP tool -> 本地 client profile -> DNS service API
 ```
 
-This keeps login/profile/token refresh in one client layer. MCP should not grow a separate auth system.
+这样登录、refresh、profile、capability discovery 都沉在同一层。MCP 只负责把 Agent 请求适配成 ChatTool client 调用，不单独维护鉴权系统。
 
-## Open Questions
+## 第一阶段完成标准
 
-- Should cert download stay under `client cert`, or should `dns cert download` exist too?
-- Should `CHATTOOL_API_BASE` be global, or service-specific like `CHATTOOL_DNS_API_BASE`?
-- Should `dns list` default to remote if an active DNS client profile exists?
-- How should domain wildcard policy be matched and displayed?
-- Should mutation APIs require a two-step preview/execute protocol?
+设计层面先收敛到以下范围：
+
+- DNS 服务端可声明 provider、allowed domains、allowed actions；
+- client 可 connect、capabilities、调用只读 DNS 能力；
+- 鉴权使用一次性配对码 + refresh token + 短期 access token；
+- 证书能力先定义接口边界，实际实现可分后续 PR；
+- 修改记录类能力默认不开放，只保留接口草图和安全要求。
