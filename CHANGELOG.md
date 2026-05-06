@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- [2026-05-06] 新增 `chatenv paste` / `chattool env paste`，可粘贴或从 stdin 导入 `chatenv cat -t <type> --no-mask` 输出和 `.env` 风格文本，自动识别已注册配置 key，并在交互中询问可选 profile name 后按类型写入 active `.env` 或同名 profile，覆盖前会展示概要并要求确认。
 - [2026-05-06] 准备 `6.7.0` 版本：ChatTool 依赖外部 ChatStyle，清理本地 CLI style facade，并同步 `chattool pypi init <name> -t cli-style` 模板与 `probe <name>` 入口。
 - [2026-05-06] 新增 `chattool setup zsh`，可配置 zsh / git / oh-my-zsh / powerlevel10k，`-i` 时先以默认值候选框选择 zsh 基础配置项，再以默认全选候选框选择 oh-my-zsh 插件，并把 QuickSetup 当前 `zsh_aliases` 风格完整常用 alias 与 ChatTool alias 写入 `~/.zsh_aliases`；系统依赖只做存在性检查，缺少 `zsh` / `git` 时直接退出并提示对应 `sudo apt install ... -y`。
 - [2026-05-06] ChatTool 本地迁移到外部 `chatstyle` runtime：删除 `chattool.chatstyle` 本地风格层，并移除 `chattool.interaction` 下 prompt、choice、render、constants 等纯转发子模块；`chattool.interaction` 只保留命令侧 adapter 入口、policy、command schema 和 warnings，prompt、choice、output、mask、flow 和 command schema 的通用实现由独立 ChatStyle 项目承载。
@@ -19,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - [2026-04-20] `chattool gh` 已重构为分层实现：CLI 入口收口到 `gh pr ...` / `gh run ...` 嵌套命令树，主要命令业务从 `src/chattool/tools/github/cli.py` 迁出到独立命令实现层，请求访问收口为显式 `get_*` / `post_*` / `patch_*` 函数，`GitHubClient` 同步瘦身为围绕这些提取后能力的薄包装；保留了 repo-scoped token 优先级、`set-token`、`repo-perms`、缺参自动补问、`pr checks --wait`、`pr merge --check` 等 ChatTool 定制行为
 
 ### Fixed
+- [2026-05-06] `chatenv test -t oai` 现在优先使用 OpenAI Responses API 做最小生成测试，读取 streaming 事件确认输出或完成，兼容 CRS/Codex 风格端点与 `gpt-5.x` 模型，并在不可用时回退到 Chat Completions。
 - [2026-04-20] `chatloop` bootstrap 首轮现在不允许直接输出 `STATUS: COMPLETE` 或 `<complete>DONE</complete>`；completion gate 仅从后续 continuation 开始生效，避免模型在首轮因习惯性“promise done”过早结束 loop
 - [2026-04-20] `chatloop` 插件现在在首次执行 `/chatloop ...` 时不再额外弹出启动完成提示，也不再把 bootstrap PRD 提示作为工具返回文本直接回显；改为异步把首轮 PRD contract 注入当前 session，避免模型把首轮启动误判为“一轮已经结束”
 - [2026-04-20] `chattool setup workspace --with-opencode-loop` / `setup opencode --plugin chatloop` 附带的 `chatloop` 插件现在会在启动首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则，不再把 `/chatloop <message>` 原样转发给模型；同时引入更强的 completion gate，要求每轮输出 `## Completed`、`## Next Steps` 与 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`，只有在 `Next Steps` 清空、`STATUS: COMPLETE` 与 `<complete>DONE</complete>` 同时满足时才停止 continuation
