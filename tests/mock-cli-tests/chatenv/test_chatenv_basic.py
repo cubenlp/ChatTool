@@ -3,7 +3,7 @@ import shutil
 
 from click.testing import CliRunner
 
-from chattool.config import BaseEnvConfig, EnvField
+from chattool.config import BaseEnvConfig, EnvField, OpenAIConfig
 from chattool.config.cli import cli
 
 
@@ -126,3 +126,65 @@ def test_chatenv_test_prompts_for_target(tmp_path, monkeypatch):
 
     assert result.exit_code == 0
     assert outputs == ["tested"]
+
+
+def test_chatenv_openai_test_uses_responses_api(monkeypatch, tmp_path):
+    env_dir = tmp_path / "envs"
+    env_file = tmp_path / ".env"
+    env_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [OpenAIConfig])
+    monkeypatch.setattr(OpenAIConfig.OPENAI_API_BASE, "value", "https://api.example/v1")
+    monkeypatch.setattr(OpenAIConfig.OPENAI_API_KEY, "value", "sk-test")
+    monkeypatch.setattr(OpenAIConfig.OPENAI_API_MODEL, "value", "gpt-5.5")
+
+    calls = []
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def raise_for_status(self):
+            return None
+
+        def iter_lines(self):
+            return iter([
+                'event: response.created',
+                'data: {"type":"response.created"}',
+                'event: response.output_text.delta',
+                'data: {"type":"response.output_text.delta","delta":"ok"}',
+            ])
+
+    class FakeClient:
+        def __init__(self, timeout=None):
+            self.timeout = timeout
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def stream(self, method, url, json=None, headers=None):
+            calls.append(
+                {"method": method, "url": url, "json": json, "headers": headers}
+            )
+            return FakeResponse()
+
+    monkeypatch.setattr("httpx.Client", FakeClient)
+
+    result = CliRunner().invoke(cli, ["test", "-t", "oai"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Responses API generated" in result.output
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["url"] == "https://api.example/v1/responses"
+    assert calls[0]["json"]["input"] == [{"role": "user", "content": "hi"}]
+    assert calls[0]["json"]["max_output_tokens"] == 8
+    assert calls[0]["json"]["stream"] is True

@@ -691,6 +691,11 @@ chattool env get CHATTOOL_DNS_PROVIDER
 # 删除配置值
 chattool env unset CHATTOOL_DNS_PROVIDER
 
+# 粘贴导入从 chatenv cat --no-mask 复制来的配置
+chattool env paste
+chattool env paste --stdin --yes < openai.env
+chattool env paste --stdin --profile work --yes < openai.env
+
 # 缺少 key / profile 名时自动补问
 chattool env save -t gh
 chattool env use -t gh
@@ -706,8 +711,9 @@ chattool env unset
 - `set`: 设置单个配置项，格式为 `KEY=VALUE`。
 - `get`: 获取单个配置项的值。
 - `unset`: 删除（置空）单个配置项的值。
+- `paste`: 粘贴导入 `KEY='VALUE'` / `.env` / `export KEY=VALUE` 文本，识别已注册 key 后按类型写入 active `.env`；传 `--profile NAME` 或在交互中输入 profile name 时，写入各命中类型的同名 profile。
 
-在交互终端里，`save/use/delete/get/set/unset/test` 缺少关键参数时都会自动补问；显式传 `-I` 才禁用交互并直接报错。
+在交互终端里，`save/use/delete/get/set/unset/test` 缺少关键参数时都会自动补问，显式传 `-I` 才禁用交互并直接报错；`paste` 会读取粘贴内容、询问可选 profile name，并在写入前展示概要确认，非交互导入请配合 `--stdin` / `--value` 与 `--yes`。
 
 ---
 

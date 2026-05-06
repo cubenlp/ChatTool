@@ -8,7 +8,7 @@ from chattool.config import BaseEnvConfig, EnvField
 
 # Mock Config Class for testing
 class MockConfig(BaseEnvConfig):
-    _title = "MockConfig"
+    _title = "Mock"
     mock_key = EnvField("MOCK_KEY", default="default_mock", desc="Mock key description")
     sensitive_key = EnvField("SENSITIVE_KEY", default="secret", desc="Sensitive key", is_sensitive=True)
 
@@ -22,9 +22,13 @@ def mock_env_setup(tmp_path):
     env_dir.mkdir()
     env_file = tmp_path / ".env"
     
-    # Create a dummy .env file
+    # Create active typed env and a legacy .env file. Current chatenv commands
+    # should prefer envs/<Config>/.env over the legacy file.
     content = "MOCK_KEY='value1'\nSENSITIVE_KEY='secret_value'\nOTHER_KEY='other'"
-    env_file.write_text(content)
+    active_dir = env_dir / "Mock"
+    active_dir.mkdir()
+    (active_dir / ".env").write_text(content)
+    env_file.write_text("LEGACY_ONLY='legacy'")
     
     # We need to patch where CHATTOOL_ENV_DIR and CHATTOOL_ENV_FILE are used in chatenv.py
     # Since they are imported as names, we must patch chatenv module attributes if possible,
@@ -64,10 +68,11 @@ def test_cat(runner, mock_env_setup):
 
 def test_profiles(runner, mock_env_setup):
     env_dir, env_file = mock_env_setup
-    (env_dir / "profile1.env").touch()
-    (env_dir / "profile2.env").touch()
+    profile_dir = env_dir / "Mock"
+    (profile_dir / "profile1.env").touch()
+    (profile_dir / "profile2.env").touch()
     
-    result = runner.invoke(cli, ['list'])
+    result = runner.invoke(cli, ['list', '-t', 'Mock'])
     assert result.exit_code == 0
     assert "profile1" in result.output
     assert "profile2" in result.output
@@ -76,36 +81,40 @@ def test_save_use_delete(runner, mock_env_setup):
     env_dir, env_file = mock_env_setup
     
     # Save
-    result = runner.invoke(cli, ['save', 'test_profile'])
+    result = runner.invoke(cli, ['save', 'test_profile', '-t', 'Mock'])
     assert result.exit_code == 0
-    assert (env_dir / "test_profile.env").exists()
-    assert (env_dir / "test_profile.env").read_text() == env_file.read_text()
+    profile_file = env_dir / "Mock" / "test_profile.env"
+    active_file = env_dir / "Mock" / ".env"
+    assert profile_file.exists()
+    profile_content = profile_file.read_text()
+    assert "MOCK_KEY='value1'" in profile_content
+    assert "SENSITIVE_KEY='secret_value'" in profile_content
     
-    # Modify current .env
-    env_file.write_text("MOCK_KEY='modified'")
+    # Modify current active typed .env
+    active_file.write_text("MOCK_KEY='modified'")
     
     # Use
-    result = runner.invoke(cli, ['use', 'test_profile'])
+    result = runner.invoke(cli, ['use', 'test_profile', '-t', 'Mock'])
     assert result.exit_code == 0
-    assert "Activated profile 'test_profile'" in result.output
-    assert env_file.read_text() == (env_dir / "test_profile.env").read_text()
-    assert "MOCK_KEY='value1'" in env_file.read_text()
+    assert "Activated Mock profile 'test_profile.env'" in result.output
+    assert active_file.read_text() == profile_file.read_text()
+    assert "MOCK_KEY='value1'" in active_file.read_text()
     
     # Delete
-    result = runner.invoke(cli, ['delete', 'test_profile'])
+    result = runner.invoke(cli, ['delete', 'test_profile', '-t', 'Mock'])
     assert result.exit_code == 0
-    assert not (env_dir / "test_profile.env").exists()
+    assert not profile_file.exists()
 
 def test_init_type(runner, mock_env_setup):
     env_dir, env_file = mock_env_setup
     
     # Inputs: "new_mock_val", "new_secret"
     # We use input argument for prompts
-    result = runner.invoke(cli, ['init', '-i', '-t', 'MockConfig'], input="new_mock_val\nnew_secret\n")
+    result = runner.invoke(cli, ['init', '-i', '-t', 'Mock'], input="new_mock_val\nnew_secret\n")
     assert result.exit_code == 0
     
     # Verify values updated in file
-    content = env_file.read_text()
+    content = (env_dir / "Mock" / ".env").read_text()
     # The saved file format depends on BaseEnvConfig.save_env_file template
     # It usually wraps values in single quotes
     assert "MOCK_KEY='new_mock_val'" in content

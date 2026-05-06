@@ -1,7 +1,8 @@
 import click
 import shutil
 import os
-import dotenv
+import re
+import sys
 
 from chattool.interaction import (
     BACK_VALUE,
@@ -11,10 +12,12 @@ from chattool.interaction import (
     ask_confirm,
     ask_select,
     ask_text,
+    abort_if_force_without_tty,
     create_choice,
     get_separator,
     is_interactive_available,
     resolve_command_inputs,
+    resolve_interactive_mode,
 )
 from chattool.config import BaseEnvConfig
 from chattool.interaction import install_cli_warning_filters
@@ -129,6 +132,316 @@ def _render_field_line(field, no_mask: bool) -> str:
     if field.is_sensitive and not no_mask:
         value = mask_secret(value)
     return f"{field.env_key}='{value}'"
+
+
+def _render_paste_value(field, value) -> str:
+    value = "" if value is None else str(value)
+    if field.is_sensitive:
+        value = mask_secret(value)
+    return f"{field.env_key}='{value}'"
+
+
+def _read_paste_value(value: str | None, read_stdin: bool, interactive) -> str:
+    if value is not None and read_stdin:
+        raise click.ClickException("--value and --stdin cannot be used together.")
+    if read_stdin:
+        return sys.stdin.read()
+    if value is not None:
+        return value
+
+    (
+        _normalized,
+        can_prompt,
+        force_interactive,
+        _auto_interactive,
+        need_prompt,
+    ) = resolve_interactive_mode(interactive, auto_prompt_condition=True)
+    abort_if_force_without_tty(
+        force_interactive,
+        can_prompt,
+        "Usage: chatenv paste [--value TEXT | --stdin] [--profile NAME] [-i|-I]",
+    )
+    if not need_prompt:
+        raise click.ClickException(
+            "paste requires --value or --stdin outside interactive mode."
+        )
+
+    click.echo("Paste env text. Finish with an empty line:")
+    # ChatStyle currently has no multiline paste primitive, so collect lines
+    # explicitly while keeping this special case contained in chatenv paste.
+    lines = []
+    while True:
+        try:
+            line = click.prompt(">", default="", show_default=False)
+        except (EOFError, KeyboardInterrupt):
+            raise click.Abort()
+        if line == "":
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
+
+_ENV_ASSIGN_RE = re.compile(
+    r"(?:^|[^A-Za-z0-9_])(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*="
+)
+
+
+def _unquote_pasted_value(raw_value: str) -> str:
+    value = raw_value.strip()
+    if not value:
+        return ""
+
+    quote = value[0]
+    if quote in ("'", '"'):
+        chars = []
+        escaped = False
+        for char in value[1:]:
+            if escaped:
+                chars.append(char)
+                escaped = False
+                continue
+            if quote == '"' and char == "\\":
+                escaped = True
+                continue
+            if char == quote:
+                return "".join(chars)
+            chars.append(char)
+        return "".join(chars)
+
+    if " #" in value:
+        value = value.split(" #", 1)[0].rstrip()
+    return value
+
+
+def _extract_pasted_assignment(line: str):
+    match = _ENV_ASSIGN_RE.search(line)
+    if match is None:
+        return None
+    key = match.group(1)
+    value_start = match.end()
+    return key, _unquote_pasted_value(line[value_start:])
+
+
+def _parse_pasted_env_text(text: str):
+    grouped = {}
+    unknown = []
+
+    for line in text.splitlines():
+        parsed = _extract_pasted_assignment(line)
+        if parsed is None:
+            continue
+        key, value = parsed
+        match = BaseEnvConfig.find_field(key)
+        if match is None:
+            unknown.append(key)
+            continue
+        config_cls, field = match
+        grouped.setdefault(config_cls, {})[field.env_key] = value
+
+    return grouped, unknown
+
+
+def _iter_fields_for_values(config_cls, values):
+    fields_by_key = {
+        field.env_key: field for field in config_cls.get_fields().values()
+    }
+    for key, value in values.items():
+        field = fields_by_key.get(key)
+        if field is not None:
+            yield field, value
+
+
+def _summarize_paste_result(grouped, unknown):
+    count = sum(len(values) for values in grouped.values())
+    click.echo(
+        f"Parsed {count} recognized value{'s' if count != 1 else ''} "
+        f"in {len(grouped)} config type{'s' if len(grouped) != 1 else ''}:"
+    )
+    for config_cls in grouped:
+        click.echo(f"- {config_cls.get_storage_name()}")
+        for field, value in _iter_fields_for_values(config_cls, grouped[config_cls]):
+            click.echo(f"  - {_render_paste_value(field, value)}")
+
+    if unknown:
+        click.echo(
+            f"Ignored {len(unknown)} unknown key"
+            f"{'s' if len(unknown) != 1 else ''}:"
+        )
+        for key in unknown:
+            click.echo(f"- {key}")
+
+
+def _echo_paste_write_summary(grouped, target_paths):
+    click.echo("Written values:")
+    for config_cls in grouped:
+        target_path = target_paths[config_cls]
+        click.echo(f"- {config_cls.get_storage_name()}: {target_path}")
+        for field, _ in _iter_fields_for_values(config_cls, grouped[config_cls]):
+            click.echo(f"  - {field.env_key}")
+
+
+def _confirm_paste_write(yes: bool, message: str, interactive):
+    if yes:
+        return
+    (
+        _normalized,
+        can_prompt,
+        force_interactive,
+        _auto_interactive,
+        need_prompt,
+    ) = resolve_interactive_mode(interactive, auto_prompt_condition=True)
+    abort_if_force_without_tty(
+        force_interactive,
+        can_prompt,
+        "Usage: chatenv paste [--value TEXT | --stdin] [--profile NAME] [-i|-I]",
+    )
+    if not need_prompt:
+        raise click.ClickException("paste requires --yes outside interactive mode.")
+    if not ask_confirm(message, default=False):
+        raise click.Abort()
+
+
+def _resolve_paste_profile(
+    profile: str | None, yes: bool, interactive
+) -> str | None:
+    if profile:
+        return _normalize_profile_name(profile)
+    if yes:
+        return None
+
+    (
+        _normalized,
+        can_prompt,
+        force_interactive,
+        _auto_interactive,
+        need_prompt,
+    ) = resolve_interactive_mode(interactive, auto_prompt_condition=True)
+    abort_if_force_without_tty(
+        force_interactive,
+        can_prompt,
+        "Usage: chatenv paste [--value TEXT | --stdin] [--profile NAME] [-i|-I]",
+    )
+    if not need_prompt:
+        return None
+
+    profile_name = ask_text(
+        "Profile name (leave blank to write active .env)", default=""
+    )
+    if profile_name == BACK_VALUE:
+        raise click.Abort()
+    profile_name = str(profile_name).strip()
+    if not profile_name:
+        return None
+    return _normalize_profile_name(profile_name)
+
+
+def _apply_grouped_values(grouped):
+    for config_cls, values in grouped.items():
+        fields_by_key = {
+            field.env_key: field for field in config_cls.get_fields().values()
+        }
+        for key, value in values.items():
+            field = fields_by_key.get(key)
+            if field is not None:
+                field.value = value
+
+
+def _write_paste_active(grouped):
+    _reload_runtime_config()
+    _apply_grouped_values(grouped)
+    _write_config_files(grouped.keys())
+
+
+def _write_paste_profiles(profile_name: str, grouped):
+    _reload_runtime_config()
+    _apply_grouped_values(grouped)
+    for config_cls in grouped:
+        target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, profile_name)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
+    _reload_runtime_config()
+
+
+@cli.command(name="paste")
+@click.option("--value", help="Paste content passed as an argument.")
+@click.option(
+    "--stdin",
+    "read_stdin",
+    is_flag=True,
+    help="Read paste content from stdin.",
+)
+@click.option(
+    "--profile",
+    help="Write parsed values to same-named typed profiles instead of active .env files.",
+)
+@click.option(
+    "--yes",
+    "yes",
+    "-y",
+    is_flag=True,
+    help="Confirm write operations without prompting.",
+)
+@add_interactive_option
+def paste_env(value, read_stdin, profile, yes, interactive):
+    """Paste env text and import recognized keys into typed env files."""
+    paste_text = _read_paste_value(value, read_stdin, interactive)
+    grouped, unknown = _parse_pasted_env_text(paste_text)
+    if not grouped:
+        if unknown:
+            click.echo(
+                f"Ignored {len(unknown)} unknown key"
+                f"{'s' if len(unknown) != 1 else ''}:"
+            )
+            for key in unknown:
+                click.echo(f"- {key}")
+        raise click.ClickException(
+            "No registered configuration keys found in pasted text."
+        )
+
+    _summarize_paste_result(grouped, unknown)
+
+    profile_name = _resolve_paste_profile(profile, yes, interactive)
+    if profile_name:
+        existing = [
+            (
+                config_cls,
+                config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, profile_name),
+            )
+            for config_cls in grouped
+            if config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, profile_name).exists()
+        ]
+        if existing:
+            click.echo("Existing profiles will be overwritten:")
+            for config_cls, target_path in existing:
+                click.echo(f"- {config_cls.get_storage_name()}: {target_path}")
+        _confirm_paste_write(
+            yes,
+            f"Write parsed values to profile '{profile_name}.env' "
+            f"for {len(grouped)} config type(s)?",
+            interactive,
+        )
+        _write_paste_profiles(profile_name, grouped)
+        target_paths = {
+            config_cls: config_cls.get_profile_env_file(
+                CHATTOOL_ENV_DIR, profile_name
+            )
+            for config_cls in grouped
+        }
+        _echo_paste_write_summary(grouped, target_paths)
+        return
+
+    _confirm_paste_write(
+        yes,
+        f"Write parsed values to active env files for {len(grouped)} config type(s)?",
+        interactive,
+    )
+    _write_paste_active(grouped)
+    target_paths = {
+        config_cls: config_cls.get_active_env_file(CHATTOOL_ENV_DIR)
+        for config_cls in grouped
+    }
+    _echo_paste_write_summary(grouped, target_paths)
+    click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
 
 
 @cli.command(name="list")

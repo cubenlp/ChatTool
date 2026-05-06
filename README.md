@@ -45,6 +45,7 @@ chatenv init -i                  # 交互式初始化（敏感字段自动隐藏
 chatenv init -i -t openai        # 仅初始化指定服务
 chatenv cat                      # 查看配置（敏感值打码）
 chatenv cat -t feishu           # 查看飞书配置，供 chattool cc init 默认候选值参考
+chatenv cat -t openai --no-mask | chatenv paste --stdin --yes  # 跨设备复制/导入配置
 chatenv set OPENAI_API_KEY=sk-xxx
 chatenv new mini -t feishu      # 从当前激活配置复制一份新的 Feishu profile
 chatenv new -t openai           # 交互式创建 OpenAI profile：先问名称，再补齐字段，不改 active .env

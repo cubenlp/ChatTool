@@ -39,3 +39,26 @@ assert output contains MOCK_KEY='from_file'
 - 执行 `chatenv test` 时，缺少 `--target` 也应自动补问。
 - 在交互终端下，缺少 `name` / `key` / `KEY=VALUE` 时应自动补问。
 - 加 `-I` 时应直接报缺少必要参数。
+
+## Case 3: OpenAI config test should prefer Responses API
+
+### 初始环境准备
+
+- 注册真实 `OpenAIConfig`。
+- 设置 `OPENAI_API_BASE`、`OPENAI_API_KEY`、`OPENAI_API_MODEL`。
+- mock `httpx.Client.stream`，模拟 `/responses` 成功返回 `response.output_text.delta` SSE 事件。
+
+### 预期过程和结果
+
+- 执行 `chatenv test -t oai`。
+- 命令应请求 `<OPENAI_API_BASE>/responses`，请求体包含 `input` 和 `max_output_tokens`。
+- 输出应显示 `Responses API generated` 成功，而不是走 `/chat/completions`。
+
+### 参考执行脚本（伪代码）
+
+```sh
+mock httpx responses endpoint
+run chatenv test -t oai
+assert posted url ends with /responses
+assert output contains Responses API
+```

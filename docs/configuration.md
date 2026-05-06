@@ -73,7 +73,39 @@ chatenv cat --no-mask
 
 # 获取单个配置
 chatenv get OPENAI_API_KEY
+
+# 从另一台设备复制过来的 chatenv cat --no-mask 输出中导入配置
+chatenv paste
+
+# 非交互导入：设备 A 输出明文，设备 B 从 stdin 写入 typed env
+chatenv cat -t openai --no-mask | chatenv paste --stdin --yes
 ```
+
+### 4. 粘贴导入配置
+
+`chatenv paste` 用于跨设备迁移或分享 ChatTool 配置。典型流程是：
+
+```bash
+# 设备 A：默认 cat 会 mask 敏感值，迁移真实密钥时必须显式 --no-mask
+chatenv cat -t openai --no-mask | pbcopy
+
+# 设备 B：粘贴导入，查看识别概要后可输入 profile 名；留空则写 active .env
+chatenv paste
+```
+
+交互模式下，`paste` 会先询问 profile name：输入名称时写入同名 profile，留空时写入当前 active `.env`。
+
+`paste` 会解析 `KEY='VALUE'`、`KEY=VALUE` 和 `export KEY=VALUE` 这类文本，只导入已注册到 `BaseEnvConfig` 的 key，并按 key 所属类型写入对应文件，例如 `envs/OpenAI/.env` 或 `envs/Feishu/.env`。未知 key 会被忽略并在概要中提示。
+
+如果不想直接激活配置，可以写入同名 profile：
+
+```bash
+chatenv paste --profile work
+# 或非交互：
+chatenv cat -t openai --no-mask | chatenv paste --stdin --profile work --yes
+```
+
+当粘贴内容命中多个配置类型时，`--profile work` 会在每个命中的类型目录下写入同名 `work.env`。如果目标 profile 已存在，交互模式会要求确认覆盖；非交互模式必须显式传 `--yes`。
 
 在代码中，你不再需要手动读取 `os.getenv`，ChatTool 的各个组件会自动读取配置。
 
@@ -175,6 +207,14 @@ from chattool.config import BaseEnvConfig
 
 # 打印当前所有配置（敏感信息已脱敏）
 BaseEnvConfig.print_config()
+```
+
+## 测试配置连通性
+
+`chatenv test -t oai` 会优先使用 OpenAI Responses API 进行最小生成测试：请求 `/responses` 的 streaming 接口，并读取到 `response.output_text.delta` 或 `response.completed` 事件才算成功。它适配 CRS/Codex 风格的 OpenAI 兼容端点和 `gpt-5.x` 这类走 `/responses` 的模型；如果该接口不可用，会回退到旧的 Chat Completions 测试路径。
+
+```bash
+chatenv test -t oai
 ```
 
 ## 支持的配置项
