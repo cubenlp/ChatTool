@@ -131,7 +131,7 @@ chattool dns ddns home.example.com --monitor
 - `--ip-type`: (可选) IP 类型，`public` (默认) 或 `local`
 - `--local-ip-cidr`: (可选) 局域网 IP 过滤网段，仅当 `ip-type=local` 时有效 (如 `192.168.1.0/24`)
 
-#### 3. SSL 证书自动更新
+#### 3. SSL 证书管理
 
 ChatTool 内置了轻量级 ACME v2 客户端，支持通过 DNS-01 挑战自动申请和更新 Let's Encrypt 证书。
 
@@ -142,17 +142,21 @@ ChatTool 内置了轻量级 ACME v2 客户端，支持通过 DNS-01 挑战自动
 
 ```bash
 # 申请证书 (自动处理 DNS 验证)
-chattool dns cert-update -d *.example.com -d example.com -e admin@example.com
+chattool dns cert apply -d *.example.com -d example.com -e admin@example.com
 
 # 指定证书保存目录
-chattool dns cert-update -d *.example.com -e admin@example.com --cert-dir ./certs
+chattool dns cert apply -d *.example.com --cert-dir ./certs
+
+# 只读检查本地证书
+chattool dns cert check -d example.com --cert-dir ./certs
 ```
 
 **参数说明**：
-- `--domains, -d`: 域名列表，支持多次指定。支持泛域名 (如 `*.example.com`)；交互终端里缺少时会自动补问。
-- `--email, -e`: Let's Encrypt 账户邮箱 (用于接收通知)；交互终端里缺少时会自动补问。
+- `--domain, -d`: 域名列表，支持多次指定。支持泛域名 (如 `*.example.com`)；交互终端里缺少时会自动补问。
+- `--email, -e`: Let's Encrypt 账户邮箱 (用于接收通知)；未传时默认读取 `git config user.email`，仍缺少时交互补问或在 `-I` 下报错。
 - `--cert-dir`: (可选) 证书存储根目录 (默认: `certs`)。证书将保存在 `<cert-dir>/<domain>/` 下。
 - `--staging`: (可选) 使用 Let's Encrypt 测试环境 (建议首次测试时使用)。
+- `--force`: (可选) 跳过本地过期判断，强制申请/续期。
 - `-l, --log-level`: (可选) 控制证书更新阶段日志级别，默认 `INFO`；排查问题时可用 `DEBUG`。
 
 ## 扩展指南
@@ -222,12 +226,13 @@ class MyCloudDNSClient(DNSClient):
 | `rr` | str | 主机记录 |
 | `ip_type` | str | `public`（公网）或 `local`（内网） |
 
-### `dns_cert_update`
+### `dns_cert_apply`
 
 自动申请或更新 Let's Encrypt 证书（DNS-01 验证）。
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `domains` | List[str] | 域名列表 |
-| `email` | str | 注册邮箱 |
+| `email` | str | 注册邮箱；为空时尝试读取 `git config user.email` |
 | `staging` | bool | 是否使用测试环境（默认 false） |
+| `force` | bool | 是否强制申请/续期（默认 false） |

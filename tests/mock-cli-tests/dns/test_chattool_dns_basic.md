@@ -1,6 +1,6 @@
 # test_chattool_dns_basic
 
-测试 `chattool dns` 的 mock 基础链路，覆盖默认交互入口、ddns/get/set/cert-update 的命令流程与参数解析。
+测试 `chattool dns` 的 mock 基础链路，覆盖默认交互入口、ddns/get/set/cert 的命令流程与参数解析。
 
 ## 元信息
 
@@ -21,14 +21,18 @@
 预期过程和结果：
   1. 执行 `chattool dns get --help`，预期输出命令说明。
   2. 执行 `chattool dns ddns --help`，预期输出命令说明。
-  3. 执行 `chattool dns cert-update --help`，预期输出命令说明。
+  3. 执行 `chattool dns cert --help`，预期输出 `apply` 和 `check`。
+  4. 执行 `chattool dns cert apply --help`，预期输出命令说明。
+  5. 执行 `chattool dns cert check --help`，预期输出命令说明。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool dns get --help
 chattool dns ddns --help
-chattool dns cert-update --help
+chattool dns cert --help
+chattool dns cert apply --help
+chattool dns cert check --help
 ```
 
 ## 用例 2：根命令默认进入交互选择
@@ -88,6 +92,26 @@ chattool dns ddns -d example.com -r test --monitor
 chattool dns set
 chattool dns set -I
 chattool dns get
+```
+
+## 用例 5：证书新接口和旧入口移除
+
+- 初始环境准备：
+  - patch `SSLCertUpdater`，避免真实调用 ACME 或 DNS。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+1. 执行 `chattool dns cert apply -d example.com -e admin@example.com --provider tencent --force -I`，预期构造 updater 时传入 domains/email/provider/force。
+2. 当未传 `--email` 但能读取 `git config user.email` 时，执行 `chattool dns cert apply -d example.com -I` 预期使用 git email 默认值。
+3. 执行 `chattool dns cert-update --help`，预期旧入口不存在。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool dns cert apply -d example.com -e admin@example.com --provider tencent --force -I
+chattool dns cert apply -d example.com -I
+chattool dns cert-update --help
 ```
 
 ## 清理 / 回滚

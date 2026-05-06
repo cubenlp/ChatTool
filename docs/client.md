@@ -401,16 +401,17 @@ chattool dns set -d example.com -r _test -t TXT -v "some-value"
 - `--ttl`: TTL 值 (默认: 600)。
 - `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
 
-### 1.3 SSL 证书 (`cert-update`)
+### 1.3 SSL 证书 (`dns cert`)
 
 使用 Let's Encrypt 和 DNS 验证自动申请和续期 SSL 证书。
 
 ```bash
-chattool dns cert-update -d example.com -d *.example.com -e admin@example.com
-chattool dns cert-update
+chattool dns cert apply -d example.com -d *.example.com -e admin@example.com
+chattool dns cert apply -d example.com
+chattool dns cert check -d example.com
 ```
 
-在交互终端里，缺少域名或邮箱时会自动补问；显式传 `-I` 时才会禁用交互并直接报错。
+在交互终端里，缺少域名或邮箱时会自动补问；邮箱未显式传入时默认读取 `git config user.email`；显式传 `-I` 时才会禁用交互并直接报错。旧入口 `chattool dns cert-update` 已移除。
 
 **输出文件结构:**
 证书将保存在 `<cert-dir>/<domain>/` 目录下，包含以下文件：
@@ -420,11 +421,12 @@ chattool dns cert-update
 - `chain.pem`: 中间证书。
 
 **完整选项说明:**
-- `-d, --domains`: 域名列表 (可多次使用，支持通配符)。
-- `-e, --email`: 用于 Let's Encrypt 注册的邮箱。
+- `-d, --domain`: 域名列表 (可多次使用，支持通配符)。
+- `-e, --email`: 用于 Let's Encrypt 注册的邮箱；未传时读取 `git config user.email`。
 - `-p, --provider`: 用于验证的 DNS 提供商 (`aliyun` 或 `tencent`，默认: `aliyun`)。
 - `--cert-dir`: 证书存储根目录 (默认: `certs`)。
 - `--staging`: 使用 Let's Encrypt 测试环境 (用于测试)。
+- `--force`: 跳过本地过期判断，强制申请/续期。
 - `--log-file`: 日志文件路径 (默认不记录到文件)。
 
 ---

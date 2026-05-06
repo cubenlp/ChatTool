@@ -18,7 +18,11 @@ def test_dns_help_commands(runner):
     assert result.exit_code == 0
     result = runner.invoke(cli, ["dns", "ddns", "--help"])
     assert result.exit_code == 0
-    result = runner.invoke(cli, ["dns", "cert-update", "--help"])
+    result = runner.invoke(cli, ["dns", "cert", "--help"])
+    assert result.exit_code == 0
+    result = runner.invoke(cli, ["dns", "cert", "apply", "--help"])
+    assert result.exit_code == 0
+    result = runner.invoke(cli, ["dns", "cert", "check", "--help"])
     assert result.exit_code == 0
 
 
@@ -165,3 +169,87 @@ def test_dns_get_set_parsing(runner):
 
         result = runner.invoke(cli, ["dns", "get", "test.example.com"])
         assert result.exit_code == 0
+
+
+def test_dns_cert_apply_passes_new_interface_options(runner, monkeypatch):
+    captured = {}
+
+    class DummyLogger:
+        def info(self, *_args, **_kwargs):
+            pass
+
+        def error(self, *_args, **_kwargs):
+            pass
+
+    class DummyUpdater:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        async def run_once(self):
+            return True
+
+    monkeypatch.setattr("chattool.tools.cert.cli.SSLCertUpdater", DummyUpdater)
+    monkeypatch.setattr(
+        "chattool.tools.cert.cli.setup_logger", lambda *_args, **_kwargs: DummyLogger()
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "dns",
+            "cert",
+            "apply",
+            "-d",
+            "example.com",
+            "-e",
+            "admin@example.com",
+            "--provider",
+            "tencent",
+            "--force",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["domains"] == ["example.com"]
+    assert captured["email"] == "admin@example.com"
+    assert captured["dns_type"] == "tencent"
+    assert captured["force"] is True
+
+
+def test_dns_cert_apply_uses_git_email_default(runner, monkeypatch):
+    captured = {}
+
+    class DummyLogger:
+        def info(self, *_args, **_kwargs):
+            pass
+
+        def error(self, *_args, **_kwargs):
+            pass
+
+    class DummyUpdater:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        async def run_once(self):
+            return True
+
+    monkeypatch.setattr("chattool.tools.cert.cli.SSLCertUpdater", DummyUpdater)
+    monkeypatch.setattr(
+        "chattool.tools.cert.cli.setup_logger", lambda *_args, **_kwargs: DummyLogger()
+    )
+    monkeypatch.setattr(
+        "chattool.tools.cert.cli.get_git_user_email", lambda: "git@example.com"
+    )
+
+    result = runner.invoke(cli, ["dns", "cert", "apply", "-d", "example.com", "-I"])
+
+    assert result.exit_code == 0
+    assert captured["email"] == "git@example.com"
+
+
+def test_dns_cert_update_is_removed(runner):
+    result = runner.invoke(cli, ["dns", "cert-update", "--help"])
+
+    assert result.exit_code != 0
+    assert "No such command" in result.output

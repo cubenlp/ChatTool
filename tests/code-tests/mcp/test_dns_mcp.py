@@ -66,22 +66,23 @@ class TestMCPServer:
                 logger=ANY
             )
 
-    async def test_dns_cert_update(self):
-        """Test dns_cert_update tool"""
+    async def test_dns_cert_apply(self):
+        """Test dns_cert_apply tool"""
         with patch('chattool.tools.dns.mcp.SSLCertUpdater') as MockUpdater:
             instance = MockUpdater.return_value
             instance.run_once = AsyncMock(return_value=True)
             
-            from chattool.tools.dns.mcp import cert_update
+            from chattool.tools.dns.mcp import cert_apply
             
             domains = ['example.com', '*.example.com']
             email = 'admin@example.com'
             
-            result = await cert_update(
+            result = await cert_apply(
                 domains=domains,
                 email=email,
                 provider='aliyun',
-                staging=True
+                staging=True,
+                force=True,
             )
             
             assert result is True
@@ -90,5 +91,6 @@ class TestMCPServer:
                 email=email,
                 dns_type='aliyun',
                 staging=True,
+                force=True,
                 logger=ANY
             )

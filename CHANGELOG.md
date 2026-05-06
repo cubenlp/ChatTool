@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - [2026-05-05] `chattool pypi init <name> -t cli-style` 模板新增默认中文 README/docs、`.en.md` 英文副本、mkdocs 配置、docs deploy/preview workflow、README 顶部 PyPI/Actions/docs 徽章，并为 `--license` 内置 MIT、Apache-2.0、BSD-3-Clause、GPL-3.0-only 和 Proprietary 模板。
 
 ### Changed
+- [2026-05-06] `chattool dns cert-update` 已替换为 `chattool dns cert apply` / `chattool dns cert check` 子命令组；`cert apply` 的邮箱默认读取 `git config user.email`，支持 `--force`，MCP 工具同步改名为 `dns_cert_apply`，旧入口不再保留。
 - [2026-05-06] ChatTool 依赖外部 `chatstyle>=0.1.0` 后，公开 Python 下限同步为 `>=3.10`，避免与 ChatStyle 包元数据冲突。
 - [2026-05-06] `chattool pypi probe` 支持把包名作为首个位置参数传入，例如 `chattool pypi probe chatstyle`，不再要求使用 `--name` 前缀。
 - [2026-04-20] `chattool gh` 已重构为分层实现：CLI 入口收口到 `gh pr ...` / `gh run ...` 嵌套命令树，主要命令业务从 `src/chattool/tools/github/cli.py` 迁出到独立命令实现层，请求访问收口为显式 `get_*` / `post_*` / `patch_*` 函数，`GitHubClient` 同步瘦身为围绕这些提取后能力的薄包装；保留了 repo-scoped token 优先级、`set-token`、`repo-perms`、缺参自动补问、`pr checks --wait`、`pr merge --check` 等 ChatTool 定制行为
@@ -25,9 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - [2026-04-20] `chatloop` 插件现在在首次执行 `/chatloop ...` 时不再额外弹出启动完成提示，也不再把 bootstrap PRD 提示作为工具返回文本直接回显；改为异步把首轮 PRD contract 注入当前 session，避免模型把首轮启动误判为“一轮已经结束”
 - [2026-04-20] `chattool setup workspace --with-opencode-loop` / `setup opencode --plugin chatloop` 附带的 `chatloop` 插件现在会在启动首轮就强制注入 `PRD.md` 路径、project path 和结构化进度规则，不再把 `/chatloop <message>` 原样转发给模型；同时引入更强的 completion gate，要求每轮输出 `## Completed`、`## Next Steps` 与 `STATUS: IN_PROGRESS` / `STATUS: COMPLETE`，只有在 `Next Steps` 清空、`STATUS: COMPLETE` 与 `<complete>DONE</complete>` 同时满足时才停止 continuation
 - `chattool cc start` 现在会捕获启动异常和非零退出码，并把失败原因直接输出给用户；默认连续失败 5 次后才停止重试，避免 cc-connect 因偶发异常直接变成不可用状态
-- `chattool setup nodejs`、`setup codex`、`setup opencode`、`setup claude`、`setup lark-cli`、`setup cc-connect`、`setup frp`、`setup docker` 与 `chattool dns cert-update` 现在统一支持 `-l/--log-level`；复杂等待型命令的阶段日志可按 `DEBUG/INFO/WARNING/ERROR` 控制，而 `setup alias` 这类本地即时配置命令继续保持简洁输出
+- `chattool setup nodejs`、`setup codex`、`setup opencode`、`setup claude`、`setup lark-cli`、`setup cc-connect`、`setup frp`、`setup docker` 与 `chattool dns cert apply` 现在统一支持 `-l/--log-level`；复杂等待型命令的阶段日志可按 `DEBUG/INFO/WARNING/ERROR` 控制，而 `setup alias` 这类本地即时配置命令继续保持简洁输出
 - `chattool setup alias` 现在在未显式传 `--shell` 且终端可交互时，会先进入 shell 多选页，再进入 alias 多选页；`chattool setup nodejs` 也改为像 alias 一样默认同步更新所有已探测到的 `~/.zshrc` / `~/.bashrc`，并在 `-i` 时允许交互选择目标 shell
-- `src/chattool/interaction/` 新增声明式 CLI 输入规范层：统一提供 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，把缺参补问、`-i/-I` 语义、TTY 检查和多字段约束从各命令的重复样板中收口到共享模块；`chattool dns`、`chattool client cert`、`chattool client svg2gif`、`chattool gh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool dns cert-update` 已切到这套机制，并补充了相应 mock CLI 测试与开发文档规范
+- `src/chattool/interaction/` 新增声明式 CLI 输入规范层：统一提供 `CommandField` / `CommandSchema` / `CommandConstraint` / `resolve_command_inputs()` / `add_interactive_option()`，把缺参补问、`-i/-I` 语义、TTY 检查和多字段约束从各命令的重复样板中收口到共享模块；`chattool dns`、`chattool client cert`、`chattool client svg2gif`、`chattool gh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool dns cert apply` 已切到这套机制，并补充了相应 mock CLI 测试与开发文档规范
 - `chattool dns` 现在在交互终端里默认进入命令选择；`chattool dns get` / `set` / `ddns` 缺少必要参数时会自动补问，`-I` 才显式禁用交互并报错；同时 `ddns` 的监控间隔短参数收口为仅保留 `--interval`，避免与统一的 `-i` 交互开关冲突
 - `chattool pypi probe` 现在默认检查正式 `pypi`，收口为更直接的精确项目名可用性检查：名称已占用时直接给出阻塞结论，并补充作者、摘要、链接、最新版本等少量有用信息；不再默认查 `testpypi`，也不再输出一组对决策无帮助的固定状态项
 - `chattool nginx static-root` 的默认站点根目录现从 NAS 风格示例调整为更通用的 `/var/www/example-site`，交互默认值、文档和测试同步更新

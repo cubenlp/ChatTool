@@ -5,6 +5,7 @@ try:
 except ImportError:
     FastMCP = Any
 from chattool.tools.cert import SSLCertUpdater
+from chattool.tools.cert.email import resolve_cert_email
 from chattool.tools.dns import DynamicIPUpdater, create_dns_client
 from chattool.utils import setup_logger
 
@@ -154,28 +155,38 @@ async def ddns_update(
         logger.error(f"Error in DDNS update: {e}")
         return f"Error: {str(e)}"
 
-async def cert_update(
+async def cert_apply(
     domains: List[str], 
-    email: str, 
+    email: Optional[str] = None,
     provider: Optional[str] = None, 
     staging: bool = False,
-    cert_dir: Optional[str] = None
+    cert_dir: Optional[str] = None,
+    force: bool = False,
 ) -> Union[bool, str]:
     """
     Request or renew SSL certificates using Let's Encrypt (DNS-01 challenge).
     
     Args:
         domains: List of domains to include in the certificate.
-        email: Email for Let's Encrypt registration.
+        email: Email for Let's Encrypt registration. If omitted, git config
+            user.email is used.
         provider: DNS provider used for validation.
         staging: Use Let's Encrypt staging environment (for testing).
         cert_dir: Directory to save certificates (optional).
+        force: Force certificate request/renewal even when local certs are still
+            valid.
         
     Returns:
         True if certificate was successfully obtained or renewed.
     """
     try:
         p = _get_provider(provider)
+        resolved_email = resolve_cert_email(email)
+        if not resolved_email:
+            return (
+                "Error: email is required. "
+                "Pass email or configure git config user.email."
+            )
         
         # Handle optional cert_dir: pass it only if not None, otherwise let class use default
         kwargs = {}
@@ -184,9 +195,10 @@ async def cert_update(
             
         updater = SSLCertUpdater(
             domains=domains,
-            email=email,
+            email=resolved_email,
             dns_type=p,
             staging=staging,
+            force=force,
             logger=logger,
             **kwargs
         )
@@ -195,7 +207,7 @@ async def cert_update(
         logger.error(f"Dependency missing: {e}")
         return f"Error: {str(e)}"
     except Exception as e:
-        logger.error(f"Error in cert update: {e}")
+        logger.error(f"Error in cert apply: {e}")
         return f"Error: {str(e)}"
 
 def register(mcp: FastMCP):
@@ -205,4 +217,4 @@ def register(mcp: FastMCP):
     mcp.tool(name="dns_add_record", tags=["dns", "write"])(add_record)
     mcp.tool(name="dns_delete_record", tags=["dns", "write"])(delete_record)
     mcp.tool(name="dns_ddns_update", tags=["dns", "write"])(ddns_update)
-    mcp.tool(name="dns_cert_update", tags=["cert", "write"])(cert_update)
+    mcp.tool(name="dns_cert_apply", tags=["cert", "write"])(cert_apply)

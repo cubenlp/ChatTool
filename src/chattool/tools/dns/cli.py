@@ -39,7 +39,7 @@ def cli(ctx):
             "ddns - 动态更新 DNS 记录",
             "set - 创建或更新 DNS 记录",
             "get - 查询 DNS 记录",
-            "cert-update - 申请或更新证书",
+            "cert - 证书管理",
         ],
     )
     ctx.invoke(cli.get_command(ctx, selected.split(" - ", 1)[0]))

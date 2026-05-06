@@ -18,7 +18,7 @@ TOOL_SPECS: Sequence[MCPToolSpec] = (
     MCPToolSpec("dns_add_record", "dns", ("dns", "write"), "添加 DNS 记录"),
     MCPToolSpec("dns_delete_record", "dns", ("dns", "write"), "删除 DNS 记录"),
     MCPToolSpec("dns_ddns_update", "dns", ("dns", "write"), "执行 DDNS 更新"),
-    MCPToolSpec("dns_cert_update", "dns", ("cert", "write"), "申请或续期证书"),
+    MCPToolSpec("dns_cert_apply", "dns", ("cert", "write"), "申请或续期证书"),
     MCPToolSpec("zulip_list_streams", "zulip", ("zulip", "read"), "列出 Zulip 频道"),
     MCPToolSpec("zulip_get_messages", "zulip", ("zulip", "read"), "查询 Zulip 消息"),
     MCPToolSpec("zulip_send_message", "zulip", ("zulip", "write"), "发送 Zulip 消息"),

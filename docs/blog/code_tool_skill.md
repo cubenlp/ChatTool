@@ -54,14 +54,14 @@ class SSLCertUpdater:
 **“一行命令解决问题。”**
 
 为了让非 Python 开发者（或者不想打开 IDE 的自己）也能用，我给代码穿上了一层外衣——CLI。
-使用 `click` 这样的库，我们将 `SSLCertUpdater` 包装成了 `chattool dns cert-update`。
+使用 `click` 这样的库，我们将 `SSLCertUpdater` 包装成了 `chattool dns cert apply`。
 
 ```bash
 # 申请证书
-chattool dns cert-update -d example.com -d *.example.com -e admin@example.com --provider aliyun
+chattool dns cert apply -d example.com -d *.example.com -e admin@example.com --provider aliyun
 
 # 使用测试环境（Staging）
-chattool dns cert-update -d example.com --staging
+chattool dns cert apply -d example.com --staging
 ```
 
 **输出结构**：
@@ -140,7 +140,7 @@ Client 负责发送指令，查询状态，下载结果。
     >
     > **Route 2: CLI**
     > *Scenario*: Local machine ops.
-    > *Tool*: `chattool dns cert-update`
+    > *Tool*: `chattool dns cert apply`
     >
     > **Route 3: Server-Client**
     > *Scenario*: Remote management, multi-tenant.

@@ -28,16 +28,16 @@
 chattool --help
 ```
 
-## 用例 2：dns 组会挂上 cert-update
+## 用例 2：dns 组会挂上 cert 子命令组
 
 - 初始环境准备：
   - patch `_load_attr`，为 `chattool.tools.dns.cli:cli` 返回一个空 group。
-  - patch `_load_attr`，为 `chattool.tools.cert.cli:main` 返回一个最小 command。
+  - patch `_load_attr`，为 `chattool.tools.cert.cli:cert_cli` 返回一个最小 group。
 - 相关文件：
   - 无
 
 预期过程和结果：
-  1. 执行 `chattool dns --help`，预期输出包含 `cert-update`。
+  1. 执行 `chattool dns --help`，预期输出包含 `cert`，不包含旧的 `cert-update`。
   2. `_load_attr` 应按 `dns cli -> cert cli` 的顺序被调用。
 
 参考执行脚本（伪代码）：

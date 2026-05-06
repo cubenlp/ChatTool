@@ -30,6 +30,7 @@ class SSLCertUpdater:
                  email: str,
                  cert_dir: str = "certs",
                  staging: bool = False,
+                 force: bool = False,
                  logger=None,
                  log_file: Optional[str] = None,
                  dns_type: Union[DNSClientType, str]='aliyun',
@@ -43,6 +44,7 @@ class SSLCertUpdater:
             email: Let's Encrypt账户邮箱
             cert_dir: 证书存储目录
             staging: 是否使用Let's Encrypt测试环境
+            force: 是否跳过本地证书过期判断，强制申请/续期
             logger: 日志记录器
             log_file: 日志文件路径 (如果未提供 logger 且需要文件日志)
             dns_type: DNS客户端类型
@@ -52,6 +54,7 @@ class SSLCertUpdater:
         self.email = email
         self.cert_dir = Path(cert_dir)
         self.staging = staging
+        self.force = force
         self.logger = logger or setup_logger(__name__, log_file=log_file)
         
         # 初始化DNS客户端
@@ -163,7 +166,11 @@ class SSLCertUpdater:
             self.logger.info(f"处理域名组: {main_domain} -> {domain_list}")
             
             # 检查是否需要续期
-            needs_update = any(self.needs_renewal(domain) for domain in domain_list)
+            needs_update = self.force or any(
+                self.needs_renewal(domain) for domain in domain_list
+            )
+            if self.force:
+                self.logger.info(f"域名组 {main_domain} 已启用强制申请/续期")
             
             if not needs_update:
                 self.logger.info(f"域名组 {main_domain} 的证书都不需要更新")
