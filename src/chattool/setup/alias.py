@@ -29,6 +29,7 @@ ALIAS_MAP = {
     "chatlark": "chattool lark",
     "chatimg": "chattool image",
     "chatnet": "chattool network",
+    "chatcrs": "chattool crs",
 }
 
 BLOCK_BEGIN = "# >>> chattool aliases >>>"

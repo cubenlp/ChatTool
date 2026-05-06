@@ -161,6 +161,7 @@ chattool explore arxiv get
 | Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-opencode-loop` 启用 OpenCode loop-aware 模板并安装本地 `chatloop` 资产 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
+| CRS 查询 | `chattool crs` | 查询 Claude Relay Service API key 用量、模型统计和只读 admin 信息 |
 
 ## 文档
 

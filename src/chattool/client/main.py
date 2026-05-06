@@ -107,6 +107,7 @@ cli._lazy_commands.update(
         "cc": lambda: _load_attr("chattool.tools.cc.cli", "cli"),
         "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
         "explore": lambda: _load_attr("chattool.explore.cli", "explore_cli"),
+        "crs": lambda: _load_attr("chattool.tools.crs.cli", "cli"),
     }
 )
 
