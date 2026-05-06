@@ -79,12 +79,15 @@ class AliyunDNSClient(DNSClient):
             records = []
             if response.body.domains and response.body.domains.domain:
                 for record in response.body.domains.domain:
+                    status = "EXPIRED" if getattr(record, 'instance_expired', False) else "ENABLE"
                     records.append({
                         'DomainName': record.domain_name,
                         'DomainId': record.domain_id,
+                        'Status': status,
+                        'RecordCount': getattr(record, 'record_count', None),
                         'CreateTime': record.create_time,
-                        'Remark': record.remark,
-                        'Tags': record.tags.tag
+                        'Remark': getattr(record, 'remark', None),
+                        'Tags': record.tags.tag if record.tags else []
                     })
             return records
         except Exception as e:
