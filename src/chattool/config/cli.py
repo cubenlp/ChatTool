@@ -3,6 +3,7 @@ import shutil
 import os
 import re
 import sys
+import dotenv
 
 from chattool.interaction import (
     BACK_VALUE,

@@ -106,15 +106,16 @@ bot.start()
 ```bash
 chattool dns
 chattool dns list
-chattool dns get home.example.com
+chattool dns records home.example.com
 chattool dns set home.example.com -v 1.2.3.4
-chattool dns delete home.example.com -t A
+chattool dns delete home.example.com -t A --yes
+chattool dns ip
 chattool dns ddns home.example.com --monitor
 chattool dns cert apply -d example.com -e admin@example.com
 chattool dns cert check -d example.com
 ```
 
-交互终端里直接运行 `chattool dns` 会先进入命令选择；`get` / `set` / `delete` / `ddns` / `cert apply` 缺少必要参数时会自动补问，`cert apply` 的邮箱默认读取 `git config user.email`，`-I` 才会禁用交互并直接报错。
+交互终端里直接运行 `chattool dns` 会先进入命令选择；`records` / `set` / `delete` / `ddns` / `cert apply` 缺少必要参数时会自动补问，`cert apply` 的邮箱默认读取 `git config user.email`，`-I` 才会禁用交互并直接报错。
 
 ### Nginx 配置生成 (`chattool nginx`)
 

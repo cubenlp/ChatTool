@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
 ## 2026-05-07
-- `chattool dns` 新增 `list` 域名列表命令和 `delete` 记录删除命令，覆盖 provider 已有的域名枚举与记录删除能力。
+- `chattool dns` 新增并收口 `list` / `records` / `set` / `delete` / `ip` 接口：`list` 查看域名列表，`records` 查看解析记录，`set` 使用幂等写入，`delete` 显示匹配记录并要求确认或 `--yes`，`ip` 只探测当前 IP；旧 `get` 命令已删除。
+- 修复 `chatenv cat -t <type> <profile>` 读取 profile env 文件时缺少 `dotenv` 导入导致的崩溃。
 - `CHANGELOG.md` 取消待发布分组，改为按日期追加更新记录。
 
 ## 2026-05-06

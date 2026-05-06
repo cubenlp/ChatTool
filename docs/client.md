@@ -375,13 +375,13 @@ chattool dns ddns public.example.com --ttl 600 --max-retries 5 --retry-delay 10
 
 ### 1.2 记录管理
 
-**获取记录 (`get`):**
+**获取记录 (`records`):**
 ```bash
 # 获取域名的所有记录
-chattool dns get -d example.com
+chattool dns records example.com
 
 # 获取特定记录
-chattool dns get test.example.com
+chattool dns records test.example.com
 ```
 **选项:**
 - `-t, --type`: 记录类型过滤 (例如 `A`, `TXT`, `CNAME`)。
@@ -406,12 +406,14 @@ chattool dns set -d example.com -r _test -t TXT -v "some-value"
 ```bash
 chattool dns list
 chattool dns list --provider tencent --page-size 50
-chattool dns delete test.example.com -t A
-chattool dns delete test.example.com -t A -v 1.2.3.4
+chattool dns delete test.example.com -t A --yes
+chattool dns delete test.example.com -t A -v 1.2.3.4 --yes
+chattool dns ip
 ```
 
 - `list` 会调用云厂商域名列表接口，输出 `DomainName`、`DomainId`、`Status`、记录数量和备注。
-- `delete` 需要显式传入 `--type/-t`，避免误删整个主机记录；可选 `--value/-v` 进一步限制删除目标。
+- `delete` 需要显式传入 `--type/-t`，避免误删整个主机记录；可选 `--value/-v` 进一步限制删除目标；非交互删除需要 `--yes`。
+- `ip` 只输出当前探测到的 public/local IP，不初始化 DNS provider。
 
 ### 1.4 SSL 证书 (`dns cert`)
 

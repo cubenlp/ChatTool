@@ -102,7 +102,7 @@ chattool serve lark ai --system "你是工作助手"
 ### DNS 管理
 
 ```bash
-chattool dns get home.example.com
+chattool dns records home.example.com
 chattool dns ddns home.example.com --monitor
 ```
 

@@ -13,10 +13,13 @@ class TestDNSIntegration:
     """DNS CLI Integration Tests - Real Production Tests"""
 
     def test_dns_list_help(self, runner):
-        """Test dns get help command"""
-        result = runner.invoke(cli, ['dns', 'get', '--help'])
+        """Test dns list/records/delete/ip help commands"""
+        result = runner.invoke(cli, ['dns', 'records', '--help'])
         assert result.exit_code == 0
         assert 'Show DNS record details.' in result.output
+
+        result = runner.invoke(cli, ['dns', 'get', '--help'])
+        assert result.exit_code != 0
 
         result = runner.invoke(cli, ['dns', 'list', '--help'])
         assert result.exit_code == 0
@@ -25,6 +28,10 @@ class TestDNSIntegration:
         result = runner.invoke(cli, ['dns', 'delete', '--help'])
         assert result.exit_code == 0
         assert 'Delete DNS records' in result.output
+
+        result = runner.invoke(cli, ['dns', 'ip', '--help'])
+        assert result.exit_code == 0
+        assert 'current public or local IP' in result.output
 
     def test_dns_ddns_help(self, runner):
         """Test dns ddns help command"""
@@ -44,7 +51,7 @@ class TestDNSIntegration:
         if not (TencentConfig.TENCENT_SECRET_ID.value and TencentConfig.TENCENT_SECRET_KEY.value):
             pytest.skip("Tencent DNS credentials are not configured")
         # Ensure we are using the correct provider
-        result = runner.invoke(cli, ['dns', 'get', '-d', 'rexwang.site', '-p', 'tencent'])
+        result = runner.invoke(cli, ['dns', 'records', '-d', 'rexwang.site', '-p', 'tencent'])
         print(f"Tencent Result: {result.output}")
         if result.exit_code != 0:
             pytest.fail(f"Tencent DNS list failed: {result.output}")
@@ -60,7 +67,7 @@ class TestDNSIntegration:
         ):
             pytest.skip("Aliyun DNS credentials are not configured")
         # Ensure we are using the correct provider
-        result = runner.invoke(cli, ['dns', 'get', '-d', 'qpetlover.cn', '-p', 'aliyun'])
+        result = runner.invoke(cli, ['dns', 'records', '-d', 'qpetlover.cn', '-p', 'aliyun'])
         print(f"Aliyun Result: {result.output}")
         if result.exit_code != 0:
             pytest.fail(f"Aliyun DNS list failed: {result.output}")

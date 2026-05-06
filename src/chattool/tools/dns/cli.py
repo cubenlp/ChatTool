@@ -9,6 +9,7 @@ import click
 import asyncio
 
 from chattool.interaction import (
+    ask_confirm,
     ask_select,
     CommandConstraint,
     CommandField,
@@ -39,8 +40,9 @@ def cli(ctx):
             "list - 查看域名列表",
             "ddns - 动态更新 DNS 记录",
             "set - 创建或更新 DNS 记录",
-            "get - 查询 DNS 记录",
+            "records - 查询 DNS 记录",
             "delete - 删除 DNS 记录",
+            "ip - 查看当前 IP",
             "cert - 证书管理",
         ],
     )
@@ -59,6 +61,26 @@ def _resolve_domain_inputs(full_domain, domain, rr):
         except ValueError as exc:
             raise click.ClickException(
                 "无效的完整域名格式。应如 'sub.example.com'"
+            ) from exc
+
+    return domain, rr
+
+
+def _resolve_records_inputs(target, domain, rr):
+    if target:
+        if domain or rr:
+            click.echo(
+                "警告: 当提供 target 时，--domain 和 --rr 参数将被忽略。", err=True
+            )
+
+        parts = target.split(".")
+        if len(parts) == 2:
+            return target, None
+        try:
+            return split_full_domain(target)
+        except ValueError as exc:
+            raise click.ClickException(
+                "无效的域名格式。应如 'example.com' 或 'sub.example.com'"
             ) from exc
 
     return domain, rr
@@ -154,13 +176,12 @@ DNS_DELETE_SCHEMA = CommandSchema(
 )
 
 
-DNS_GET_SCHEMA = CommandSchema(
-    name="dns-get",
+DNS_RECORDS_SCHEMA = CommandSchema(
+    name="dns-records",
     fields=(
         CommandField(
             "domain", prompt="domain", required=True, missing_message="必须提供域名。"
         ),
-        CommandField("rr", prompt="rr", default="@", prompt_if_missing=True),
     ),
     constraints=(CommandConstraint(_validate_dns_domain_only),),
 )
@@ -207,6 +228,63 @@ def _print_record_table(records, provider):
         )
 
 
+async def _get_public_ip(timeout: int = 10):
+    import aiohttp
+
+    ip_check_urls = [
+        "https://ipv4.icanhazip.com",
+        "https://api.ipify.org",
+        "https://ipinfo.io/ip",
+        "https://checkip.amazonaws.com",
+        "https://ident.me",
+        "https://v4.ident.me",
+    ]
+    async with aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=timeout)
+    ) as session:
+        for url in ip_check_urls:
+            try:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        ip = (await response.text()).strip()
+                        parts = ip.split(".")
+                        if len(parts) == 4 and all(0 <= int(p) <= 255 for p in parts):
+                            return ip
+            except Exception:
+                continue
+    return None
+
+
+def _get_local_ip(local_ip_cidr=None):
+    import ipaddress
+    import netifaces
+
+    candidates = []
+    network = None
+    if local_ip_cidr:
+        try:
+            network = ipaddress.ip_network(local_ip_cidr, strict=False)
+        except ValueError as exc:
+            raise click.ClickException(f"无效的网段格式: {local_ip_cidr}") from exc
+
+    for iface in netifaces.interfaces():
+        if iface == "lo":
+            continue
+        addrs = netifaces.ifaddresses(iface)
+        for addr_info in addrs.get(netifaces.AF_INET, []):
+            ip = addr_info["addr"]
+            if ip.startswith("127."):
+                continue
+            if network is not None:
+                if ipaddress.ip_address(ip) in network:
+                    candidates.append(ip)
+                continue
+            if ip.startswith(("192.168.", "10.", "172.", "100.")):
+                candidates.append(ip)
+
+    return candidates[0] if candidates else None
+
+
 @cli.command(name="list")
 @click.option(
     "--provider",
@@ -234,6 +312,30 @@ def list_domains(provider, page_number, page_size):
     except Exception as e:
         logger.error(f"获取DNS域名列表失败: {e}")
         raise click.ClickException(f"获取DNS域名列表失败: {e}")
+
+
+@cli.command(name="ip")
+@click.option(
+    "--type",
+    "ip_type",
+    default="public",
+    type=click.Choice(["public", "local"]),
+    help="IP类型 (默认: public)",
+)
+@click.option(
+    "--local-ip-cidr",
+    help="局域网IP过滤网段 (例如: 192.168.0.0/16)，仅当 type=local 时有效",
+)
+def show_ip(ip_type, local_ip_cidr):
+    """Show the current public or local IP without touching DNS records."""
+    if ip_type == "public":
+        current_ip = asyncio.run(_get_public_ip())
+    else:
+        current_ip = _get_local_ip(local_ip_cidr)
+
+    if not current_ip:
+        raise click.ClickException(f"无法获取当前 {ip_type} IP")
+    click.echo(current_ip)
 
 
 @cli.command()
@@ -393,23 +495,15 @@ def set_record(full_domain, domain, rr, record_type, value, ttl, provider, inter
     domain = inputs["domain"]
     rr = inputs["rr"]
     value = inputs["value"]
+    record_type = record_type.upper()
 
     logger = setup_logger("dns_set", log_level="INFO", format_type="simple")
     try:
         client = create_dns_client(provider, logger=logger)
 
-        # 检查是否存在
-        records = client.describe_domain_records(
-            domain, subdomain=rr, record_type=record_type
-        )
-
-        if records:
-            logger.info(f"删除记录 {rr}.{domain} ({record_type}) -> {value}")
-            client.delete_record_value(domain, rr, record_type)
-
-        logger.info(f"添加记录 {rr}.{domain} ({record_type}) -> {value}")
-        res = client.add_domain_record(domain, rr, record_type, value, ttl)
-        if res:
+        logger.info(f"设置记录 {rr}.{domain} ({record_type}) -> {value}")
+        success = client.set_record_value(domain, rr, record_type, value, ttl)
+        if success:
             click.echo(f"操作成功: {rr}.{domain} -> {value}")
         else:
             raise click.ClickException("操作失败")
@@ -421,8 +515,8 @@ def set_record(full_domain, domain, rr, record_type, value, ttl, provider, inter
         raise click.ClickException(f"设置DNS记录失败: {e}")
 
 
-@cli.command(name="get")
-@click.argument("full_domain", required=False)
+@cli.command(name="records")
+@click.argument("target", required=False)
 @click.option("--domain", "-d", help="域名")
 @click.option("--rr", "-r", help="主机记录")
 @click.option("--type", "-t", "record_type", help="记录类型过滤")
@@ -434,24 +528,26 @@ def set_record(full_domain, domain, rr, record_type, value, ttl, provider, inter
     help="DNS提供商 (默认: aliyun)",
 )
 @add_interactive_option
-def get_record(full_domain, domain, rr, record_type, provider, interactive):
+def records(target, domain, rr, record_type, provider, interactive):
     """Show DNS record details.
 
     支持:
-    1. 完整域名: chattool dns get test.example.com
-    2. 分开指定: chattool dns get -d example.com -r test
+    1. 域名: chattool dns records example.com
+    2. 完整域名: chattool dns records test.example.com
+    3. 分开指定: chattool dns records -d example.com -r test
     """
-    domain, rr = _resolve_domain_inputs(full_domain, domain, rr)
+    domain, rr = _resolve_records_inputs(target, domain, rr)
     inputs = resolve_command_inputs(
-        schema=DNS_GET_SCHEMA,
-        provided={"domain": domain, "rr": rr},
+        schema=DNS_RECORDS_SCHEMA,
+        provided={"domain": domain},
         interactive=interactive,
-        usage="Usage: chattool dns get [FULL_DOMAIN] [--domain TEXT] [--rr TEXT] [--provider aliyun|tencent] [-i|-I]",
+        usage="Usage: chattool dns records [TARGET] [--domain TEXT] [--rr TEXT] [--provider aliyun|tencent] [-i|-I]",
     )
     domain = inputs["domain"]
-    rr = inputs["rr"]
+    if record_type:
+        record_type = record_type.upper()
 
-    logger = setup_logger("dns_get", log_level="INFO", format_type="simple")
+    logger = setup_logger("dns_records", log_level="INFO", format_type="simple")
     try:
         client = create_dns_client(provider, logger=logger)
         records = client.describe_domain_records(
@@ -472,6 +568,7 @@ def get_record(full_domain, domain, rr, record_type, provider, interactive):
 @click.option("--rr", "-r", help="主机记录")
 @click.option("--type", "-t", "record_type", required=False, help="记录类型")
 @click.option("--value", "-v", required=False, help="记录值过滤")
+@click.option("--yes", "-y", is_flag=True, help="跳过确认并执行删除")
 @click.option(
     "--provider",
     "-p",
@@ -480,7 +577,7 @@ def get_record(full_domain, domain, rr, record_type, provider, interactive):
     help="DNS提供商 (默认: aliyun)",
 )
 @add_interactive_option
-def delete_record(full_domain, domain, rr, record_type, value, provider, interactive):
+def delete_record(full_domain, domain, rr, record_type, value, yes, provider, interactive):
     """Delete DNS records by domain, host record, type, and optional value."""
     domain, rr = _resolve_domain_inputs(full_domain, domain, rr)
     inputs = resolve_command_inputs(
@@ -491,7 +588,7 @@ def delete_record(full_domain, domain, rr, record_type, value, provider, interac
     )
     domain = inputs["domain"]
     rr = inputs["rr"]
-    record_type = inputs["record_type"]
+    record_type = inputs["record_type"].upper()
 
     logger = setup_logger("dns_delete", log_level="INFO", format_type="simple")
     try:
@@ -508,6 +605,15 @@ def delete_record(full_domain, domain, rr, record_type, value, provider, interac
         if not matches:
             click.echo("未找到匹配的记录")
             return
+
+        click.echo("Matched records:")
+        _print_record_table(matches, provider)
+        if not yes:
+            if interactive is False or not is_interactive_available():
+                raise click.ClickException("删除记录需要确认；非交互环境请传入 --yes。")
+            if not ask_confirm("Delete these DNS records?", default=False):
+                click.echo("已取消")
+                return
 
         deleted_count = 0
         for record in matches:

@@ -71,7 +71,7 @@ client.delete_subdomain_records("example.com", "temp")
 
 ChatTool 提供了统一的 DNS 管理 CLI 工具，用于快速查看、更新 DNS 记录（常用于 DDNS 场景）以及管理 SSL 证书。
 
-在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns get` / `set` / `delete` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
+在交互终端里，`chattool dns` 现在默认进入命令选择；`chattool dns records` / `set` / `delete` / `ddns` 缺少必要参数时也会自动补问。仅在显式传入 `-I` 时禁用交互并直接报错，`-i` 可强制进入当前命令的交互补参流程。
 
 ### 基本用法
 
@@ -85,13 +85,15 @@ chattool dns
 chattool dns list
 chattool dns list --provider tencent --page 1 --page-size 50
 
-# 获取 DNS 记录 (get)
+# 获取 DNS 记录 (records)
+# 查看域名下全部记录:
+chattool dns records example.com
 # 完整域名方式:
-chattool dns get test.example.com
+chattool dns records test.example.com
 # 分开指定方式:
-chattool dns get -d example.com -r test
+chattool dns records -d example.com -r test
 # 缺参时自动进入交互补问：
-chattool dns get
+chattool dns records
 
 # 设置 DNS 记录 (set) - 自动处理新增或更新
 # 将 test.example.com 解析到 1.2.3.4
@@ -103,9 +105,9 @@ chattool dns set test.example.com -v "some-text-value" -t TXT --ttl 300
 
 # 删除 DNS 记录 (delete)
 # 删除 test.example.com 下所有 A 记录
-chattool dns delete test.example.com -t A
+chattool dns delete test.example.com -t A --yes
 # 只删除匹配 value 的 A 记录
-chattool dns delete test.example.com -t A -v 1.2.3.4
+chattool dns delete test.example.com -t A -v 1.2.3.4 --yes
 ```
 
 当前 CLI 对 provider 能力的映射：
@@ -113,13 +115,25 @@ chattool dns delete test.example.com -t A -v 1.2.3.4
 | Provider 能力 | CLI |
 | --- | --- |
 | `describe_domains()` | `chattool dns list` |
-| `describe_domain_records()` / `describe_subdomain_records()` | `chattool dns get` |
+| `describe_domain_records()` / `describe_subdomain_records()` | `chattool dns records` |
 | `add_domain_record()` / `update_domain_record()` | `chattool dns set` |
 | `delete_domain_record()` | `chattool dns delete` |
+| public/local IP detection | `chattool dns ip` |
 | `DynamicIPUpdater.run_once()` | `chattool dns ddns` |
 | `SSLCertUpdater.run_once()` | `chattool dns cert apply` |
 
-#### 2. 动态域名更新 (DDNS)
+#### 2. 查看当前 IP
+
+```bash
+chattool dns ip
+chattool dns ip --type public
+chattool dns ip --type local
+chattool dns ip --type local --local-ip-cidr 192.168.1.0/24
+```
+
+`dns ip` 只做 IP 探测，不初始化 DNS provider，也不写解析记录。
+
+#### 3. 动态域名更新 (DDNS)
 
 ```bash
 # 1. 公网 IP 更新 (默认)
@@ -152,7 +166,7 @@ chattool dns ddns home.example.com --monitor
 - `--ip-type`: (可选) IP 类型，`public` (默认) 或 `local`
 - `--local-ip-cidr`: (可选) 局域网 IP 过滤网段，仅当 `ip-type=local` 时有效 (如 `192.168.1.0/24`)
 
-#### 3. SSL 证书管理
+#### 4. SSL 证书管理
 
 ChatTool 内置了轻量级 ACME v2 客户端，支持通过 DNS-01 挑战自动申请和更新 Let's Encrypt 证书。
 

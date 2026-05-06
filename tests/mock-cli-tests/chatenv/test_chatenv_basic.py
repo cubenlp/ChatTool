@@ -44,6 +44,27 @@ def test_cat_prefers_typed_env_over_shell_env(tmp_path, monkeypatch):
     assert "from_env" not in result.output
 
 
+def test_cat_profile_loads_profile_env_file(tmp_path, monkeypatch):
+    env_dir = tmp_path / "envs"
+    env_file = tmp_path / ".env"
+    profile_dir = env_dir / "Mock"
+    profile_dir.mkdir(parents=True)
+    profile_file = profile_dir / "apple.env"
+    profile_file.write_text("MOCK_KEY='from_profile'\n", encoding="utf-8")
+    env_file.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
+
+    result = CliRunner().invoke(cli, ["cat", "-t", "mock", "apple"])
+
+    assert result.exit_code == 0
+    assert "MOCK_KEY='from_profile'" in result.output
+
+
 def test_profile_and_key_commands_prompt_when_args_missing(tmp_path, monkeypatch):
     env_dir = tmp_path / "envs"
     env_file = tmp_path / ".env"

@@ -43,7 +43,7 @@
 
 - `chattool dns ddns`
 - `chattool dns set`
-- `chattool dns get`
+- `chattool dns records`
 - `chattool dns cert apply`
 
 行为：
