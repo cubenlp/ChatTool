@@ -142,6 +142,7 @@ nav:
     - SVG 转 GIF: tools/svg2gif.md
     - TP-Link 路由器: tools/tplogin.md
     - CC-Connect 管理: tools/cc/index.md
+    - CRS 查询工具: tools/crs/index.md
     - MCP 服务指南: mcp/index.md
     - Zulip 集成: mcp/zulip.md
     - 飞书机器人: tools/lark/index.md

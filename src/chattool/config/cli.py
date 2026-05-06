@@ -870,6 +870,7 @@ def init(interactive, config_types):
     \b
     Supported aliases:
     - OpenAI: oai, openai
+    - Claude Relay Service: crs, claude-relay
     - Azure: azure, az
     - Aliyun: ali, aliyun, alidns
     - Tencent: tencent, tx, tencent-dns
