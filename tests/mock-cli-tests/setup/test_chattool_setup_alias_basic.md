@@ -17,8 +17,8 @@
 
 ```sh
 run chattool setup alias --dry-run in pty
-use multi-select controls to keep chatenv and chatskill
-assert dry-run output only contains chatenv and chatskill
+use multi-select controls to keep chatskill only
+assert dry-run output contains chatskill and excludes chatdns
 ```
 
 ## Case 2: default shell detection should update all detected shells
@@ -47,7 +47,7 @@ assert output includes .zshrc and .bashrc
 ### 初始环境准备
 
 - 在交互测试环境下执行 `chattool setup alias --dry-run`。
-- mock shell 选择页只保留 `bash`，随后 alias 选择页只保留 `chatenv`。
+- mock shell 选择页只保留 `bash`，随后 alias 选择页只保留 `chatdns`。
 
 ### 预期过程和结果
 
@@ -60,7 +60,7 @@ assert output includes .zshrc and .bashrc
 ```sh
 run chattool setup alias --dry-run in pty
 use shell multi-select to keep bash only
-use alias multi-select to keep chatenv only
+use alias multi-select to keep chatdns only
 assert output includes .bashrc but not .zshrc
 assert output includes chatdns => chattool dns
 ```

@@ -53,7 +53,7 @@ flowchart LR
 
 ### 1. CLI 优先，代码为根
 
-ChatTool 的主要使用方式不是直接调用内部模块，而是通过 `chattool`、`chatenv`、`chatskill` 等 CLI 命令来执行能力。
+ChatTool 的主要使用方式不是直接调用内部模块，而是通过 `chattool` 主入口，以及 `chatenv`、`chatpypi`、`chatskill` 等 ChatArch 系列入口或别名来执行能力。
 
 这样设计有几个直接好处：
 
@@ -64,8 +64,8 @@ ChatTool 的主要使用方式不是直接调用内部模块，而是通过 `cha
 
 仓库里这点体现得很明确：
 
-- `src/chattool/client/main.py` 统一聚合 `env`、`dns`、`serve`、`network`、`mcp`、`lark`、`image`、`gh`、`browser`、`zulip`、`skill`、`setup`、`cc`、`docker` 等子命令。
-- `pyproject.toml` 直接暴露 `chattool`、`chatenv`、`chatskill` 三类入口。
+- `src/chattool/client/main.py` 统一聚合 `dns`、`serve`、`network`、`mcp`、`lark`、`image`、`gh`、`browser`、`zulip`、`skill`、`setup`、`cc`、`docker` 等 ChatTool 子命令。
+- `pyproject.toml` 直接暴露 `chattool`、`chatpypi`、`chatmcp`；`chatenv` 由独立 ChatEnv 包提供，ChatTool 通过 `chatenv.configs` 注册自己的配置 schema。
 - `tests/cli-tests/` 与 `tests/mock-cli-tests/` 都采用 doc-first 机制，说明 CLI 被视为一等公民，而不是实现之后顺带补一个壳。
 
 这意味着 ChatTool 的典型路径是：

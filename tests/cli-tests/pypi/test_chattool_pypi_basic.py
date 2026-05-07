@@ -167,7 +167,6 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     assert (project_dir / "AGENTS.md").exists()
     assert (project_dir / "src" / "mychat_cli" / "cli.py").exists()
     assert (project_dir / "tests" / "test_cli.py").exists()
-    assert (project_dir / "docs" / "README.md").exists()
     assert (project_dir / "docs" / "index.md").exists()
     assert (project_dir / "docs" / "index.en.md").exists()
     assert (project_dir / "README.en.md").exists()

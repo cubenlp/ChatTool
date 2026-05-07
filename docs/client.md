@@ -652,7 +652,7 @@ chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 使用 `chatenv` 查看或配置：
 
 ```bash
-chattool chatenv cat -t zulip
+chatenv cat -t zulip
 ```
 
 常用配置项：

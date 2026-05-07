@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -266,6 +267,27 @@ def test_scaffold_chatarch_defaults_to_python_310_and_chatarch_deps(tmp_path):
     assert '"chatstyle>=0.1.0"' in pyproject_text
     assert '"chatenv>=0.1.1"' in pyproject_text
     assert "CommandSchema" in cli_text
+
+
+def test_scaffold_chatarch_mkdocs_build_is_strict_clean(tmp_path):
+    project_dir = tmp_path / "mychat-cli"
+
+    scaffold_package(
+        package_name="mychat-cli",
+        project_dir=project_dir,
+        description="My chat CLI package",
+        template="chatarch",
+    )
+
+    process = subprocess.run(
+        [sys.executable, "-m", "mkdocs", "build", "--strict"],
+        cwd=project_dir,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert process.returncode == 0, process.stdout + process.stderr
 
 
 def test_scaffold_chatarch_can_skip_mkdocs_and_workflows(tmp_path):

@@ -857,9 +857,6 @@ def scaffold_package(
                 project_dir / "mkdocs.yml": _build_chatarch_mkdocs_yml(
                     package_name
                 ),
-                project_dir / "docs" / "README.md": _build_chatarch_docs_index(
-                    package_name
-                ),
                 project_dir / "docs" / "index.md": _build_chatarch_docs_index(
                     package_name
                 ),
@@ -1023,7 +1020,6 @@ def scaffold_package(
         if not include_mkdocs:
             for optional_path in (
                 project_dir / "mkdocs.yml",
-                project_dir / "docs" / "README.md",
                 project_dir / "docs" / "index.md",
                 project_dir / "docs" / "index.en.md",
                 project_dir / ".github" / "workflows" / "deploy.yaml",
