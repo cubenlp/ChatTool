@@ -69,6 +69,7 @@ def _fake_pr_checks_payload():
                 "completed_at": None,
             },
         ],
+        "check_runs_error": None,
         "workflow_runs": [
             {
                 "name": "CI",
@@ -85,6 +86,7 @@ def _fake_pr_checks_payload():
                 "run_number": 501,
             }
         ],
+        "workflow_runs_error": None,
     }
 
 

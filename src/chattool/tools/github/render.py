@@ -80,7 +80,11 @@ def echo_pr_checks(payload: dict) -> None:
             if check_run["details_url"]:
                 click.echo(f"    {check_run['details_url']}")
     else:
-        click.echo("Check runs: none")
+        if payload.get("check_runs_error"):
+            click.echo("Check runs: unavailable")
+            click.echo(f"  note: {payload['check_runs_error']}")
+        else:
+            click.echo("Check runs: none")
 
     if payload["workflow_runs"]:
         click.echo("Workflow runs:")
@@ -93,7 +97,11 @@ def echo_pr_checks(payload: dict) -> None:
             if workflow_run["html_url"]:
                 click.echo(f"    {workflow_run['html_url']}")
     else:
-        click.echo("Workflow runs: none")
+        if payload.get("workflow_runs_error"):
+            click.echo("Workflow runs: unavailable")
+            click.echo(f"  note: {payload['workflow_runs_error']}")
+        else:
+            click.echo("Workflow runs: none")
 
 
 def echo_workflow_run(payload: dict) -> None:

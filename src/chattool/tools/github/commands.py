@@ -6,7 +6,9 @@ from typing import Optional
 import click
 
 from chattool.tools.github.api import (
+    CredentialQuery,
     configure_github_https_token,
+    credential_path_from_repo,
     get_client,
     resolve_repo,
     resolve_repo_from_git_remote,
@@ -33,10 +35,10 @@ from chattool.tools.github.requests import (
 )
 
 
-def resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, str]:
+def resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, CredentialQuery]:
     if repo:
         normalized = resolve_repo(repo)
-        return normalized, f"{normalized}.git"
+        return normalized, credential_path_from_repo(normalized)
     return resolve_repo_from_git_remote()
 
 

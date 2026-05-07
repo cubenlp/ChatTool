@@ -184,48 +184,58 @@ def _build_pr_check_payload(
         }
 
     check_runs = []
-    for check_run in commit.get_check_runs():
-        check_runs.append(
-            {
-                "name": check_run.name,
-                "status": check_run.status,
-                "conclusion": check_run.conclusion,
-                "details_url": check_run.details_url,
-                "html_url": getattr(check_run, "html_url", None),
-                "app": check_run.app.name if getattr(check_run, "app", None) else None,
-                "started_at": _isoformat(check_run.started_at),
-                "completed_at": _isoformat(check_run.completed_at),
-            }
-        )
-        if len(check_runs) >= check_limit:
-            break
+    check_runs_error = None
+    try:
+        for check_run in commit.get_check_runs():
+            check_runs.append(
+                {
+                    "name": check_run.name,
+                    "status": check_run.status,
+                    "conclusion": check_run.conclusion,
+                    "details_url": check_run.details_url,
+                    "html_url": getattr(check_run, "html_url", None),
+                    "app": check_run.app.name if getattr(check_run, "app", None) else None,
+                    "started_at": _isoformat(check_run.started_at),
+                    "completed_at": _isoformat(check_run.completed_at),
+                }
+            )
+            if len(check_runs) >= check_limit:
+                break
+    except Exception as exc:
+        check_runs_error = str(exc)
 
     workflow_runs = []
-    for workflow_run in repo_obj.get_workflow_runs(head_sha=pr.head.sha):
-        workflow_runs.append(
-            {
-                "name": workflow_run.name,
-                "display_title": workflow_run.display_title,
-                "event": workflow_run.event,
-                "status": workflow_run.status,
-                "conclusion": workflow_run.conclusion,
-                "html_url": workflow_run.html_url,
-                "created_at": _isoformat(workflow_run.created_at),
-                "updated_at": _isoformat(workflow_run.updated_at),
-                "run_started_at": _isoformat(
-                    getattr(workflow_run, "run_started_at", None)
-                ),
-                "head_branch": workflow_run.head_branch,
-                "head_sha": workflow_run.head_sha,
-                "run_number": workflow_run.run_number,
-            }
-        )
-        if len(workflow_runs) >= workflow_limit:
-            break
+    workflow_runs_error = None
+    try:
+        for workflow_run in repo_obj.get_workflow_runs(head_sha=pr.head.sha):
+            workflow_runs.append(
+                {
+                    "name": workflow_run.name,
+                    "display_title": workflow_run.display_title,
+                    "event": workflow_run.event,
+                    "status": workflow_run.status,
+                    "conclusion": workflow_run.conclusion,
+                    "html_url": workflow_run.html_url,
+                    "created_at": _isoformat(workflow_run.created_at),
+                    "updated_at": _isoformat(workflow_run.updated_at),
+                    "run_started_at": _isoformat(
+                        getattr(workflow_run, "run_started_at", None)
+                    ),
+                    "head_branch": workflow_run.head_branch,
+                    "head_sha": workflow_run.head_sha,
+                    "run_number": workflow_run.run_number,
+                }
+            )
+            if len(workflow_runs) >= workflow_limit:
+                break
+    except Exception as exc:
+        workflow_runs_error = str(exc)
 
     payload["combined_status"] = combined_status_payload
     payload["check_runs"] = check_runs
+    payload["check_runs_error"] = check_runs_error
     payload["workflow_runs"] = workflow_runs
+    payload["workflow_runs_error"] = workflow_runs_error
     return payload
 
 
