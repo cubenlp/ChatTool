@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import importlib
 import json
 import importlib.util
@@ -163,6 +164,33 @@ def _extract_project_snippets(payload: dict | None) -> list[RepositoryCheck]:
     version = info.get("version")
     if isinstance(version, str) and version.strip():
         snippets.append(RepositoryCheck("latest version", "info", version.strip()))
+
+    release_entries = payload.get("urls")
+    if not isinstance(release_entries, list):
+        releases = payload.get("releases")
+        if isinstance(releases, dict) and isinstance(version, str) and version.strip():
+            release_entries = releases.get(version.strip())
+
+    timestamps: list[tuple[datetime, str]] = []
+    for release_item in release_entries if isinstance(release_entries, list) else []:
+        if not isinstance(release_item, dict):
+            continue
+        uploaded = release_item.get("upload_time_iso_8601") or release_item.get(
+            "upload_time"
+        )
+        if not isinstance(uploaded, str) or not uploaded.strip():
+            continue
+        normalized = uploaded.strip().replace("Z", "+00:00")
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        timestamps.append((parsed, uploaded.strip()))
+    if timestamps:
+        _, latest_uploaded = max(timestamps, key=lambda item: item[0])
+        snippets.append(RepositoryCheck("latest release date", "info", latest_uploaded))
 
     summary = info.get("summary")
     if isinstance(summary, str) and summary.strip():
