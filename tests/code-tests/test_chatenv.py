@@ -30,14 +30,14 @@ def mock_env_setup(tmp_path):
     (active_dir / ".env").write_text(content)
     env_file.write_text("LEGACY_ONLY='legacy'")
     
-    # We need to patch where CHATTOOL_ENV_DIR and CHATTOOL_ENV_FILE are used in chatenv.py
+    # We need to patch where CHATARCH_ENV_DIR and CHATARCH_ENV_FILE are used in chatenv.py
     # Since they are imported as names, we must patch chatenv module attributes if possible,
     # or rely on them being module variables.
-    # In chatenv.py: from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
-    # So we patch chatenv.CHATTOOL_ENV_DIR and chatenv.CHATTOOL_ENV_FILE
+    # In chatenv.py: from chattool.const import CHATARCH_ENV_FILE, CHATARCH_ENV_DIR
+    # So we patch chatenv.CHATARCH_ENV_DIR and chatenv.CHATARCH_ENV_FILE
     
-    with patch("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir), \
-         patch("chattool.config.cli.CHATTOOL_ENV_FILE", env_file), \
+    with patch("chattool.config.cli.CHATARCH_ENV_DIR", env_dir), \
+         patch("chattool.config.cli.CHATARCH_ENV_FILE", env_file), \
          patch("chattool.config.BaseEnvConfig._registry", [MockConfig]):
         yield env_dir, env_file
 

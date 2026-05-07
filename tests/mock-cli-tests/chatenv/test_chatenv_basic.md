@@ -4,7 +4,7 @@
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册一个最小 `MockConfig`，包含 `MOCK_KEY`。
 - 在 typed env `envs/Mock/.env` 中写入 `MOCK_KEY='from_file'`。
 - 同时在当前进程环境变量中设置 `MOCK_KEY=from_env`。
@@ -29,7 +29,7 @@ assert output contains MOCK_KEY='from_file'
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册一个最小 `MockConfig`，包含 `MOCK_KEY`。
 - mock 交互输入与 profile/config 文件写入。
 

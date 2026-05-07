@@ -8,7 +8,7 @@
 - 目的：验证 `setup lark-cli` 可显式复用 `Feishu` 配置，并遵守 `显式 env > 保存配置 > 环境变量` 的回退关系。
 - 标签：`cli`
 - 前置条件：无
-- 环境准备：使用临时目录作为 `CHATTOOL_CONFIG_DIR`，在真实文件系统中构造 `envs/Feishu/`。
+- 环境准备：使用临时目录作为 `CHATARCH_HOME`，在真实文件系统中构造 `envs/Feishu/`。
 - 回滚：测试结束后临时目录自动删除。
 
 ## 用例 1：profile 优先于保存配置，保存配置优先于环境变量

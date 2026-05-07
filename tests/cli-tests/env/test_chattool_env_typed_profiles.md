@@ -8,7 +8,7 @@
 - 目的：验证 `envs/<Config>/.env` 与 `envs/<Config>/<profile>.env` 的真实行为，以及 `显式参数 > -e/显式 env > 内置 .env > environment > default` 的加载顺序。
 - 标签：`cli`
 - 前置条件：无
-- 环境准备：使用临时目录作为 `CHATTOOL_CONFIG_DIR`，在真实文件系统中构造 `envs/<Config>/`。
+- 环境准备：使用临时目录作为 `CHATARCH_HOME`，在真实文件系统中构造 `envs/<Config>/`。
 - 回滚：测试结束后临时目录自动删除。
 
 ## 用例 1：按类型新建、保存与切换 profile

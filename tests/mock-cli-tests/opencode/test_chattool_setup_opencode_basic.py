@@ -28,10 +28,10 @@ def test_setup_opencode_reuses_openai_profile(tmp_path, monkeypatch, runner):
     env_file.write_text("", encoding="utf-8")
 
     monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
-    monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.setup.opencode.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.setup.opencode.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.setup.opencode.ensure_nodejs_requirement",
         lambda interactive, can_prompt, log_level="INFO": None,
@@ -122,10 +122,10 @@ def test_setup_opencode_explicit_args_override_env_ref(tmp_path, monkeypatch, ru
     env_file.write_text("", encoding="utf-8")
 
     monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
-    monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.setup.opencode.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.setup.opencode.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.setup.opencode.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.setup.opencode.ensure_nodejs_requirement",
         lambda interactive, can_prompt, log_level="INFO": None,

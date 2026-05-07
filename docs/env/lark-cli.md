@@ -19,13 +19,13 @@ $LARKSUITE_CLI_CONFIG_DIR/config.json
 而 ChatTool 自己的 Feishu 默认配置位置是：
 
 ```text
-~/.config/chattool/envs/Feishu/.env
+~/.chatarch/envs/Feishu/.env
 ```
 
-如果设置了 `CHATTOOL_CONFIG_DIR`，则对应变为：
+如果设置了 `CHATARCH_HOME`，则对应变为：
 
 ```text
-$CHATTOOL_CONFIG_DIR/envs/Feishu/.env
+$CHATARCH_HOME/envs/Feishu/.env
 ```
 
 这就是 `setup lark-cli` 的主要作用：直接把 ChatTool 这套现有配置复用给官方 CLI，避免再手工抄一次 `FEISHU_APP_ID` / `FEISHU_APP_SECRET`。
@@ -42,7 +42,7 @@ chattool setup lark-cli
 
 ```bash
 chattool setup lark-cli -e work
-chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
+chattool setup lark-cli -e ~/.chatarch/envs/Feishu/work.env
 ```
 
 也可以完全手工传参：

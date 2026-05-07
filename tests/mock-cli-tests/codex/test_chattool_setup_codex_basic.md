@@ -47,7 +47,7 @@ assert ensure_nodejs_requirement received DEBUG
 
 ### 初始环境准备
 
-- 准备临时 `CHATTOOL_ENV_DIR` 与 `envs/OpenAI/work.env`。
+- 准备临时 `CHATARCH_ENV_DIR` 与 `envs/OpenAI/work.env`。
 - mock 掉 Node.js 检查与 npm 安装判断。
 
 ### 预期过程和结果

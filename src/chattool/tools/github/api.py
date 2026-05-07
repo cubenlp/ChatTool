@@ -7,7 +7,7 @@ from typing import Optional
 
 import click
 
-from chattool.const import CHATTOOL_ENV_DIR
+from chattool.const import CHATARCH_ENV_DIR
 from chattool.config.github import GitHubConfig
 
 
@@ -226,7 +226,7 @@ def configure_github_https_token(path: str, token: str) -> None:
 
 
 def save_github_token_to_env(token: str) -> None:
-    env_file = GitHubConfig.get_active_env_file(CHATTOOL_ENV_DIR)
+    env_file = GitHubConfig.get_active_env_file(CHATARCH_ENV_DIR)
     env_file.parent.mkdir(parents=True, exist_ok=True)
 
     lines: list[str] = []

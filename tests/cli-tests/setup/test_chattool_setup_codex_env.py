@@ -9,7 +9,7 @@ def _run_python(
     code: str, *, config_dir: Path, extra_env: dict[str, str] | None = None
 ):
     env = os.environ.copy()
-    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env["CHATARCH_HOME"] = str(config_dir)
     env.pop("OPENAI_API_KEY", None)
     env.pop("OPENAI_API_BASE", None)
     env.pop("OPENAI_API_MODEL", None)
@@ -20,6 +20,7 @@ def _run_python(
         text=True,
         capture_output=True,
         env=env,
+        start_new_session=True,
         check=False,
     )
 

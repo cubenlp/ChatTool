@@ -40,6 +40,15 @@ pip install "chattool[dev]"          # 仓库开发依赖
 
 ### 环境变量管理 (`chatenv`)
 
+ChatTool 7.0.0 起，typed env/profile 默认存放到 `~/.chatarch/envs`，可用 `CHATARCH_HOME` 改根目录；不再读取旧 `~/.config/chattool/envs`。
+
+如需从旧目录手动迁移，可在仓库根目录运行：
+
+```bash
+python scripts/migrate_chattool_envs_to_chatarch.py --dry-run
+python scripts/migrate_chattool_envs_to_chatarch.py
+```
+
 ```bash
 chatenv init -i                  # 交互式初始化（敏感字段自动隐藏）
 chatenv init -i -t openai        # 仅初始化指定服务

@@ -1,0 +1,1 @@
+include scripts/migrate_chattool_envs_to_chatarch.py

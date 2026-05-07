@@ -15,7 +15,7 @@ import click
 
 from chattool.interaction import install_cli_warning_filters
 from chattool.config import BaseEnvConfig, FeishuConfig
-from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
+from chattool.const import CHATARCH_ENV_DIR
 
 install_cli_warning_filters()
 
@@ -31,7 +31,7 @@ def _resolve_env_path(env_ref: str) -> Path:
     if candidate.is_file():
         return candidate
 
-    profile_path = FeishuConfig.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
+    profile_path = FeishuConfig.get_profile_env_file(CHATARCH_ENV_DIR, env_ref)
     if profile_path.exists():
         return profile_path
 
@@ -46,9 +46,8 @@ def _load_runtime_env(env_ref: str | None) -> Path | None:
 
     env_path = _resolve_env_path(env_ref)
     BaseEnvConfig.load_all_with_override(
-        CHATTOOL_ENV_DIR,
+        CHATARCH_ENV_DIR,
         override_env_file=env_path,
-        legacy_env_file=CHATTOOL_ENV_FILE,
     )
     return env_path
 
@@ -62,7 +61,7 @@ def _get_bot():
         click.secho(f"初始化失败: {e}", fg="red", err=True)
         click.echo(
             "请确认已设置 FEISHU_APP_ID 和 FEISHU_APP_SECRET，"
-            f"或通过 -e/--env 指定配置文件（默认读取 {CHATTOOL_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}）。",
+            f"或通过 -e/--env 指定配置文件（默认读取 {CHATARCH_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}）。",
             err=True,
         )
         sys.exit(1)

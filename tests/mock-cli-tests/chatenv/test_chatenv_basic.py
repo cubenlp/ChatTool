@@ -30,10 +30,10 @@ def test_cat_prefers_typed_env_over_shell_env(tmp_path, monkeypatch):
     active_file.write_text("MOCK_KEY='from_file'\n", encoding="utf-8")
     env_file.write_text("", encoding="utf-8")
 
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
     monkeypatch.setenv("MOCK_KEY", "from_env")
 
@@ -53,10 +53,10 @@ def test_cat_profile_loads_profile_env_file(tmp_path, monkeypatch):
     profile_file.write_text("MOCK_KEY='from_profile'\n", encoding="utf-8")
     env_file.write_text("", encoding="utf-8")
 
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
 
     result = CliRunner().invoke(cli, ["cat", "-t", "mock", "apple"])
@@ -69,10 +69,10 @@ def test_profile_and_key_commands_prompt_when_args_missing(tmp_path, monkeypatch
     env_dir = tmp_path / "envs"
     env_file = tmp_path / ".env"
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
     monkeypatch.setattr(
         "chattool.interaction.policy.is_interactive_available", lambda: True
@@ -125,10 +125,10 @@ def test_chatenv_test_prompts_for_target(tmp_path, monkeypatch):
     env_dir = tmp_path / "envs"
     env_file = tmp_path / ".env"
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
     monkeypatch.setattr(
         "chattool.config.elements.BaseEnvConfig._registry", [MockConfig]
@@ -153,10 +153,10 @@ def test_chatenv_openai_test_uses_responses_api(monkeypatch, tmp_path):
     env_dir = tmp_path / "envs"
     env_file = tmp_path / ".env"
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [OpenAIConfig])
     monkeypatch.setattr(OpenAIConfig.OPENAI_API_BASE, "value", "https://api.example/v1")
     monkeypatch.setattr(OpenAIConfig.OPENAI_API_KEY, "value", "sk-test")

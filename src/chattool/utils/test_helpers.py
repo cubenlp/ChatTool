@@ -17,8 +17,8 @@ def create_temp_env_layout(tmp_path: Path, content: str) -> Tuple[Path, Path]:
 @contextmanager
 def patch_chatenv_paths(env_dir: Path, env_file: Path):
     with (
-        patch("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir),
-        patch("chattool.config.cli.CHATTOOL_ENV_FILE", env_file),
+        patch("chattool.config.cli.CHATARCH_ENV_DIR", env_dir),
+        patch("chattool.const.CHATARCH_ENV_FILE", env_file),
     ):
         yield
 

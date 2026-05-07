@@ -4,7 +4,7 @@ import importlib
 
 __author__ = """Rex Wang"""
 __email__ = "1073853456@qq.com"
-__version__ = "6.7.1"
+__version__ = "7.0.0"
 
 from dotenv import load_dotenv
 
@@ -19,7 +19,7 @@ from .utils import (
     HTTPClient,
     HTTPConfig,
 )
-from .const import CHATTOOL_REPO_DIR, CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
+from .const import CHATTOOL_REPO_DIR, CHATARCH_ENV_DIR, CHATARCH_ENV_FILE
 from .config import (
     OpenAIConfig,
     AzureConfig,
@@ -32,7 +32,7 @@ from .config import (
 setup_jupyter_async()
 load_dotenv(CHATTOOL_REPO_DIR / ".env")
 
-BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 
 _LAZY_ATTRS = {

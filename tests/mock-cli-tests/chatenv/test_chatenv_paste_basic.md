@@ -4,7 +4,7 @@
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig` 与 `MockFeishuConfig`，字段包含普通值和敏感值。
 - 准备一段形如 `chatenv cat -t mock --no-mask` 的文本：`KEY='VALUE'`。
 
@@ -28,7 +28,7 @@ assert secret is persisted in file but masked in output
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig` 与 `MockFeishuConfig`。
 - 准备 active `.env` 文件作为 profile 基础值。
 - 准备 paste 文本命中两个配置类型。
@@ -53,7 +53,7 @@ assert active .env files unchanged
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig`。
 - 预先创建 `envs/MockOpenAI/work.env`。
 
@@ -78,7 +78,7 @@ assert work.env contains new value
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig`。
 - 准备只包含未知 key 的 paste 文本。
 
@@ -100,7 +100,7 @@ assert no active .env file created
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig`。
 
 ### 预期过程和结果
@@ -119,7 +119,7 @@ assert error mentions mutually exclusive input options
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig`。
 - 准备一段包含 shell prompt、`>:` 输入提示、Confirm box 文本和 env 行的终端复制片段。
 
@@ -141,7 +141,7 @@ assert output does not contain parse warning
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig`。
 - mock 交互：profile name 输入 `work`，确认写入返回 `True`。
 
@@ -164,7 +164,7 @@ assert envs/MockOpenAI/work.env contains MOCK_OPENAI_KEY
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册 `MockOpenAIConfig`。
 
 ### 预期过程和结果

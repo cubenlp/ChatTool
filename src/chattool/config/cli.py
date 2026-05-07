@@ -22,7 +22,7 @@ from chattool.interaction import (
 )
 from chattool.config import BaseEnvConfig
 from chattool.interaction import install_cli_warning_filters
-from chattool.const import CHATTOOL_ENV_FILE, CHATTOOL_ENV_DIR
+from chattool.const import CHATARCH_ENV_FILE, CHATARCH_ENV_DIR
 from chattool.utils import mask_secret
 
 from .test_cmd import test_cmd
@@ -51,12 +51,12 @@ KEY_VALUE_SCHEMA = CommandSchema(
 @click.group(name="chatenv")
 def cli():
     """Manage configuration environment variables and profiles."""
-    if not CHATTOOL_ENV_DIR.exists():
-        CHATTOOL_ENV_DIR.mkdir(parents=True)
+    if not CHATARCH_ENV_DIR.exists():
+        CHATARCH_ENV_DIR.mkdir(parents=True)
 
 
 def _reload_runtime_config() -> None:
-    BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+    BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 
 def _require_single_config(config_types, action: str):
@@ -118,11 +118,11 @@ def _normalize_profile_name(name: str) -> str:
 
 
 def _write_config_files(configs):
-    CHATTOOL_ENV_DIR.mkdir(parents=True, exist_ok=True)
+    CHATARCH_ENV_DIR.mkdir(parents=True, exist_ok=True)
     for config_cls in configs:
-        config_dir = config_cls.get_storage_dir(CHATTOOL_ENV_DIR)
+        config_dir = config_cls.get_storage_dir(CHATARCH_ENV_DIR)
         config_dir.mkdir(parents=True, exist_ok=True)
-        config_cls.get_active_env_file(CHATTOOL_ENV_DIR).write_text(
+        config_cls.get_active_env_file(CHATARCH_ENV_DIR).write_text(
             config_cls.render_env_file(),
             encoding="utf-8",
         )
@@ -357,7 +357,7 @@ def _write_paste_profiles(profile_name: str, grouped):
     _reload_runtime_config()
     _apply_grouped_values(grouped)
     for config_cls in grouped:
-        target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, profile_name)
+        target_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, profile_name)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(config_cls.render_env_file(), encoding="utf-8")
     _reload_runtime_config()
@@ -406,10 +406,10 @@ def paste_env(value, read_stdin, profile, yes, interactive):
         existing = [
             (
                 config_cls,
-                config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, profile_name),
+                config_cls.get_profile_env_file(CHATARCH_ENV_DIR, profile_name),
             )
             for config_cls in grouped
-            if config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, profile_name).exists()
+            if config_cls.get_profile_env_file(CHATARCH_ENV_DIR, profile_name).exists()
         ]
         if existing:
             click.echo("Existing profiles will be overwritten:")
@@ -424,7 +424,7 @@ def paste_env(value, read_stdin, profile, yes, interactive):
         _write_paste_profiles(profile_name, grouped)
         target_paths = {
             config_cls: config_cls.get_profile_env_file(
-                CHATTOOL_ENV_DIR, profile_name
+                CHATARCH_ENV_DIR, profile_name
             )
             for config_cls in grouped
         }
@@ -438,11 +438,11 @@ def paste_env(value, read_stdin, profile, yes, interactive):
     )
     _write_paste_active(grouped)
     target_paths = {
-        config_cls: config_cls.get_active_env_file(CHATTOOL_ENV_DIR)
+        config_cls: config_cls.get_active_env_file(CHATARCH_ENV_DIR)
         for config_cls in grouped
     }
     _echo_paste_write_summary(grouped, target_paths)
-    click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
+    click.echo(f"Configuration saved to {CHATARCH_ENV_DIR}")
 
 
 @cli.command(name="list")
@@ -463,7 +463,7 @@ def profiles(config_types):
         return
     found = False
     for config_cls in matched:
-        config_dir = config_cls.get_storage_dir(CHATTOOL_ENV_DIR)
+        config_dir = config_cls.get_storage_dir(CHATARCH_ENV_DIR)
         profiles = (
             sorted(
                 path.name for path in config_dir.glob("*.env") if path.name != ".env"
@@ -478,7 +478,7 @@ def profiles(config_types):
         for profile in profiles:
             click.echo(f"- {profile}")
     if not found:
-        click.echo(f"No profiles found under {CHATTOOL_ENV_DIR}")
+        click.echo(f"No profiles found under {CHATARCH_ENV_DIR}")
 
 
 def _resolve_config_types(config_types):
@@ -556,7 +556,7 @@ def _configure_provider(config_cls):
                 message += f" [current: {hint}]"
             message += " (leave blank to keep current)"
 
-            new_val = ask_text(message, password=True)
+            new_val = ask_text(message, password=sys.stdin.isatty())
             if new_val == BACK_VALUE:
                 return False
             if new_val:
@@ -601,7 +601,7 @@ def _interactive_config_loop(grouped_configs):
 
         if selected_section == "Save & Exit":
             _write_config_files(BaseEnvConfig._registry)
-            click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
+            click.echo(f"Configuration saved to {CHATARCH_ENV_DIR}")
             break
         elif selected_section == "Exit without Saving":
             if ask_confirm(
@@ -682,7 +682,7 @@ def cat_env(name, no_mask, config_types):
 
     if name:
         config_cls = _require_single_config(config_types, "cat")
-        profile_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+        profile_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, name)
         if not profile_path.exists():
             click.echo(f"Error: Environment file '{profile_path}' not found.", err=True)
             return
@@ -723,7 +723,7 @@ def save_env(name, config_types, interactive):
 
     config_cls = _resolve_single_config_for_profile_action(config_types, "save")
     name = _normalize_profile_name(name)
-    target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+    target_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, name)
     if target_path.exists():
         if not ask_confirm(
             f"Profile '{name}' already exists. Overwrite?", default=False
@@ -763,7 +763,7 @@ def new_env(name, config_types):
         prompt_for_values = True
 
     name = _normalize_profile_name(name)
-    target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+    target_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, name)
     if target_path.exists():
         if not ask_confirm(
             f"Profile '{name}' already exists. Overwrite it?", default=False
@@ -803,12 +803,12 @@ def use_env(name, config_types, interactive):
 
     config_cls = _resolve_single_config_for_profile_action(config_types, "use")
     name = _normalize_profile_name(name)
-    source_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+    source_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, name)
     if not source_path.exists():
         click.echo(f"Error: Profile '{name}' not found.", err=True)
         return
 
-    target_path = config_cls.get_active_env_file(CHATTOOL_ENV_DIR)
+    target_path = config_cls.get_active_env_file(CHATARCH_ENV_DIR)
     target_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(source_path, target_path)
     _reload_runtime_config()
@@ -839,7 +839,7 @@ def delete_env(name, config_types, interactive):
 
     config_cls = _resolve_single_config_for_profile_action(config_types, "delete")
     name = _normalize_profile_name(name)
-    target_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, name)
+    target_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, name)
     if not target_path.exists():
         click.echo(f"Error: Profile '{name}' not found.", err=True)
         return
@@ -913,7 +913,7 @@ def init(interactive, config_types):
                     _configure_provider(config_cls)
 
                 _write_config_files(target_configs)
-                click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
+                click.echo(f"Configuration saved to {CHATARCH_ENV_DIR}")
                 return
 
         # Fallback for environments without the full select UI, while still
@@ -962,7 +962,7 @@ def init(interactive, config_types):
                     hint = mask_secret(default_val) if default_val else ""
                     if hint:
                         prompt_text += f" [{hint}]"
-                    new_val = ask_text(prompt_text, password=True)
+                    new_val = ask_text(prompt_text, password=sys.stdin.isatty())
                     if new_val:
                         field.value = new_val
                 else:
@@ -974,7 +974,7 @@ def init(interactive, config_types):
                         field.value = new_val
 
     _write_config_files(target_configs)
-    click.echo(f"Configuration saved to {CHATTOOL_ENV_DIR}")
+    click.echo(f"Configuration saved to {CHATARCH_ENV_DIR}")
 
 
 @cli.command(name="set")

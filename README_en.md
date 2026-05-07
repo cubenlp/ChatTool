@@ -180,6 +180,17 @@ chattool nginx -i
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 
+## Environment Profiles
+
+Since ChatTool 7.0.0, typed env profiles live under `~/.chatarch/envs` by default. Set `CHATARCH_HOME` to redirect the ChatArch root. The old `~/.config/chattool/envs` path is no longer read as a fallback.
+
+To manually copy legacy profiles into the new root from a repository checkout:
+
+```bash
+python scripts/migrate_chattool_envs_to_chatarch.py --dry-run
+python scripts/migrate_chattool_envs_to_chatarch.py
+```
+
 ## PyPI Package Scaffolding
 
 ```bash

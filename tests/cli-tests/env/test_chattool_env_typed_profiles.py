@@ -6,7 +6,7 @@ from pathlib import Path
 
 def _run_chattool_env(args: list[str], *, config_dir: Path, extra_env: dict[str, str] | None = None):
     env = os.environ.copy()
-    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env["CHATARCH_HOME"] = str(config_dir)
     env.pop("OPENAI_API_KEY", None)
     if extra_env:
         env.update(extra_env)
@@ -15,13 +15,14 @@ def _run_chattool_env(args: list[str], *, config_dir: Path, extra_env: dict[str,
         text=True,
         capture_output=True,
         env=env,
+        start_new_session=True,
         check=False,
     )
 
 
 def _run_python(code: str, *, config_dir: Path, extra_env: dict[str, str] | None = None):
     env = os.environ.copy()
-    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env["CHATARCH_HOME"] = str(config_dir)
     env.pop("FEISHU_APP_ID", None)
     env.pop("FEISHU_APP_SECRET", None)
     if extra_env:
@@ -31,6 +32,7 @@ def _run_python(code: str, *, config_dir: Path, extra_env: dict[str, str] | None
         text=True,
         capture_output=True,
         env=env,
+        start_new_session=True,
         check=False,
     )
 

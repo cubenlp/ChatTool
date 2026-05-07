@@ -6,7 +6,7 @@ import click
 
 from chattool.config import BaseEnvConfig, OpenAIConfig
 from chattool.config.source_chain import split_config_sources
-from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
+from chattool.const import CHATARCH_ENV_DIR, CHATARCH_ENV_FILE
 from chattool.interaction import (
     BACK_VALUE,
     ask_checkbox_with_controls,
@@ -77,7 +77,7 @@ def _snapshot_openai_values() -> dict[str, str | None]:
 def _load_saved_openai_values() -> dict[str, str | None]:
     current_values = _snapshot_openai_values()
     try:
-        BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+        BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
         return _snapshot_openai_values()
     finally:
         _restore_openai_values(current_values)
@@ -94,7 +94,7 @@ def _resolve_openai_env_path(env_ref: str) -> Path:
     if candidate.is_file():
         return candidate
 
-    profile_path = OpenAIConfig.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
+    profile_path = OpenAIConfig.get_profile_env_file(CHATARCH_ENV_DIR, env_ref)
     if profile_path.exists():
         return profile_path
 
@@ -108,9 +108,8 @@ def _load_openai_values_from_env_ref(env_ref: str) -> dict[str, str | None]:
     try:
         env_path = _resolve_openai_env_path(env_ref)
         BaseEnvConfig.load_all_with_override(
-            CHATTOOL_ENV_DIR,
+            CHATARCH_ENV_DIR,
             override_env_file=env_path,
-            legacy_env_file=CHATTOOL_ENV_FILE,
         )
         return _snapshot_openai_values()
     finally:
@@ -216,8 +215,7 @@ def setup_opencode(
     existing, config_data = _load_existing_opencode_config(config_path, provider_id)
     env_values, typed_env_values = split_config_sources(
         OpenAIConfig,
-        CHATTOOL_ENV_DIR,
-        legacy_env_file=CHATTOOL_ENV_FILE,
+        CHATARCH_ENV_DIR,
     )
     env_config = _load_openai_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start opencode setup")

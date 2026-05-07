@@ -65,7 +65,7 @@ chattool crs models --period daily
 
 ### 初始环境准备
 
-- 使用临时 `CHATTOOL_CONFIG_DIR` / `CHATTOOL_ENV_DIR`。
+- 使用临时 `CHATARCH_HOME` / `CHATARCH_ENV_DIR`。
 - mock `CRSClient.login` 返回 token。
 
 ### 预期过程和结果

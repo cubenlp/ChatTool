@@ -24,10 +24,10 @@ license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
     "chatstyle>=0.1.0",
+    "chatenv>=0.1.0",
     "requests>=2.20",
     "python-dotenv>=0.17.0",
     "colorama",
-    "platformdirs>=3.0",
     "httpx",
     "tomli; python_version < '3.11'",
 ]

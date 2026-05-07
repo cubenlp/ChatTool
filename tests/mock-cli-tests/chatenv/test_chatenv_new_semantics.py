@@ -19,10 +19,10 @@ def test_new_only_creates_profile_without_touching_active(tmp_path, monkeypatch,
     active_file.write_text("MOCK_KEY='active_value'\n", encoding="utf-8")
     env_file.write_text("", encoding="utf-8")
 
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
 
     result = runner.invoke(cli, ["new", "snapshot", "-t", "mock"])

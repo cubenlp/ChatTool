@@ -25,10 +25,10 @@ def _patch_env(monkeypatch, tmp_path, registry=None):
     env_dir = tmp_path / "envs"
     env_file = tmp_path / ".env"
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.config.BaseEnvConfig._registry",
         registry or [MockOpenAIConfig, MockFeishuConfig],

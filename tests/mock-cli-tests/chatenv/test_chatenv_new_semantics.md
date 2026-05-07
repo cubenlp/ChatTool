@@ -4,7 +4,7 @@
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 注册一个最小 `MockConfig`，包含 `MOCK_KEY`。
 - 在 active typed env `envs/Mock/.env` 中写入 `MOCK_KEY='active_value'`。
 

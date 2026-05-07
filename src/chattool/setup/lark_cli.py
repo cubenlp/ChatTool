@@ -10,7 +10,7 @@ import click
 
 from chattool.config import BaseEnvConfig, FeishuConfig
 from chattool.config.source_chain import split_config_sources
-from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
+from chattool.const import CHATARCH_ENV_DIR
 from chattool.interaction import (
     BACK_VALUE,
     abort_if_force_without_tty,
@@ -70,7 +70,7 @@ def _snapshot_feishu_values() -> dict[str, str | None]:
 def _load_saved_feishu_values() -> dict[str, str | None]:
     current_values = _snapshot_feishu_values()
     try:
-        BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+        BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
         return _snapshot_feishu_values()
     finally:
         _restore_feishu_values(current_values)
@@ -87,7 +87,7 @@ def _resolve_feishu_env_path(env_ref: str) -> Path:
     if candidate.is_file():
         return candidate
 
-    profile_path = FeishuConfig.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
+    profile_path = FeishuConfig.get_profile_env_file(CHATARCH_ENV_DIR, env_ref)
     if profile_path.exists():
         return profile_path
 
@@ -101,9 +101,8 @@ def _load_feishu_values_from_env_ref(env_ref: str) -> dict[str, str | None]:
     try:
         env_path = _resolve_feishu_env_path(env_ref)
         BaseEnvConfig.load_all_with_override(
-            CHATTOOL_ENV_DIR,
+            CHATARCH_ENV_DIR,
             override_env_file=env_path,
-            legacy_env_file=CHATTOOL_ENV_FILE,
         )
         return _snapshot_feishu_values()
     finally:
@@ -250,8 +249,7 @@ def setup_lark_cli(
     saved_feishu = _load_saved_feishu_values()
     env_values, typed_env_values = split_config_sources(
         FeishuConfig,
-        CHATTOOL_ENV_DIR,
-        legacy_env_file=CHATTOOL_ENV_FILE,
+        CHATARCH_ENV_DIR,
     )
     env_config = _load_feishu_values_from_env_ref(env_ref) if env_ref else {}
     logger.info("Start lark-cli setup")
@@ -416,7 +414,7 @@ def setup_lark_cli(
     click.echo(f"Config dir: {config_dir}")
     click.echo(f"Config file: {config_path}")
     click.echo(
-        f"ChatTool Feishu env: {CHATTOOL_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}"
+        f"ChatTool Feishu env: {CHATARCH_ENV_DIR / FeishuConfig.get_storage_name() / '.env'}"
     )
     if env_ref:
         click.echo(f"Reused ChatTool Feishu config: {env_ref}")
