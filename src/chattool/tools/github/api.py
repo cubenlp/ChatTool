@@ -1,20 +1,24 @@
 from __future__ import annotations
 
-from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
 import subprocess
-from typing import Optional
+from typing import Optional, TypedDict
 
 import click
 
 from chattool.const import CHATARCH_ENV_DIR
 from chattool.config import GitHubConfig
 
+class CredentialQuery(TypedDict):
+    protocol: str
+    host: str
+    path: str
+
 
 def get_client(
     token: Optional[str],
     require_token: bool = False,
-    credential_path: Optional[str] = None,
+    credential_path: Optional[CredentialQuery] = None,
 ):
     from github import Github, Auth
 
@@ -43,11 +47,16 @@ def resolve_repo(repo: Optional[str]) -> str:
 
 def resolve_token(
     token: Optional[str],
-    credential_path: Optional[str] = None,
+    credential_path: Optional[CredentialQuery] = None,
     exact_only: bool = False,
 ) -> Optional[str]:
     if token:
         return token
+    credential_token = read_github_token_from_git(
+        credential_path, exact_only=exact_only
+    )
+    if credential_token:
+        return credential_token
     credential_token = read_github_token_from_credentials(
         credential_path, exact_only=exact_only
     )
@@ -58,7 +67,12 @@ def resolve_token(
     return GitHubConfig.GITHUB_ACCESS_TOKEN.value
 
 
-def resolve_repo_from_git_remote() -> tuple[str, str]:
+def credential_path_from_repo(repo: str) -> dict[str, str]:
+    normalized = repo.strip().removesuffix(".git")
+    return {"protocol": "https", "host": "github.com", "path": normalized}
+
+
+def resolve_repo_from_git_remote() -> tuple[str, dict[str, str]]:
     try:
         remotes_result = subprocess.run(
             ["git", "remote"],
@@ -107,90 +121,93 @@ def resolve_repo_from_git_remote() -> tuple[str, str]:
     )
 
 
-def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, str]]:
+def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, dict[str, str]]]:
     url = (remote_url or "").strip()
     if not url:
         return None
 
-    prefixes = [
-        "https://github.com/",
-        "http://github.com/",
-        "git@github.com:",
-        "ssh://git@github.com/",
-    ]
-    for prefix in prefixes:
-        if url.startswith(prefix):
-            path = url[len(prefix) :]
-            normalized_path = path[:-4] if path.endswith(".git") else path
-            parts = [part for part in path.split("/") if part]
-            if len(parts) >= 2:
-                normalized_parts = [part for part in normalized_path.split("/") if part]
-                return f"{normalized_parts[0]}/{normalized_parts[1]}", path
+    if url.startswith(("https://", "http://")):
+        parsed = urlparse(url)
+        if parsed.hostname != "github.com":
+            return None
+        path = parsed.path.lstrip("/")
+        normalized_path = path[:-4] if path.endswith(".git") else path
+        parts = [part for part in normalized_path.split("/") if part]
+        if len(parts) >= 2:
+            return (
+                f"{parts[0]}/{parts[1]}",
+                {"protocol": parsed.scheme, "host": "github.com", "path": path},
+            )
+
+    if url.startswith("git@github.com:"):
+        path = url[len("git@github.com:") :]
+        normalized_path = path[:-4] if path.endswith(".git") else path
+        parts = [part for part in normalized_path.split("/") if part]
+        if len(parts) >= 2:
+            return (
+                f"{parts[0]}/{parts[1]}",
+                {"protocol": "https", "host": "github.com", "path": path},
+            )
+
+    if url.startswith("ssh://git@github.com/"):
+        path = url[len("ssh://git@github.com/") :]
+        normalized_path = path[:-4] if path.endswith(".git") else path
+        parts = [part for part in normalized_path.split("/") if part]
+        if len(parts) >= 2:
+            return (
+                f"{parts[0]}/{parts[1]}",
+                {"protocol": "https", "host": "github.com", "path": path},
+            )
     return None
 
 
 def read_github_token_from_credentials(
-    credential_path: Optional[str] = None,
+    credential_path: Optional[CredentialQuery] = None,
     exact_only: bool = False,
 ) -> Optional[str]:
-    for store_path in _credential_store_candidates():
-        if not store_path.exists():
-            continue
-        token = _read_token_from_store(
-            store_path, credential_path, exact_only=exact_only
-        )
-        if token:
-            return token
     return None
 
 
-def _credential_store_candidates() -> list[Path]:
-    return [Path.home() / ".git-credential", Path.home() / ".git-credentials"]
-
-
-def _read_token_from_store(
-    store_path: Path, credential_path: Optional[str], exact_only: bool = False
+def read_github_token_from_git(
+    credential_path: Optional[CredentialQuery] = None,
+    exact_only: bool = False,
 ) -> Optional[str]:
-    exact_match = None
-    host_match = None
-
-    for raw_line in store_path.read_text(
-        encoding="utf-8", errors="ignore"
-    ).splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parsed = _parse_credential_url(line)
-        if not parsed:
-            continue
-        host, path, password = parsed
-        if host != "github.com" or not password:
-            continue
-        if credential_path and path == credential_path:
-            exact_match = password
-            break
-        if credential_path and exact_only:
-            continue
-        if host_match is None:
-            host_match = password
-
-    return exact_match or host_match
+    if not credential_path:
+        return None
+    return _git_credential_fill(credential_path)
 
 
-def _parse_credential_url(url: str) -> Optional[tuple[str, str, str]]:
+def _git_credential_fill(credential: CredentialQuery) -> Optional[str]:
+    credential_input = (
+        f"protocol={credential['protocol']}\n"
+        f"host={credential['host']}\n"
+        f"path={credential['path']}\n"
+    )
+    credential_input += "\n"
     try:
-        parsed = urlparse(url)
-    except ValueError:
+        result = subprocess.run(
+            ["git", "credential", "fill"],
+            input=credential_input,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
         return None
-    if parsed.scheme not in {"http", "https"}:
+    if result.returncode != 0:
         return None
-    if not parsed.hostname or not parsed.password:
+    values: dict[str, str] = {}
+    for line in result.stdout.splitlines():
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key] = value
+    if values.get("host") != credential["host"]:
         return None
-    path = parsed.path.lstrip("/")
-    return parsed.hostname, unquote(path), unquote(parsed.password)
+    return values.get("password") or None
 
 
-def configure_github_https_token(path: str, token: str) -> None:
+def configure_github_https_token(credential: CredentialQuery, token: str) -> None:
     try:
         subprocess.run(
             ["git", "config", "--global", "credential.helper", "store"],
@@ -205,9 +222,9 @@ def configure_github_https_token(path: str, token: str) -> None:
             text=True,
         )
         credential_input = (
-            "protocol=https\n"
-            "host=github.com\n"
-            f"path={path}\n"
+            f"protocol={credential['protocol']}\n"
+            f"host={credential['host']}\n"
+            f"path={credential['path']}\n"
             "username=x-access-token\n"
             f"password={token}\n\n"
         )
@@ -221,7 +238,7 @@ def configure_github_https_token(path: str, token: str) -> None:
     except subprocess.CalledProcessError as exc:
         stderr = (exc.stderr or "").strip()
         raise click.ClickException(
-            f"Failed to configure GitHub token for {path}: {stderr or 'git credential command failed'}"
+            f"Failed to configure GitHub token for {credential['path']}: {stderr or 'git credential command failed'}"
         ) from exc
 
 

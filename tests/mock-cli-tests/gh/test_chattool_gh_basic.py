@@ -240,7 +240,9 @@ def test_chattool_gh_pr_checks_forwards_wait(monkeypatch, runner):
             "mergeable_state": "clean",
             "combined_status": {"state": "success", "total_count": 0, "statuses": []},
             "check_runs": [],
+            "check_runs_error": None,
             "workflow_runs": [],
+            "workflow_runs_error": None,
         },
     )
 
@@ -323,12 +325,87 @@ def test_chattool_gh_repo_perms_full_json(monkeypatch, runner):
 
 def test_chattool_gh_repo_scoped_credential_requires_exact_path(monkeypatch, runner):
     monkeypatch.setattr(
+        "chattool.tools.github.api.read_github_token_from_git",
+        lambda credential_path=None, exact_only=False: None,
+    )
+    monkeypatch.setattr(
         "chattool.tools.github.api.read_github_token_from_credentials",
         lambda credential_path=None, exact_only=False: None if credential_path and exact_only else "ghp_other_repo_token",
     )
     from chattool.tools.github.api import resolve_token
 
     assert resolve_token(None, credential_path="CubeNLP/ChatTool.git", exact_only=True) is None
+
+
+def test_chattool_gh_token_uses_exact_git_credential_query(monkeypatch):
+    from chattool.tools.github import api as gh_api
+
+    calls = []
+
+    def fake_run(command, input=None, check=False, capture_output=True, text=True):
+        calls.append(input)
+
+        class Result:
+            returncode = 0
+            stderr = ""
+            stdout = ""
+
+        result = Result()
+        if input == "protocol=https\nhost=github.com\npath=ChatArch/ChatEnv\n\n":
+            result.stdout = (
+                "protocol=https\n"
+                "host=github.com\n"
+                "path=ChatArch/ChatEnv\n"
+                "username=x-access-token\n"
+                "password=ghp_repo_token\n"
+            )
+        return result
+
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
+
+    assert (
+        gh_api.resolve_token(
+            None,
+            credential_path={"protocol": "https", "host": "github.com", "path": "ChatArch/ChatEnv"},
+            exact_only=True,
+        )
+        == "ghp_repo_token"
+    )
+    assert calls == ["protocol=https\nhost=github.com\npath=ChatArch/ChatEnv\n\n"]
+
+
+def test_chattool_gh_token_falls_back_to_host_credential(monkeypatch):
+    from chattool.tools.github import api as gh_api
+
+    def fake_run(command, input=None, check=False, capture_output=True, text=True):
+        class Result:
+            returncode = 0
+            stderr = ""
+            stdout = ""
+
+        result = Result()
+        if input == "protocol=https\nhost=github.com\n\n":
+            result.stdout = (
+                "protocol=https\n"
+                "host=github.com\n"
+                "username=x-access-token\n"
+                "password=ghp_host_token\n"
+            )
+        return result
+
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
+    monkeypatch.setattr(
+        "chattool.tools.github.api.read_github_token_from_credentials",
+        lambda credential_path=None, exact_only=False: None if exact_only else "ghp_host_token",
+    )
+
+    assert (
+        gh_api.resolve_token(
+            None,
+            credential_path={"protocol": "https", "host": "github.com", "path": "ChatArch/ChatEnv"},
+        )
+        == "ghp_host_token"
+    )
 
 
 def test_chattool_gh_set_token_configures_repo_scoped_https_credential(tmp_path, monkeypatch, runner):
