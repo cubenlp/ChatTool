@@ -247,24 +247,28 @@ chattool setup docker --sudo -i
 
 ### 0.6 Hermes (`setup hermes`)
 
-安装 Hermes Agent，并可选准备 Hermes WebUI 配置。默认会复用 ChatTool 的 OpenAI typed env；如果存在 Feishu typed env，也会映射到 Hermes gateway 使用的 `~/.hermes/.env`。
+安装或检查 Hermes Agent，并在需要时配置基础 OpenAI-compatible 参数。该命令封装 Hermes 官方 `install.sh`；默认使用本地缓存或随包 installer，不主动访问 GitHub 更新，也不默认 clone Hermes / WebUI 仓库。
 
 ```bash
 chattool setup hermes
-chattool setup hermes -e apple --feishu-env rexwzh
-chattool setup hermes --agent-dir ./hermes --webui-dir ./hermes-webui --start-webui
+chattool setup hermes -e apple --model openai/gpt-5.4-mini
+chattool setup hermes --installer /path/to/install.sh
+chattool setup hermes --with-webui-env --webui-dir ./hermes-webui --start-webui
 ```
 
 常用参数：
 
+- `--installer`：使用本地 Hermes 官方 `install.sh`。
+- `--update-installer`：从 Hermes 官方 URL 更新 ChatTool 缓存里的 installer。
+- `--hermes-home`：指定 Hermes home，默认 `~/.hermes`。
 - `-e/--env`：OpenAI 配置来源，支持 `.env` 文件路径或保存的 OpenAI profile 名。
-- `--feishu-env`：Feishu 配置来源，支持 `.env` 文件路径或保存的 Feishu profile 名。
-- `--install-only`：只安装 Hermes，不写入模型或 Feishu 配置。
-- `--with-webui/--no-webui`：是否准备 WebUI `.env`。
-- `--start-webui`：安装后启动 WebUI，默认地址 `http://127.0.0.1:8787`。
-- `--dry-run -I`：只打印计划，不执行 clone/install/write。
+- `--api-key` / `--base-url` / `--model`：显式写入 Hermes 基础模型配置。
+- `--feishu-env`：显式导入 Feishu 配置；不传时不会自动导入 Feishu。
+- `--install-only`：只安装/检查 Hermes，不写入 `.env`、`config.yaml` 或 WebUI env。
+- `--with-webui-env`：生成 WebUI env；如果没有 WebUI app files，会提示提供 `--webui-dir`。
+- `--start-webui`：使用已有 WebUI 目录的原生入口启动，优先 `./ctl.sh start`，否则 `./start.sh` 或 `python3 bootstrap.py`。
 
-当前实现默认安装轻量 extras：`messaging,cli,pty,cron,feishu,web,acp,mcp`，避免 Hermes 官方 `.[all]` 中 RL/voice 等非必需依赖拖慢或阻塞基础安装。
+重复运行时只更新本次命令管理的 key，不重写整份 `.env` 或 `config.yaml`。
 
 ### 0.7 Zsh (`setup zsh`)
 
