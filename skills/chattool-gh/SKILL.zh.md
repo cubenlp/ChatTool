@@ -34,7 +34,7 @@ cat > /tmp/pr_body.md <<'EOF'
 - command 2
 EOF
 
-chattool gh pr create   --repo owner/repo   --base master   --head your-branch   --title "feat: add xyz"   --body-file /tmp/pr_body.md
+chattool gh pr create --repo owner/repo --base master --head your-branch --title "feat: add xyz" --body-file /tmp/pr_body.md
 ```
 
 ## 更新 PR
@@ -42,13 +42,13 @@ chattool gh pr create   --repo owner/repo   --base master   --head your-branch  
 范围变化时同步更新 PR body：
 
 ```bash
-chattool gh pr edit   --repo owner/repo   --number 123   --body-file /tmp/pr_body.md
+chattool gh pr edit --repo owner/repo --number 123 --body-file /tmp/pr_body.md
 ```
 
 也可以更新 title、state 或 base branch：
 
 ```bash
-chattool gh pr edit   --repo owner/repo   --number 123   --title "feat: refine xyz"   --state open
+chattool gh pr edit --repo owner/repo --number 123 --title "feat: refine xyz" --state open
 ```
 
 ## 查看 PR 和 CI

@@ -33,7 +33,7 @@ chatenv cat -t ali
 ## CLI 申请
 
 ```bash
-chattool dns cert apply   -d example.com   -d "*.example.com"   -e admin@example.com   -p aliyun   --cert-dir ./certs
+chattool dns cert apply -d example.com -d "*.example.com" -e admin@example.com -p aliyun --cert-dir ./certs
 ```
 
 常用选项：
@@ -49,7 +49,7 @@ chattool dns cert apply   -d example.com   -d "*.example.com"   -e admin@example
 ## CLI 检查
 
 ```bash
-chattool dns cert check   -d example.com   --cert-dir ./certs
+chattool dns cert check -d example.com --cert-dir ./certs
 ```
 
 `check` 只检查本地证书文件，不触碰 DNS 或 ACME。

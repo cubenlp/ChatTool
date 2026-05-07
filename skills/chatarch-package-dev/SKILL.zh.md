@@ -25,7 +25,7 @@ chatpypi chatfoo -t chatarch --project-dir ./chatfoo
 只有在确实不需要 docs 或 workflows 时才跳过可选文件：
 
 ```bash
-chattool pypi init chatfoo -t chatarch   --project-dir ./chatfoo   --without-mkdocs   --without-workflows
+chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## 生成物职责
@@ -131,3 +131,4 @@ chatenv cat -t foo
 - 不要让 `chatenv` 硬编码 import 某个业务包。
 - 不要把业务 env 字段写进 ChatEnv 包本体。
 - 不要把 ChatArch 包描述成 ChatTool 插件。
+- scaffold 已存在后，使用 `$chatarch-post-init-dev` 处理持续开发规范。

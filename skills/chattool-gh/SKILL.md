@@ -34,7 +34,7 @@ cat > /tmp/pr_body.md <<'EOF'
 - command 2
 EOF
 
-chattool gh pr create   --repo owner/repo   --base master   --head your-branch   --title "feat: add xyz"   --body-file /tmp/pr_body.md
+chattool gh pr create --repo owner/repo --base master --head your-branch --title "feat: add xyz" --body-file /tmp/pr_body.md
 ```
 
 ## Update PR
@@ -42,13 +42,13 @@ chattool gh pr create   --repo owner/repo   --base master   --head your-branch  
 Update the PR body whenever scope changes:
 
 ```bash
-chattool gh pr edit   --repo owner/repo   --number 123   --body-file /tmp/pr_body.md
+chattool gh pr edit --repo owner/repo --number 123 --body-file /tmp/pr_body.md
 ```
 
 You can also update title, state, or base branch:
 
 ```bash
-chattool gh pr edit   --repo owner/repo   --number 123   --title "feat: refine xyz"   --state open
+chattool gh pr edit --repo owner/repo --number 123 --title "feat: refine xyz" --state open
 ```
 
 ## Inspect PRs And CI

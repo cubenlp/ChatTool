@@ -65,7 +65,7 @@ chatpypi chatfoo -t chatarch --project-dir ./chatfoo
 如需跳过可选文件：
 
 ```bash
-chattool pypi init chatfoo -t chatarch   --project-dir ./chatfoo   --without-mkdocs   --without-workflows
+chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## 默认生成结构
@@ -103,4 +103,4 @@ chattool pypi probe mychat
 - 版本号来自 `src/<module>/__init__.py`。
 - 需要明确作者信息时使用 `--author` 和 `--email`。
 - TTY 中缺少包名会自动进入向导；`-i` 强制交互，`-I` 禁止交互。
-- ChatArch 专属的 `chatstyle` / `chatenv` 集成说明见 `$chatarch-package-dev`。
+- ChatArch 专属的创建/集成说明见 `$chatarch-package-dev`；scaffold 之后的持续开发规范见 `$chatarch-post-init-dev`。

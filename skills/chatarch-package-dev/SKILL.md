@@ -25,7 +25,7 @@ chatpypi chatfoo -t chatarch --project-dir ./chatfoo
 Skip optional docs or workflows only when the package does not need them:
 
 ```bash
-chattool pypi init chatfoo -t chatarch   --project-dir ./chatfoo   --without-mkdocs   --without-workflows
+chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## Generated Responsibilities
@@ -131,3 +131,4 @@ chatenv cat -t foo
 - Do not make `chatenv` hard-code imports for a business package.
 - Do not put business env fields into the ChatEnv package itself.
 - Do not describe a ChatArch package as a ChatTool plugin.
+- After the scaffold exists, use `$chatarch-post-init-dev` for ongoing development conventions.

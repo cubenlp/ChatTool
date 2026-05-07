@@ -33,7 +33,7 @@ Relevant providers are `aliyun` and `tencent`.
 ## CLI Apply
 
 ```bash
-chattool dns cert apply   -d example.com   -d "*.example.com"   -e admin@example.com   -p aliyun   --cert-dir ./certs
+chattool dns cert apply -d example.com -d "*.example.com" -e admin@example.com -p aliyun --cert-dir ./certs
 ```
 
 Useful options:
@@ -49,7 +49,7 @@ Useful options:
 ## CLI Check
 
 ```bash
-chattool dns cert check   -d example.com   --cert-dir ./certs
+chattool dns cert check -d example.com --cert-dir ./certs
 ```
 
 Use `check` to inspect local certificate files without touching DNS or ACME.

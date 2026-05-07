@@ -65,7 +65,7 @@ The `chatarch` template defaults to Python `>=3.10`, includes `chatstyle` and `c
 Optional files can be skipped:
 
 ```bash
-chattool pypi init chatfoo -t chatarch   --project-dir ./chatfoo   --without-mkdocs   --without-workflows
+chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## Generated Default Structure
@@ -103,4 +103,4 @@ Use `probe` only when checking package-name availability against PyPI is relevan
 - The generated version comes from `src/<module>/__init__.py`.
 - Use `--author` and `--email` when author metadata should be explicit.
 - Missing package name auto-enters the interactive wizard in a TTY; `-i` forces prompting and `-I` disables prompting.
-- For ChatArch-specific `chatstyle` / `chatenv` integration, use `$chatarch-package-dev` after scaffolding.
+- For ChatArch-specific creation/integration, use `$chatarch-package-dev`; for ongoing development after scaffold, use `$chatarch-post-init-dev`.
