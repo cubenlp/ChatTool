@@ -10,7 +10,7 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, FeishuConfig, OpenAIConfig
-from chattool.config.source_chain import split_config_sources
+from chatenv.source_chain import split_config_sources
 from chattool.const import CHATARCH_ENV_DIR
 from chattool.interaction import abort_if_force_without_tty, resolve_interactive_mode, resolve_value
 from chattool.utils.custom_logger import setup_logger

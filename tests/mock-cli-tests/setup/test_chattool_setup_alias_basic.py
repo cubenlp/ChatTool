@@ -22,7 +22,7 @@ def test_setup_alias_uses_shared_multi_select_controls(monkeypatch):
         if message == "Select shells":
             return ["zsh", "bash"]
         if message == "Select aliases":
-            return ["chatenv", "chatskill"]
+            return ["chatskill"]
         raise AssertionError(f"unexpected prompt: {message}")
 
     monkeypatch.setattr(
@@ -34,7 +34,6 @@ def test_setup_alias_uses_shared_multi_select_controls(monkeypatch):
 
     assert result.exit_code == 0
     assert prompts == ["Select shells", "Select aliases"]
-    assert "chatenv => chattool env" in result.output
     assert "chatskill => chattool skill" in result.output
     assert "chatdns => chattool dns" not in result.output
 
@@ -68,7 +67,7 @@ def test_setup_alias_prompts_for_shell_selection_before_aliases(monkeypatch):
         if message == "Select shells":
             return ["bash"]
         if message == "Select aliases":
-            return ["chatenv"]
+            return ["chatdns"]
         raise AssertionError(f"unexpected prompt: {message}")
 
     monkeypatch.setattr(
@@ -82,5 +81,5 @@ def test_setup_alias_prompts_for_shell_selection_before_aliases(monkeypatch):
     assert prompts == ["Select shells", "Select aliases"]
     assert ".bashrc" in result.output
     assert ".zshrc" not in result.output
-    assert "chatenv => chattool env" in result.output
+    assert "chatdns => chattool dns" in result.output
     assert "chatskill => chattool skill" not in result.output

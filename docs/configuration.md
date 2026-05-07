@@ -146,7 +146,7 @@ chatenv delete test -t openai
 当前目录结构形如：
 
 ```text
-~/.config/chattool/envs/
+~/.chatarch/envs/
 ├── OpenAI/
 │   ├── .env
 │   └── prod.env

@@ -1,5 +1,5 @@
 from chattool.config import BaseEnvConfig, EnvField
-from chattool.config.cli import cli
+from chatenv.cli import cli
 
 
 class MockConfig(BaseEnvConfig):
@@ -11,18 +11,17 @@ class MockConfig(BaseEnvConfig):
 
 
 def test_new_only_creates_profile_without_touching_active(tmp_path, monkeypatch, runner):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
     active_dir = env_dir / "Mock"
     active_dir.mkdir(parents=True)
     active_file = active_dir / ".env"
     active_file.write_text("MOCK_KEY='active_value'\n", encoding="utf-8")
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
 
-    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATARCH_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
 
     result = runner.invoke(cli, ["new", "snapshot", "-t", "mock"])

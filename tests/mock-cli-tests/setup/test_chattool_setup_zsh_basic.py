@@ -33,7 +33,6 @@ def test_setup_zsh_writes_alias_files_idempotently(tmp_path, monkeypatch):
     assert 'alias copy="xclip -selection clipboard"' in aliases_content
     assert 'alias c7="CUDA_VISIBLE_DEVICES=7"' in aliases_content
     assert "alias pypi='pip install -i https://pypi.python.org/simple'" in aliases_content
-    assert "alias chatenv='chattool env'" in aliases_content
     assert 'alias ollama="docker exec ollama ollama"' not in aliases_content
     assert bash_profile_content.count("# >>> chattool zsh login >>>") == 1
 

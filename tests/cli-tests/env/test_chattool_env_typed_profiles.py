@@ -11,7 +11,7 @@ def _run_chattool_env(args: list[str], *, config_dir: Path, extra_env: dict[str,
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
-        [sys.executable, "-m", "chattool.client.main", "env", *args],
+        [sys.executable, "-c", "import chattool.config; from chatenv.cli import main; main()", *args],
         text=True,
         capture_output=True,
         env=env,

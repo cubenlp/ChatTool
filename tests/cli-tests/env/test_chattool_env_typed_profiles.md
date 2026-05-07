@@ -4,7 +4,7 @@
 
 ## 元信息
 
-- 命令：`chattool env ...`、`chattool lark ...`
+- 命令：`chatenv ...`、`chattool lark ...`
 - 目的：验证 `envs/<Config>/.env` 与 `envs/<Config>/<profile>.env` 的真实行为，以及 `显式参数 > -e/显式 env > 内置 .env > environment > default` 的加载顺序。
 - 标签：`cli`
 - 前置条件：无
@@ -15,26 +15,26 @@
 
 - 初始环境准备：
   - 创建临时配置目录。
-  - 通过 `chattool env set` 写入 OpenAI 配置。
+  - 通过 `chatenv set` 写入 OpenAI 配置。
 - 相关文件：
   - `<tmp>/config/envs/OpenAI/.env`
   - `<tmp>/config/envs/OpenAI/work.env`
 
 预期过程和结果：
-  1. 执行 `chattool env save work -t openai`，预期生成 `envs/OpenAI/work.env`。
-  2. 执行 `chattool env new mini -t feishu`，预期生成 `envs/Feishu/mini.env`，但不修改 `envs/Feishu/.env`。
-  3. 修改当前 `envs/OpenAI/.env` 后执行 `chattool env use work -t openai`，预期活动配置恢复为保存内容。
+  1. 执行 `chatenv save work -t openai`，预期生成 `envs/OpenAI/work.env`。
+  2. 执行 `chatenv new mini -t feishu`，预期生成 `envs/Feishu/mini.env`，但不修改 `envs/Feishu/.env`。
+  3. 修改当前 `envs/OpenAI/.env` 后执行 `chatenv use work -t openai`，预期活动配置恢复为保存内容。
 
 参考执行脚本（伪代码）：
 
 ```sh
-chattool env set OPENAI_API_KEY=sk-one
-chattool env save work -t openai
-chattool env set FEISHU_APP_ID=cli-one
-chattool env set FEISHU_APP_SECRET=secret-one
-chattool env new mini -t feishu
-chattool env set OPENAI_API_KEY=sk-two
-chattool env use work -t openai
+chatenv set OPENAI_API_KEY=sk-one
+chatenv save work -t openai
+chatenv set FEISHU_APP_ID=cli-one
+chatenv set FEISHU_APP_SECRET=secret-one
+chatenv new mini -t feishu
+chatenv set OPENAI_API_KEY=sk-two
+chatenv use work -t openai
 ```
 
 ## 用例 2：类型内置 `.env` 优先于系统环境变量
@@ -44,12 +44,12 @@ chattool env use work -t openai
   - 额外设置进程环境变量 `OPENAI_API_KEY=from_os`。
 
 预期过程和结果：
-  1. 执行 `chattool env cat -t openai --no-mask`，预期读取到 `from_env_file`，而不是进程环境变量中的 `from_os`。
+  1. 执行 `chatenv cat -t openai --no-mask`，预期读取到 `from_env_file`，而不是进程环境变量中的 `from_os`。
 
 参考执行脚本（伪代码）：
 
 ```sh
-OPENAI_API_KEY=from_os chattool env cat -t openai --no-mask
+OPENAI_API_KEY=from_os chatenv cat -t openai --no-mask
 ```
 
 ## 用例 3：`chattool lark -e` 覆盖系统环境变量

@@ -49,7 +49,7 @@ chatenv set FEISHU_DEFAULT_CHAT_ID=oc_xxxxx
 三个保留命令都支持 `-e/--env`：
 
 ```bash
-chattool lark info -e ~/.config/chattool/envs/Feishu/.env
+chattool lark info -e ~/.chatarch/envs/Feishu/.env
 chattool lark info -e work
 ```
 

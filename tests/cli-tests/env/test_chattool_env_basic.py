@@ -37,7 +37,7 @@ def _run_chattool_env(
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
-        [sys.executable, "-m", "chattool.client.main", "env", *args],
+        [sys.executable, "-c", "import chattool.config; from chatenv.cli import main; main()", *args],
         text=True,
         input=input_text,
         capture_output=True,
@@ -76,7 +76,7 @@ def _run_chattool_env_pty(
     if extra_env:
         env.update(extra_env)
 
-    argv = [sys.executable, "-m", "chattool.client.main", "env", *args]
+    argv = [sys.executable, "-c", "import chattool.config; from chatenv.cli import main; main()", *args]
     pid, master_fd = pty.fork()
     if pid == 0:
         os.execvpe(sys.executable, argv, env)
@@ -190,7 +190,7 @@ def test_env_save_use_delete_profile(tmp_path: Path):
     assert "Activated OpenAI profile 'work.env'" in result.stdout
     assert "OPENAI_API_KEY='sk-one'" in active_path.read_text(encoding="utf-8")
 
-    result = _run_chattool_env(["delete", "work", "-t", "openai"], config_dir=config_dir)
+    result = _run_chattool_env(["delete", "work", "-t", "openai", "-y"], config_dir=config_dir)
     assert result.returncode == 0, result.stderr
     assert "Deleted OpenAI profile 'work.env'" in result.stdout
     assert not profile_path.exists()
@@ -228,7 +228,7 @@ def test_env_new_without_name_prompts_and_configures_type(tmp_path: Path):
         input_text="open1\nhttps://api.example/v1\nsk-open\n\n",
     )
     assert returncode == 0, output
-    assert "Configuring OpenAI Configuration" in output
+    assert "[OpenAI Configuration]" in output
 
     active_path = config_dir / "envs" / "OpenAI" / ".env"
     profile_path = config_dir / "envs" / "OpenAI" / "open1.env"

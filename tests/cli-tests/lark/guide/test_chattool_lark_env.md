@@ -30,9 +30,9 @@ chattool lark info -e /tmp/chattool-lark.env
 ## 用例 2：通过 profile 名称读取凭证
 
 - 初始环境准备：
-  - 在 `~/.config/chattool/envs/` 下准备一个 profile，例如 `work.env`。
+  - 在 `~/.chatarch/envs/` 下准备一个 profile，例如 `work.env`。
 - 相关文件：
-  - `~/.config/chattool/envs/work.env`
+  - `~/.chatarch/envs/work.env`
 
 预期过程和结果：
   1. 执行 `chattool lark info -e work`。

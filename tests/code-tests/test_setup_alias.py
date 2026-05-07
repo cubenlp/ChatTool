@@ -27,11 +27,10 @@ def test_resolve_shell_rc():
 
 
 def test_render_alias_block():
-    keys = ["chatenv", "chatdns"]
+    keys = ["chatdns"]
     block = render_alias_block(keys)
     assert BLOCK_BEGIN in block
     assert BLOCK_END in block
-    assert "alias chatenv='chattool env'" in block
     assert "alias chatdns='chattool dns'" in block
 
 
@@ -70,7 +69,6 @@ def test_setup_alias_dry_run_does_not_write(tmp_path, monkeypatch, capsys):
     assert content == "export A=1\n"
     out = capsys.readouterr().out
     assert "[dry-run] target shell rc:" in out
-    assert "alias chatenv='chattool env'" in out
 
 
 def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
@@ -95,13 +93,12 @@ def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
         "chattool.setup.alias.ask_checkbox_with_controls",
         fake_ask_checkbox_with_controls,
     )
-    selected = select_aliases_interactively(["chatenv", "chatgh"])
+    selected = select_aliases_interactively(["chatgh"])
 
     assert selected == ["chatgh"]
     assert captured["message"] == "Select aliases"
-    assert captured["default_values"] == ["chatenv", "chatgh"]
+    assert captured["default_values"] == ["chatgh"]
     assert captured["select_all_label"] == "Select all aliases"
     checked = {choice.value: choice.checked for choice in captured["choices"]}
-    assert checked["chatenv"] is True
     assert checked["chatgh"] is True
     assert checked["chatdns"] is False

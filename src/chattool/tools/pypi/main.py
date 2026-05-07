@@ -315,7 +315,7 @@ def _build_chatarch_pyproject_content(
         'readme = "README.md"',
         f'requires-python = "{_toml_escape(requires_python)}"',
         f'license = "{_toml_escape(license_name)}"',
-        'dependencies = ["click>=8.0", "chatstyle>=0.1.0", "chatenv>=0.1.0"]',
+        'dependencies = ["click>=8.0", "chatstyle>=0.1.0", "chatenv>=0.1.1"]',
     ]
     if author and email:
         lines.append(
@@ -451,7 +451,7 @@ def _build_chatarch_readme(
 
             ## CLI 规范
 
-            这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.0`，新的命令应优先使用：
+            这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.1`，新的命令应优先使用：
 
             - `CommandSchema` / `CommandField` 描述输入。
             - `add_interactive_option()` 提供统一 `-i/-I`。
@@ -509,7 +509,7 @@ def _build_chatarch_readme_en(
 
             ## CLI Contract
 
-            This template depends on `chatstyle>=0.1.0` and `chatenv>=0.1.0`. New commands should prefer:
+            This template depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`. New commands should prefer:
 
             - `CommandSchema` / `CommandField` for inputs.
             - `add_interactive_option()` for the shared `-i/-I` switch.
@@ -536,7 +536,7 @@ def _build_chatarch_develop_md() -> str:
 
             ## CLI Rules
 
-            - Use `chatstyle>=0.1.0` and `chatenv>=0.1.0` as the canonical CLI interaction runtime.
+            - Use `chatstyle>=0.1.0` and `chatenv>=0.1.1` as the canonical CLI interaction runtime.
             - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
             - Missing required args should auto-enter interactive mode when recoverable.
             - `-i` forces interactive mode; `-I` disables prompting and must fail fast.

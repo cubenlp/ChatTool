@@ -53,7 +53,7 @@ assert output includes .zshrc and .bashrc
 
 - 命令应先进入 shell 选择页，再进入 alias 多选页。
 - dry-run 输出只应包含 `.bashrc`，不应包含 `.zshrc`。
-- alias 输出只应包含 `chatenv => chattool env`。
+- alias 输出只应包含 `chatdns => chattool dns`。
 
 ### 参考执行脚本（伪代码）
 
@@ -62,5 +62,5 @@ run chattool setup alias --dry-run in pty
 use shell multi-select to keep bash only
 use alias multi-select to keep chatenv only
 assert output includes .bashrc but not .zshrc
-assert output includes chatenv => chattool env
+assert output includes chatdns => chattool dns
 ```

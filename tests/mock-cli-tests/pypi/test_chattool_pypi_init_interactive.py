@@ -109,7 +109,7 @@ def test_chattool_pypi_init_chatarch_template_interactive(
         encoding="utf-8"
     )
     assert '"chatstyle>=0.1.0"' in pyproject_text
-    assert '"chatenv>=0.1.0"' in pyproject_text
+    assert '"chatenv>=0.1.1"' in pyproject_text
 
 
 def test_chattool_pypi_init_stops_early_when_project_dir_not_empty(

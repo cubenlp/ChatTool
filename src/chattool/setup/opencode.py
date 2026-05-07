@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, OpenAIConfig
-from chattool.config.source_chain import split_config_sources
+from chatenv.source_chain import split_config_sources
 from chattool.const import CHATARCH_ENV_DIR, CHATARCH_ENV_FILE
 from chattool.interaction import (
     BACK_VALUE,
