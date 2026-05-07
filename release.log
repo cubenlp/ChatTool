@@ -1,0 +1,1 @@
+2026-05-07T20:29:53Z | version=7.0.0 | tag=v7.0.0 | commit=f63e2c8d120f8ab429f548ae3113d3bd865b1039 | operator=rexwzh | workflow=Publish Package run 25520258728 | pypi=https://pypi.org/project/chattool/7.0.0/ | summary=Released ChatTool 7.0.0 with ChatArch env migration, Hermes setup updates, PyPI scaffold publishing workflow fixes, and GitHub credential path normalization.
