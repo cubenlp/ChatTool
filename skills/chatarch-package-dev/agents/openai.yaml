@@ -1,0 +1,4 @@
+interface:
+  display_name: "ChatArch Package Dev"
+  short_description: "Build ChatArch packages with chatstyle and chatenv"
+  default_prompt: "Use $chatarch-package-dev to scaffold or review this ChatArch package and verify its chatstyle/chatenv integration."

@@ -1,85 +1,62 @@
 ---
 name: practice-make-perfact
-description: ChatTool 仓库任务的后处理工作流。适用于任务实现完成后，回顾已有改动、先检查现有 CLI 是否已覆盖、提取可复用内容落回仓库、调用 $chattool-dev-review 做开发验收，并按规范补齐文档/测试/变更记录与 PR/MR 流程；若任务还包含合并后的正式发版，则在 PR/MR 阶段后切到 $chattool-release。
-version: 0.4.1
+description: ChatTool 开发任务后处理工作流：更新项目 PRD/progress，沉淀 durable 产物，检查已有 CLI，运行 dev review，并完成 docs/tests/changelog/PR 收尾。
+version: 0.5.0
 ---
 
-# Practice Make Perfact（中文）
+# Practice Make Perfact
 
-这是 ChatTool 仓库的后处理阶段 skill。
+在 ChatTool 的功能、修复、重构、CLI 变更、skill 更新或带文档的行为变更基本完成后使用这个 skill。
 
-适用于 ChatTool 仓库里的功能开发、修复、重构、CLI 变更、skill 更新，以及任何已经基本完成、准备进入规范化收尾的任务。
+这是任务后的规范化收尾流程，不是开工前探索指南。
 
-核心思路：先把任务做完，再显式进入后处理阶段，回顾现有产物、提取有价值内容沉淀进仓库，并按规范走完 review 与提交流程。
+## 工作流
 
-## 核心原则
+1. 回顾实际产物
+   - 阅读当前 diff、改动文件和生成结果。
+   - 区分 durable 仓库产物和临时探索材料。
+   - 临时探索默认留在仓库外，除非需要整理成长期维护文档。
 
-- 先做事，再整理：先把任务完成，再统一规范与复盘。
-- 能复用进 `src/` 的能力就进 `src/`；仅任务相关的就放 `skills/`。
-- 过程尽量用 CLI，保持可审计、可复现。
-- 每个任务结束后必须进入一次后处理 review 阶段。
-- 默认目标不是“本地改完就停”，而是推进到 PR/MR 阶段。
-- 这个 skill 不负责前期探索，不要在开工前把它当作流程门槛。
+2. 先更新项目内记录
+   - 如果任务发生在 `projects/<date>-<name>/` 下，先更新该项目的 `PRD.md`、`progress.md` 和 `memory.md`。
+   - 不要把一次性原始调研直接提升到 workspace 根 reference。
+   - 只有规范化后的 durable 产物才进入 ChatTool 的 `src/`、`docs/`、`skills/` 或 `tests/`。
 
-## 执行流程
+3. 新增脚本前先查已有 CLI
+   - 先看 `references/cli-reference.md`。
+   - 优先复用已有 `chattool pypi`、`chatpypi`、`chattool skill`、`chatenv`、`chattool gh` 和 `chattool dns` 命令。
+   - 只有当动作可复用、容易出错且现有 CLI 没覆盖时，才考虑新增脚本。
 
-1. **只在任务基本完成后进入**  
-   - 不把这份 skill 当作开工前提醒  
-   - 主任务已经做完或至少主路径已打通后，再主动调用它  
-   - 把它视为一个明确的后处理阶段
+4. 规范 ChatArch 边界
+   - ChatTool 命令需要本项目 policy 或测试 patch 点时使用 `chattool.interaction` adapter。
+   - 独立 ChatArch 包直接使用外部 `chatstyle` 与 `chatenv`。
+   - 新 env/profile schema 应作为 provider module，并通过 `chatenv.configs` 注册。
 
-2. **先回顾已有产物**  
-   - 阅读当前 diff、改动文件和任务过程中产生的中间产物  
-   - 区分哪些是临时探索材料，哪些值得沉淀到仓库  
-   - 临时脚本、试验输出、探索草稿继续留在仓库外目录，例如 `~/tmp/chattool/<task>/`
+5. 规范 skills
+   - skill 变更必须保持 `SKILL.md` 和 `SKILL.zh.md` 对齐。
+   - 如果 skill 有 `agents/openai.yaml`，行为或触发范围变化时同步更新 metadata。
+   - 新 skill 通常应包含英文、中文说明和 agents metadata。
+   - skill 编辑后运行旧命令 grep。
 
-3. **提取并归位可复用内容**  
-   - 通用能力：补充到 `src/`（工具层、CLI、MCP）  
-   - 任务特定：补充到 `skills/<name>/`
-   - 只有需要长期保留的结果，才整理后放回仓库里的正式位置
-   - 统一命名、目录和职责边界，避免“任务做完了，但沉淀位置还是临时的”
-   - 在决定保留临时脚本前，先检查现有 CLI 是否已经覆盖类似动作
-   - 这一步先看 `references/cli-reference.md`，再决定是补 CLI 还是保留为一次性探索
+6. 运行任务后 review
+   - 默认 review 当前 diff，而不是全仓。
+   - 检查 lazy import、`-i/-I` 交互、ChatStyle/ChatEnv 边界、docs、tests、README 和 changelog。
+   - 除非用户明确不要，否则使用 `$chattool-dev-review`。
 
-4. **任务后强制 review**  
-   - 默认 review 当前 diff，而不是整个仓库  
-   - 检查最小 import / lazy import  
-   - 检查缺参自动交互与 `-i/-I`  
-    - 检查新的交互是否统一走 `src/chattool/interaction/`  
-   - 检查测试、`docs/`、`README.md`、`CHANGELOG.md`、`tests/cli-tests/` 是否同步  
-   - 默认主动调用 `$chattool-dev-review` 做这一轮开发验收，除非用户明确不要
+7. 推进到 PR/MR 阶段
+   - commit 并 push 当前分支。
+   - 使用 `chattool gh` 做 GitHub PR 操作。
+   - 优先使用 `chattool gh pr create --body-file ...`，范围变化时更新 PR body。
+   - 交付需要 CI 状态时使用 `chattool gh pr checks --wait`。
 
-5. **文档与 skill 同步**  
-   - 在 `docs/` 补充或更新相关说明  
-   - 用户可见变更同步更新 `README.md`  
-   - 更新 `CHANGELOG.md`  
-   - 如果这次任务要作为某个正式包版本发出，必须在 PR/MR 阶段前就把 `src/chattool/__init__.py` bump 到目标版本，而不是合并后再改
-   - skill 变更时，维护 `SKILL.md` 与 `SKILL.zh.md`  
-   - skill frontmatter 中的 `version` 要同步维护
-
-6. **一直推进到 PR/MR 阶段**  
-   - 确保分支已经 commit 并 push  
-   - 用 `chattool gh` 执行 GitHub PR 相关操作  
-   - 默认使用 `chattool gh pr create --body-file ...` 建 PR  
-   - 若范围变化，继续更新 PR 内容  
-   - 任务默认停在 PR/MR 阶段，而不是停在本地提交
-
-7. **正式发版动作单独切阶段**  
-   - 如果任务还包括版本 tag、`Publish Package`、PyPI 校验或 `release.log`，在 PR/MR 阶段后切到 `$chattool-release`
-   - 把“开发后整理”与“合并后发版”视为两个阶段
-   - 不要因为实现已经 ready，就从未合并分支直接打 tag
-   - 如果 PyPI 已经有该版本，不要试图重推同版本 tag 解决问题；正确动作是回到新的 PR，先把版本号 bump 到下一个版本
-
-8. **只有明确要求时才提前停下**  
-   - 如果用户明确只要分析、只要方案、只做到一半，就按用户要求停  
-   - 否则默认走完整个“后处理整理 -> review -> PR”流程
+8. 正式发版单独交接
+   - tag、包发布、PyPI 校验和 `release.log` 属于合并后的 `$chattool-release`。
+   - 不要从未合并 PR head 直接打 tag。
 
 ## 结果要求
 
-- 每次任务都能沉淀到工具、技能或文档。
-- 阶段化输出与命名一致，便于检索与复用。
-- 这份 skill 应服务于任务结束后的回顾与沉淀，而不是前期探索。
-- 它应明确串联 `$chattool-dev-review`，帮助模型按开发规范做收尾。
-- 如果用户明确要求正式发版，它应把该阶段切给 `$chattool-release`。
-- 默认落点应是已经进入 PR/MR 阶段的结果。
-- 它还应提供一个很轻的 CLI 参考面，帮助模型快速判断“该继续手写脚本，还是应该补一个正式命令”。
+- 仓库 diff 已归一到维护位置。
+- 存在项目内 `PRD.md` / `progress.md` / `memory.md` 时已更新。
+- skills 有匹配的英文和中文文件。
+- 行为变更同步 docs/tests/changelog。
+- 除非用户明确要求提前停止，否则任务推进到 PR/MR 阶段。

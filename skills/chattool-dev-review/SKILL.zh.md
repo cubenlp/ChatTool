@@ -1,74 +1,77 @@
 ---
 name: chattool-dev-review
-description: 对 ChatTool 新功能做开发后 review。适用于检查 lazy import、缺参自动交互、统一 utils/tui 交互样式，以及相关文档/测试/变更记录是否同步更新。
-version: 0.2.1
+description: 对 ChatTool 或 ChatArch 改动做开发后 review，检查 lazy import、交互式 CLI、chatstyle/chatenv 边界、文档测试变更记录和发版边界。
+version: 0.3.0
 ---
 
 # ChatTool 开发 Review
 
-这个 skill 用于在 ChatTool 新功能或 CLI 变更完成后做一轮开发验收。
+在 ChatTool 或 ChatArch 的功能、CLI、skill 或 scaffold 更新完成后使用这个 skill。
 
-默认只 review 本次 feature 相关改动，除非用户明确要求做全局检查。
+默认范围是当前改动，不是全仓审计，除非用户明确要求扩大范围。
 
-边界：这个 skill 只负责开发验收，不负责发版时机、tag、`Publish Package`、PyPI 校验或 `release.log`。这些动作统一交给 `$chattool-release`。
+边界：这个 skill 只负责开发验收。合并时机、tag、包发布、PyPI 校验和 `release.log` 交给 `$chattool-release`。
 
 ## 检查重点
 
-1. 最小 import / lazy import
-   - 统一入口保持 lazy load，重点看 [src/chattool/client/main.py](src/chattool/client/main.py)。
-   - CLI 模块避免在顶层直接导入重实现模块。
-   - 如果某个导入只在命令执行时需要，优先下沉到函数内部。
+1. Lazy import 和命令接线
+   - `src/chattool/client/main.py` 的子命令应保持 lazy load。
+   - CLI 模块避免在 import 阶段加载重实现模块。
+   - 只在命令执行时需要的导入通常应放到命令函数内部。
 
-2. 缺参时是否自动进入交互
-   - 可通过提问补全的必填参数，缺失时应自动进入 interactive。
-   - `-i` 应强制进入当前命令的交互流程。
-   - `-I` 应完全禁止交互，缺参时快速失败。
-   - 交互里展示的默认值必须与真实执行一致。
+2. 交互式 CLI 行为
+   - 可恢复缺参在 TTY 中应自动进入交互。
+   - `-i` 应强制进入当前命令的 prompt 流程。
+   - `-I` 应禁止提示，并在必填输入缺失时快速失败。
+   - prompt 展示默认值必须与实际执行默认值一致。
+   - 敏感值必须在 prompt 和 summary 中脱敏。
 
-3. 是否使用统一交互样式
-   - 新增 CLI 交互优先走 [src/chattool/interaction](src/chattool/interaction)。
-   - 不要为新的交互流程继续直接写 `click.prompt` / `click.confirm`，除非有明确理由并在文档中说明。
-   - 敏感信息在 prompt 和输出中必须脱敏。
+3. ChatStyle 边界
+   - 外部 `chatstyle` 是共享 prompt、choice、render、mask、schema 行为的 canonical runtime。
+   - ChatTool 命令需要 ChatTool policy、usage、warning filters 或旧 mock patch 点时，使用 `chattool.interaction`。
+   - 独立 ChatArch 包应直接导入 `chatstyle`，不得依赖 `chattool.interaction`。
+   - 不要在 ChatTool 内重新创建本地 style/runtime 层。
 
-4. 文档和测试是否同步
-   - 更新相关 `docs/`
-   - 用户可见功能同步更新 [README.md](README.md)
-   - 更新 [CHANGELOG.md](CHANGELOG.md)
-   - CLI 变更同步更新 [cli-tests](cli-tests) 下对应 `.md` 与需要的 `.py`
-   - 如果这个 PR 计划作为某个正式包版本发出，那么目标 `__version__` 和 changelog 变更必须在合并前就已经出现在 diff 里；不要把版本号调整拖到合并后打 tag 阶段。
+4. ChatEnv 边界
+   - `chatenv` 是独立 typed env/profile CLI。
+   - ChatTool 通过 `[project.entry-points."chatenv.configs"]` 暴露具体 config schema。
+   - 新业务包只注册 provider module，不复制 env CLI，也不让 `chatenv` 硬编码业务包 import。
+   - 示例应使用 `chatenv init -t <alias>` 和 `chatenv cat -t <alias>`，不要写嵌套在 ChatTool 下的 env 命令。
+
+5. PyPI scaffold 正确性
+   - `chattool pypi` 示例必须匹配当前命令面：`init/build/check/probe/upload`。
+   - `chatarch` scaffold 示例应包含 `chatstyle` / `chatenv` 依赖和当前 mkdocs/workflow 选项。
+   - 可以说明 `chatpypi <name>` 是 `chattool pypi init <name>` 的便捷 wrapper。
+
+6. 文档、测试和变更记录
+   - 行为变更同步更新相关 `docs/`。
+   - 用户可见行为同步更新 `README.md`。
+   - feature/fix/skill 更新同步更新 `CHANGELOG.md`。
+   - CLI 变更保持 `tests/cli-tests/` 的 doc-first case 或 `tests/mock-cli-tests/` 的 mock case 对齐。
+   - 如果 PR 计划作为特定版本发出，版本和 changelog 应在合并前已进入 diff。
 
 ## Review 流程
 
-1. 先确定范围
-   - 优先看当前 diff：`git diff --stat`、`git diff --name-only`、`git diff --cached --name-only`
-   - 如果用户指定了功能或文件，先聚焦这些位置
-   - 只有在用户明确要求时才做全仓检查
-
-2. 再看 CLI 入口和改动命令
-   - 检查 `cli.py` / `main.py` 是否引入了新的顶层重导入
-   - 检查新的交互流程里是否出现 `click.prompt` / `click.confirm`
-   - 检查 `--interactive/--no-interactive`、`-i/-I` 和缺参处理是否一致
-
-3. 检查文档与测试
-   - 在 `docs/`、`README.md`、`CHANGELOG.md`、`tests/cli-tests/` 中搜索对应命令名
-   - 新参数、新环境变量、新行为如果没有同步文档，记为 finding
-
-4. 做最小必要验证
-   - 运行最相关、最小的一条测试或 CLI 命令
-   - 如果无法验证，要在结论里明确说明
+1. 用 `git diff --stat`、`git diff --name-only` 和用户上下文确定范围。
+2. 检查变更的 CLI 入口、命令模块、skills、docs 和 tests。
+3. 搜索旧命令名和边界违规。
+4. 为变更路径运行最小有用验证命令或测试。
+5. 先输出 findings，按严重程度排序，并写明具体文件位置和风险。
 
 ## 常用命令
 
 ```bash
 git diff --stat
 git diff --name-only
-rg -n "click\\.prompt|click\\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests cli-tests
-rg -n "lazy import|src/chattool/interaction|interactive" docs/development-guide docs README.md
+rg -n "click\.prompt|click\.confirm|--interactive|--no-interactive|-i/-I|resolve_interactive_mode|ask_text|ask_confirm|ask_select|ask_path" src docs tests skills
+rg -n "pypi|cert|chatenv|chatstyle|chattool.interaction" skills docs tests README.md CHANGELOG.md
+rg -n "chatstyle|chattool.interaction|chatenv.configs|BaseEnvConfig|EnvField" src docs tests skills pyproject.toml
 ```
 
 ## 输出要求
 
-- 按 code review 风格输出
-- 先写 findings，再写简短总结
-- 每条 finding 给出文件位置和具体风险
-- 如果没有问题，要明确写出 “未发现问题”，并补充剩余测试风险
+- 按 code review 风格输出。
+- 先写 findings，并按严重程度排序。
+- 每条 finding 给出文件位置和具体风险。
+- 简短总结放在 findings 之后。
+- 如果没有问题，明确写“未发现问题”，并补充剩余测试风险。

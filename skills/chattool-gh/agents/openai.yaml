@@ -1,3 +1,4 @@
 interface:
-  display_name: "Chattool GH"
-  short_description: "Help with Chattool GH tasks"
+  display_name: "ChatTool GitHub Helpers"
+  short_description: "Manage PRs and CI with chattool gh"
+  default_prompt: "Use $chattool-gh to create or update this PR with a body file and wait for GitHub checks using chattool gh."

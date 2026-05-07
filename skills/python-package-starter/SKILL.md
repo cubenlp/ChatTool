@@ -1,35 +1,74 @@
 ---
 name: python-package-starter
-description: Use `chattool pypi init` to scaffold a minimal Python package, then validate it with doctor/build/check. Example package name `mychat`.
-version: 0.1.0
+description: Use `chattool pypi init` or `chatpypi` to scaffold Python packages, including ChatArch templates, then validate with pytest/build/check/probe.
+version: 0.2.0
 ---
 
 # Python Package Starter
 
-## Overview
+Use this skill when creating a Python package with ChatTool's PyPI helpers.
 
-Use `chattool pypi init` to create a minimal `src/`-layout Python package that is ready for `chattool pypi doctor`, `build`, and `check`.
+For a generic package, use the `default` template. For a ChatArch / chatxxx CLI package, use the `chatarch` template or switch to `$chatarch-package-dev` for integration guidance.
 
-## Quick Start
+## Current Command Surface
+
+`chattool pypi` currently provides:
+
+```bash
+chattool pypi init
+chattool pypi build
+chattool pypi check
+chattool pypi probe
+chattool pypi upload
+```
+
+`chatpypi` is a convenience wrapper. When its first argument is not a known pypi subcommand, it dispatches to `chattool pypi init`:
+
+```bash
+chatpypi mychat --description "My chat package"
+```
+
+## Default Package Quick Start
 
 ```bash
 chattool pypi init mychat --description "My chat package"
 cd mychat
 python -m pytest -q
-chattool pypi doctor --project-dir .
 chattool pypi build --project-dir .
 chattool pypi check --project-dir .
 ```
 
-If you want to review defaults through the standard ChatTool CLI wizard, run:
+Equivalent wrapper form:
 
 ```bash
-chattool pypi init -i
+chatpypi mychat --description "My chat package"
 ```
 
-The wizard will continue through `Package name`, `project_dir`, `description`, `requires_python`, `license`, `author`, and `email` instead of silently finishing after the first missing field.
+The default template creates a minimal `setuptools` + `src/` layout with Python `>=3.9`.
 
-## Example Output Structure
+## ChatArch Package Quick Start
+
+Use `chatarch` for a standalone ChatArch CLI package:
+
+```bash
+chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo
+```
+
+Equivalent wrapper form:
+
+```bash
+chatpypi chatfoo -t chatarch --project-dir ./chatfoo
+```
+
+The `chatarch` template defaults to Python `>=3.10`, includes `chatstyle` and `chatenv`, and can generate docs and GitHub workflows.
+
+Optional files can be skipped:
+
+```bash
+chattool pypi init chatfoo -t chatarch   --project-dir ./chatfoo   --without-mkdocs   --without-workflows
+```
+
+## Generated Default Structure
 
 ```text
 mychat/
@@ -45,18 +84,23 @@ mychat/
     └── test_version.py
 ```
 
-## Notes
+## Validation
 
-- `chattool pypi init` defaults to a `setuptools` + `src/` layout.
-- The generated version comes from `src/mychat/__init__.py`.
-- `tests/conftest.py` makes the generated package importable for local pytest runs.
-- Hyphenated package names are converted to underscore module names.
-- Use `--author` and `--email` if you want author metadata in `pyproject.toml`.
-- The interactive flow follows the repo CLI policy: missing required args auto-start the wizard, `-i` forces the full prompt flow, and `-I` disables prompts.
-
-## Suggested Follow-up
+Run the smallest relevant checks before handing off:
 
 ```bash
 python -m pytest -q
-chattool pypi release --project-dir . --dry-run
+chattool pypi build --project-dir .
+chattool pypi check --project-dir .
+chattool pypi probe mychat
 ```
+
+Use `probe` only when checking package-name availability against PyPI is relevant.
+
+## Notes
+
+- Hyphenated package names are converted to underscore module names.
+- The generated version comes from `src/<module>/__init__.py`.
+- Use `--author` and `--email` when author metadata should be explicit.
+- Missing package name auto-enters the interactive wizard in a TTY; `-i` forces prompting and `-I` disables prompting.
+- For ChatArch-specific `chatstyle` / `chatenv` integration, use `$chatarch-package-dev` after scaffolding.
