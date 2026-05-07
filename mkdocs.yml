@@ -189,5 +189,6 @@ nav:
     - 白嫖 AI 生图实战: blog/free-image-guide.md
     - 从代码到 Agent 技能: blog/code_tool_skill.md
     - chatenv 配置发现机制: blog/chatenv-provider-discovery.md
+    - ChatArch Python 包初始化: blog/chattool-pypi-init-chatarch.md
     - v0.5.3 飞书机器人: blog/larkbot_v053.md
     - 飞书机器人教程: blog/larkbot-tutorial.md

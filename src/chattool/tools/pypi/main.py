@@ -426,48 +426,43 @@ def _build_chatarch_readme(
         include_workflows=include_workflows,
     )
     layout = _chatarch_layout_lines(include_mkdocs=include_mkdocs)
-    return (
-        textwrap.dedent(
-            f"""
-            {badges}
+    return f"""\
+{badges}
 
-            <div align="center">
+<div align="center">
 
-            [English](README.en.md) | [简体中文](README.md)
-            </div>
+[English](README.en.md) | [简体中文](README.md)
+</div>
 
-            # {package_name}
+# {package_name}
 
-            {description}
+{description}
 
-            ## 快速开始
+## 快速开始
 
-            ```bash
-            pip install -e ".[dev]"
-            {module_name} hello ChatArch
-            python -m pytest -q
-            python -m build
-            ```
+```bash
+pip install -e ".[dev]"
+{module_name} hello ChatArch
+python -m pytest -q
+python -m build
+```
 
-            ## CLI 规范
+## CLI 规范
 
-            这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.1`，新的命令应优先使用：
+这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.1`，新的命令应优先使用：
 
-            - `CommandSchema` / `CommandField` 描述输入。
-            - `add_interactive_option()` 提供统一 `-i/-I`。
-            - `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
+- `CommandSchema` / `CommandField` 描述输入。
+- `add_interactive_option()` 提供统一 `-i/-I`。
+- `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
 
-            ## 目录结构
+## 目录结构
 
-            {layout}
+{layout}
 
-            ## 开发说明
+## 开发说明
 
-            扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
-            """
-        ).strip()
-        + "\n"
-    )
+扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
+"""
 
 
 def _build_chatarch_readme_en(
@@ -484,48 +479,43 @@ def _build_chatarch_readme_en(
         include_workflows=include_workflows,
     )
     layout = _chatarch_layout_lines_en(include_mkdocs=include_mkdocs)
-    return (
-        textwrap.dedent(
-            f"""
-            {badges}
+    return f"""\
+{badges}
 
-            <div align="center">
+<div align="center">
 
-            [English](README.en.md) | [简体中文](README.md)
-            </div>
+[English](README.en.md) | [简体中文](README.md)
+</div>
 
-            # {package_name}
+# {package_name}
 
-            {description}
+{description}
 
-            ## Quick Start
+## Quick Start
 
-            ```bash
-            pip install -e ".[dev]"
-            {module_name} hello ChatArch
-            python -m pytest -q
-            python -m build
-            ```
+```bash
+pip install -e ".[dev]"
+{module_name} hello ChatArch
+python -m pytest -q
+python -m build
+```
 
-            ## CLI Contract
+## CLI Contract
 
-            This template depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`. New commands should prefer:
+This template depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`. New commands should prefer:
 
-            - `CommandSchema` / `CommandField` for inputs.
-            - `add_interactive_option()` for the shared `-i/-I` switch.
-            - `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
+- `CommandSchema` / `CommandField` for inputs.
+- `add_interactive_option()` for the shared `-i/-I` switch.
+- `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
 
-            ## Layout
+## Layout
 
-            {layout}
+{layout}
 
-            ## Development Notes
+## Development Notes
 
-            See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
-            """
-        ).strip()
-        + "\n"
-    )
+See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
+"""
 
 
 def _build_chatarch_develop_md() -> str:

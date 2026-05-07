@@ -189,6 +189,9 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     assert "from chatstyle import" in cli_text
     assert "CommandSchema" in cli_text
     readme_text = (project_dir / "README.md").read_text(encoding="utf-8")
+    assert readme_text.startswith('<div align="center">\n')
+    assert "\n# mychat-cli\n\n" in readme_text
+    assert "\n            # mychat-cli\n" not in readme_text
     assert "img.shields.io/pypi/v/mychat-cli.svg" in readme_text
     assert "actions/workflows/ci.yml/badge.svg" in readme_text
     assert "docs-mkdocs" in readme_text
