@@ -1,10 +1,506 @@
-"""Compatibility facade for ChatTool typed env schemas.
+"""ChatTool typed env schemas.
 
 ChatEnv owns the generic env/profile runtime. ChatTool keeps concrete schema
-classes in ``chattool.config`` and re-exports the base API here for existing
-imports.
+classes here and re-exports the generic base API for existing imports.
 """
+
+import json
 
 from chatenv.fields import BaseEnvConfig, EnvField, normalize_profile_name
 
-__all__ = ["BaseEnvConfig", "EnvField", "normalize_profile_name"]
+# ==================== 具体服务配置定义 ====================
+
+class OpenAIConfig(BaseEnvConfig):
+    _title = "OpenAI Configuration"
+    _aliases = ["oai", "openai"]
+    _storage_dir = "OpenAI"
+
+    OPENAI_API_BASE = EnvField("OPENAI_API_BASE", desc="The base url of the API (with suffix /v1).")
+    OPENAI_API_KEY = EnvField("OPENAI_API_KEY", desc="Your API key", is_sensitive=True)
+    OPENAI_API_MODEL = EnvField("OPENAI_API_MODEL", default="gpt-3.5-turbo", desc="The default model name")
+
+    @classmethod
+    def _parse_responses_stream_event(cls, line: str):
+        if not line.startswith("data:"):
+            return None
+        payload = line.removeprefix("data:").strip()
+        if not payload or payload == "[DONE]":
+            return None
+        try:
+            return json.loads(payload)
+        except json.JSONDecodeError:
+            return None
+
+    @classmethod
+    def _validate_responses_stream(cls, response) -> str:
+        for line in response.iter_lines():
+            event = cls._parse_responses_stream_event(line)
+            if not event:
+                continue
+            event_type = event.get("type")
+            if event_type in ("response.failed", "error"):
+                error = event.get("error") or event.get("response", {}).get("error")
+                raise RuntimeError(error or event_type)
+            if event_type == "response.output_text.delta" and event.get("delta"):
+                return "generated"
+            if event_type == "response.completed":
+                return "completed"
+            if event_type in ("response.incomplete", "response.cancelled"):
+                raise RuntimeError(event_type)
+        raise RuntimeError("Responses stream ended before output or completion event")
+
+    @classmethod
+    def _test_responses_api(cls):
+        import httpx
+
+        api_base = (cls.OPENAI_API_BASE.value or "").rstrip("/")
+        api_key = cls.OPENAI_API_KEY.value
+        model = cls.OPENAI_API_MODEL.value
+        if not api_base:
+            raise ValueError("OPENAI_API_BASE not set")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not set")
+        if not model:
+            raise ValueError("OPENAI_API_MODEL not set")
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": model,
+            "input": [{"role": "user", "content": "hi"}],
+            "max_output_tokens": 8,
+            "stream": True,
+        }
+        with httpx.Client(timeout=30) as client:
+            with client.stream(
+                "POST", f"{api_base}/responses", json=data, headers=headers
+            ) as response:
+                response.raise_for_status()
+                return cls._validate_responses_stream(response)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            # Prefer the Responses API: current CRS/Codex-style OpenAI endpoints
+            # expose models such as gpt-5.x through /responses rather than
+            # /chat/completions. Use streaming for proxies that require it,
+            # consume enough events to prove generation works, and do not print
+            # response chunks because they may include context.
+            try:
+                result = cls._test_responses_api()
+                print(f"✅ Success! Responses API {result}.")
+                return
+            except Exception as responses_error:
+                try:
+                    from chattool.llm.chattype import Chat
+
+                    chat = Chat(messages=[{"role": "user", "content": "hi"}])
+                    resp = chat.get_response(max_tokens=5)
+                    print(f"✅ Success! Chat Completions API: {resp.content}")
+                except Exception as chat_error:
+                    raise RuntimeError(
+                        "Responses API failed: "
+                        f"{responses_error}; Chat Completions API failed: {chat_error}"
+                    ) from chat_error
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+
+class CRSConfig(BaseEnvConfig):
+    _title = "Claude Relay Service Configuration"
+    _aliases = ["crs", "claude-relay"]
+    _storage_dir = "CRS"
+
+    CRS_API_BASE = EnvField(
+        "CRS_API_BASE",
+        desc="Claude Relay Service root URL, for example https://crs.example.com.",
+    )
+    CRS_API_KEY = EnvField(
+        "CRS_API_KEY",
+        desc="CRS downstream API key, usually cr_..., for apiStats self queries.",
+        is_sensitive=True,
+    )
+    CRS_USERNAME = EnvField(
+        "CRS_USERNAME",
+        desc="CRS admin username for /web/auth/login.",
+    )
+    CRS_PASSWORD = EnvField(
+        "CRS_PASSWORD",
+        desc="CRS admin password for /web/auth/login.",
+        is_sensitive=True,
+    )
+    CRS_ACCESS_TOKEN = EnvField(
+        "CRS_ACCESS_TOKEN",
+        desc="CRS admin session token returned by /web/auth/login.",
+        is_sensitive=True,
+    )
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.CRS_API_BASE.value:
+                print("❌ Failed: CRS_API_BASE not set")
+                return
+
+            from chattool.tools.crs.api import CRSClient
+
+            client = CRSClient(api_base=cls.CRS_API_BASE.value)
+            payload = client.models()
+            count = len(payload.get("data", {}).get("all", []))
+            print(f"✅ Success! CRS public models endpoint reachable ({count} models).")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+
+class SkillsConfig(BaseEnvConfig):
+    _title = "ChatTool Skills Configuration"
+    _aliases = ["skills", "skill", "chattool-skills"]
+    _storage_dir = "Skills"
+
+    CHATTOOL_SKILLS_DIR = EnvField(
+        "CHATTOOL_SKILLS_DIR",
+        desc="Default ChatTool skills source directory.",
+    )
+
+class AzureConfig(BaseEnvConfig):
+    _title = "Azure OpenAI Configuration"
+    _aliases = ["azure", "az"]
+    _storage_dir = "Azure"
+
+    AZURE_OPENAI_API_KEY = EnvField("AZURE_OPENAI_API_KEY", desc="Azure OpenAI API Key", is_sensitive=True)
+    AZURE_OPENAI_ENDPOINT = EnvField("AZURE_OPENAI_ENDPOINT", desc="Azure OpenAI Endpoint")
+    AZURE_OPENAI_API_VERSION = EnvField("AZURE_OPENAI_API_VERSION", desc="Azure OpenAI API Version")
+    AZURE_OPENAI_API_MODEL = EnvField("AZURE_OPENAI_API_MODEL", desc="Azure OpenAI Deployment Name (Model)")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            from chattool.llm.chattype import AzureChat
+            chat = AzureChat(messages=[{"role": "user", "content": "hi"}])
+            resp = chat.get_response(max_tokens=5)
+            print(f"✅ Success! Response: {resp.content}")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class AliyunConfig(BaseEnvConfig):
+    _title = "Alibaba Cloud (Aliyun) Configuration"
+    _aliases = ["ali", "aliyun", "alidns"]
+    _storage_dir = "Aliyun"
+
+    ALIBABA_CLOUD_ACCESS_KEY_ID = EnvField("ALIBABA_CLOUD_ACCESS_KEY_ID", desc="Access Key ID. See https://www.alibabacloud.com/help/zh/ram/user-guide/create-an-accesskey-pair", is_sensitive=True)
+    ALIBABA_CLOUD_ACCESS_KEY_SECRET = EnvField("ALIBABA_CLOUD_ACCESS_KEY_SECRET", desc="Access Key Secret", is_sensitive=True)
+    ALIBABA_CLOUD_REGION_ID = EnvField("ALIBABA_CLOUD_REGION_ID", default="cn-hangzhou", desc="Region ID (default: cn-hangzhou)")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            from chattool.tools.dns.aliyun import AliyunDNSClient
+            client = AliyunDNSClient()
+            # 尝试获取域名列表，只取1个来验证
+            domains = client.describe_domains(page_size=1)
+            print(f"✅ Success! API call successful. Found {len(domains)} domains (in first page).")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class TencentConfig(BaseEnvConfig):
+    _title = "Tencent Cloud Configuration"
+    _aliases = ["tencent", "tx", "tencent-dns"]
+    _storage_dir = "Tencent"
+
+    TENCENT_SECRET_ID = EnvField("TENCENT_SECRET_ID", desc="Secret ID. See https://console.cloud.tencent.com.cn/cam/capi", is_sensitive=True)
+    TENCENT_SECRET_KEY = EnvField("TENCENT_SECRET_KEY", desc="Secret Key", is_sensitive=True)
+    TENCENT_REGION_ID = EnvField("TENCENT_REGION_ID", default="ap-guangzhou", desc="Region ID (default: ap-guangzhou)")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            from chattool.tools.dns.tencent import TencentDNSClient
+            client = TencentDNSClient()
+            domains = client.describe_domains(page_size=1)
+            print(f"✅ Success! API call successful. Found {len(domains)} domains (in first page).")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class ZulipConfig(BaseEnvConfig):
+    _title = "Zulip Configuration"
+    _aliases = ["zulip"]
+    _storage_dir = "Zulip"
+
+    ZULIP_BOT_EMAIL = EnvField("ZULIP_BOT_EMAIL", desc="Zulip Bot Email")
+    ZULIP_BOT_API_KEY = EnvField("ZULIP_BOT_API_KEY", desc="Zulip Bot API Key", is_sensitive=True)
+    ZULIP_SITE = EnvField("ZULIP_SITE", desc="Zulip Site URL")
+    ZULIP_NEWS_STREAMS = EnvField("ZULIP_NEWS_STREAMS", desc="Comma-separated stream names for news summary")
+    ZULIP_NEWS_TOPICS = EnvField("ZULIP_NEWS_TOPICS", desc="Comma-separated topic names for news summary")
+    ZULIP_NEWS_SINCE_HOURS = EnvField("ZULIP_NEWS_SINCE_HOURS", default="24", desc="Default hours for news window")
+    ZULIP_NEWS_PER_STREAM = EnvField("ZULIP_NEWS_PER_STREAM", default="200", desc="Default per-stream fetch limit for news")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            from chattool.tools.zulip.client import ZulipClient
+            client = ZulipClient()
+            profile = client.get_profile()
+            print(f"✅ Success! Authenticated as: {profile.get('email')} ({profile.get('full_name')})")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class FeishuConfig(BaseEnvConfig):
+    _title = "Feishu Configuration"
+    _aliases = ["feishu", "lark"]
+    _storage_dir = "Feishu"
+
+    FEISHU_APP_ID = EnvField("FEISHU_APP_ID", desc="Feishu App ID (Get from https://open.feishu.cn/app)")
+    FEISHU_APP_SECRET = EnvField("FEISHU_APP_SECRET", desc="Feishu App Secret", is_sensitive=True)
+    FEISHU_API_BASE = EnvField("FEISHU_API_BASE", default="https://open.feishu.cn", desc="Feishu API Base URL (Default: https://open.feishu.cn, for Lark: https://open.larksuite.com)")
+    FEISHU_DEFAULT_RECEIVER_ID = EnvField("FEISHU_DEFAULT_RECEIVER_ID", desc="Default user receive_id for `chattool lark send` (optional)")
+    FEISHU_DEFAULT_CHAT_ID = EnvField("FEISHU_DEFAULT_CHAT_ID", desc="Default chat_id for `chattool lark send -t chat_id` (optional)")
+
+    FEISHU_ENCRYPT_KEY = EnvField("FEISHU_ENCRYPT_KEY", desc="Feishu Encrypt Key (Get from https://open.feishu.cn/app)")
+    FEISHU_VERIFY_TOKEN = EnvField("FEISHU_VERIFY_TOKEN", desc="Feishu Verify Token (Get from https://open.feishu.cn/app)")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            from chattool.tools.lark.bot import LarkBot
+            bot = LarkBot()
+            # Verify bot info using v3 API
+            resp = bot.get_bot_info()
+
+            if resp.code == 0:
+                data = json.loads(resp.raw.content)
+                bot_info = data.get("bot", {})
+                app_name = bot_info.get("app_name", "Unknown")
+                print(f"✅ Success! Connected to bot: {app_name}")
+                print(f"   Bot Status: {'Activated' if bot_info.get('activate_status') == 2 else 'Not Activated'}")
+            else:
+                print(f"❌ Failed to get bot info: {resp.msg} (Code: {resp.code})")
+
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class TongyiConfig(BaseEnvConfig):
+    _title = "Tongyi Wanxiang Configuration"
+    _aliases = ["tongyi", "dashscope"]
+    _storage_dir = "Tongyi"
+
+    DASHSCOPE_API_KEY = EnvField("DASHSCOPE_API_KEY", desc="Aliyun DashScope API Key. See https://bailian.console.aliyun.com/cn-beijing/?tab=model#/api-key", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            # 简单验证 key 是否存在
+            if not cls.DASHSCOPE_API_KEY.value:
+                print("❌ Failed: DASHSCOPE_API_KEY not set")
+                return
+
+            # 尝试导入并调用
+            from chattool.tools.image.tongyi import TongyiImageGenerator
+            # 注意：这里我们不真正生成图片，因为那会消耗额度且较慢，
+            # 我们可以尝试初始化 Client，如果 key 格式不对通常会在使用时报错。
+            # 由于 Tongyi 的 SDK 也是惰性的，这里主要检查 import 和 key 存在。
+            client = TongyiImageGenerator(api_key=cls.DASHSCOPE_API_KEY.value)
+            print(f"✅ Success! Client initialized with key: {cls.DASHSCOPE_API_KEY.mask_value()}")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class HuggingFaceConfig(BaseEnvConfig):
+    _title = "Hugging Face Configuration"
+    _aliases = ["hf", "huggingface"]
+    _storage_dir = "HuggingFace"
+
+    HUGGINGFACE_HUB_TOKEN = EnvField("HUGGINGFACE_HUB_TOKEN", desc="Hugging Face User Access Token. See https://huggingface.co/settings/tokens", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.HUGGINGFACE_HUB_TOKEN.value:
+                print("❌ Failed: HUGGINGFACE_HUB_TOKEN not set")
+                return
+
+            from chattool.tools.image.huggingface import HuggingFaceImageGenerator
+            client = HuggingFaceImageGenerator(api_key=cls.HUGGINGFACE_HUB_TOKEN.value)
+            print(f"✅ Success! Client initialized with token: {cls.HUGGINGFACE_HUB_TOKEN.mask_value()}")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class PollinationsConfig(BaseEnvConfig):
+    _title = "Pollinations Configuration"
+    _aliases = ["pollinations", "poll"]
+    _storage_dir = "Pollinations"
+
+    POLLINATIONS_API_KEY = EnvField("POLLINATIONS_API_KEY", desc="Pollinations API Key (from enter.pollinations.ai)", is_sensitive=True)
+    POLLINATIONS_MODEL_ID = EnvField("POLLINATIONS_MODEL_ID", default="flux", desc="Default Pollinations model ID.")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            print("✅ Config loaded.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class LiblibConfig(BaseEnvConfig):
+    _title = "LiblibAI Configuration"
+    _aliases = ["liblib"]
+    _storage_dir = "Liblib"
+
+    LIBLIB_MODEL_ID = EnvField("LIBLIB_MODEL_ID", desc="LiblibAI Model ID. Use `chattool image liblib list-models` to get available models.")
+    LIBLIB_ACCESS_KEY = EnvField("LIBLIB_ACCESS_KEY", desc="LiblibAI Access Key. See https://www.liblib.art/apis", is_sensitive=True)
+    LIBLIB_SECRET_KEY = EnvField("LIBLIB_SECRET_KEY", desc="LiblibAI Secret Key. See https://www.liblib.art/apis", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.LIBLIB_ACCESS_KEY.value or not cls.LIBLIB_SECRET_KEY.value:
+                print("❌ Failed: LIBLIB_ACCESS_KEY or LIBLIB_SECRET_KEY not set")
+                return
+
+            from chattool.tools.image.liblib import LiblibImageGenerator
+            client = LiblibImageGenerator(
+                access_key=cls.LIBLIB_ACCESS_KEY.value,
+                secret_key=cls.LIBLIB_SECRET_KEY.value
+            )
+            print(f"✅ Success! Client initialized.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class SiliconFlowConfig(BaseEnvConfig):
+    _title = "SiliconFlow Configuration"
+    _aliases = ["siliconflow"]
+    _storage_dir = "SiliconFlow"
+
+    SILICONFLOW_API_KEY = EnvField("SILICONFLOW_API_KEY", desc="SiliconFlow API Key. See https://cloud.siliconflow.cn/account/ak", is_sensitive=True)
+    SILICONFLOW_MODEL_ID = EnvField("SILICONFLOW_MODEL_ID", default="black-forest-labs/FLUX.1-schnell", desc="Default Image Model ID. Use `chattool image siliconflow list-models` to see available models.")
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.SILICONFLOW_API_KEY.value:
+                print("❌ Failed: SILICONFLOW_API_KEY not set")
+                return
+
+            # Simple test to check if key is valid (requires network)
+            # For now, just print success if key is present
+            print(f"✅ Success! Key configured.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+class TPLinkConfig(BaseEnvConfig):
+    _title = "TP-Link Router Configuration"
+    _aliases = ["tplink", "tplogin"]
+    _storage_dir = "TPLink"
+
+    TPLOGIN_URL = EnvField("TPLOGIN_URL", default="http://192.168.1.1", desc="TP-Link Router Login URL")
+    TPLOGIN_AUTH_PASSWORD = EnvField("TPLOGIN_AUTH_PASSWORD", desc="TP-Link Router Password", is_sensitive=True)
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.TPLOGIN_AUTH_PASSWORD.value:
+                print("❌ Failed: TPLOGIN_AUTH_PASSWORD not set")
+                return
+
+            from chattool.tools.tplogin import TPLogin
+            client = TPLogin()
+            stok = client.login()
+            if stok:
+                print(f"✅ Success! Login successful. Stok: {stok}")
+            else:
+                print("❌ Failed: Login failed")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+
+class BrowserConfig(BaseEnvConfig):
+    _title = "Browser Configuration"
+    _aliases = ["browser"]
+    _storage_dir = "Browser"
+
+    BROWSER_DEFAULT_BACKEND = EnvField(
+        "BROWSER_DEFAULT_BACKEND",
+        default="playwright",
+        desc="Default backend: playwright | selenium | chromium",
+    )
+    BROWSER_CHROMIUM_CDP_URL = EnvField(
+        "BROWSER_CHROMIUM_CDP_URL",
+        desc="Chromium CDP URL (via /chromium/ proxy).",
+    )
+    BROWSER_CHROMIUM_TOKEN = EnvField(
+        "BROWSER_CHROMIUM_TOKEN",
+        desc="Chromium token (optional, appended as ?token= if provided).",
+        is_sensitive=True,
+    )
+    BROWSER_SELENIUM_REMOTE_URL = EnvField(
+        "BROWSER_SELENIUM_REMOTE_URL",
+        desc="Selenium remote WebDriver URL (via /chromedriver/ proxy).",
+    )
+    BROWSER_PLAYWRIGHT_URL = EnvField(
+        "BROWSER_PLAYWRIGHT_URL",
+        desc="Playwright service URL (currently not exposed).",
+    )
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            print("✅ Config loaded.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+
+class GitHubConfig(BaseEnvConfig):
+    _title = "GitHub Configuration"
+    _aliases = ["github", "gh"]
+    _storage_dir = "GitHub"
+
+    GITHUB_ACCESS_TOKEN = EnvField(
+        "GITHUB_ACCESS_TOKEN", desc="GitHub Personal Access Token", is_sensitive=True
+    )
+
+    @classmethod
+    def test(cls):
+        print(f"Testing {cls._title}...")
+        try:
+            if not cls.GITHUB_ACCESS_TOKEN.value:
+                print("❌ Failed: GITHUB_ACCESS_TOKEN not set")
+                return
+            print("✅ Config loaded.")
+        except Exception as e:
+            print(f"❌ Failed: {e}")
+
+
+__all__ = [
+    "EnvField",
+    "BaseEnvConfig",
+    "normalize_profile_name",
+    "AzureConfig",
+    "OpenAIConfig",
+    "CRSConfig",
+    "ZulipConfig",
+    "AliyunConfig",
+    "TencentConfig",
+    "FeishuConfig",
+    "TongyiConfig",
+    "HuggingFaceConfig",
+    "PollinationsConfig",
+    "LiblibConfig",
+    "SiliconFlowConfig",
+    "GitHubConfig",
+    "BrowserConfig",
+    "TPLinkConfig",
+    "SkillsConfig",
+]

@@ -5,10 +5,10 @@ from chattool.interaction import (
     add_interactive_option,
     resolve_command_inputs,
 )
-from chattool.config.elements import BaseEnvConfig
+from chattool.config import BaseEnvConfig
 
 # Ensure all configs are registered
-import chattool.config.main
+import chattool.config
 
 __test__ = False
 

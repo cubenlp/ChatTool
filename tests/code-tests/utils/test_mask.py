@@ -1,7 +1,7 @@
 
 import unittest
 from chattool.utils import mask_secret
-from chattool.config.elements import EnvField
+from chattool.config import EnvField
 
 class TestMaskValue(unittest.TestCase):
     def test_mask_secret(self):
@@ -23,14 +23,12 @@ class TestMaskValue(unittest.TestCase):
         
         # Sensitive
         f2 = EnvField("KEY", is_sensitive=True)
-        f2.value = "secret" # length 6 -> s****t
-        self.assertEqual(f2.mask_value(), "s****t")
+        f2.value = "secret" # length 6 -> fully masked
+        self.assertEqual(f2.mask_value(), "******")
         
         f3 = EnvField("KEY", is_sensitive=True)
-        f3.value = "longsecretkey" # length 13 -> lo*ey
-        # 7 <= 13 <= 14: api_key[:2] + '*' * (length - 4) + api_key[-2:]
-        # lo + * * 9 + ey
-        self.assertEqual(f3.mask_value(), "lo*********ey")
+        f3.value = "longsecretkey" # ChatEnv EnvField always fully masks sensitive values.
+        self.assertEqual(f3.mask_value(), "*************")
 
 if __name__ == '__main__':
     unittest.main()

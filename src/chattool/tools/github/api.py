@@ -8,7 +8,7 @@ from typing import Optional
 import click
 
 from chattool.const import CHATARCH_ENV_DIR
-from chattool.config.github import GitHubConfig
+from chattool.config import GitHubConfig
 
 
 def get_client(

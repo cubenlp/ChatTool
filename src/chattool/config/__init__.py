@@ -1,15 +1,29 @@
-from .elements import EnvField, BaseEnvConfig
-from .main import (
-    AzureConfig, OpenAIConfig, CRSConfig, ZulipConfig, AliyunConfig, TencentConfig, FeishuConfig,
-    TongyiConfig, HuggingFaceConfig, PollinationsConfig, LiblibConfig, SiliconFlowConfig ,
-    TPLinkConfig, SkillsConfig
+from .elements import (
+    EnvField,
+    BaseEnvConfig,
+    normalize_profile_name,
+    AzureConfig,
+    OpenAIConfig,
+    CRSConfig,
+    ZulipConfig,
+    AliyunConfig,
+    TencentConfig,
+    FeishuConfig,
+    TongyiConfig,
+    HuggingFaceConfig,
+    PollinationsConfig,
+    LiblibConfig,
+    SiliconFlowConfig,
+    GitHubConfig,
+    BrowserConfig,
+    TPLinkConfig,
+    SkillsConfig,
 )
-from .github import GitHubConfig
-from .browser import BrowserConfig
 
 __all__ = [
     "EnvField",
     "BaseEnvConfig",
+    "normalize_profile_name",
     "AzureConfig",
     "OpenAIConfig",
     "CRSConfig",
