@@ -280,6 +280,8 @@ def test_chattool_gh_repo_perms_basic(monkeypatch, runner):
             "repo": "CubeNLP/ChatTool",
             "private": True,
             "visibility": "private",
+            "token_mask": "gho_abc...12345",
+            "token_source": "git credential",
             "permissions": {"pull": True, "push": False, "admin": False},
             "capabilities": {
                 "can_comment_pr": False,
@@ -295,6 +297,8 @@ def test_chattool_gh_repo_perms_basic(monkeypatch, runner):
 
     assert result.exit_code == 0
     assert "Repo: CubeNLP/ChatTool" in result.output
+    assert "Token: gho_abc...12345" in result.output
+    assert "Token Source: git credential" in result.output
     assert "Permissions:" in result.output
     assert "Capabilities:" in result.output
 
@@ -307,6 +311,8 @@ def test_chattool_gh_repo_perms_full_json(monkeypatch, runner):
             "repo": "CubeNLP/ChatTool",
             "private": False,
             "visibility": "public",
+            "token_mask": "github_...token",
+            "token_source": "--token",
             "permissions": {"pull": True, "push": True, "admin": True},
             "capabilities": {"can_merge_pr": True},
             "repository": {"allow_merge_commit": True},
@@ -319,6 +325,8 @@ def test_chattool_gh_repo_perms_full_json(monkeypatch, runner):
     )
 
     assert result.exit_code == 0
+    assert '"token_mask": "github_...token"' in result.output
+    assert '"token_source": "--token"' in result.output
     assert '"repository"' in result.output
     assert '"allow_merge_commit": true' in result.output
 

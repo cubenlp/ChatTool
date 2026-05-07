@@ -13,6 +13,7 @@ from chattool.tools.github.api import (
     resolve_repo,
     resolve_repo_from_git_remote,
     resolve_token,
+    resolve_token_with_source,
     save_github_token_to_env,
 )
 from chattool.tools.github.render import (
@@ -206,19 +207,30 @@ def view_job_logs(
 
 def repo_perms(repo: Optional[str], full_json: bool, token: Optional[str]) -> dict:
     resolved_repo, credential_path = resolve_repo_and_credential_path(repo)
-    resolved_token = resolve_token(token, credential_path=credential_path)
+    token_info = resolve_token_with_source(token, credential_path=credential_path)
+    resolved_token = token_info["token"]
     payload = get_repo_permissions(resolved_repo, resolved_token)
     permissions = payload.get("permissions") or {}
     result = {
         "repo": payload.get("full_name") or resolved_repo,
         "private": payload.get("private"),
         "visibility": payload.get("visibility"),
+        "token_mask": mask_token(resolved_token),
+        "token_source": token_info["source"],
         "permissions": permissions,
         "capabilities": derive_repo_capabilities(permissions),
     }
     if full_json:
         result["repository"] = payload
     return result
+
+
+def mask_token(token: Optional[str]) -> str:
+    if not token:
+        return "<none>"
+    if len(token) <= 12:
+        return token[:2] + "..." + token[-2:]
+    return token[:7] + "..." + token[-5:]
 
 
 def set_token(token: Optional[str], save_env: bool) -> dict:

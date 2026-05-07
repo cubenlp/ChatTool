@@ -410,6 +410,8 @@ def repo_permissions(repo, json_output, full_json, token):
     click.echo(f"Repo: {payload['repo']}")
     click.echo(f"Private: {format_optional(payload['private'])}")
     click.echo(f"Visibility: {format_optional(payload['visibility'])}")
+    click.echo(f"Token: {payload['token_mask']}")
+    click.echo(f"Token Source: {payload['token_source']}")
     click.echo("Permissions:")
     if not payload["permissions"]:
         click.echo("  - none returned")
