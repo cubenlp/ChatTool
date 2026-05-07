@@ -127,36 +127,46 @@ def lark_cli_setup(app_id, app_secret, brand, env, interactive, log_level):
 
 
 def hermes_setup(
-    agent_dir,
+    installer,
+    update_installer,
+    hermes_home,
     webui_dir,
     env,
     feishu_env,
     api_key,
     base_url,
     model,
-    skip_feishu,
-    with_webui,
+    with_webui_env,
     start_webui,
     install_only,
-    extras,
-    dry_run,
+    webui_host,
+    webui_port,
+    webui_state_dir,
+    webui_workspace,
+    webui_model,
+    webui_password,
     interactive,
     log_level,
 ):
     setup_hermes(
-        agent_dir=agent_dir,
+        installer=installer,
+        update_installer=update_installer,
+        hermes_home=hermes_home,
         webui_dir=webui_dir,
         openai_env=env,
         feishu_env=feishu_env,
         api_key=api_key,
         base_url=base_url,
         model=model,
-        skip_feishu=skip_feishu,
-        with_webui=with_webui,
+        with_webui_env=with_webui_env,
         start_webui=start_webui,
         install_only=install_only,
-        extras=extras,
-        dry_run=dry_run,
+        webui_host=webui_host,
+        webui_port=webui_port,
+        webui_state_dir=webui_state_dir,
+        webui_workspace=webui_workspace,
+        webui_model=webui_model,
+        webui_password=webui_password,
         interactive=interactive,
         log_level=log_level,
     )
@@ -538,12 +548,26 @@ SETUP_COMMAND_ELEMENTS = (
                 },
             ),
             SetupOptionElement(
-                param_decls=("--agent-dir",),
-                kwargs={"default": None, "help": "Hermes Agent checkout path."},
+                param_decls=("--installer",),
+                kwargs={
+                    "default": None,
+                    "help": "Path to a local Hermes official install.sh.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--update-installer",),
+                kwargs={
+                    "is_flag": True,
+                    "help": "Download the latest official Hermes install.sh into the ChatTool cache before setup.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--hermes-home",),
+                kwargs={"default": None, "help": "Hermes home directory."},
             ),
             SetupOptionElement(
                 param_decls=("--webui-dir",),
-                kwargs={"default": None, "help": "Hermes WebUI checkout path."},
+                kwargs={"default": None, "help": "Existing Hermes WebUI app directory."},
             ),
             SetupOptionElement(
                 param_decls=("-e", "--env"),
@@ -556,7 +580,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--feishu-env",),
                 kwargs={
                     "default": None,
-                    "help": "Load Feishu config from a .env file path or saved Feishu profile name.",
+                    "help": "Explicitly load Feishu config from a .env file path or saved Feishu profile name.",
                 },
             ),
             SetupOptionElement(
@@ -572,32 +596,40 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={"default": None, "help": "Hermes default model."},
             ),
             SetupOptionElement(
-                param_decls=("--skip-feishu",),
-                kwargs={"is_flag": True, "help": "Do not import ChatTool Feishu config."},
+                param_decls=("--with-webui-env",),
+                kwargs={"is_flag": True, "help": "Write Hermes WebUI env/profile values."},
             ),
             SetupOptionElement(
-                param_decls=("--with-webui/--no-webui",),
-                kwargs={"default": True, "help": "Also prepare Hermes WebUI config."},
+                param_decls=("--webui-host",),
+                kwargs={"default": "127.0.0.1", "show_default": True, "help": "Hermes WebUI host."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webui-port",),
+                kwargs={"default": 8787, "show_default": True, "type": int, "help": "Hermes WebUI port."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webui-state-dir",),
+                kwargs={"default": None, "help": "Hermes WebUI state directory."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webui-workspace",),
+                kwargs={"default": None, "help": "Hermes WebUI default workspace."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webui-model",),
+                kwargs={"default": None, "help": "Hermes WebUI default model."},
+            ),
+            SetupOptionElement(
+                param_decls=("--webui-password",),
+                kwargs={"default": None, "help": "Hermes WebUI password."},
             ),
             SetupOptionElement(
                 param_decls=("--start-webui",),
-                kwargs={"is_flag": True, "help": "Start Hermes WebUI after setup."},
+                kwargs={"is_flag": True, "help": "Start an existing Hermes WebUI app directory after setup."},
             ),
             SetupOptionElement(
                 param_decls=("--install-only",),
-                kwargs={"is_flag": True, "help": "Install Hermes without writing model or Feishu config."},
-            ),
-            SetupOptionElement(
-                param_decls=("--extras",),
-                kwargs={
-                    "default": "messaging,cli,pty,cron,feishu,web,acp,mcp",
-                    "show_default": True,
-                    "help": "Hermes extras to install with uv pip install -e.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--dry-run",),
-                kwargs={"is_flag": True, "help": "Print planned actions without writing files or running installs."},
+                kwargs={"is_flag": True, "help": "Only install or check Hermes Agent without writing config files."},
             ),
         ),
     ),

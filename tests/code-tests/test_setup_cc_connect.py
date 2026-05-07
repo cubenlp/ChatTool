@@ -10,7 +10,7 @@ def test_setup_cc_connect_command_invokes_shared_setup(monkeypatch):
 
     monkeypatch.setattr(
         "chattool.setup.elements.setup_cc_connect",
-        lambda interactive=None: calls.append(interactive),
+        lambda interactive=None, log_level="INFO": calls.append(interactive),
     )
 
     result = runner.invoke(root_cli, ["setup", "cc-connect", "-i"])
