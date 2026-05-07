@@ -182,7 +182,7 @@ ChatTool 现在就是一个 ChatEnv consumer。
 chattool = "chattool.config"
 ```
 
-在 `src/chattool/config/__init__.py` 中导出配置类。当前具体 schema 放在 `src/chattool/config/elements.py`，例如：
+在 `src/chattool/config/__init__.py` 中统一导出配置类。具体 schema 按类型拆到独立文件，例如 `src/chattool/config/openai.py`、`src/chattool/config/feishu.py`：
 
 ```python
 from chatenv.fields import BaseEnvConfig, EnvField
