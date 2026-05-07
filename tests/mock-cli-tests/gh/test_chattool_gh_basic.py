@@ -331,6 +331,50 @@ def test_chattool_gh_repo_perms_full_json(monkeypatch, runner):
     assert '"allow_merge_commit": true' in result.output
 
 
+@pytest.mark.parametrize(
+    ("remote_url", "expected_repo"),
+    [
+        ("https://github.com/CubeNLP/ChatTool.git", "CubeNLP/ChatTool"),
+        ("https://github.com/CubeNLP/ChatTool", "CubeNLP/ChatTool"),
+        ("git@github.com:CubeNLP/ChatTool.git", "CubeNLP/ChatTool"),
+        ("ssh://git@github.com/CubeNLP/ChatTool.git", "CubeNLP/ChatTool"),
+    ],
+)
+def test_chattool_gh_remote_paths_are_canonical_without_git_suffix(remote_url, expected_repo):
+    from chattool.tools.github.api import parse_github_repo_from_remote
+
+    parsed = parse_github_repo_from_remote(remote_url)
+
+    assert parsed == (
+        expected_repo,
+        {"protocol": "https", "host": "github.com", "path": expected_repo},
+    )
+
+
+def test_chattool_gh_explicit_and_remote_repo_share_credential_path(monkeypatch):
+    from chattool.tools.github.api import credential_path_from_repo, resolve_repo_from_git_remote
+
+    def fake_run(command, check=True, capture_output=True, text=True, input=None):
+        class Result:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+                self.stderr = ""
+
+        if command == ["git", "remote"]:
+            return Result(stdout="origin\n")
+        if command == ["git", "remote", "get-url", "origin"]:
+            return Result(stdout="https://github.com/CubeNLP/ChatTool.git\n")
+        return Result()
+
+    monkeypatch.setattr("chattool.tools.github.api.subprocess.run", fake_run)
+
+    _, remote_credential = resolve_repo_from_git_remote()
+    explicit_credential = credential_path_from_repo("CubeNLP/ChatTool")
+
+    assert remote_credential == explicit_credential
+    assert remote_credential["path"] == "CubeNLP/ChatTool"
+
+
 def test_chattool_gh_repo_scoped_credential_requires_exact_path(monkeypatch, runner):
     monkeypatch.setattr(
         "chattool.tools.github.api.read_github_token_from_git",
@@ -442,7 +486,7 @@ def test_chattool_gh_set_token_configures_repo_scoped_https_credential(tmp_path,
     assert result.exit_code == 0
     assert "Configured Git HTTPS token for CubeNLP/ChatTool." in result.output
     approve_input = inputs[commands.index(["git", "credential", "approve"])]
-    assert "path=CubeNLP/ChatTool.git" in approve_input
+    assert "path=CubeNLP/ChatTool" in approve_input
     assert "password=ghp_test_token" in approve_input
 
 
@@ -556,7 +600,7 @@ def test_chattool_gh_set_token_falls_back_to_other_github_remote(monkeypatch, ru
 
     assert result.exit_code == 0
     approve_input = inputs[commands.index(["git", "credential", "approve"])]
-    assert "path=CubeNLP/ChatTool.git" in approve_input
+    assert "path=CubeNLP/ChatTool" in approve_input
 
 
 def test_chattool_gh_set_token_keeps_remote_path_without_git_suffix(monkeypatch, runner):

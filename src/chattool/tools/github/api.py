@@ -154,7 +154,11 @@ def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, dict[s
         if len(parts) >= 2:
             return (
                 f"{parts[0]}/{parts[1]}",
-                {"protocol": parsed.scheme, "host": "github.com", "path": path},
+                {
+                    "protocol": parsed.scheme,
+                    "host": "github.com",
+                    "path": normalized_path,
+                },
             )
 
     if url.startswith("git@github.com:"):
@@ -164,7 +168,11 @@ def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, dict[s
         if len(parts) >= 2:
             return (
                 f"{parts[0]}/{parts[1]}",
-                {"protocol": "https", "host": "github.com", "path": path},
+                {
+                    "protocol": "https",
+                    "host": "github.com",
+                    "path": normalized_path,
+                },
             )
 
     if url.startswith("ssh://git@github.com/"):
@@ -174,7 +182,11 @@ def parse_github_repo_from_remote(remote_url: str) -> Optional[tuple[str, dict[s
         if len(parts) >= 2:
             return (
                 f"{parts[0]}/{parts[1]}",
-                {"protocol": "https", "host": "github.com", "path": path},
+                {
+                    "protocol": "https",
+                    "host": "github.com",
+                    "path": normalized_path,
+                },
             )
     return None
 
