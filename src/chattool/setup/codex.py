@@ -109,6 +109,123 @@ def _load_existing_codex_config(codex_dir):
     return existing
 
 
+def _toml_value(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def _upsert_toml_section(content: str, section: str | None, values: dict) -> tuple[str, list[str]]:
+    lines = content.splitlines() if content else []
+    output: list[str] = []
+    changed: list[str] = []
+    current_section: str | None = None
+    in_target = section is None
+    seen: set[str] = set()
+    inserted_root = False
+
+    def flush_missing() -> None:
+        for key, value in values.items():
+            if key not in seen:
+                output.append(f"{key} = {_toml_value(value)}")
+                changed.append(key if section is None else f"{section}.{key}")
+                seen.add(key)
+
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        is_section = stripped.startswith("[") and stripped.endswith("]")
+        if is_section:
+            if section is None and not inserted_root:
+                flush_missing()
+                inserted_root = True
+            elif in_target and section is not None:
+                flush_missing()
+            current_section = stripped[1:-1].strip()
+            in_target = current_section == section
+            if in_target:
+                seen = set()
+            output.append(raw_line)
+            continue
+
+        if in_target and "=" in stripped and not stripped.startswith("#"):
+            key, old_value = stripped.split("=", 1)
+            key = key.strip()
+            if key in values:
+                seen.add(key)
+                new_value = values[key]
+                normalized_old = old_value.strip().strip('"').strip("'")
+                if normalized_old != str(new_value):
+                    changed.append(key if section is None else f"{section}.{key}")
+                indent = raw_line[: len(raw_line) - len(raw_line.lstrip())]
+                output.append(f"{indent}{key} = {_toml_value(new_value)}")
+                continue
+
+        output.append(raw_line)
+
+    if section is None:
+        if not inserted_root:
+            flush_missing()
+    elif any(line.strip() == f"[{section}]" for line in output):
+        if in_target:
+            flush_missing()
+    else:
+        if output and output[-1].strip():
+            output.append("")
+        output.append(f"[{section}]")
+        seen = set()
+        flush_missing()
+
+    return "\n".join(output).rstrip() + "\n", changed
+
+
+def _write_codex_config(config_path: Path, *, model: str, base_url: str) -> list[str]:
+    content = config_path.read_text(encoding="utf-8") if config_path.exists() else ""
+    content, changed_root = _upsert_toml_section(
+        content,
+        None,
+        {
+            "model_provider": "crs",
+            "model": model,
+            "preferred_auth_method": DEFAULT_AUTH_METHOD,
+        },
+    )
+    content, changed_provider = _upsert_toml_section(
+        content,
+        "model_providers.crs",
+        {
+            "name": "crs",
+            "base_url": base_url,
+            "wire_api": "responses",
+            "requires_openai_auth": True,
+        },
+    )
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(content, encoding="utf-8")
+    config_path.chmod(0o600)
+    logger.info(f"Patched config file: {config_path}")
+    return changed_root + changed_provider
+
+
+def _write_codex_auth(auth_path: Path, api_key: str) -> list[str]:
+    auth_data = {}
+    if auth_path.exists():
+        try:
+            loaded = json.loads(auth_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                auth_data = loaded
+        except Exception:
+            auth_data = {}
+    old_value = auth_data.get("OPENAI_API_KEY")
+    auth_data["OPENAI_API_KEY"] = api_key
+    auth_path.parent.mkdir(parents=True, exist_ok=True)
+    auth_path.write_text(
+        json.dumps(auth_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    auth_path.chmod(0o600)
+    logger.info(f"Patched auth file: {auth_path}")
+    return ["OPENAI_API_KEY"] if old_value != api_key else []
+
+
 def _snapshot_openai_values() -> dict[str, str | None]:
     return {
         "openai_api_key": OpenAIConfig.OPENAI_API_KEY.value,
@@ -322,31 +439,15 @@ def setup_codex(
 
     codex_dir.mkdir(parents=True, exist_ok=True)
 
-    config_toml = (
-        'model_provider = "crs"\n'
-        f'model = "{model}"\n'
-        'model_reasoning_effort = "high"\n'
-        "disable_response_storage = true\n"
-        f'preferred_auth_method = "{DEFAULT_AUTH_METHOD}"\n\n'
-        "[model_providers.crs]\n"
-        'name = "crs"\n'
-        f'base_url = "{base_url}"\n'
-        'wire_api = "responses"\n'
-        "requires_openai_auth = true\n"
-    )
     config_path = codex_dir / "config.toml"
-    config_path.write_text(config_toml, encoding="utf-8")
-    config_path.chmod(0o600)
-    logger.info(f"Wrote config file: {config_path}")
-
-    auth_json = {"OPENAI_API_KEY": api_key}
+    changed_config = _write_codex_config(config_path, model=model, base_url=base_url)
     auth_path = codex_dir / "auth.json"
-    auth_path.write_text(
-        json.dumps(auth_json, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    auth_path.chmod(0o600)
-    logger.info(f"Wrote auth file: {auth_path}")
+    changed_auth = _write_codex_auth(auth_path, api_key)
 
     click.echo("Codex setup completed.")
     click.echo(f"Config: {config_path}")
     click.echo(f"Auth: {auth_path}")
+    if changed_config:
+        click.echo("Updated Codex config keys: " + ", ".join(sorted(changed_config)))
+    if changed_auth:
+        click.echo("Updated Codex secret keys: " + ", ".join(sorted(changed_auth)))

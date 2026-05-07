@@ -262,11 +262,64 @@ def test_scaffold_chatarch_defaults_to_python_310_and_chatarch_deps(tmp_path):
     cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(
         encoding="utf-8"
     )
+    workflow_texts = [
+        path.read_text(encoding="utf-8")
+        for path in sorted((project_dir / ".github" / "workflows").iterdir())
+    ]
 
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert '"chatstyle>=0.1.0"' in pyproject_text
     assert '"chatenv>=0.1.1"' in pyproject_text
     assert "CommandSchema" in cli_text
+    assert all('python-version: "3.10"' in text for text in workflow_texts)
+    assert all("3.11" not in text for text in workflow_texts)
+
+
+def test_scaffold_chatarch_publish_workflow_creates_tag_and_publishes(tmp_path):
+    project_dir = tmp_path / "mychat-cli"
+
+    scaffold_package(
+        package_name="mychat-cli",
+        project_dir=project_dir,
+        description="My chat CLI package",
+        template="chatarch",
+    )
+
+    publish_text = (project_dir / ".github" / "workflows" / "publish.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "branches:\n      - main\n      - master" in publish_text
+    assert "contents: write" in publish_text
+    assert "id-token: write" in publish_text
+    assert "Path(\"src/mychat_cli/__init__.py\")" in publish_text
+    assert "tag=v{version}" in publish_text
+    assert "git tag -a" in publish_text
+    assert "git push origin" in publish_text
+    assert "https://pypi.org/pypi/" in publish_text
+    assert "python -m twine check dist/*" in publish_text
+    assert "pypa/gh-action-pypi-publish@release/v1" in publish_text
+    assert "Publish workflow scaffold only" not in publish_text
+
+
+def test_scaffold_chatarch_workflows_follow_custom_python_requirement(tmp_path):
+    project_dir = tmp_path / "mychat-cli"
+
+    scaffold_package(
+        package_name="mychat-cli",
+        project_dir=project_dir,
+        description="My chat CLI package",
+        template="chatarch",
+        requires_python=">=3.12",
+    )
+
+    workflow_texts = [
+        path.read_text(encoding="utf-8")
+        for path in sorted((project_dir / ".github" / "workflows").iterdir())
+    ]
+
+    assert all('python-version: "3.12"' in text for text in workflow_texts)
+    assert all("3.11" not in text for text in workflow_texts)
 
 
 def test_scaffold_chatarch_mkdocs_build_is_strict_clean(tmp_path):

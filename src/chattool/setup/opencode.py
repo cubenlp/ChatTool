@@ -163,6 +163,49 @@ def _write_opencode_config(config_path: Path, config_payload: dict) -> None:
     logger.info(f"Wrote config file: {config_path}")
 
 
+def _patch_provider_config(
+    config_payload: dict,
+    *,
+    provider_id: str,
+    base_url: str,
+    api_key: str,
+    model: str,
+) -> None:
+    providers = config_payload.get("provider")
+    if not isinstance(providers, dict):
+        providers = {}
+        config_payload["provider"] = providers
+
+    provider_entry = providers.get(provider_id)
+    if not isinstance(provider_entry, dict):
+        provider_entry = {}
+        providers[provider_id] = provider_entry
+
+    provider_entry.setdefault("npm", DEFAULT_PROVIDER_NPM)
+    provider_entry.setdefault("name", "OpenCode Provider")
+
+    options = provider_entry.get("options")
+    if not isinstance(options, dict):
+        options = {}
+        provider_entry["options"] = options
+    options["baseURL"] = base_url
+    if "baseUrl" in options:
+        options["baseUrl"] = base_url
+    options["apiKey"] = api_key
+
+    models = provider_entry.get("models")
+    if not isinstance(models, dict):
+        models = {}
+        provider_entry["models"] = models
+    model_entry = models.get(model)
+    if not isinstance(model_entry, dict):
+        model_entry = {}
+    model_entry.setdefault("name", model)
+    models[model] = model_entry
+
+    config_payload["model"] = f"{provider_id}/{model}"
+
+
 def _append_plugin(config_payload: dict, plugin_entry: str) -> None:
     existing_plugins = config_payload.get("plugin")
     if not isinstance(existing_plugins, list):
@@ -385,24 +428,13 @@ def setup_opencode(
     config_payload = config_data if isinstance(config_data, dict) else {}
     config_payload["$schema"] = "https://opencode.ai/config.json"
 
-    providers = config_payload.get("provider")
-    if not isinstance(providers, dict):
-        providers = {}
-        config_payload["provider"] = providers
-
-    providers[provider_id] = {
-        "npm": DEFAULT_PROVIDER_NPM,
-        "name": "OpenCode Provider",
-        "options": {
-            "baseURL": base_url,
-            "apiKey": api_key,
-        },
-        "models": {
-            model: {"name": model},
-        },
-    }
-
-    config_payload["model"] = f"{provider_id}/{model}"
+    _patch_provider_config(
+        config_payload,
+        provider_id=provider_id,
+        base_url=base_url,
+        api_key=api_key,
+        model=model,
+    )
 
     plugin_result = _apply_plugin_preset(config_payload, plugin, config_dir)
 

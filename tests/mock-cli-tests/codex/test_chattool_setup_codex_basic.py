@@ -56,6 +56,77 @@ def test_setup_codex_prefers_existing_config_over_current_env(
     assert 'model = "existing-model"' in config_text
 
 
+def test_setup_codex_patches_target_keys_without_rewriting_unrelated_config(
+    tmp_path, monkeypatch, runner
+):
+    home_dir = tmp_path / "home"
+    codex_dir = home_dir / ".codex"
+    codex_dir.mkdir(parents=True)
+    (codex_dir / "auth.json").write_text(
+        json.dumps({"OPENAI_API_KEY": "sk-existing", "EXTRA": "keep-me"}),
+        encoding="utf-8",
+    )
+    (codex_dir / "config.toml").write_text(
+        "\n".join(
+            [
+                "# keep root comment",
+                'model_provider = "crs"',
+                'model = "old-model"',
+                'custom_root = "keep-me"',
+                "",
+                "[model_providers.crs]",
+                "# keep provider comment",
+                'base_url = "https://old.example/v1"',
+                'custom_provider = "keep-me-too"',
+                "",
+                "[unrelated]",
+                'value = "keep"',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr(
+        "chattool.setup.codex.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.codex.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "codex",
+            "-I",
+            "--api-key",
+            "sk-new",
+            "--model",
+            "new-model",
+            "--base-url",
+            "https://new.example/v1",
+        ],
+    )
+
+    assert result.exit_code == 0
+    config_text = (codex_dir / "config.toml").read_text(encoding="utf-8")
+    auth_payload = json.loads((codex_dir / "auth.json").read_text(encoding="utf-8"))
+    assert "# keep root comment" in config_text
+    assert "# keep provider comment" in config_text
+    assert 'custom_root = "keep-me"' in config_text
+    assert 'custom_provider = "keep-me-too"' in config_text
+    assert "[unrelated]" in config_text
+    assert 'value = "keep"' in config_text
+    assert 'model = "new-model"' in config_text
+    assert 'base_url = "https://new.example/v1"' in config_text
+    assert auth_payload["OPENAI_API_KEY"] == "sk-new"
+    assert auth_payload["EXTRA"] == "keep-me"
+
+
 def test_setup_codex_explicit_args_override_env_ref(tmp_path, monkeypatch, runner):
     home_dir = tmp_path / "home"
     env_dir = tmp_path / "envs"

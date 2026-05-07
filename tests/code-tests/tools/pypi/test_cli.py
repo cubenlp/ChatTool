@@ -5,6 +5,7 @@ import pytest
 
 from chattool.client.main import cli as root_cli
 import chattool.tools.pypi.cli as pypi_cli
+from chattool.tools.pypi.main import check_repository_conflicts
 
 
 def _write_minimal_project(root: Path) -> None:
@@ -196,6 +197,59 @@ def test_probe_command_reports_repository_conflicts(monkeypatch, tmp_path):
     assert result.exit_code == 0
     assert "[WARN] repository.project: demo-pkg already exists" in result.output
     assert "[OK] repository.version: demo-pkg==0.1.0 is available" in result.output
+    assert "latest release date" not in result.output
+
+
+def test_probe_command_shows_latest_upload_date(monkeypatch, tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "pkg"
+    project_dir.mkdir()
+    _write_minimal_project(project_dir)
+
+    monkeypatch.setattr(
+        pypi_cli,
+        "check_repository_conflicts",
+        lambda *args, **kwargs: [
+            type("Check", (), {"status": "warn", "label": "repository.project", "detail": "demo-pkg already exists", "hint": None})(),
+            type("Check", (), {"status": "info", "label": "latest release date", "detail": "2026-05-07T12:34:56.000Z", "hint": None})(),
+            type("Check", (), {"status": "ok", "label": "repository.version", "detail": "demo-pkg==0.1.0 is available", "hint": None})(),
+        ],
+    )
+
+    result = runner.invoke(
+        pypi_cli.cli,
+        ["probe", "--project-dir", str(project_dir)],
+    )
+
+    assert result.exit_code == 0
+    assert "[INFO] latest release date: 2026-05-07T12:34:56.000Z" in result.output
+
+
+def test_repository_conflict_snippets_include_latest_release_date_from_json_urls():
+    def fake_fetcher(url, timeout):
+        return 200, {
+            "info": {
+                "version": "1.2.3",
+                "summary": "Demo package",
+            },
+            "urls": [
+                {"upload_time_iso_8601": "2026-05-07T12:34:56.000Z"},
+                {"upload_time_iso_8601": "2026-05-08T01:02:03.000Z"},
+            ],
+            "releases": {
+                "1.2.3": [
+                    {"upload_time_iso_8601": "2026-05-06T00:00:00.000Z"},
+                ],
+            },
+        }
+
+    checks = check_repository_conflicts("demo-pkg", fetcher=fake_fetcher)
+
+    assert any(
+        item.label == "latest release date"
+        and item.detail == "2026-05-08T01:02:03.000Z"
+        for item in checks
+    )
 
 
 def test_probe_command_accepts_package_name_argument(monkeypatch, tmp_path):

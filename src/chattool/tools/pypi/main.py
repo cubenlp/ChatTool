@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import importlib
 import json
 import importlib.util
 from pathlib import Path
+import re
 import subprocess
 import sys
 import textwrap
@@ -164,6 +166,33 @@ def _extract_project_snippets(payload: dict | None) -> list[RepositoryCheck]:
     if isinstance(version, str) and version.strip():
         snippets.append(RepositoryCheck("latest version", "info", version.strip()))
 
+    release_entries = payload.get("urls")
+    if not isinstance(release_entries, list):
+        releases = payload.get("releases")
+        if isinstance(releases, dict) and isinstance(version, str) and version.strip():
+            release_entries = releases.get(version.strip())
+
+    timestamps: list[tuple[datetime, str]] = []
+    for release_item in release_entries if isinstance(release_entries, list) else []:
+        if not isinstance(release_item, dict):
+            continue
+        uploaded = release_item.get("upload_time_iso_8601") or release_item.get(
+            "upload_time"
+        )
+        if not isinstance(uploaded, str) or not uploaded.strip():
+            continue
+        normalized = uploaded.strip().replace("Z", "+00:00")
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        timestamps.append((parsed, uploaded.strip()))
+    if timestamps:
+        _, latest_uploaded = max(timestamps, key=lambda item: item[0])
+        snippets.append(RepositoryCheck("latest release date", "info", latest_uploaded))
+
     summary = info.get("summary")
     if isinstance(summary, str) and summary.strip():
         snippets.append(RepositoryCheck("summary", "info", summary.strip()))
@@ -216,6 +245,13 @@ def normalize_module_name(package_name: str) -> str:
 
 def _toml_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _workflow_python_version(requires_python: str) -> str:
+    match = re.search(r">=\s*(\d+\.\d+)", requires_python)
+    if match:
+        return match.group(1)
+    return "3.10"
 
 
 def _license_template_content(license_name: str, author: str | None) -> str:
@@ -732,6 +768,7 @@ def scaffold_package(
         include_workflows = template == "chatarch"
 
     module_name = normalize_module_name(package_name)
+    workflow_python_version = _workflow_python_version(requires_python)
     project_dir = Path(project_dir)
     _ensure_empty_or_missing(project_dir)
     project_dir.mkdir(parents=True, exist_ok=True)
@@ -886,37 +923,128 @@ def scaffold_package(
                               git config user.email 41898282+github-actions[bot]@users.noreply.github.com
                           - uses: actions/setup-python@v5
                             with:
-                              python-version: "3.11"
+                              python-version: "{workflow_python_version}"
                           - run: python -m pip install --upgrade pip
                           - run: python -m pip install -e ".[dev,docs]"
                           - run: python -m pytest -q
                           - run: python -m build
                           - run: mkdocs build --strict
                     """
-                ).strip()
+                )
+                .replace("{workflow_python_version}", workflow_python_version)
+                .strip()
                 + "\n",
                 project_dir / ".github" / "workflows" / "publish.yml": textwrap.dedent(
                     """
                     name: Publish Package
 
                     on:
+                      push:
+                        branches:
+                          - main
+                          - master
                       workflow_dispatch:
+
+                    permissions:
+                      contents: write
+                      id-token: write
 
                     jobs:
                       publish:
                         runs-on: ubuntu-latest
                         steps:
                           - uses: actions/checkout@v4
+                            with:
+                              fetch-depth: 0
                           - uses: actions/setup-python@v5
                             with:
-                              python-version: "3.11"
-                          - run: python -m pip install --upgrade pip build
-                          - run: python -m build
-                          - run: |
-                              echo "Publish workflow scaffold only."
-                              echo "Add trusted publishing or credentials before real release."
+                              python-version: "{workflow_python_version}"
+                          - name: Resolve package version
+                            id: meta
+                            run: |
+                              python - <<'PY'
+                              import ast
+                              import os
+                              from pathlib import Path
+
+                              module = ast.parse(Path("src/{module_name}/__init__.py").read_text(encoding="utf-8"))
+                              for stmt in module.body:
+                                  if not isinstance(stmt, ast.Assign):
+                                      continue
+                                  if any(isinstance(target, ast.Name) and target.id == "__version__" for target in stmt.targets):
+                                      version = ast.literal_eval(stmt.value)
+                                      break
+                              else:
+                                  raise SystemExit("__version__ not found in src/{module_name}/__init__.py")
+
+                              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                                  print(f"version={version}", file=output)
+                                  print(f"tag=v{version}", file=output)
+                              PY
+                          - name: Check release tag
+                            id: tag
+                            env:
+                              RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+                            run: |
+                              if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+                                echo "exists=true" >> "$GITHUB_OUTPUT"
+                              else
+                                echo "exists=false" >> "$GITHUB_OUTPUT"
+                              fi
+                          - name: Check PyPI version
+                            id: pypi
+                            env:
+                              PACKAGE_NAME: "{package_name}"
+                              PACKAGE_VERSION: ${{ steps.meta.outputs.version }}
+                            run: |
+                              python - <<'PY'
+                              import os
+                              import urllib.error
+                              import urllib.parse
+                              import urllib.request
+
+                              package = os.environ["PACKAGE_NAME"]
+                              version = os.environ["PACKAGE_VERSION"]
+                              url = f"https://pypi.org/pypi/{urllib.parse.quote(package)}/{urllib.parse.quote(version)}/json"
+                              exists = "false"
+                              try:
+                                  urllib.request.urlopen(url, timeout=10)
+                              except urllib.error.HTTPError as exc:
+                                  if exc.code != 404:
+                                      raise
+                              else:
+                                  exists = "true"
+
+                              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                                  print(f"exists={exists}", file=output)
+                              PY
+                          - name: Create release tag
+                            if: steps.pypi.outputs.exists == 'false' && steps.tag.outputs.exists == 'false'
+                            env:
+                              RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+                            run: |
+                              git config user.name github-actions[bot]
+                              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+                              git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
+                              git push origin "${RELEASE_TAG}"
+                          - name: Stop when version is already on PyPI
+                            if: steps.pypi.outputs.exists == 'true'
+                            run: echo "{package_name} ${{ steps.meta.outputs.version }} is already on PyPI; skipping publish."
+                          - name: Build distribution
+                            if: steps.pypi.outputs.exists == 'false'
+                            run: |
+                              python -m pip install --upgrade pip build twine
+                              python -m build
+                              python -m twine check dist/*
+                          - name: Publish to PyPI
+                            if: steps.pypi.outputs.exists == 'false'
+                            uses: pypa/gh-action-pypi-publish@release/v1
                     """
-                ).strip()
+                )
+                .replace("{workflow_python_version}", workflow_python_version)
+                .replace("{package_name}", package_name)
+                .replace("{module_name}", module_name)
+                .strip()
                 + "\n",
                 project_dir / ".github" / "workflows" / "deploy.yaml": textwrap.dedent(
                     """
@@ -938,12 +1066,14 @@ def scaffold_package(
                           - uses: actions/checkout@v4
                           - uses: actions/setup-python@v5
                             with:
-                              python-version: "3.11"
+                              python-version: "{workflow_python_version}"
                           - run: python -m pip install --upgrade pip
                           - run: python -m pip install -e ".[docs]"
                           - run: mkdocs gh-deploy --force
                     """
-                ).strip()
+                )
+                .replace("{workflow_python_version}", workflow_python_version)
+                .strip()
                 + "\n",
                 project_dir / ".github" / "workflows" / "preview.yaml": textwrap.dedent(
                     """
@@ -971,7 +1101,7 @@ def scaffold_package(
                               git config user.email 41898282+github-actions[bot]@users.noreply.github.com
                           - uses: actions/setup-python@v5
                             with:
-                              python-version: "3.11"
+                              python-version: "{workflow_python_version}"
                           - run: python -m pip install --upgrade pip
                           - run: python -m pip install -e ".[docs]"
                           - run: |
@@ -1003,7 +1133,9 @@ def scaffold_package(
                                   });
                                 }
                     """
-                ).strip()
+                )
+                .replace("{workflow_python_version}", workflow_python_version)
+                .strip()
                 + "\n",
             }
         )

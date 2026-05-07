@@ -135,6 +135,7 @@ include-package-data = true
 [tool.setuptools.package-data]
 "chattool.setup" = [
     "assets/*.sh",
+    "assets/hermes/*.sh",
     "assets/opencode_chatloop/README.md",
     "assets/opencode_chatloop/plugins/chatloop/*",
     "assets/opencode_chatloop/commands/*.md",

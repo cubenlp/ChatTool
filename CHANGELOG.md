@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
 ## 2026-05-07
+- `chattool setup hermes` 重新收敛为 Hermes 官方 `install.sh` 封装：默认使用用户指定、本地缓存或随包 installer，只有 `--update-installer` 才联网更新；默认不 clone Hermes/WebUI、不导入 Feishu、不启动 WebUI，WebUI env/start 均改为显式选项。
+- `chattool pypi init -t chatarch` 生成的 GitHub workflow 现在会按 `requires-python` 同步 Python 版本，并补全 PyPI 发布链路：合并到 `main` / `master` 后读取包内 `__version__`、创建对应 `vX.Y.Z` tag，并通过 PyPI Trusted Publishing 发布尚未存在的版本。
+- `chattool setup hermes`、`setup codex` 与 `setup opencode` 的配置写入改为目标 key 更新：重复执行或安装后配置不再用整份模板重写配置文件，Codex TOML、Codex auth JSON、OpenCode provider JSON 和 Hermes `.env`/`config.yaml` 会保留 unrelated 字段。
 - 新增 `chatarch-post-init-dev` skill，补充 `chatpypi init -t chatarch` 生成项目后的 ChatStyle 交互、ChatEnv schema、文档测试和 changelog 持续开发规范。
 - 更新 ChatTool skills 以对齐当前 ChatArch 拆包：补充 `chatarch-package-dev`，校正 `chattool pypi` / `chatpypi`、`chatstyle`、`chatenv`、DNS/cert、GitHub 与 Zulip 相关说明，并移除旧命令示例。
 - ChatTool 7.0.0 接入独立 `chatenv` 底层：`BaseEnvConfig` / `EnvField` 由 `chatenv` 提供，具体 OpenAI/DNS/Feishu/GitHub/Browser schema 仍在 ChatTool 注册；typed env/profile 默认路径直接切到 `~/.chatarch/envs`，只认 `CHATARCH_HOME`，不再读取旧 `~/.config/chattool/envs` 或旧 ChatTool 路径变量 fallback；新增 `scripts/migrate_chattool_envs_to_chatarch.py` 供需要时手动复制旧 profile。
@@ -56,7 +59,7 @@ All notable changes to this project will be documented in this file.
 - `chattool setup codex` / `chattool setup opencode` 现在默认优先读取保存的 typed env 配置，再回退到 shell 环境变量；显式 `-e/--env` 仍然拥有更高优先级，避免交互默认值被临时环境变量意外抢占
 
 ### Added
-- `chattool setup hermes` 新增 Hermes Agent/WebUI 安装入口，可复用 ChatTool OpenAI typed env 与 Feishu typed env，写入 `~/.hermes/.env` / `~/.hermes/config.yaml`，并支持 `--dry-run`、`--install-only`、`--start-webui`。
+- `chattool setup hermes` 新增 Hermes Agent/WebUI 安装入口，可复用 ChatTool OpenAI typed env 与显式 Feishu env，写入 `~/.hermes/.env` / `~/.hermes/config.yaml`，并支持 `--install-only`、`--start-webui`。
 - [2026-04-20] `chatloop` 新增 `/chatloop-project`，用于直接查看当前解析到的 project 根目录、`PRD.md` 路径、状态文件与事件日志路径；`/chatloop-status` 同步补充最近一次 lifecycle event / reason，减少仅靠日志排查的需要
 - [2026-04-20] `chattool setup workspace` 生成的协作脚手架现在默认包含 workspace 级 `reference/`、`docs/themes/` 与 `skills/workspace-maintenance/`，用于长期参考沉淀、按主题维护约定和定期整理 `projects/`
 - [2026-04-20] 新增 `docs/env/chatloop-quickstart.md`，用 `arxiv-explore` 示例串起从创建 `PRD.md`、初始化 workspace、显式触发 `/chatloop ...` 到使用 `.opencode/chatloop.events.log` 调试的完整入门流程；`docs/env/index.md`、`workspace.md`、`opencode.md` 同步增加入口链接

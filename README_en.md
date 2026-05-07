@@ -175,7 +175,7 @@ chattool nginx -i
 | MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
-| Setup | `chattool setup codex/claude/opencode/hermes` | Install or upgrade common agent CLIs and Hermes Agent/WebUI; supports `--install-only` for pure install/upgrade flows without writing config |
+| Setup | `chattool setup codex/claude/opencode/hermes` | Install or upgrade common agent CLIs; Hermes wraps the official installer and treats WebUI as explicit opt-in; supports `--install-only` for pure install/upgrade flows without writing config |
 | Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-opencode-loop` for a loop-aware OpenCode workspace variant |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
@@ -201,9 +201,9 @@ chattool pypi probe mychat
 chatpypi mychat
 ```
 
-The default template writes `requires-python = ">=3.9"`. The `chatarch` template writes `requires-python = ">=3.10"`, depends on `chatstyle>=0.1.0` and `chatenv>=0.1.0`, and adds `README.en.md`, `mkdocs.yml`, docs, tests, and GitHub workflow scaffolding. Use `--without-mkdocs` or `--without-workflows` to skip those optional files.
+The default template writes `requires-python = ">=3.9"`. The `chatarch` template writes `requires-python = ">=3.10"`, depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`, and adds `README.en.md`, `mkdocs.yml`, docs, tests, and GitHub workflows. Its publish workflow reads package `__version__` after merges to `main` / `master`, creates the matching `vX.Y.Z` tag, and publishes missing versions through PyPI Trusted Publishing. Use `--without-mkdocs` or `--without-workflows` to skip those optional files.
 
-`chattool pypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata when the name already exists.
+`chattool pypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata, including the latest release date, when the name already exists.
 
 ## License
 

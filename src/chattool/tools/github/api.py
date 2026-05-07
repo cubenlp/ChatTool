@@ -15,6 +15,11 @@ class CredentialQuery(TypedDict):
     path: str
 
 
+class ResolvedToken(TypedDict):
+    token: Optional[str]
+    source: str
+
+
 def get_client(
     token: Optional[str],
     require_token: bool = False,
@@ -50,21 +55,34 @@ def resolve_token(
     credential_path: Optional[CredentialQuery] = None,
     exact_only: bool = False,
 ) -> Optional[str]:
+    return resolve_token_with_source(
+        token, credential_path=credential_path, exact_only=exact_only
+    )["token"]
+
+
+def resolve_token_with_source(
+    token: Optional[str],
+    credential_path: Optional[CredentialQuery] = None,
+    exact_only: bool = False,
+) -> ResolvedToken:
     if token:
-        return token
+        return {"token": token, "source": "--token"}
     credential_token = read_github_token_from_git(
         credential_path, exact_only=exact_only
     )
     if credential_token:
-        return credential_token
+        return {"token": credential_token, "source": "git credential"}
     credential_token = read_github_token_from_credentials(
         credential_path, exact_only=exact_only
     )
     if credential_token:
-        return credential_token
+        return {"token": credential_token, "source": "credentials file"}
     if credential_path and exact_only:
-        return None
-    return GitHubConfig.GITHUB_ACCESS_TOKEN.value
+        return {"token": None, "source": "none"}
+    config_token = GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    if config_token:
+        return {"token": config_token, "source": "GitHubConfig.GITHUB_ACCESS_TOKEN"}
+    return {"token": None, "source": "none"}
 
 
 def credential_path_from_repo(repo: str) -> dict[str, str]:

@@ -166,7 +166,7 @@ chattool explore arxiv get
 | Nginx 配置 | `chattool nginx` | 按模板生成常见的反向代理、路径转发和静态目录配置 |
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
-| 环境安装 | `chattool setup zsh/codex/claude/opencode/hermes/lark-cli/docker` | 配置 zsh，安装或检查常用 Agent CLI / WebUI / Docker 环境，并在确认后执行建议的系统命令；`setup hermes` 可安装 Hermes Agent/WebUI 并复用 OpenAI、Feishu 配置；`setup opencode/codex/claude` 现支持 `--install-only` 纯安装/升级，`setup opencode` 也支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
+| 环境安装 | `chattool setup zsh/codex/claude/opencode/hermes/lark-cli/docker` | 配置 zsh，安装或检查常用 Agent CLI / WebUI / Docker 环境，并在确认后执行建议的系统命令；`setup hermes` 封装 Hermes 官方 installer，WebUI 需显式启用；`setup opencode/codex/claude/hermes` 支持 `--install-only` 纯安装/升级，`setup opencode` 也支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
 | Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-opencode-loop` 启用 OpenCode loop-aware 模板并安装本地 `chatloop` 资产 |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
@@ -197,13 +197,13 @@ chatpypi mychat
 
 默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1`，默认写入 `requires-python = ">=3.10"`。
 
-`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1` 作为 ChatArch CLI/env 运行时。
+`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1` 作为 ChatArch CLI/env 运行时；其中发布 workflow 会在合并到 `main` / `master` 后按包内 `__version__` 创建 `vX.Y.Z` tag，并通过 PyPI Trusted Publishing 发布尚未存在的版本。
 
 如只想生成代码与测试骨架，可以用 `--without-mkdocs` 跳过 mkdocs/docs，用 `--without-workflows` 跳过 `.github/workflows/`。
 
 `chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
 
-其中 `chattool pypi probe <name>` 现在默认面向正式 `pypi`，按精确项目名检查名称是否已被占用；若命中现有项目，会顺手输出少量项目摘要信息，便于快速判断是否需要换名。
+其中 `chattool pypi probe <name>` 现在默认面向正式 `pypi`，按精确项目名检查名称是否已被占用；若命中现有项目，会顺手输出少量项目摘要信息和最新 release 日期，便于快速判断是否需要换名。
 
 ## 开源协议
 

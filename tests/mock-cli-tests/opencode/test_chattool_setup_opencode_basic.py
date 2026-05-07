@@ -102,6 +102,84 @@ def test_setup_opencode_prefers_existing_config_over_current_env(
     assert payload["model"] == "opencode/existing-model"
 
 
+def test_setup_opencode_patches_provider_without_dropping_unrelated_keys(
+    tmp_path, monkeypatch, runner
+):
+    home_dir = tmp_path / "home"
+    config_dir = home_dir / ".config" / "opencode"
+    config_dir.mkdir(parents=True)
+    (config_dir / "opencode.json").write_text(
+        json.dumps(
+            {
+                "$schema": "https://opencode.ai/config.json",
+                "theme": "keep-theme",
+                "model": "opencode/old-model",
+                "provider": {
+                    "opencode": {
+                        "npm": "@custom/provider",
+                        "name": "Custom Name",
+                        "customProviderKey": "keep-provider",
+                        "options": {
+                            "baseURL": "https://old.example/v1",
+                            "apiKey": "sk-existing",
+                            "customOption": "keep-option",
+                        },
+                        "models": {
+                            "old-model": {
+                                "name": "old-model",
+                                "customModelKey": "keep-model",
+                            }
+                        },
+                    },
+                    "other": {"keep": True},
+                },
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
+    monkeypatch.setattr(
+        "chattool.setup.opencode.ensure_nodejs_requirement",
+        lambda interactive, can_prompt, log_level="INFO": None,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.opencode.should_install_global_npm_package",
+        lambda *args, **kwargs: False,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "setup",
+            "opencode",
+            "-I",
+            "--base-url",
+            "https://new.example/v1",
+            "--api-key",
+            "sk-new",
+            "--model",
+            "new-model",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads((config_dir / "opencode.json").read_text(encoding="utf-8"))
+    provider = payload["provider"]["opencode"]
+    assert payload["theme"] == "keep-theme"
+    assert payload["provider"]["other"] == {"keep": True}
+    assert provider["npm"] == "@custom/provider"
+    assert provider["name"] == "Custom Name"
+    assert provider["customProviderKey"] == "keep-provider"
+    assert provider["options"]["baseURL"] == "https://new.example/v1"
+    assert provider["options"]["apiKey"] == "sk-new"
+    assert provider["options"]["customOption"] == "keep-option"
+    assert provider["models"]["old-model"]["customModelKey"] == "keep-model"
+    assert provider["models"]["new-model"]["name"] == "new-model"
+    assert payload["model"] == "opencode/new-model"
+
+
 def test_setup_opencode_explicit_args_override_env_ref(tmp_path, monkeypatch, runner):
     home_dir = tmp_path / "home"
     env_dir = tmp_path / "envs"
