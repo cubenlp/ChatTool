@@ -179,15 +179,18 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 
 ```bash
 chattool pypi init mychat
-chattool pypi init mycli -t cli-style
+chattool pypi init mycli -t chatarch
+chattool pypi init -i                  # 交互式选择模板、mkdocs/workflow 等选项
 chatpypi mychat
 ```
 
 `chatpypi` 现在是更直接的快捷入口：传入普通首参数时，会自动按 `chattool pypi init <name>` 处理；如果首参数本身就是 `init/build/check/upload/probe` 之一，则保持原样透传给 `chattool pypi`。
 
-默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`cli-style` 模板依赖 `chatstyle>=0.1.0`，默认写入 `requires-python = ">=3.10"`。
+默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.0`，默认写入 `requires-python = ">=3.10"`。
 
-`cli-style` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 作为可复用 CLI 运行时。
+`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.0` 作为 ChatArch CLI/env 运行时。
+
+如只想生成代码与测试骨架，可以用 `--without-mkdocs` 跳过 mkdocs/docs，用 `--without-workflows` 跳过 `.github/workflows/`。
 
 `chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
 

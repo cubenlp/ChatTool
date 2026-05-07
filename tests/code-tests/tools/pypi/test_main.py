@@ -247,14 +247,14 @@ def test_scaffold_package_generated_project_pytest_passes(tmp_path):
     assert "1 passed" in process.stdout
 
 
-def test_scaffold_cli_style_defaults_to_python_310_and_chatstyle(tmp_path):
+def test_scaffold_chatarch_defaults_to_python_310_and_chatarch_deps(tmp_path):
     project_dir = tmp_path / "mychat-cli"
 
     scaffold_package(
         package_name="mychat-cli",
         project_dir=project_dir,
         description="My chat CLI package",
-        template="cli-style",
+        template="chatarch",
     )
 
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
@@ -264,7 +264,33 @@ def test_scaffold_cli_style_defaults_to_python_310_and_chatstyle(tmp_path):
 
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert '"chatstyle>=0.1.0"' in pyproject_text
+    assert '"chatenv>=0.1.0"' in pyproject_text
     assert "CommandSchema" in cli_text
+
+
+def test_scaffold_chatarch_can_skip_mkdocs_and_workflows(tmp_path):
+    project_dir = tmp_path / "mychat-cli"
+
+    scaffold_package(
+        package_name="mychat-cli",
+        project_dir=project_dir,
+        description="My chat CLI package",
+        template="chatarch",
+        include_mkdocs=False,
+        include_workflows=False,
+    )
+
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    readme_text = (project_dir / "README.md").read_text(encoding="utf-8")
+
+    assert (project_dir / "src" / "mychat_cli" / "cli.py").exists()
+    assert not (project_dir / "mkdocs.yml").exists()
+    assert not (project_dir / "docs").exists()
+    assert not (project_dir / ".github").exists()
+    assert '"chatenv>=0.1.0"' in pyproject_text
+    assert 'docs = ["mkdocs' not in pyproject_text
+    assert "docs-mkdocs" not in readme_text
+    assert "actions/workflows/ci.yml" not in readme_text
 
 
 def test_scaffold_package_supports_custom_initial_version(tmp_path):

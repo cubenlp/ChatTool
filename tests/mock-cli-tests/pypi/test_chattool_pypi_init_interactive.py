@@ -53,7 +53,7 @@ def test_chattool_pypi_init_errors_when_interaction_disabled(runner):
     assert "Package name is required" in result.output
 
 
-def test_chattool_pypi_init_cli_style_template_interactive(
+def test_chattool_pypi_init_chatarch_template_interactive(
     tmp_path, monkeypatch, runner
 ):
     answers = {
@@ -65,7 +65,7 @@ def test_chattool_pypi_init_cli_style_template_interactive(
         "license": "MIT",
         "author": "",
         "email": "",
-        "template": "cli-style",
+        "template": "chatarch",
     }
     monkeypatch.setattr(
         "chattool.interaction.policy.is_interactive_available", lambda: True
@@ -85,7 +85,11 @@ def test_chattool_pypi_init_cli_style_template_interactive(
         "chattool.tools.pypi.cli.ask_select",
         lambda message,
         choices,
-        style=None: "cli-style - CLI/docs/tests/automation scaffold with chatstyle",
+        style=None: "chatarch - ChatArch CLI/docs/tests/automation scaffold",
+    )
+    monkeypatch.setattr(
+        "chattool.tools.pypi.cli.ask_confirm",
+        lambda message, default=False, style=None: True,
     )
 
     result = runner.invoke(cli, ["pypi", "init"], catch_exceptions=False)
@@ -101,6 +105,11 @@ def test_chattool_pypi_init_cli_style_template_interactive(
     assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "ci.yml").exists()
     assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "deploy.yaml").exists()
     assert (tmp_path / "demo-pkg" / ".github" / "workflows" / "preview.yaml").exists()
+    pyproject_text = (tmp_path / "demo-pkg" / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    assert '"chatstyle>=0.1.0"' in pyproject_text
+    assert '"chatenv>=0.1.0"' in pyproject_text
 
 
 def test_chattool_pypi_init_stops_early_when_project_dir_not_empty(

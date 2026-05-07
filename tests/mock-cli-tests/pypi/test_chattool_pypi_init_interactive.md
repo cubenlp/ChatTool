@@ -44,7 +44,7 @@ chattool pypi init
 chattool pypi init -I
 ```
 
-## 用例 3：交互模式支持选择 `cli-style` 模板
+## 用例 3：交互模式支持选择 `chatarch` 模板
 
 - 初始环境准备：
   - 准备临时目录。
@@ -53,15 +53,16 @@ chattool pypi init -I
   - `<tmp>/demo-pkg/src/demo_pkg/cli.py`
 
 预期过程和结果：
-1. 在交互可用条件下执行 `chattool pypi init`，并把 `template` 选择为 `cli-style`。
-2. 预期生成的模板仓库额外包含开发规范、测试约定、初始化说明文件、mkdocs 文档配置、英文 `.en.md` 文档副本、docs deploy workflow 和 PR preview workflow。
+1. 在交互可用条件下执行 `chattool pypi init`，并把 `template` 选择为 `chatarch`。
+2. 预期交互继续询问是否创建 mkdocs 和 GitHub workflow 文件。
+3. 预期生成的模板仓库额外包含开发规范、测试约定、初始化说明文件、mkdocs 文档配置、英文 `.en.md` 文档副本、docs deploy workflow 和 PR preview workflow。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool pypi init
-select template = cli-style
-assert scaffold contains DEVELOP.md and ChatStyle-backed cli.py
+select template = chatarch
+assert scaffold contains DEVELOP.md and ChatArch-backed cli.py
 ```
 
 ## 清理 / 回滚
