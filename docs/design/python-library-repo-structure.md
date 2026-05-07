@@ -143,7 +143,7 @@ config / utils
 当前 `pyproject.toml` 已定义：
 
 - `chattool = "chattool.client:main_cli"`
-- `chatenv = "chattool.config.cli:cli"`
+- `chatenv = "chatenv.cli:main"`（由独立 ChatEnv 包提供）
 - `mcp-server-chattool = "chattool.mcp:main"`
 - `chatskill = "chattool.skill.cli:main"`
 

@@ -24,10 +24,10 @@ license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
     "chatstyle>=0.1.0",
+    "chatenv>=0.1.1",
     "requests>=2.20",
     "python-dotenv>=0.17.0",
     "colorama",
-    "platformdirs>=3.0",
     "httpx",
     "tomli; python_version < '3.11'",
 ]
@@ -119,6 +119,9 @@ Repository = "https://github.com/cubenlp/chattool"
 chattool = "chattool.client:main_cli"
 chatpypi = "chattool.client:main_pypi_cli"
 chatmcp = "chattool.mcp:main"
+
+[project.entry-points."chatenv.configs"]
+chattool = "chattool.config"
 
 [tool.setuptools.dynamic]
 version = {attr = "chattool.__version__"}

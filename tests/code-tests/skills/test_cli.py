@@ -169,7 +169,7 @@ version: 0.1.0
     monkeypatch.delenv("CHATTOOL_SKILLS_DIR", raising=False)
     monkeypatch.setattr("chattool.skill.platforms.find_repo_skills_dir", lambda: None)
     monkeypatch.setattr(
-        "chattool.config.main.SkillsConfig.CHATTOOL_SKILLS_DIR",
+        "chattool.config.SkillsConfig.CHATTOOL_SKILLS_DIR",
         type("Field", (), {"value": str(source)})(),
     )
 
@@ -198,7 +198,7 @@ version: 0.1.0
     monkeypatch.delenv("CHATTOOL_SKILLS_DIR", raising=False)
     monkeypatch.setattr("chattool.skill.platforms.find_repo_skills_dir", lambda: None)
     monkeypatch.setattr(
-        "chattool.config.main.SkillsConfig.CHATTOOL_SKILLS_DIR",
+        "chattool.config.SkillsConfig.CHATTOOL_SKILLS_DIR",
         type("Field", (), {"value": str(source)})(),
     )
 

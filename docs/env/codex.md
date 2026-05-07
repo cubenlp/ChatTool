@@ -44,7 +44,7 @@ chattool setup codex --api-key "sk-xxx"
 
 ```bash
 chattool setup codex -e work
-chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
+chattool setup codex -e ~/.chatarch/envs/OpenAI/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：

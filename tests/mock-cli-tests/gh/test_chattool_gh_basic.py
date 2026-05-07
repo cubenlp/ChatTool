@@ -363,7 +363,7 @@ def test_chattool_gh_set_token_configures_repo_scoped_https_credential(tmp_path,
 
 def test_chattool_gh_set_token_save_env_updates_github_env(tmp_path, monkeypatch, runner):
     env_root = tmp_path / "envs"
-    monkeypatch.setattr("chattool.tools.github.api.CHATTOOL_ENV_DIR", env_root)
+    monkeypatch.setattr("chattool.tools.github.api.CHATARCH_ENV_DIR", env_root)
 
     def fake_run(command, check=True, capture_output=True, text=True, input=None):
         class Result:

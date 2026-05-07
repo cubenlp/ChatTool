@@ -17,7 +17,6 @@ logger = setup_logger("setup_alias")
 SUPPORTED_SHELLS = ("zsh", "bash")
 
 ALIAS_MAP = {
-    "chatenv": "chattool env",
     "chatskill": "chattool skill",
     "chatdns": "chattool dns",
     "chattp": "chattool tplogin",

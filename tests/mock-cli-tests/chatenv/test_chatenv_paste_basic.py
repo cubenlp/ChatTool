@@ -1,5 +1,6 @@
 from chattool.config import BaseEnvConfig, EnvField
-from chattool.config.cli import cli
+from chatstyle import InteractiveResolution
+from chatenv.cli import cli
 
 
 class MockOpenAIConfig(BaseEnvConfig):
@@ -22,13 +23,12 @@ class MockFeishuConfig(BaseEnvConfig):
 
 
 def _patch_env(monkeypatch, tmp_path, registry=None):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
     monkeypatch.setattr(
         "chattool.config.BaseEnvConfig._registry",
         registry or [MockOpenAIConfig, MockFeishuConfig],
@@ -122,7 +122,15 @@ def test_paste_existing_profile_requires_yes_to_overwrite(
     profile_path = env_dir / "MockOpenAI" / "work.env"
     profile_path.parent.mkdir(parents=True)
     profile_path.write_text("MOCK_OPENAI_KEY='old'\n", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.is_interactive_available", lambda: False)
+    monkeypatch.setattr(
+        "chatenv.cli.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: InteractiveResolution(
+            interactive=None,
+            can_prompt=False,
+            force_interactive=False,
+            need_prompt=False,
+        ),
+    )
 
     result = runner.invoke(
         cli,
@@ -213,13 +221,21 @@ Continue [y/N] y
 
 def test_paste_interactive_can_choose_profile_name(tmp_path, monkeypatch, runner):
     env_dir, _ = _patch_env(monkeypatch, tmp_path, registry=[MockOpenAIConfig])
-    monkeypatch.setattr("chattool.interaction.policy.is_interactive_available", lambda: True)
     monkeypatch.setattr(
-        "chattool.config.cli.ask_text",
+        "chatenv.cli.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: InteractiveResolution(
+            interactive=None,
+            can_prompt=True,
+            force_interactive=False,
+            need_prompt=auto_prompt_condition,
+        ),
+    )
+    monkeypatch.setattr(
+        "chatenv.cli.ask_text",
         lambda message, default="": "work",
     )
     monkeypatch.setattr(
-        "chattool.config.cli.ask_confirm", lambda message, default=False: True
+        "chatenv.cli.ask_confirm", lambda message, default=False: True
     )
 
     result = runner.invoke(

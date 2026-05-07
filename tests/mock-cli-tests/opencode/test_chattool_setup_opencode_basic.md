@@ -4,7 +4,7 @@
 
 ### 初始环境准备
 
-- 创建临时 `CHATTOOL_ENV_DIR` 与 `CHATTOOL_ENV_FILE`。
+- 创建临时 `CHATARCH_ENV_DIR` 与 `CHATARCH_ENV_FILE`。
 - 在 `envs/OpenAI/work.env` 中写入 `OPENAI_API_BASE`、`OPENAI_API_KEY`、`OPENAI_API_MODEL`。
 - 准备临时 HOME 目录，避免污染真实 `~/.config/opencode/opencode.json`。
 - mock 掉 Node.js 检查与 npm 安装判断，让测试只验证参数流与配置写入。
@@ -51,7 +51,7 @@ assert written opencode.json keeps existing config values
 
 ### 初始环境准备
 
-- 准备临时 `CHATTOOL_ENV_DIR` 与 `envs/OpenAI/work.env`。
+- 准备临时 `CHATARCH_ENV_DIR` 与 `envs/OpenAI/work.env`。
 - mock 掉 Node.js 检查与 npm 安装判断。
 
 ### 预期过程和结果

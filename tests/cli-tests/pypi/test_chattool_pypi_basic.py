@@ -144,7 +144,7 @@ def test_chattool_pypi_basic(tmp_path):
     assert "Checked distributions:" in check.output
 
 
-def test_chattool_pypi_init_cli_style_template(tmp_path):
+def test_chattool_pypi_init_chatarch_template(tmp_path):
     runner = CliRunner()
     project_dir = tmp_path / "mychat-cli"
 
@@ -155,7 +155,7 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
             "init",
             "mychat-cli",
             "-t",
-            "cli-style",
+            "chatarch",
             "--project-dir",
             str(project_dir),
         ],
@@ -167,7 +167,6 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
     assert (project_dir / "AGENTS.md").exists()
     assert (project_dir / "src" / "mychat_cli" / "cli.py").exists()
     assert (project_dir / "tests" / "test_cli.py").exists()
-    assert (project_dir / "docs" / "README.md").exists()
     assert (project_dir / "docs" / "index.md").exists()
     assert (project_dir / "docs" / "index.en.md").exists()
     assert (project_dir / "README.en.md").exists()
@@ -181,6 +180,7 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
     assert (project_dir / ".github" / "workflows" / "preview.yaml").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
     assert '"chatstyle>=0.1.0"' in pyproject_text
+    assert '"chatenv>=0.1.1"' in pyproject_text
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert 'docs = ["mkdocs' in pyproject_text
     cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(
@@ -189,7 +189,43 @@ def test_chattool_pypi_init_cli_style_template(tmp_path):
     assert "from chatstyle import" in cli_text
     assert "CommandSchema" in cli_text
     readme_text = (project_dir / "README.md").read_text(encoding="utf-8")
+    assert readme_text.startswith('<div align="center">\n')
+    assert "\n# mychat-cli\n\n" in readme_text
+    assert "\n            # mychat-cli\n" not in readme_text
     assert "img.shields.io/pypi/v/mychat-cli.svg" in readme_text
     assert "actions/workflows/ci.yml/badge.svg" in readme_text
     assert "docs-mkdocs" in readme_text
     assert "CommandSchema" in readme_text
+
+
+def test_chattool_pypi_init_chatarch_can_skip_optional_files(tmp_path):
+    runner = CliRunner()
+    project_dir = tmp_path / "mychat-cli"
+
+    result = runner.invoke(
+        cli,
+        [
+            "pypi",
+            "init",
+            "mychat-cli",
+            "-t",
+            "chatarch",
+            "--project-dir",
+            str(project_dir),
+            "--without-mkdocs",
+            "--without-workflows",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (project_dir / "src" / "mychat_cli" / "cli.py").exists()
+    assert not (project_dir / "mkdocs.yml").exists()
+    assert not (project_dir / "docs").exists()
+    assert not (project_dir / ".github").exists()
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"chatstyle>=0.1.0"' in pyproject_text
+    assert '"chatenv>=0.1.1"' in pyproject_text
+    assert 'docs = ["mkdocs' not in pyproject_text
+    readme_text = (project_dir / "README.md").read_text(encoding="utf-8")
+    assert "docs-mkdocs" not in readme_text
+    assert "actions/workflows/ci.yml" not in readme_text

@@ -9,7 +9,7 @@ def _run_python(
     code: str, *, config_dir: Path, extra_env: dict[str, str] | None = None
 ):
     env = os.environ.copy()
-    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env["CHATARCH_HOME"] = str(config_dir)
     env.pop("FEISHU_APP_ID", None)
     env.pop("FEISHU_APP_SECRET", None)
     env.pop("FEISHU_API_BASE", None)
@@ -20,6 +20,7 @@ def _run_python(
         text=True,
         capture_output=True,
         env=env,
+        start_new_session=True,
         check=False,
     )
 

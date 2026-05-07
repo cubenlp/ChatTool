@@ -1,4 +1,6 @@
-from .elements import BaseEnvConfig, EnvField
+"""GitHubConfig env schema."""
+
+from .base import BaseEnvConfig, EnvField
 
 
 class GitHubConfig(BaseEnvConfig):
@@ -20,3 +22,6 @@ class GitHubConfig(BaseEnvConfig):
             print("✅ Config loaded.")
         except Exception as e:
             print(f"❌ Failed: {e}")
+
+
+__all__ = ["GitHubConfig"]

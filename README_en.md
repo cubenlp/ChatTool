@@ -180,16 +180,28 @@ chattool nginx -i
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 
+## Environment Profiles
+
+Since ChatTool 7.0.0, typed env profiles live under `~/.chatarch/envs` by default. Set `CHATARCH_HOME` to redirect the ChatArch root. The old `~/.config/chattool/envs` path is no longer read as a fallback.
+
+To manually copy legacy profiles into the new root from a repository checkout:
+
+```bash
+python scripts/migrate_chattool_envs_to_chatarch.py --dry-run
+python scripts/migrate_chattool_envs_to_chatarch.py
+```
+
 ## PyPI Package Scaffolding
 
 ```bash
 chattool pypi init mychat
-chattool pypi init mycli -t cli-style
+chattool pypi init mycli -t chatarch
+chattool pypi init -i                  # Interactive template, mkdocs, and workflow options
 chattool pypi probe mychat
 chatpypi mychat
 ```
 
-The default template writes `requires-python = ">=3.9"`. The `cli-style` template writes `requires-python = ">=3.10"`, depends on `chatstyle>=0.1.0`, and adds `README.en.md`, `mkdocs.yml`, docs, tests, and GitHub workflow scaffolding.
+The default template writes `requires-python = ">=3.9"`. The `chatarch` template writes `requires-python = ">=3.10"`, depends on `chatstyle>=0.1.0` and `chatenv>=0.1.0`, and adds `README.en.md`, `mkdocs.yml`, docs, tests, and GitHub workflow scaffolding. Use `--without-mkdocs` or `--without-workflows` to skip those optional files.
 
 `chattool pypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata when the name already exists.
 

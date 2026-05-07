@@ -1,6 +1,6 @@
-from __future__ import annotations
+"""BrowserConfig env schema."""
 
-from .elements import BaseEnvConfig, EnvField
+from .base import BaseEnvConfig, EnvField
 
 
 class BrowserConfig(BaseEnvConfig):
@@ -38,3 +38,6 @@ class BrowserConfig(BaseEnvConfig):
             print("✅ Config loaded.")
         except Exception as e:
             print(f"❌ Failed: {e}")
+
+
+__all__ = ["BrowserConfig"]

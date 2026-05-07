@@ -9,6 +9,7 @@ from chatstyle import INTERACTIVE_OPTION_HELP
 from chattool.interaction import (
     abort_if_force_without_tty,
     abort_if_missing_without_tty,
+    ask_confirm,
     ask_select,
     ask_text,
     resolve_interactive_mode,
@@ -104,7 +105,7 @@ def _resolve_init_inputs(
 
 
 def _default_requires_python(template: str) -> str:
-    if template == "cli-style":
+    if template == "chatarch":
         return ">=3.10"
     return ">=3.9"
 
@@ -166,7 +167,7 @@ def cli():
 @click.option(
     "-t",
     "--template",
-    type=click.Choice(["default", "cli-style"]),
+    type=click.Choice(["default", "chatarch"]),
     default="default",
     show_default=True,
     help="Project scaffold template.",
@@ -202,6 +203,18 @@ def cli():
     help="Target directory to create. Defaults to ./{name}.",
 )
 @click.option(
+    "--with-mkdocs/--without-mkdocs",
+    "include_mkdocs",
+    default=None,
+    help="Create mkdocs files for chatarch template. Defaults to on for chatarch.",
+)
+@click.option(
+    "--with-workflows/--without-workflows",
+    "include_workflows",
+    default=None,
+    help="Create GitHub workflow files for chatarch template. Defaults to on for chatarch.",
+)
+@click.option(
     "--interactive/--no-interactive",
     "interactive",
     "-i/-I",
@@ -218,6 +231,8 @@ def init(
     author: str | None,
     email: str | None,
     project_dir: Path | None,
+    include_mkdocs: bool | None,
+    include_workflows: bool | None,
     interactive: bool | None,
 ):
     """Scaffold a minimal src-layout Python package."""
@@ -226,7 +241,7 @@ def init(
 
     missing_required = _is_name_missing(name, project_dir)
     usage = (
-        "Usage: chattool pypi init [NAME] [-t default|cli-style] [--project-dir PATH] "
+        "Usage: chattool pypi init [NAME] [-t default|chatarch] [--project-dir PATH] "
         "[--description TEXT] [--version TEXT] [--python TEXT] [--license TEXT] "
         "[--author TEXT] [--email TEXT] [-i|-I]"
     )
@@ -250,7 +265,7 @@ def init(
             "选择模板",
             choices=[
                 "default - minimal Python package",
-                "cli-style - CLI/docs/tests/automation scaffold with chatstyle",
+                "chatarch - ChatArch CLI/docs/tests/automation scaffold",
             ],
         ).split(" - ", 1)[0]
         name_default = _normalize_optional_text(name) or (
@@ -281,6 +296,20 @@ def init(
             requires_python = _default_requires_python(template)
         requires_python = ask_text("requires_python", default=requires_python)
         license_name = ask_text("license", default=license_name or "MIT")
+        if include_mkdocs is None and template == "chatarch":
+            include_mkdocs = ask_confirm(
+                "Create mkdocs documentation files?",
+                default=True,
+            )
+        elif include_mkdocs is None:
+            include_mkdocs = False
+        if include_workflows is None and template == "chatarch":
+            include_workflows = ask_confirm(
+                "Create GitHub workflow files?",
+                default=True,
+            )
+        elif include_workflows is None:
+            include_workflows = False
         author = ask_text(
             "author",
             default=_normalize_optional_text(author)
@@ -325,6 +354,8 @@ def init(
             author=author,
             email=email,
             template=template,
+            include_mkdocs=include_mkdocs,
+            include_workflows=include_workflows,
         )
     except PyPICommandError as exc:
         _raise_click_error(exc)

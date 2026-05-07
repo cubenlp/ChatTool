@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterable, Optional, Sequence, TYPE_CHECKING
 from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
 
-from chattool.config.browser import BrowserConfig
+from chattool.config import BrowserConfig
 
 if TYPE_CHECKING:
     from chattool.tools.browser import BrowserClient

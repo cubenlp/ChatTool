@@ -75,8 +75,8 @@ def fake_crs_config(monkeypatch, tmp_path):
     FakeClient.calls = []
     monkeypatch.setattr(crs_cli, "CRSClient", FakeClient)
     monkeypatch.setattr(crs_cli, "_load_runtime_env", lambda env_ref=None, *, openai_env_ref=None: None)
-    monkeypatch.setattr(crs_cli, "CHATTOOL_ENV_DIR", tmp_path / "envs")
-    monkeypatch.setattr(crs_cli, "CHATTOOL_ENV_FILE", tmp_path / ".env")
+    monkeypatch.setattr(crs_cli, "CHATARCH_ENV_DIR", tmp_path / "envs")
+    monkeypatch.setattr(crs_cli, "CHATARCH_ENV_FILE", tmp_path / ".env")
     CRSConfig.CRS_API_BASE.value = "https://crs.example.com"
     CRSConfig.CRS_API_KEY.value = "cr_test"
     CRSConfig.CRS_USERNAME.value = "admin"

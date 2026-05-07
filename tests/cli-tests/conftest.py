@@ -19,14 +19,14 @@ if str(SRC_DIR) not in sys.path:
 
 from chattool.client.main import cli
 from chattool.config import BaseEnvConfig, FeishuConfig
-from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE, CHATTOOL_REPO_DIR
+from chattool.const import CHATARCH_ENV_DIR, CHATARCH_ENV_FILE, CHATTOOL_REPO_DIR
 from chattool.tools.lark import LarkBot
 
 
 def _reload_chattool_env() -> None:
     env_values = {}
-    if CHATTOOL_ENV_FILE.exists():
-        env_values = dotenv_values(str(CHATTOOL_ENV_FILE))
+    if CHATARCH_ENV_FILE.exists():
+        env_values = dotenv_values(str(CHATARCH_ENV_FILE))
     for config_cls in BaseEnvConfig._registry:
         config_cls.load_from_dict(env_values)
 
@@ -114,8 +114,8 @@ def lark_testkit(tmp_path: Path):
     return SimpleNamespace(
         tmp_path=tmp_path,
         repo_root=CHATTOOL_REPO_DIR,
-        env_dir=CHATTOOL_ENV_DIR,
-        env_file=CHATTOOL_ENV_FILE,
+        env_dir=CHATARCH_ENV_DIR,
+        env_file=CHATARCH_ENV_FILE,
         bot=LarkBot(),
         invoke=invoke,
         invoke_raw=invoke_raw,
@@ -157,8 +157,8 @@ def lark_docaudit():
 
     return SimpleNamespace(
         repo_root=CHATTOOL_REPO_DIR,
-        env_dir=CHATTOOL_ENV_DIR,
-        env_file=CHATTOOL_ENV_FILE,
+        env_dir=CHATARCH_ENV_DIR,
+        env_file=CHATARCH_ENV_FILE,
         read=read,
         exists=exists,
         invoke_help=invoke_help,

@@ -106,7 +106,7 @@ docker build -f Dockerfile.playground -t chattool-playground .
 镜像启动后会按固定顺序执行：
 
 1. `chattool setup workspace /workspace --with-chattool --chattool-source /playground/ChatTool -I`
-2. `chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills`
+2. `chatenv set CHATTOOL_SKILLS_DIR=/workspace/skills`
 3. `chattool setup alias`
 
 镜像构建阶段会先在 `/opt/venv` 虚拟环境中安装 ChatTool，然后启动 `sshd`。默认工作目录是 `/workspace`。

@@ -1,25 +1,25 @@
-import os
-import platformdirs
 from pathlib import Path
+
+from chatenv.paths import get_paths
+
 from chattool.config import BaseEnvConfig, OpenAIConfig
 
-# dirs
-CHATTOOL_CACHE_DIR = Path(
-    os.getenv("CHATTOOL_CACHE_DIR", platformdirs.user_cache_dir("chattool"))
-)
-CHATTOOL_CONFIG_DIR = Path(
-    os.getenv("CHATTOOL_CONFIG_DIR", platformdirs.user_config_dir("chattool"))
-)
-CHATTOOL_ENV_DIR = CHATTOOL_CONFIG_DIR / "envs"
-CHATTOOL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-CHATTOOL_ENV_DIR.mkdir(parents=True, exist_ok=True)
-
-CHATTOOL_ENV_FILE = CHATTOOL_CONFIG_DIR / ".env"
+# ChatTool 7.0.0 uses the ChatArch env root directly. Old platformdirs based
+# paths are intentionally not used as fallback.
+CHATARCH_PATHS = get_paths()
+CHATARCH_HOME = CHATARCH_PATHS.home_dir
+CHATARCH_ENV_DIR = CHATARCH_PATHS.envs_dir
+CHATARCH_ENV_FILE = CHATARCH_ENV_DIR / ".env"
+CHATARCH_CACHE_DIR = CHATARCH_HOME / "cache" / "chattool"
+CHATARCH_CONFIG_DIR = CHATARCH_HOME / "config" / "chattool"
 CHATTOOL_REPO_DIR = Path(__file__).parent.parent.parent
 
+CHATARCH_ENV_DIR.mkdir(parents=True, exist_ok=True)
+CHATARCH_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
 # setup environment variables
-# explicit args > environment > env files > default values
-BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+# explicit args > environment > typed env files > default values
+BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 # Inject loaded values into current namespace
 # This ensures backward compatibility (e.g., chattool.const.OPENAI_API_KEY)

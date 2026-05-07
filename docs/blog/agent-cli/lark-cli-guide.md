@@ -44,13 +44,13 @@ chattool setup lark-cli
 如果你是从 ChatTool 复用配置，来源默认是：
 
 ```text
-~/.config/chattool/envs/Feishu/.env
+~/.chatarch/envs/Feishu/.env
 ```
 
 或者你通过：
 
 ```bash
-chattool env cat -t Feishu
+chatenv cat -t Feishu
 ```
 
 看到的当前生效 Feishu 配置。

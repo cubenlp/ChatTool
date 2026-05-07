@@ -1,8 +1,10 @@
 import os
 import pty
 import select
+import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -19,7 +21,7 @@ def _run_chattool_env(
     input_text: str | None = None,
 ):
     env = os.environ.copy()
-    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env["CHATARCH_HOME"] = str(config_dir)
     for key in (
         "OPENAI_API_KEY",
         "OPENAI_API_BASE",
@@ -35,11 +37,12 @@ def _run_chattool_env(
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
-        [sys.executable, "-m", "chattool.client.main", "env", *args],
+        [sys.executable, "-c", "import chattool.config; from chatenv.cli import main; main()", *args],
         text=True,
         input=input_text,
         capture_output=True,
         env=env,
+        start_new_session=True,
         check=False,
     )
 
@@ -57,7 +60,7 @@ def _run_chattool_env_pty(
     extra_env: dict[str, str] | None = None,
 ):
     env = os.environ.copy()
-    env["CHATTOOL_CONFIG_DIR"] = str(config_dir)
+    env["CHATARCH_HOME"] = str(config_dir)
     for key in (
         "OPENAI_API_KEY",
         "OPENAI_API_BASE",
@@ -73,20 +76,22 @@ def _run_chattool_env_pty(
     if extra_env:
         env.update(extra_env)
 
-    master_fd, slave_fd = pty.openpty()
-    proc = subprocess.Popen(
-        [sys.executable, "-m", "chattool.client.main", "env", *args],
-        stdin=slave_fd,
-        stdout=slave_fd,
-        stderr=slave_fd,
-        env=env,
-        close_fds=True,
-    )
-    os.close(slave_fd)
-    os.write(master_fd, input_text.encode("utf-8"))
+    argv = [sys.executable, "-c", "import chattool.config; from chatenv.cli import main; main()", *args]
+    pid, master_fd = pty.fork()
+    if pid == 0:
+        os.execvpe(sys.executable, argv, env)
+
+    input_lines = input_text.splitlines()
+    sent_count = 0
+    seen_prompts = 0
+    deadline = time.monotonic() + 15
 
     output = bytearray()
+    status: int | None = None
     while True:
+        if time.monotonic() > deadline:
+            os.kill(pid, signal.SIGKILL)
+            raise TimeoutError(output.decode("utf-8", errors="replace"))
         ready, _, _ = select.select([master_fd], [], [], 0.1)
         if master_fd in ready:
             try:
@@ -95,7 +100,13 @@ def _run_chattool_env_pty(
                 chunk = b""
             if chunk:
                 output.extend(chunk)
-        if proc.poll() is not None:
+                prompt_count = output.count(b"Value")
+                while sent_count < len(input_lines) and prompt_count > seen_prompts:
+                    os.write(master_fd, f"{input_lines[sent_count]}\r".encode("utf-8"))
+                    sent_count += 1
+                    seen_prompts += 1
+        waited_pid, status = os.waitpid(pid, os.WNOHANG)
+        if waited_pid:
             break
 
     while True:
@@ -108,7 +119,7 @@ def _run_chattool_env_pty(
         output.extend(chunk)
 
     os.close(master_fd)
-    return proc.returncode, output.decode("utf-8", errors="replace")
+    return os.waitstatus_to_exitcode(status), output.decode("utf-8", errors="replace")
 
 
 def test_env_cat_masks_sensitive_values(tmp_path: Path):
@@ -179,7 +190,7 @@ def test_env_save_use_delete_profile(tmp_path: Path):
     assert "Activated OpenAI profile 'work.env'" in result.stdout
     assert "OPENAI_API_KEY='sk-one'" in active_path.read_text(encoding="utf-8")
 
-    result = _run_chattool_env(["delete", "work", "-t", "openai"], config_dir=config_dir)
+    result = _run_chattool_env(["delete", "work", "-t", "openai", "-y"], config_dir=config_dir)
     assert result.returncode == 0, result.stderr
     assert "Deleted OpenAI profile 'work.env'" in result.stdout
     assert not profile_path.exists()
@@ -217,18 +228,17 @@ def test_env_new_without_name_prompts_and_configures_type(tmp_path: Path):
         input_text="open1\nhttps://api.example/v1\nsk-open\n\n",
     )
     assert returncode == 0, output
-    assert "Configuring OpenAI Configuration" in output
+    assert "[OpenAI Configuration]" in output
 
     active_path = config_dir / "envs" / "OpenAI" / ".env"
     profile_path = config_dir / "envs" / "OpenAI" / "open1.env"
-    assert active_path.exists()
+    assert not active_path.exists()
     assert profile_path.exists()
 
     content = profile_path.read_text(encoding="utf-8")
     assert "OPENAI_API_BASE='https://api.example/v1'" in content
     assert "OPENAI_API_KEY='sk-open'" in content
     assert "OPENAI_API_MODEL='gpt-3.5-turbo'" in content
-    assert active_path.read_text(encoding="utf-8") != content
 
 
 def test_env_init_type_updates_real_typed_env(tmp_path: Path):

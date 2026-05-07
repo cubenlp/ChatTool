@@ -5,8 +5,10 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
 ## 2026-05-07
+- ChatTool 7.0.0 接入独立 `chatenv` 底层：`BaseEnvConfig` / `EnvField` 由 `chatenv` 提供，具体 OpenAI/DNS/Feishu/GitHub/Browser schema 仍在 ChatTool 注册；typed env/profile 默认路径直接切到 `~/.chatarch/envs`，只认 `CHATARCH_HOME`，不再读取旧 `~/.config/chattool/envs` 或旧 ChatTool 路径变量 fallback；新增 `scripts/migrate_chattool_envs_to_chatarch.py` 供需要时手动复制旧 profile。
 - 新增 `chattool crs` 只读 CRS 查询工具：支持 `stats` / `models` API key 自统计、`auth login --save` 获取并保存 admin session token，以及 `admin dashboard` / `admin api-keys` / `admin accounts` 获取管理端只读信息；同步新增 `crs` typed env。
 - `chattool dns` 新增并收口 `list` / `records` / `set` / `delete` / `ip` 接口：`list` 查看域名列表，`records` 查看解析记录，`set` 使用幂等写入，`delete` 显示匹配记录并要求确认或 `--yes`，`ip` 只探测当前 IP；旧 `get` 命令已删除。
+- `chattool pypi init` 模板从 `cli-style` 收口为 `chatarch`，默认生成 `chatstyle>=0.1.0` 与 `chatenv>=0.1.0` 依赖；`chatarch` 模板支持 `--with/--without-mkdocs` 与 `--with/--without-workflows`，交互式向导会询问是否创建 mkdocs 和 GitHub workflow 文件。
 - 修复 `chatenv cat -t <type> <profile>` 读取 profile env 文件时缺少 `dotenv` 导入导致的崩溃。
 - `CHANGELOG.md` 取消待发布分组，改为按日期追加更新记录。
 

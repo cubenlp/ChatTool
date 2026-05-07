@@ -66,7 +66,7 @@ chattool setup opencode --log-level DEBUG
 
 ```bash
 chattool setup opencode -e work
-chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
+chattool setup opencode -e ~/.chatarch/envs/OpenAI/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：

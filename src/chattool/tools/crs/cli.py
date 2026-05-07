@@ -7,7 +7,7 @@ from typing import Any
 import click
 
 from chattool.config import BaseEnvConfig, CRSConfig, OpenAIConfig
-from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
+from chattool.const import CHATARCH_ENV_DIR, CHATARCH_ENV_FILE
 from chattool.interaction import CommandField, CommandSchema, add_interactive_option, resolve_command_inputs
 from chattool.tools.crs.api import CRSAPIError, CRSClient, derive_crs_root_from_openai_base
 
@@ -26,7 +26,7 @@ def _resolve_env_path(config_cls, env_ref: str) -> Path:
     candidate = Path(env_ref).expanduser()
     if candidate.is_file():
         return candidate
-    profile_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
+    profile_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, env_ref)
     if profile_path.exists():
         return profile_path
     raise click.ClickException(
@@ -39,23 +39,21 @@ def _load_runtime_env(env_ref: str | None, *, openai_env_ref: str | None = None)
         raise click.ClickException("--env and --openai-env cannot be used together.")
     if env_ref:
         BaseEnvConfig.load_all_with_override(
-            CHATTOOL_ENV_DIR,
+            CHATARCH_ENV_DIR,
             override_env_file=_resolve_env_path(CRSConfig, env_ref),
-            legacy_env_file=CHATTOOL_ENV_FILE,
         )
         return
     if openai_env_ref:
         BaseEnvConfig.load_all_with_override(
-            CHATTOOL_ENV_DIR,
+            CHATARCH_ENV_DIR,
             override_env_file=_resolve_env_path(OpenAIConfig, openai_env_ref),
-            legacy_env_file=CHATTOOL_ENV_FILE,
         )
         CRSConfig.CRS_API_BASE.value = derive_crs_root_from_openai_base(
             OpenAIConfig.OPENAI_API_BASE.value
         )
         CRSConfig.CRS_API_KEY.value = OpenAIConfig.OPENAI_API_KEY.value
         return
-    BaseEnvConfig.load_all(CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE)
+    BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 
 def _client(*, require_key: bool = False, require_token: bool = False) -> CRSClient:
@@ -347,7 +345,7 @@ def login(env_ref, api_base, username, password, save, json_output, interactive)
         CRSConfig.CRS_USERNAME.value = inputs["username"]
         CRSConfig.CRS_PASSWORD.value = inputs["password"]
         CRSConfig.CRS_ACCESS_TOKEN.value = token
-        target_path = CRSConfig.get_active_env_file(CHATTOOL_ENV_DIR)
+        target_path = CRSConfig.get_active_env_file(CHATARCH_ENV_DIR)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(CRSConfig.render_env_file(), encoding="utf-8")
     if json_output:
@@ -357,7 +355,7 @@ def login(env_ref, api_base, username, password, save, json_output, interactive)
     if payload.get("expiresIn"):
         click.echo(f"Expires in: {_fmt_duration(payload.get('expiresIn'))}")
     if save and token:
-        click.echo(f"Saved token: {CRSConfig.get_active_env_file(CHATTOOL_ENV_DIR)}")
+        click.echo(f"Saved token: {CRSConfig.get_active_env_file(CHATARCH_ENV_DIR)}")
 
 
 @auth_group.command(name="whoami")

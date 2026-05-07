@@ -152,7 +152,7 @@ chattool setup lark-cli
 ChatTool 默认 Feishu 配置位置：
 
 ```text
-~/.config/chattool/envs/Feishu/.env
+~/.chatarch/envs/Feishu/.env
 ```
 
 也就是说，如果你原来就已经把飞书配置放在 ChatTool 里，切到官方 CLI 基本不需要再重输一遍。

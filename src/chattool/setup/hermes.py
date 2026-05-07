@@ -10,8 +10,8 @@ from pathlib import Path
 import click
 
 from chattool.config import BaseEnvConfig, FeishuConfig, OpenAIConfig
-from chattool.config.source_chain import split_config_sources
-from chattool.const import CHATTOOL_ENV_DIR, CHATTOOL_ENV_FILE
+from chatenv.source_chain import split_config_sources
+from chattool.const import CHATARCH_ENV_DIR
 from chattool.interaction import abort_if_force_without_tty, resolve_interactive_mode, resolve_value
 from chattool.utils.custom_logger import setup_logger
 
@@ -76,7 +76,7 @@ def _resolve_profile_env_path(config_cls, env_ref: str) -> Path:
     candidate = Path(env_ref).expanduser()
     if candidate.is_file():
         return candidate
-    profile_path = config_cls.get_profile_env_file(CHATTOOL_ENV_DIR, env_ref)
+    profile_path = config_cls.get_profile_env_file(CHATARCH_ENV_DIR, env_ref)
     if profile_path.exists():
         return profile_path
     raise click.ClickException(
@@ -92,7 +92,7 @@ def _load_env_ref(config_cls, env_ref: str | None) -> dict[str, str]:
 
 def _openai_values(env_ref: str | None) -> dict[str, str | None]:
     system_values, typed_values = split_config_sources(
-        OpenAIConfig, CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE
+        OpenAIConfig, CHATARCH_ENV_DIR
     )
     override = _load_env_ref(OpenAIConfig, env_ref)
     return {
@@ -121,7 +121,7 @@ def _openai_values(env_ref: str | None) -> dict[str, str | None]:
 
 def _feishu_values(env_ref: str | None) -> dict[str, str | None]:
     system_values, typed_values = split_config_sources(
-        FeishuConfig, CHATTOOL_ENV_DIR, legacy_env_file=CHATTOOL_ENV_FILE
+        FeishuConfig, CHATARCH_ENV_DIR
     )
     override = _load_env_ref(FeishuConfig, env_ref)
 

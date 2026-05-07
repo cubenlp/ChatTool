@@ -1,10 +1,8 @@
-import os
-import shutil
-
 from click.testing import CliRunner
+from chatstyle import InteractiveResolution
 
 from chattool.config import BaseEnvConfig, EnvField, OpenAIConfig
-from chattool.config.cli import cli
+from chatenv.cli import cli
 
 
 class MockConfig(BaseEnvConfig):
@@ -22,18 +20,17 @@ class MockConfig(BaseEnvConfig):
 
 
 def test_cat_prefers_typed_env_over_shell_env(tmp_path, monkeypatch):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
     active_dir = env_dir / "Mock"
     active_dir.mkdir(parents=True)
     active_file = active_dir / ".env"
     active_file.write_text("MOCK_KEY='from_file'\n", encoding="utf-8")
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
 
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
     monkeypatch.setenv("MOCK_KEY", "from_env")
 
@@ -45,18 +42,17 @@ def test_cat_prefers_typed_env_over_shell_env(tmp_path, monkeypatch):
 
 
 def test_cat_profile_loads_profile_env_file(tmp_path, monkeypatch):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
     profile_dir = env_dir / "Mock"
     profile_dir.mkdir(parents=True)
     profile_file = profile_dir / "apple.env"
     profile_file.write_text("MOCK_KEY='from_profile'\n", encoding="utf-8")
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
 
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
 
     result = CliRunner().invoke(cli, ["cat", "-t", "mock", "apple"])
@@ -66,16 +62,21 @@ def test_cat_profile_loads_profile_env_file(tmp_path, monkeypatch):
 
 
 def test_profile_and_key_commands_prompt_when_args_missing(tmp_path, monkeypatch):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
     monkeypatch.setattr(
-        "chattool.interaction.policy.is_interactive_available", lambda: True
+        "chatstyle.input.resolve.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: InteractiveResolution(
+            interactive=None,
+            can_prompt=True,
+            force_interactive=False,
+            need_prompt=auto_prompt_condition,
+        ),
     )
 
     answers = {
@@ -84,11 +85,11 @@ def test_profile_and_key_commands_prompt_when_args_missing(tmp_path, monkeypatch
         "KEY=VALUE": "MOCK_KEY=updated",
     }
     monkeypatch.setattr(
-        "chattool.interaction.command_schema.ask_text",
+        "chatstyle.tui.prompt.ask_text",
         lambda message, default="", password=False, style=None: answers[message],
     )
     monkeypatch.setattr(
-        "chattool.config.cli.ask_confirm", lambda message, default=False: True
+        "chatenv.cli.ask_confirm", lambda message, default=False: True
     )
 
     active_dir = env_dir / "Mock"
@@ -122,22 +123,27 @@ def test_chatenv_get_errors_with_no_interaction():
 
 
 def test_chatenv_test_prompts_for_target(tmp_path, monkeypatch):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [MockConfig])
     monkeypatch.setattr(
         "chattool.config.elements.BaseEnvConfig._registry", [MockConfig]
     )
     monkeypatch.setattr(
-        "chattool.interaction.policy.is_interactive_available", lambda: True
+        "chatstyle.input.resolve.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: InteractiveResolution(
+            interactive=None,
+            can_prompt=True,
+            force_interactive=False,
+            need_prompt=auto_prompt_condition,
+        ),
     )
     monkeypatch.setattr(
-        "chattool.interaction.command_schema.ask_text",
+        "chatstyle.tui.prompt.ask_text",
         lambda message, default="", password=False, style=None: "mock",
     )
     outputs = []
@@ -150,13 +156,12 @@ def test_chatenv_test_prompts_for_target(tmp_path, monkeypatch):
 
 
 def test_chatenv_openai_test_uses_responses_api(monkeypatch, tmp_path):
-    env_dir = tmp_path / "envs"
-    env_file = tmp_path / ".env"
+    home = tmp_path
+    env_dir = home / "envs"
+    env_file = env_dir / ".env"
+    env_dir.mkdir(parents=True, exist_ok=True)
     env_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.config.cli.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setenv("CHATARCH_HOME", str(home))
     monkeypatch.setattr("chattool.config.BaseEnvConfig._registry", [OpenAIConfig])
     monkeypatch.setattr(OpenAIConfig.OPENAI_API_BASE, "value", "https://api.example/v1")
     monkeypatch.setattr(OpenAIConfig.OPENAI_API_KEY, "value", "sk-test")

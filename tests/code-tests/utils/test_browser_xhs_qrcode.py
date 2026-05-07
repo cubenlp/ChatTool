@@ -1,6 +1,6 @@
 import pytest
 
-from chattool.config.browser import BrowserConfig
+from chattool.config import BrowserConfig
 from chattool.tools.browser import xhs_qrcode
 
 

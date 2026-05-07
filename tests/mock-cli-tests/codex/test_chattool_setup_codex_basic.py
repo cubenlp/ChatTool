@@ -76,10 +76,10 @@ def test_setup_codex_explicit_args_override_env_ref(tmp_path, monkeypatch, runne
     env_file.write_text("", encoding="utf-8")
 
     monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
-    monkeypatch.setattr("chattool.setup.codex.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.setup.codex.CHATTOOL_ENV_FILE", env_file)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_DIR", env_dir)
-    monkeypatch.setattr("chattool.const.CHATTOOL_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.setup.codex.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.setup.codex.CHATARCH_ENV_FILE", env_file)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_DIR", env_dir)
+    monkeypatch.setattr("chattool.const.CHATARCH_ENV_FILE", env_file)
     monkeypatch.setattr(
         "chattool.setup.codex.ensure_nodejs_requirement",
         lambda interactive, can_prompt, log_level="INFO": None,

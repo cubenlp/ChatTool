@@ -23,14 +23,14 @@ pip install "chattool[pypi]"
 - `--project-dir` 默认为当前目录
 - `--dist-dir` 默认为 `<project-dir>/dist`
 - `build` 默认同时构建 `sdist` 和 `wheel`
-- `init --python` 默认为 default 模板的 `>=3.9`；`cli-style` 模板未显式传 `--python` 时默认 `>=3.10`
+- `init --python` 默认为 default 模板的 `>=3.9`；`chatarch` 模板未显式传 `--python` 时默认 `>=3.10`
 - `init --license` 默认为 `MIT`，会写入完整 LICENSE 模板；内置 `MIT`、`Apache-2.0`、`BSD-3-Clause`、`GPL-3.0-only` 和 `Proprietary`
 - `upload` 不接管仓库、凭证和交互，直接复用原始 `twine upload` 默认行为
 - `init --version` 可直接设置模板初始版本，`probe` 会解析 dynamic version 的真实值
 
 ## 使用说明
 
-- 这组命令不再提供交互式补参；缺少必要输入时直接报错。
+- init 支持交互式补参：缺少包名且终端可交互时会自动进入向导；`-i` 强制完整向导，`-I` 禁用补问并在缺参时失败。
 - `build` 会先打印构建目标目录，便于确认输出位置。
 - `upload` 只是 `twine upload` 的薄封装；如需更复杂的上传参数，直接用原始 `twine upload`。
 
@@ -70,6 +70,6 @@ chattool pypi upload --project-dir .
 - `tests/test_version.py`
 
 其中 `tests/conftest.py` 会自动把 `src/` 加入导入路径，因此生成后可以直接运行 `python -m pytest -q`。
-default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`cli-style` 模板依赖 `chatstyle>=0.1.0`，默认写入 `requires-python = ">=3.10"`。
+default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`chatarch` 模板依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1`，默认写入 `requires-python = ">=3.10"`。
 
-`chattool pypi init <name> -t cli-style` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、PyPI 发布占位 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatStyle 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。
+`chattool pypi init <name> -t chatarch` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、PyPI 发布占位 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatArch 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。可用 `--without-mkdocs` 跳过 mkdocs/docs 相关文件，可用 `--without-workflows` 跳过 `.github/workflows/`。

@@ -20,10 +20,10 @@
 
 预期过程和结果：
   1. 执行 `chattool pypi init mychat --project-dir <tmp>/mychat`，预期生成 `pyproject.toml`、`README.md`、`LICENSE`、`src/mychat/__init__.py`、`tests/conftest.py`、`tests/test_version.py`。
-  2. default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`cli-style` 模板默认写入 `requires-python = ">=3.10"`。
+  2. default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`chatarch` 模板默认写入 `requires-python = ">=3.10"`。
   3. 在交互终端里缺少包名时，`chattool pypi init` 应自动进入交互式补参；显式 `-I` 关闭交互时才报错。
 
-## 用例 1b：`cli-style` 模板应补基础开发规范
+## 用例 1b：`chatarch` 模板应补基础开发规范
 
 - 初始环境准备：
   - 准备一个空目录。
@@ -31,17 +31,18 @@
   - `<tmp>/mychat-cli/`
 
 预期过程和结果：
-  1. 执行 `chattool pypi init mychat-cli -t cli-style --project-dir <tmp>/mychat-cli`。
-  2. 预期额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`src/<module>/cli.py`、`docs/README.md`、`docs/index.md`、`docs/index.en.md`、`tests/cli-tests/README.md`、`tests/mock-cli-tests/README.md`、`tests/code-tests/README.md`。
+  1. 执行 `chattool pypi init mychat-cli -t chatarch --project-dir <tmp>/mychat-cli`。
+  2. 预期额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`src/<module>/cli.py`、`docs/index.md`、`docs/index.en.md`、`tests/cli-tests/README.md`、`tests/mock-cli-tests/README.md`、`tests/code-tests/README.md`。
   3. 预期生成 `.github/workflows/ci.yml`、`publish.yml`、`deploy.yaml`、`preview.yaml`。
   4. 默认 README 使用中文，并在开头包含 PyPI version、GitHub Actions 和 mkdocs docs badge；英文内容放在 `.en.md` 文件中。
   5. 这些文件应体现 CLI 规范、开发规范、文档/测试约定和自动化基础说明。
+  6. 可通过 `--without-mkdocs` 跳过 mkdocs/docs 文件，通过 `--without-workflows` 跳过 `.github/workflows/`。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool pypi init mychat --project-dir /tmp/mychat
-chattool pypi init mychat-cli -t cli-style --project-dir /tmp/mychat-cli
+chattool pypi init mychat-cli -t chatarch --project-dir /tmp/mychat-cli
 ```
 
 ## 用例 2：build/check 验证最小包结构

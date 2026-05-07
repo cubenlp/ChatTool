@@ -293,7 +293,7 @@ def _build_pyproject_content(
     return "\n".join(lines)
 
 
-def _build_cli_style_pyproject_content(
+def _build_chatarch_pyproject_content(
     package_name: str,
     module_name: str,
     description: str,
@@ -301,6 +301,7 @@ def _build_cli_style_pyproject_content(
     license_name: str,
     author: str | None,
     email: str | None,
+    include_mkdocs: bool = True,
 ) -> str:
     lines = [
         "[build-system]",
@@ -314,7 +315,7 @@ def _build_cli_style_pyproject_content(
         'readme = "README.md"',
         f'requires-python = "{_toml_escape(requires_python)}"',
         f'license = "{_toml_escape(license_name)}"',
-        'dependencies = ["click>=8.0", "chatstyle>=0.1.0"]',
+        'dependencies = ["click>=8.0", "chatstyle>=0.1.0", "chatenv>=0.1.1"]',
     ]
     if author and email:
         lines.append(
@@ -326,7 +327,7 @@ def _build_cli_style_pyproject_content(
         lines.append(f'authors = [{{email = "{_toml_escape(email)}"}}]')
     lines.extend(
         [
-            f'keywords = ["{_toml_escape(module_name)}", "cli"]',
+            f'keywords = ["{_toml_escape(module_name)}", "chatarch", "cli"]',
             "classifiers = [",
             '    "Programming Language :: Python :: 3",',
             '    "Operating System :: OS Independent",',
@@ -336,8 +337,13 @@ def _build_cli_style_pyproject_content(
             f'{module_name} = "{module_name}.cli:main"',
             "",
             "[project.optional-dependencies]",
-            'dev = ["build", "pytest"]',
-            'docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mike>=2.0.0"]',
+            'dev = ["build", "pytest", "twine"]',
+        ]
+    )
+    if include_mkdocs:
+        lines.append('docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mike>=2.0.0"]')
+    lines.extend(
+        [
             "",
             "[tool.setuptools.dynamic]",
             f'version = {{attr = "{module_name}.__version__"}}',
@@ -353,129 +359,166 @@ def _build_cli_style_pyproject_content(
     return "\n".join(lines)
 
 
-def _build_cli_style_readme(
-    package_name: str, module_name: str, description: str
+def _chatarch_badge_block(
+    package_name: str, *, include_mkdocs: bool, include_workflows: bool
 ) -> str:
-    return (
-        textwrap.dedent(
-            f"""
-            <div align="center">
-                <a href="https://pypi.python.org/pypi/{package_name}">
-                    <img src="https://img.shields.io/pypi/v/{package_name}.svg" alt="PyPI version" />
-                </a>
-                <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">
-                    <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />
-                </a>
-                <a href="https://OWNER.github.io/REPO">
-                    <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
-                </a>
-            </div>
-
-            <div align="center">
-
-            [English](README.en.md) | [简体中文](README.md)
-            </div>
-
-            # {package_name}
-
-            {description}
-
-            ## 快速开始
-
-            ```bash
-            pip install -e ".[dev]"
-            {module_name} hello ChatArch
-            python -m pytest -q
-            python -m build
-            ```
-
-            ## CLI 规范
-
-            这个模板默认依赖 `chatstyle>=0.1.0`，新的命令应优先使用：
-
-            - `CommandSchema` / `CommandField` 描述输入。
-            - `add_interactive_option()` 提供统一 `-i/-I`。
-            - `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
-
-            ## 目录结构
-
-            - `src/`：包源码
-            - `tests/code-tests/`：代码测试和历史测试迁移
-            - `tests/cli-tests/`：真实 CLI 测试，doc-first
-            - `tests/mock-cli-tests/`：mock/fake CLI 测试，doc-first
-            - `docs/`：长期维护文档，由 mkdocs 构建
-
-            ## 开发说明
-
-            扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
-            """
-        ).strip()
-        + "\n"
-    )
+    lines = [
+        '<div align="center">',
+        f'    <a href="https://pypi.python.org/pypi/{package_name}">',
+        f'        <img src="https://img.shields.io/pypi/v/{package_name}.svg" alt="PyPI version" />',
+        "    </a>",
+    ]
+    if include_workflows:
+        lines.extend(
+            [
+                '    <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">',
+                '        <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />',
+                "    </a>",
+            ]
+        )
+    if include_mkdocs:
+        lines.extend(
+            [
+                '    <a href="https://OWNER.github.io/REPO">',
+                '        <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />',
+                "    </a>",
+            ]
+        )
+    lines.append("</div>")
+    return "\n".join(lines)
 
 
-def _build_cli_style_readme_en(
-    package_name: str, module_name: str, description: str
+def _chatarch_layout_lines(*, include_mkdocs: bool) -> str:
+    lines = [
+        "- `src/`：包源码",
+        "- `tests/code-tests/`：代码测试和历史测试迁移",
+        "- `tests/cli-tests/`：真实 CLI 测试，doc-first",
+        "- `tests/mock-cli-tests/`：mock/fake CLI 测试，doc-first",
+    ]
+    if include_mkdocs:
+        lines.append("- `docs/`：长期维护文档，由 mkdocs 构建")
+    return "\n".join(lines)
+
+
+def _chatarch_layout_lines_en(*, include_mkdocs: bool) -> str:
+    lines = [
+        "- `src/`: package source code",
+        "- `tests/code-tests/`: code tests and migrated historical tests",
+        "- `tests/cli-tests/`: real CLI tests, doc-first",
+        "- `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first",
+    ]
+    if include_mkdocs:
+        lines.append("- `docs/`: long-lived project docs built by mkdocs")
+    return "\n".join(lines)
+
+
+def _build_chatarch_readme(
+    package_name: str,
+    module_name: str,
+    description: str,
+    *,
+    include_mkdocs: bool = True,
+    include_workflows: bool = True,
 ) -> str:
-    return (
-        textwrap.dedent(
-            f"""
-            <div align="center">
-                <a href="https://pypi.python.org/pypi/{package_name}">
-                    <img src="https://img.shields.io/pypi/v/{package_name}.svg" alt="PyPI version" />
-                </a>
-                <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">
-                    <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />
-                </a>
-                <a href="https://OWNER.github.io/REPO">
-                    <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
-                </a>
-            </div>
-
-            <div align="center">
-
-            [English](README.en.md) | [简体中文](README.md)
-            </div>
-
-            # {package_name}
-
-            {description}
-
-            ## Quick Start
-
-            ```bash
-            pip install -e ".[dev]"
-            {module_name} hello ChatArch
-            python -m pytest -q
-            python -m build
-            ```
-
-            ## CLI Contract
-
-            This template depends on `chatstyle>=0.1.0`. New commands should prefer:
-
-            - `CommandSchema` / `CommandField` for inputs.
-            - `add_interactive_option()` for the shared `-i/-I` switch.
-            - `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
-
-            ## Layout
-
-            - `src/`: package source code
-            - `tests/code-tests/`: code tests and migrated historical tests
-            - `tests/cli-tests/`: real CLI tests, doc-first
-            - `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first
-            - `docs/`: long-lived project docs built by mkdocs
-
-            ## Development Notes
-
-            See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
-            """
-        ).strip()
-        + "\n"
+    badges = _chatarch_badge_block(
+        package_name,
+        include_mkdocs=include_mkdocs,
+        include_workflows=include_workflows,
     )
+    layout = _chatarch_layout_lines(include_mkdocs=include_mkdocs)
+    return f"""\
+{badges}
+
+<div align="center">
+
+[English](README.en.md) | [简体中文](README.md)
+</div>
+
+# {package_name}
+
+{description}
+
+## 快速开始
+
+```bash
+pip install -e ".[dev]"
+{module_name} hello ChatArch
+python -m pytest -q
+python -m build
+```
+
+## CLI 规范
+
+这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.1`，新的命令应优先使用：
+
+- `CommandSchema` / `CommandField` 描述输入。
+- `add_interactive_option()` 提供统一 `-i/-I`。
+- `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
+
+## 目录结构
+
+{layout}
+
+## 开发说明
+
+扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
+"""
 
 
-def _build_cli_style_develop_md() -> str:
+def _build_chatarch_readme_en(
+    package_name: str,
+    module_name: str,
+    description: str,
+    *,
+    include_mkdocs: bool = True,
+    include_workflows: bool = True,
+) -> str:
+    badges = _chatarch_badge_block(
+        package_name,
+        include_mkdocs=include_mkdocs,
+        include_workflows=include_workflows,
+    )
+    layout = _chatarch_layout_lines_en(include_mkdocs=include_mkdocs)
+    return f"""\
+{badges}
+
+<div align="center">
+
+[English](README.en.md) | [简体中文](README.md)
+</div>
+
+# {package_name}
+
+{description}
+
+## Quick Start
+
+```bash
+pip install -e ".[dev]"
+{module_name} hello ChatArch
+python -m pytest -q
+python -m build
+```
+
+## CLI Contract
+
+This template depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`. New commands should prefer:
+
+- `CommandSchema` / `CommandField` for inputs.
+- `add_interactive_option()` for the shared `-i/-I` switch.
+- `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
+
+## Layout
+
+{layout}
+
+## Development Notes
+
+See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
+"""
+
+
+def _build_chatarch_develop_md() -> str:
     return (
         textwrap.dedent(
             """
@@ -483,7 +526,7 @@ def _build_cli_style_develop_md() -> str:
 
             ## CLI Rules
 
-            - Use `chatstyle>=0.1.0` as the canonical CLI interaction runtime.
+            - Use `chatstyle>=0.1.0` and `chatenv>=0.1.1` as the canonical CLI interaction runtime.
             - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
             - Missing required args should auto-enter interactive mode when recoverable.
             - `-i` forces interactive mode; `-I` disables prompting and must fail fast.
@@ -509,11 +552,11 @@ def _build_cli_style_develop_md() -> str:
     )
 
 
-def _build_cli_style_changelog() -> str:
+def _build_chatarch_changelog() -> str:
     return "# Changelog\n\n## YYYY-MM-DD\n\n### Added\n\n### Changed\n\n### Fixed\n"
 
 
-def _build_cli_style_cli_py(module_name: str) -> str:
+def _build_chatarch_cli_py(module_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -563,7 +606,7 @@ def _build_cli_style_cli_py(module_name: str) -> str:
     )
 
 
-def _build_cli_style_test_cli_py(module_name: str) -> str:
+def _build_chatarch_test_cli_py(module_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -583,7 +626,7 @@ def _build_cli_style_test_cli_py(module_name: str) -> str:
     )
 
 
-def _build_cli_style_docs_index(package_name: str) -> str:
+def _build_chatarch_docs_index(package_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -605,7 +648,7 @@ def _build_cli_style_docs_index(package_name: str) -> str:
     )
 
 
-def _build_cli_style_docs_index_en(package_name: str) -> str:
+def _build_chatarch_docs_index_en(package_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -627,7 +670,7 @@ def _build_cli_style_docs_index_en(package_name: str) -> str:
     )
 
 
-def _build_cli_style_mkdocs_yml(package_name: str) -> str:
+def _build_chatarch_mkdocs_yml(package_name: str) -> str:
     return (
         textwrap.dedent(
             f"""
@@ -646,7 +689,7 @@ def _build_cli_style_mkdocs_yml(package_name: str) -> str:
     )
 
 
-def _build_cli_style_agends_md() -> str:
+def _build_chatarch_agends_md() -> str:
     return (
         textwrap.dedent(
             """
@@ -675,12 +718,18 @@ def scaffold_package(
     author: str | None = None,
     email: str | None = None,
     template: str = "default",
+    include_mkdocs: bool | None = None,
+    include_workflows: bool | None = None,
 ) -> ScaffoldResult:
     package_name = package_name.strip()
     if not package_name:
         raise PyPICommandError("Package name is required.")
-    if template == "cli-style" and requires_python == ">=3.9":
+    if template == "chatarch" and requires_python == ">=3.9":
         requires_python = ">=3.10"
+    if include_mkdocs is None:
+        include_mkdocs = template == "chatarch"
+    if include_workflows is None:
+        include_workflows = template == "chatarch"
 
     module_name = normalize_module_name(package_name)
     project_dir = Path(project_dir)
@@ -758,15 +807,17 @@ def scaffold_package(
         + "\n",
     }
 
-    if template == "cli-style":
-        (project_dir / "docs").mkdir(parents=True, exist_ok=True)
+    if template == "chatarch":
         (tests_dir / "cli-tests").mkdir(parents=True, exist_ok=True)
         (tests_dir / "mock-cli-tests").mkdir(parents=True, exist_ok=True)
         (tests_dir / "code-tests").mkdir(parents=True, exist_ok=True)
-        (project_dir / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
+        if include_mkdocs:
+            (project_dir / "docs").mkdir(parents=True, exist_ok=True)
+        if include_workflows:
+            (project_dir / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
         file_map.update(
             {
-                project_dir / "pyproject.toml": _build_cli_style_pyproject_content(
+                project_dir / "pyproject.toml": _build_chatarch_pyproject_content(
                     package_name=package_name,
                     module_name=module_name,
                     description=description,
@@ -774,26 +825,32 @@ def scaffold_package(
                     license_name=license_name,
                     author=author,
                     email=email,
+                    include_mkdocs=include_mkdocs,
                 ),
-                project_dir / "README.md": _build_cli_style_readme(
-                    package_name, module_name, description
+                project_dir / "README.md": _build_chatarch_readme(
+                    package_name,
+                    module_name,
+                    description,
+                    include_mkdocs=include_mkdocs,
+                    include_workflows=include_workflows,
                 ),
-                project_dir / "README.en.md": _build_cli_style_readme_en(
-                    package_name, module_name, description
+                project_dir / "README.en.md": _build_chatarch_readme_en(
+                    package_name,
+                    module_name,
+                    description,
+                    include_mkdocs=include_mkdocs,
+                    include_workflows=include_workflows,
                 ),
-                project_dir / "DEVELOP.md": _build_cli_style_develop_md(),
-                project_dir / "CHANGELOG.md": _build_cli_style_changelog(),
-                project_dir / "AGENTS.md": _build_cli_style_agends_md(),
-                project_dir / "mkdocs.yml": _build_cli_style_mkdocs_yml(
+                project_dir / "DEVELOP.md": _build_chatarch_develop_md(),
+                project_dir / "CHANGELOG.md": _build_chatarch_changelog(),
+                project_dir / "AGENTS.md": _build_chatarch_agends_md(),
+                project_dir / "mkdocs.yml": _build_chatarch_mkdocs_yml(
                     package_name
                 ),
-                project_dir / "docs" / "README.md": _build_cli_style_docs_index(
+                project_dir / "docs" / "index.md": _build_chatarch_docs_index(
                     package_name
                 ),
-                project_dir / "docs" / "index.md": _build_cli_style_docs_index(
-                    package_name
-                ),
-                project_dir / "docs" / "index.en.md": _build_cli_style_docs_index_en(
+                project_dir / "docs" / "index.en.md": _build_chatarch_docs_index_en(
                     package_name
                 ),
                 tests_dir
@@ -805,8 +862,8 @@ def scaffold_package(
                 tests_dir
                 / "code-tests"
                 / "README.md": "# Code Tests\n\nNon-CLI code tests live here.\n",
-                src_dir / "cli.py": _build_cli_style_cli_py(module_name),
-                tests_dir / "test_cli.py": _build_cli_style_test_cli_py(module_name),
+                src_dir / "cli.py": _build_chatarch_cli_py(module_name),
+                tests_dir / "test_cli.py": _build_chatarch_test_cli_py(module_name),
                 project_dir / ".github" / "workflows" / "ci.yml": textwrap.dedent(
                     """
                     name: CI
@@ -950,6 +1007,25 @@ def scaffold_package(
                 + "\n",
             }
         )
+        if not include_mkdocs:
+            for optional_path in (
+                project_dir / "mkdocs.yml",
+                project_dir / "docs" / "index.md",
+                project_dir / "docs" / "index.en.md",
+                project_dir / ".github" / "workflows" / "deploy.yaml",
+                project_dir / ".github" / "workflows" / "preview.yaml",
+            ):
+                file_map.pop(optional_path, None)
+            ci_path = project_dir / ".github" / "workflows" / "ci.yml"
+            if ci_path in file_map:
+                file_map[ci_path] = file_map[ci_path].replace(
+                    'python -m pip install -e ".[dev,docs]"',
+                    'python -m pip install -e ".[dev]"',
+                ).replace("\n                          - run: mkdocs build --strict", "")
+        if not include_workflows:
+            for optional_path in list(file_map):
+                if ".github" in optional_path.parts:
+                    file_map.pop(optional_path, None)
 
     for path, content in file_map.items():
         path.write_text(content, encoding="utf-8")

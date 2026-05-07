@@ -84,7 +84,7 @@ chattool setup codex --api-key "sk-xxx"
 
 ```bash
 chattool setup codex -e work
-chattool setup codex -e ~/.config/chattool/envs/OpenAI/work.env
+chattool setup codex -e ~/.chatarch/envs/OpenAI/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：
@@ -161,7 +161,7 @@ chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xx
 
 ```bash
 chattool setup opencode -e work
-chattool setup opencode -e ~/.config/chattool/envs/OpenAI/work.env
+chattool setup opencode -e ~/.chatarch/envs/OpenAI/work.env
 chattool setup opencode -e work --plugin auto-loop
 ```
 
@@ -200,7 +200,7 @@ chattool setup lark-cli --log-level DEBUG
 
 ```bash
 chattool setup lark-cli -e work
-chattool setup lark-cli -e ~/.config/chattool/envs/Feishu/work.env
+chattool setup lark-cli -e ~/.chatarch/envs/Feishu/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：
@@ -652,7 +652,7 @@ chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 使用 `chatenv` 查看或配置：
 
 ```bash
-chattool chatenv cat -t zulip
+chatenv cat -t zulip
 ```
 
 常用配置项：
@@ -693,32 +693,32 @@ chattool zulip news --since-hours 24 --stream general --stream announcements
 
 ```bash
 # 交互式初始化或更新配置
-chattool env init -i
+chatenv init -i
 
 # 列出所有配置
-chattool env list
+chatenv list
 
 # 设置配置值
-chattool env set CHATTOOL_DNS_PROVIDER=tencent
+chatenv set CHATTOOL_DNS_PROVIDER=tencent
 
 # 获取配置值
-chattool env get CHATTOOL_DNS_PROVIDER
+chatenv get CHATTOOL_DNS_PROVIDER
 
 # 删除配置值
-chattool env unset CHATTOOL_DNS_PROVIDER
+chatenv unset CHATTOOL_DNS_PROVIDER
 
 # 粘贴导入从 chatenv cat --no-mask 复制来的配置
-chattool env paste
-chattool env paste --stdin --yes < openai.env
-chattool env paste --stdin --profile work --yes < openai.env
+chatenv paste
+chatenv paste --stdin --yes < openai.env
+chatenv paste --stdin --profile work --yes < openai.env
 
 # 缺少 key / profile 名时自动补问
-chattool env save -t gh
-chattool env use -t gh
-chattool env delete -t gh
-chattool env get
-chattool env set
-chattool env unset
+chatenv save -t gh
+chatenv use -t gh
+chatenv delete -t gh
+chatenv get
+chatenv set
+chatenv unset
 ```
 
 **命令详解:**
