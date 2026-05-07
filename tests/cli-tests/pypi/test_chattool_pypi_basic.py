@@ -183,6 +183,22 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     assert '"chatenv>=0.1.1"' in pyproject_text
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert 'docs = ["mkdocs' in pyproject_text
+    workflow_texts = [
+        path.read_text(encoding="utf-8")
+        for path in sorted((project_dir / ".github" / "workflows").iterdir())
+    ]
+    assert all('python-version: "3.10"' in text for text in workflow_texts)
+    assert all("3.11" not in text for text in workflow_texts)
+    publish_text = (project_dir / ".github" / "workflows" / "publish.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "branches:\n      - main\n      - master" in publish_text
+    assert "contents: write" in publish_text
+    assert "id-token: write" in publish_text
+    assert "git tag -a" in publish_text
+    assert "python -m twine check dist/*" in publish_text
+    assert "pypa/gh-action-pypi-publish@release/v1" in publish_text
+    assert "Publish workflow scaffold only" not in publish_text
     cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(
         encoding="utf-8"
     )

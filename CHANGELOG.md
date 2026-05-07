@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ## 2026-05-07
 - `chattool setup hermes` 重新收敛为 Hermes 官方 `install.sh` 封装：默认使用用户指定、本地缓存或随包 installer，只有 `--update-installer` 才联网更新；默认不 clone Hermes/WebUI、不导入 Feishu、不启动 WebUI，WebUI env/start 均改为显式选项。
+- `chattool pypi init -t chatarch` 生成的 GitHub workflow 现在会按 `requires-python` 同步 Python 版本，并补全 PyPI 发布链路：合并到 `main` / `master` 后读取包内 `__version__`、创建对应 `vX.Y.Z` tag，并通过 PyPI Trusted Publishing 发布尚未存在的版本。
 - `chattool setup hermes`、`setup codex` 与 `setup opencode` 的配置写入改为目标 key 更新：重复执行或安装后配置不再用整份模板重写配置文件，Codex TOML、Codex auth JSON、OpenCode provider JSON 和 Hermes `.env`/`config.yaml` 会保留 unrelated 字段。
 - 新增 `chatarch-post-init-dev` skill，补充 `chatpypi init -t chatarch` 生成项目后的 ChatStyle 交互、ChatEnv schema、文档测试和 changelog 持续开发规范。
 - 更新 ChatTool skills 以对齐当前 ChatArch 拆包：补充 `chatarch-package-dev`，校正 `chattool pypi` / `chatpypi`、`chatstyle`、`chatenv`、DNS/cert、GitHub 与 Zulip 相关说明，并移除旧命令示例。

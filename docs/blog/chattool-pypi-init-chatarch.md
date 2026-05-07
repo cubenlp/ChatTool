@@ -75,7 +75,7 @@ chatfoo/
     └── test_version.py
 ```
 
-这不是为了把项目变复杂，而是把 ChatArch 系列项目约定一次写齐：源码、CLI、测试分层、文档、发布占位和 Agent 协作说明都放在固定位置。
+这不是为了把项目变复杂，而是把 ChatArch 系列项目约定一次写齐：源码、CLI、测试分层、文档、发布 workflow 和 Agent 协作说明都放在固定位置。
 
 ---
 
@@ -218,15 +218,17 @@ nav:
   - English: index.en.md
 ```
 
-`.github/workflows/publish.yml` 只是发布占位，不会默认上传 PyPI：
+`.github/workflows/publish.yml` 默认在合并到 `main` / `master` 后读取 `src/<module>/__init__.py` 里的 `__version__`，当 PyPI 上还没有该版本时创建 `vX.Y.Z` tag、构建发行包，并通过 GitHub Trusted Publishing 上传 PyPI：
 
 ```yaml
-- run: |
-    echo "Publish workflow scaffold only."
-    echo "Add trusted publishing or credentials before real release."
+- name: Create release tag
+  if: steps.pypi.outputs.exists == 'false' && steps.tag.outputs.exists == 'false'
+- name: Publish to PyPI
+  if: steps.pypi.outputs.exists == 'false'
+  uses: pypa/gh-action-pypi-publish@release/v1
 ```
 
-这样做是为了安全：初始化模板可以帮助你把发布流程的位置留好，但不会替你隐式处理凭证。
+使用前需要在 PyPI 为该 GitHub 仓库配置 Trusted Publisher；如果同版本已经存在于 PyPI，workflow 会跳过发布，避免重复上传。
 
 ---
 
