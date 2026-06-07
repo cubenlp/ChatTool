@@ -25,53 +25,41 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     result = _run_chattool_setup_workspace([str(workspace_dir), "-I"])
 
     assert result.returncode == 0, result.stderr
-    assert (workspace_dir / "README.md").exists()
+    assert not (workspace_dir / "README.md").exists()
     assert (workspace_dir / "AGENTS.md").exists()
-    assert (workspace_dir / "MEMORY.md").exists()
+    assert not (workspace_dir / "IDENTITY.md").exists()
+    assert not (workspace_dir / "MEMORY.md").exists()
+    assert (workspace_dir / "ARCHIVE.md").exists()
+    assert (workspace_dir / "TODO.md").exists()
+    assert (workspace_dir / ".trash").exists()
     assert (workspace_dir / "projects" / "README.md").exists()
-    assert (workspace_dir / "reference" / "README.md").exists()
+    assert (workspace_dir / "archive" / "README.md").exists()
+    assert (workspace_dir / "scripts" / "README.md").exists()
+    assert not (workspace_dir / "reference" / "README.md").exists()
     assert (workspace_dir / "core").exists()
-    assert (workspace_dir / "docs" / "README.md").exists()
-    assert (workspace_dir / "docs" / "memory" / "README.md").exists()
-    assert (workspace_dir / "docs" / "skills" / "README.md").exists()
-    assert (workspace_dir / "docs" / "themes" / "README.md").exists()
-    assert (workspace_dir / "docs" / "themes" / "changelog.md").exists()
-    assert (workspace_dir / "docs" / "tools" / "README.md").exists()
     assert (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.md").exists()
     assert (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.zh.md").exists()
 
-    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    todo = (workspace_dir / "TODO.md").read_text(encoding="utf-8")
     projects = (workspace_dir / "projects" / "README.md").read_text(encoding="utf-8")
-    reference = (workspace_dir / "reference" / "README.md").read_text(encoding="utf-8")
-    themes = (workspace_dir / "docs" / "themes" / "README.md").read_text(encoding="utf-8")
+    archive = (workspace_dir / "archive" / "README.md").read_text(encoding="utf-8")
+    scripts = (workspace_dir / "scripts" / "README.md").read_text(encoding="utf-8")
+    skill_zh = (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.zh.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
-    assert "## 写入规则" in agents
-    assert "- 所有实际工作统一放到 `projects/` 下。" in agents
-    assert "- project 默认使用最小 `PRD.md` 工作流，不预先写死复杂目录层级。" in agents
-    assert "projects/MM-DD-<project-name>/" in agents
-    assert "reference/" in agents
-    assert "docs/themes/" in agents
-    assert "projects/MM-DD-<task-name>/" not in agents
-    assert "tasks/<task-name>/" not in agents
-    assert "docs/memory/YYYY-MM-DD-status.md" in agents
-    assert "core/" in agents
-    assert "docs/" in agents
-    assert "`projects/` 作为实际工作的执行容器" in readme
-    assert "符号链接" in readme
-    assert "reference/" in readme
+    assert "AGENTS.md" in agents
+    assert "TODO.md" in agents
+    assert "ARCHIVE.md" in agents
+    assert "Workspace/\n  AGENTS.md\n  TODO.md\n  ARCHIVE.md" in agents
+    assert "IDENTITY.md" not in agents
+    assert "这里记录这个 workspace 近期打算做的事" in todo
     assert "PRD.md" in projects
-    assert "TASK.md" not in projects
-    assert "review.md" not in projects
-    assert "workspace-level `reference/`" in projects
-    assert "跨多个 project" in reference
-    assert "按主题整理" in themes
-    assert "## 当前 Workspace" in memory
-    assert "- 核心仓库目录：`core/`" in memory
-    assert "- 项目根目录：`projects/`" in memory
-    assert "- 持久状态记录目录：`docs/memory/`" in memory
-    assert "- 技能沉淀目录：`docs/skills/`" in memory
+    assert "reports/" in projects
+    assert "topic 分组" in projects
+    assert "Archive README" in archive
+    assert "workspace 级维护脚本" in scripts
+    assert "docs/themes" not in skill_zh
+    assert "TODO.md" in skill_zh
 
 
 def test_setup_workspace_english_language_creates_english_templates(tmp_path: Path):
@@ -82,13 +70,11 @@ def test_setup_workspace_english_language_creates_english_templates(tmp_path: Pa
     )
 
     assert result.returncode == 0, result.stderr
-    readme = (workspace_dir / "README.md").read_text(encoding="utf-8")
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    memory = (workspace_dir / "MEMORY.md").read_text(encoding="utf-8")
+    todo = (workspace_dir / "TODO.md").read_text(encoding="utf-8")
     assert "## Architecture" in agents
     assert "## 架构" not in agents
-    assert "## Current Workspace" in memory
-    assert "Human-AI collaboration workspace root." in readme
+    assert "Near-term plans" in todo
 
 
 def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
@@ -130,17 +116,10 @@ def test_setup_workspace_existing_workspace_keeps_protocol_files(tmp_path: Path)
     workspace_dir = tmp_path / "workspace"
     workspace_dir.mkdir()
     (workspace_dir / "AGENTS.md").write_text("legacy agents\n", encoding="utf-8")
-    (workspace_dir / "MEMORY.md").write_text("legacy memory\n", encoding="utf-8")
 
     result = _run_chattool_setup_workspace([str(workspace_dir), "-I"])
 
     assert result.returncode == 0, result.stderr
-    assert (workspace_dir / "AGENTS.md").read_text(
-        encoding="utf-8"
-    ) == "legacy agents\n"
-    assert (workspace_dir / "MEMORY.md").read_text(
-        encoding="utf-8"
-    ) == "legacy memory\n"
-    assert not (workspace_dir / "AGENTS.generated.md").exists()
-    assert not (workspace_dir / "MEMORY.generated.md").exists()
-    assert (workspace_dir / "README.md").exists()
+    assert (workspace_dir / "AGENTS.md").read_text(encoding="utf-8") == "legacy agents\n"
+    assert not (workspace_dir / "README.md").exists()
+    assert not (workspace_dir / "IDENTITY.md").exists()

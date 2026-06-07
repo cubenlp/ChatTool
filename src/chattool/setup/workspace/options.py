@@ -13,10 +13,6 @@ from chattool.interaction import (
     ask_text,
     create_choice,
 )
-from chattool.setup.opencode_chatloop import (
-    build_chatloop_plugin_entry,
-    resolve_opencode_home,
-)
 from chattool.utils import mask_secret
 
 
@@ -86,18 +82,6 @@ def _copy_skill_tree(src: Path, dst: Path) -> list[str]:
         shutil.copytree(skill_dir, target_dir)
         copied.append(skill_dir.name)
     return copied
-def apply_opencode_loop_option(workspace_dir: Path) -> dict:
-    opencode_home = resolve_opencode_home()
-    plugin_dir = opencode_home / "plugins" / "chatloop"
-    commands_dir = opencode_home / "command"
-    return {
-        "name": "opencode_loop",
-        "workspace_dir": workspace_dir,
-        "opencode_home": opencode_home,
-        "plugin_dir": plugin_dir,
-        "commands_dir": commands_dir,
-        "plugin_entry": build_chatloop_plugin_entry(opencode_home),
-    }
 
 
 def _credential_path_from_source(repo_source: str) -> str | None:
@@ -246,7 +230,6 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
             "source": REXBLOG_REPO_URL,
             "github_token": None,
         },
-        "opencode_loop": {"enabled": False},
     }
 
     enable_extras = ask_confirm(
@@ -267,10 +250,6 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         choices=[
             create_choice("ChatTool -> core/ChatTool + ./skills", "chattool"),
             create_choice("RexBlog -> core/RexBlog + public/hexo_blog", "rexblog"),
-            create_choice(
-                "OpenCode loop support -> .opencode chatloop plugin + commands",
-                "opencode_loop",
-            ),
         ],
         default_values=[],
         instruction="",

@@ -194,7 +194,6 @@ def workspace_setup(
     dry_run,
     with_chattool,
     chattool_source,
-    with_opencode_loop,
 ):
     setup_workspace(
         profile_name=profile,
@@ -205,7 +204,6 @@ def workspace_setup(
         dry_run=dry_run,
         with_chattool=with_chattool,
         chattool_source=chattool_source,
-        with_opencode_loop=with_opencode_loop,
     )
 
 
@@ -688,13 +686,6 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "default": None,
                     "help": "Git URL or local ChatTool repo path used when --with-chattool is enabled.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--with-opencode-loop/--no-opencode-loop",),
-                kwargs={
-                    "default": False,
-                    "help": "Use the OpenCode loop-aware workspace template and install the global chatloop plugin and slash commands for OpenCode.",
                 },
             ),
         ),

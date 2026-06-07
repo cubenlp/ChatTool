@@ -6,114 +6,107 @@ from pathlib import Path
 from .core import WorkspaceProfile
 
 
-def _read_template(language: str, relative_path: str, *, template_variant: str = "default") -> str:
+def _read_template(language: str, relative_path: str) -> str:
     return (
         resources.files("chattool.setup.workspace")
         .joinpath("templates")
-        .joinpath(template_variant)
+        .joinpath("default")
         .joinpath(language)
         .joinpath(relative_path)
         .read_text(encoding="utf-8")
     )
 
 
-def _render_text_template(language: str, relative_path: str, *, template_variant: str = "default", **variables: str) -> str:
-    content = _read_template(language, relative_path, template_variant=template_variant)
+def _render_text_template(language: str, relative_path: str, **variables: str) -> str:
+    content = _read_template(language, relative_path)
     for key, value in variables.items():
         content = content.replace(f"{{{{{key}}}}}", value)
     return content
 
 
-def render_root_readme(language: str, *, template_variant: str = "default") -> str:
-    return _read_template(language, "README.md", template_variant=template_variant)
+def render_projects_readme(language: str) -> str:
+    return _read_template(language, "projects/README.md")
 
 
-def render_projects_readme(language: str, *, template_variant: str = "default") -> str:
-    return _read_template(language, "projects/README.md", template_variant=template_variant)
-
-
-def render_docs_readme(language: str) -> str:
-    if language == "en":
-        return "# Docs\n\nDurable notes outside source repositories.\n"
-    return "# Docs\n\n源码仓库之外的长期文档区。\n"
-
-
-def render_docs_memory_readme(language: str) -> str:
-    if language == "en":
-        return "# Memory\n\nDurable status snapshots and long-lived context.\n"
-    return "# Memory\n\n状态快照与长期上下文。\n"
-
-
-def render_docs_tools_readme(language: str) -> str:
-    if language == "en":
-        return "# Tools\n\nTool-specific notes and references.\n"
-    return "# Tools\n\n工具说明与参考。\n"
-
-
-def render_docs_skills_readme(language: str) -> str:
-    if language == "en":
-        return "# Skills\n\nReusable skills, patterns, and practice notes.\n"
-    return "# Skills\n\n可复用技巧、skills 与实践记录。\n"
-
-
-def render_reference_readme(language: str) -> str:
-    if language == "en":
-        return "# Reference\n\nReusable workspace-level references shared across multiple projects.\n"
-    return "# Reference\n\n跨多个 project 可复用的 workspace 级长期参考。\n"
-
-
-def render_docs_themes_readme(language: str) -> str:
-    if language == "en":
-        return "# Themes\n\nLong-lived workspace conventions organized by theme.\n"
-    return "# Themes\n\n按主题整理的 workspace 长期规范与维护约定。\n"
-
-
-def render_docs_theme_changelog(language: str) -> str:
+def render_archive_readme(language: str) -> str:
     if language == "en":
         return (
-            "# Changelog Theme\n\n"
-            "Current workspace changelog rules:\n\n"
-            "- Maintain `CHANGELOG.md` entries with explicit dates\n"
-            "- Do not introduce a parallel `release.log` mechanism unless a repo already has one\n"
-            "- Use project `progress.md` for task process notes, not repo changelogs\n"
+            "# Archive README\n\n"
+            "`archive/` stores inactive projects by archive date.\n\n"
+            "## Structure\n\n"
+            "```text\narchive/\n  README.md\n  YYYY-MM-DD/\n    <project-name>/\n```\n\n"
+            "Move inactive projects into `archive/YYYY-MM-DD/` and summarize them in the workspace root `ARCHIVE.md`.\n"
         )
     return (
-        "# Changelog Theme\n\n"
-        "当前 workspace 的 changelog 维护约定：\n\n"
-        "- `CHANGELOG.md` 按日期维护条目\n"
-        "- 不额外引入 `release.log` 这一类平行机制，除非某个仓库自己已经有明确入口\n"
-        "- project 的 `progress.md` 用来记录任务推进过程，不替代仓库 changelog\n"
+        "# Archive README\n\n"
+        "`archive/` 是 Playground 的历史日志区，按归档日期保存已不活跃的 project。\n\n"
+        "## 目录结构\n\n"
+        "```text\narchive/\n  README.md\n  YYYY-MM-DD/\n    <project-name>/\n```\n\n"
+        "每次归档时，把 project 移到 `archive/YYYY-MM-DD/`，并在 workspace 根目录 `ARCHIVE.md` 中补归档摘要。\n"
     )
 
 
-def render_workspace_maintenance_skill(language: str) -> tuple[str, str]:
+def render_archive_md(language: str) -> str:
+    if language == "en":
+        return "# Archive\n\nRecord archived project summaries in reverse chronological order.\n"
+    return (
+        "# Archive\n\n"
+        "按日期倒序记录归档项目摘要。每个项目都说明“这是做什么的”和“本轮做了什么”。更具体的维护规则见 `archive/README.md`。\n"
+    )
+
+
+def render_todo_md(language: str) -> str:
+    if language == "en":
+        return "# TODO\n\nNear-term plans for this workspace.\n"
+    return "# TODO\n\n这里记录这个 workspace 近期打算做的事。\n"
+
+
+def render_scripts_readme(language: str) -> str:
+    if language == "en":
+        return (
+            "# Scripts\n\n"
+            "Workspace-level maintenance scripts live here. Keep task-specific scripts inside the relevant project.\n"
+        )
+    return (
+        "# Scripts\n\n"
+        "这里放 workspace 级维护脚本。\n\n"
+        "约定：\n"
+        "- 只放跨 project 复用的维护脚本\n"
+        "- 不要在 workspace 顶层散放脚本或临时文件\n"
+        "- 业务任务相关脚本，优先放在对应 project 内部\n"
+    )
+
+
+def render_workspace_maintenance_skill() -> tuple[str, str]:
     skill_md = (
         "---\n"
         "name: workspace-maintenance\n"
-        "description: Maintain the outer workspace structure. Use when organizing projects, promoting reusable materials into workspace-level reference, or normalizing long-lived rules into docs/themes.\n"
-        "version: 0.1.0\n"
+        "description: Maintain the outer workspace structure. Use for project cleanup, archive review, root protocol alignment, and moving files into the proper workspace-level locations.\n"
+        "version: 0.2.2\n"
         "---\n\n"
         "# Workspace Maintenance\n\n"
-        "Use this skill for outer-workspace cleanup and normalization.\n\n"
-        "- promote reusable materials into `reference/`\n"
-        "- normalize long-lived rules into `docs/themes/`\n"
-        "- keep project-local `reference/` directories task-specific\n"
-        "- update root docs when workspace structure changes\n"
+        "Use this skill when maintaining the outer workspace rather than editing a source repository.\n\n"
+        "- keep active work under `projects/` and archive inactive work into `archive/YYYY-MM-DD/`\n"
+        "- update `ARCHIVE.md` when projects are archived or restored\n"
+        "- keep workspace-level scripts under `scripts/`\n"
+        "- prefer moving files into the nearest `.trash/` instead of deleting them directly\n"
+        "- keep root protocol files (`AGENTS.md`, `ARCHIVE.md`, `TODO.md`) aligned with the real workspace structure\n"
     )
     skill_zh = (
         "---\n"
         "name: workspace-maintenance\n"
-        "description: 维护 workspace 外层协作结构。适用于整理 projects、把可复用材料提升到 workspace 级 reference、把长期规范收口到 docs/themes。\n"
-        "version: 0.1.0\n"
+        "description: 维护 workspace 外层协作结构。适用于整理活跃项目、归档旧项目、对齐根协议文件，以及把文件移动到正确的 workspace 级目录。\n"
+        "version: 0.2.2\n"
         "---\n\n"
         "# Workspace Maintenance（中文）\n\n"
-        "用于 workspace 外层整理与规范化。\n\n"
-        "- 把可复用材料沉淀到 `reference/`\n"
-        "- 把长期规则收口到 `docs/themes/`\n"
-        "- 保持 project 内 `reference/` 只服务当前任务\n"
-        "- workspace 结构变化后同步更新根文档\n"
+        "用于维护 workspace 外层结构，而不是直接修改源码仓库。\n\n"
+        "- 活跃工作保留在 `projects/`，不活跃项目归档到 `archive/YYYY-MM-DD/`\n"
+        "- 发生归档或恢复时同步更新 `ARCHIVE.md`\n"
+        "- workspace 级维护脚本统一放到 `scripts/`\n"
+        "- 删除前优先移动到就近的 `.trash/`，不要直接删除\n"
+        "- 保持根协议文件（`AGENTS.md`、`ARCHIVE.md`、`TODO.md`）与真实结构一致\n"
     )
-    return (skill_md, skill_zh) if language == "en" else (skill_zh, skill_zh)
+    return skill_md, skill_zh
 
 
 def render_public_readme(language: str) -> str:
@@ -122,20 +115,14 @@ def render_public_readme(language: str) -> str:
     return "# Public\n\n这个目录用于部署公开网站及相关发布产物。\n"
 
 
-def render_memory_md(language: str, *, template_variant: str = "default") -> str:
-    return _read_template(language, "MEMORY.md", template_variant=template_variant)
-
-
 def render_agents_md(
     workspace_dir: Path,
     profile: WorkspaceProfile,
     language: str,
     enabled_options: list[str],
-    *,
-    template_variant: str = "default",
 ) -> str:
     options_text = ", ".join(enabled_options) if enabled_options else "none"
-    return _render_text_template(language, "AGENTS.md", template_variant=template_variant, ENABLED_OPTIONS=options_text)
+    return _render_text_template(language, "AGENTS.md", ENABLED_OPTIONS=options_text)
 
 
 def base_file_map(
@@ -144,36 +131,25 @@ def base_file_map(
     language: str,
     enabled_options: list[str],
     *,
-    template_variant: str = "default",
     existing_workspace: bool,
     helper_agents_path: str | None = None,
-    helper_memory_path: str | None = None,
+    helper_identity_path: str | None = None,
 ) -> dict[str, str]:
     file_map = {
-        "README.md": render_root_readme(language, template_variant=template_variant),
-        "TODO.md": "# TODO\n\n",
-        "projects/README.md": render_projects_readme(language, template_variant=template_variant),
-        "reference/README.md": render_reference_readme(language),
-        "docs/README.md": render_docs_readme(language),
-        "docs/memory/README.md": render_docs_memory_readme(language),
-        "docs/skills/README.md": render_docs_skills_readme(language),
-        "docs/themes/README.md": render_docs_themes_readme(language),
-        "docs/themes/changelog.md": render_docs_theme_changelog(language),
-        "docs/tools/README.md": render_docs_tools_readme(language),
+        "TODO.md": render_todo_md(language),
+        "ARCHIVE.md": render_archive_md(language),
+        "projects/README.md": render_projects_readme(language),
+        "archive/README.md": render_archive_readme(language),
+        "scripts/README.md": render_scripts_readme(language),
         "public/README.md": render_public_readme(language),
     }
-    skill_md, skill_zh = render_workspace_maintenance_skill(language)
+    skill_md, skill_zh = render_workspace_maintenance_skill()
     file_map["skills/workspace-maintenance/SKILL.md"] = skill_md
     file_map["skills/workspace-maintenance/SKILL.zh.md"] = skill_zh
-    agents_content = render_agents_md(workspace_dir, profile, language, enabled_options, template_variant=template_variant)
-    memory_content = render_memory_md(language, template_variant=template_variant)
+    agents_content = render_agents_md(workspace_dir, profile, language, enabled_options)
     if helper_agents_path:
         file_map[helper_agents_path] = agents_content
     else:
         file_map["AGENTS.md"] = agents_content
-    if helper_memory_path:
-        file_map[helper_memory_path] = memory_content
-    else:
-        file_map["MEMORY.md"] = memory_content
     file_map.update(profile.extra_files(workspace_dir))
     return file_map

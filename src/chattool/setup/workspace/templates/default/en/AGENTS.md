@@ -4,13 +4,13 @@
 
 ## Core Principles
 
-- Workspace-level files are for project authoring and guidance; actual execution should happen inside the target project directory.
-- Use `projects/` as the top-level container for all active work.
-- Default to the minimal `PRD.md` workflow instead of precommitting to a complex directory hierarchy.
+- Keep only a small set of control files at workspace root; actual execution should happen inside the target project directory.
+- Keep all active work under `projects/`; archive inactive projects into `archive/YYYY-MM-DD/`.
+- Project structure should stay minimal by default, while naming still allows more flexible grouping.
 - `PRD.md` records stable requirements, scope, constraints, and completion criteria; progress details belong in `progress.md`.
+- `progress.md` is the continuity log for each task. Update it after each substantive action.
+- Archiving should not be decided by scripts alone. Scripts can collect candidates and validate rules, but the final archive summary should be reviewed and written into `ARCHIVE.md` by the model.
 - If requirements are unclear, ask follow-up questions before execution.
-- Promote reusable references across projects into `reference/`.
-- Promote long-lived maintenance conventions into `docs/themes/`.
 
 See `projects/README.md` for concrete project structures and naming rules.
 
@@ -18,52 +18,61 @@ See `projects/README.md` for concrete project structures and naming rules.
 
 ```text
 Workspace/
-  README.md
-  MEMORY.md
+  AGENTS.md
   TODO.md
+  ARCHIVE.md
+  .trash/
   projects/
-  reference/
-  docs/
+  archive/
+    YYYY-MM-DD/
   core/
+  scripts/
   skills/
   public/
 ```
 
-This outer workspace keeps collaboration artifacts outside the core repositories.
+This workspace is an outer collaboration scaffold around source repositories.
 
 ## Current Options
 
-- Enabled options: `{{ENABLED_OPTIONS}}`
+- Enabled options: `archive/`, `ARCHIVE.md`
 - Source repositories go under `core/`
-- Durable notes live under `docs/`
+- Workspace maintenance scripts go under `scripts/`
+- The workspace root keeps a `.trash/` directory; prefer moving files there before deleting them directly
 - Imported shared skills go under `skills/`
 - Public publish output goes under `public/`
-- Cross-project reusable references go under `reference/`
-- Theme-organized maintenance rules go under `docs/themes/`
+- Archived projects go under `archive/YYYY-MM-DD/`
 
 ## Workflow
 
-1. Read `MEMORY.md` before starting work.
+1. Read root `AGENTS.md`, then enter the target project.
 2. Identify the repo to change under `core/` and the target project under `projects/`.
 3. Create or refine `PRD.md` before execution.
-4. Keep drafts and local references inside the current project rather than workspace-global buckets.
-5. If a project needs a shorter repo path, create an on-demand symlink to `core/<repo-name>` instead of copying the repository.
-6. At the end, finish the report and update `MEMORY.md` if durable context changed.
-7. If some material is clearly reusable across projects, promote it into workspace-level `reference/` or `docs/themes/` instead of leaving it in one project.
+4. Update the current project's `progress.md` after each substantive action.
+5. Keep drafts, experiments, and local references inside the current project and place them into the matching subdirectories.
+6. Do not write debug temp files into `/tmp`; use the current project's `playground/`.
+7. Keep the project root minimal: control files at the root, reports under `reports/`, scripts under `scripts/`.
+8. If you use `projects/<topic>/<name>/`, keep `projects/<topic>/` as an index layer with only `README.md`, `.trash/`, and child project directories.
+9. Use `MM-DD-...` for new execution tasks by default; only clearly long-lived stable subprojects should omit the date prefix.
+10. Prefer `.trash/` at both workspace and project level; move files there before irreversible deletion.
+11. If a project needs a shorter repo path, create an on-demand symlink to `core/<repo-name>` instead of copying the repository.
+12. Finish with a report; if archiving happens, update `ARCHIVE.md`.
+13. Follow an archive flow of “script candidate collection + model review + `ARCHIVE.md` update”.
 
 ## Write Rules
 
 | Situation | Write To |
 |-----------|----------|
-| Any active work unit | `projects/MM-DD-<project-name>/` |
-| Cross-project reusable reference | `reference/` |
+| Any active work unit | `projects/<name>/` or `projects/<topic>/<name>/` |
+| Short-term project | Prefer `MM-DD-<project-name>` |
+| Long-lived project | Use a stable name without a date prefix |
+| Inactive old project | `archive/YYYY-MM-DD/<project-name>/` |
+| Archive summary | `ARCHIVE.md` |
 | Repositories to change | `core/<repo-name>/` |
-| Durable context snapshots | `docs/memory/YYYY-MM-DD-status.md` |
-| Tool notes | `docs/tools/<toolname>.md` |
-| Reusable skills / practice | `docs/skills/` |
-| Theme maintenance rules | `docs/themes/` |
+| Workspace maintenance scripts | `scripts/<name>.py` |
 
 ## Conventions
 
 - Stay within the current task boundary unless the task is explicitly expanded.
 - State uncertainty explicitly instead of silently assuming.
+- Do not scatter standalone scripts or temp files at the workspace root; place durable scripts under `scripts/`.

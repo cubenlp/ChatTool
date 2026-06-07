@@ -315,19 +315,18 @@ chattool setup workspace ~/workspace/demo --language en
 它会生成一套独立骨架，包括：
 
 - `AGENTS.md`：模型主协议
-- `MEMORY.md`：跨 session 记忆
-- `README.md`：workspace 的 general-use 入口
-- `projects/`：所有实际工作的执行容器，单任务和多任务 project 都从这里展开
-- `docs/`：长期文档沉淀
-- `core/`：源码仓库目录
+- - `ARCHIVE.md`：归档摘要日志
+- `.trash/`：workspace 级软删除缓冲区
+- `projects/`：所有实际工作的执行容器
+- `archive/`：归档后的历史 project
+- - `core/`：源码仓库目录
+- `scripts/`：workspace 级维护脚本目录
 - `skills/`：共享 skills 目录
 - `public/`：公开网站和发布目录
 
-默认先用单任务 project；如果是一组围绕同一目标持续推进的大任务，再升级为多任务 project，并在 project 根保留 `PROJECT.md`、`progress.md`、`review.md`。工作区协议现在也会明确：review 由 loop 在模型准备停下时触发；如果是开发任务，每个阶段都要先测试通过、完善文档，再按 `review.md` 的规则完成校验与收尾。
-
 默认模板语言是中文；如果你要英文版协议和 onboarding 文件，可以显式传 `--language en`。
 
-如果目标目录已经是一个已有 workspace，`setup workspace` 不会直接覆盖原有 `AGENTS.md` / `MEMORY.md`；当前更强调通过根目录 `README.md` 和 `projects/README.md` 提供 general-use 入口与结构约定，再逐步完成迁移。
+如果目标目录已经是一个已有 workspace，`setup workspace` 会优先保留现有 `AGENTS.md` 或历史遗留的 `MEMORY.md`，同时补齐当前结构目录。
 
 如果只想先看计划不落盘：
 
