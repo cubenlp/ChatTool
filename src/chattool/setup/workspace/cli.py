@@ -4,7 +4,6 @@ from pathlib import Path
 
 import click
 
-from chattool.setup.opencode import setup_opencode
 from chattool.interaction import (
     BACK_VALUE,
     abort_if_force_without_tty,
@@ -54,8 +53,6 @@ def _plan_workspace(
     language: str,
     enabled_options: list[str],
     profile,
-    *,
-    template_variant: str = "default",
 ) -> tuple[list[Path], dict[Path, str]]:
     dir_paths = [workspace_dir / rel for rel in BASE_DIRS]
     dir_paths.extend(workspace_dir / rel for rel in profile.extra_dirs())
@@ -65,7 +62,6 @@ def _plan_workspace(
         profile,
         language,
         enabled_options,
-        template_variant=template_variant,
         existing_workspace=existing_workspace,
     )
     planned_files = {workspace_dir / rel: content for rel, content in file_map.items()}
@@ -106,7 +102,6 @@ def setup_workspace(
     dry_run=False,
     with_chattool=False,
     chattool_source=None,
-    with_opencode_loop=False,
 ):
     profile_name, workspace_dir = coerce_profile_and_workspace(
         profile_name, workspace_dir
@@ -117,7 +112,6 @@ def setup_workspace(
     usage = (
         "Usage: chattool setup workspace [PROFILE] [WORKSPACE_DIR] "
         "[--language zh|en] [--with-chattool] [--chattool-source <path-or-url>] "
-        "[--with-opencode-loop] "
         "[--force] [--dry-run] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, _, need_prompt = (
@@ -135,7 +129,6 @@ def setup_workspace(
             "source": chattool_source or workspace_options.CHATTOOL_REPO_URL,
         },
         "rexblog": {"enabled": False, "source": workspace_options.REXBLOG_REPO_URL},
-        "opencode_loop": {"enabled": bool(with_opencode_loop)},
     }
 
     if need_prompt:
@@ -158,9 +151,8 @@ def setup_workspace(
     enabled_options = [
         name for name, item in option_settings.items() if item["enabled"]
     ]
-    template_variant = "opencode-loop" if option_settings["opencode_loop"]["enabled"] else "default"
     dir_paths, file_map = _plan_workspace(
-        workspace_path, language, enabled_options, profile, template_variant=template_variant
+        workspace_path, language, enabled_options, profile
     )
 
     if dry_run:
@@ -177,9 +169,6 @@ def setup_workspace(
         write_text_file(path, content, force=force)
 
     applied = []
-    if option_settings["opencode_loop"]["enabled"]:
-        setup_opencode(interactive=False, install_only=True, plugin="chatloop")
-        applied.append(workspace_options.apply_opencode_loop_option(workspace_path))
     if option_settings["chattool"]["enabled"]:
         applied.append(
             workspace_options.apply_chattool_option(
@@ -220,8 +209,3 @@ def setup_workspace(
             click.echo(f"RexBlog repo: {item['repo_dir']}")
             click.echo(f"Repo action: {item['repo_action']}")
             click.echo(f"Public link: {item['public_link']}")
-        if item["name"] == "opencode_loop":
-            click.echo(f"OpenCode home: {item['opencode_home']}")
-            click.echo(f"ChatLoop plugin: {item['plugin_dir']}")
-            click.echo(f"ChatLoop commands: {item['commands_dir']}")
-            click.echo("ChatLoop state and event records are written under each project's .opencode/ directory when /chatloop runs.")

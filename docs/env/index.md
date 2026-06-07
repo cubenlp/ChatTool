@@ -51,21 +51,9 @@ chattool setup docker --sudo -i
 ```bash
 chattool setup workspace
 chattool setup workspace ~/workspace/demo
-chattool setup workspace ~/workspace/demo --with-opencode-loop
-chattool setup opencode --install-only --plugin chatloop
 ```
 
 详细文档：[workspace.md](workspace.md)
-
-### ChatLoop Quickstart
-
-如果你想从零开始体验一次完整的 `PRD.md -> /chatloop -> fresh-start continuation` 流程，可参考：
-
-- [chatloop-quickstart.md](chatloop-quickstart.md)
-
-如果你想看一篇更完整的设计复盘，了解为什么 `chatloop` 要向 `auto-loop` 学 continuation 状态机，以及为什么 `opencode run` 不能代表真实 loop 行为，可参考：
-
-- [../blog/agent-cli/chatloop-from-auto-loop.md](../blog/agent-cli/chatloop-from-auto-loop.md)
 
 ### Lark CLI 配置
 
