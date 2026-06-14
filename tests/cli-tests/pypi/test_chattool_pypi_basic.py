@@ -183,6 +183,9 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     assert '"chatenv>=0.1.1"' in pyproject_text
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert 'docs = ["mkdocs' in pyproject_text
+    assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
+    assert 'Repository = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
+    assert 'Documentation = "https://ChatArch.github.io/mychat-cli"' in pyproject_text
     workflow_texts = [
         path.read_text(encoding="utf-8")
         for path in sorted((project_dir / ".github" / "workflows").iterdir())
@@ -192,10 +195,12 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     publish_text = (project_dir / ".github" / "workflows" / "publish.yml").read_text(
         encoding="utf-8"
     )
-    assert "branches:\n      - main\n      - master" in publish_text
+    assert 'tags:\n      - "v*"' in publish_text
     assert "contents: write" in publish_text
     assert "id-token: write" in publish_text
-    assert "git tag -a" in publish_text
+    assert "Check tag matches package version" in publish_text
+    assert "GITHUB_REF_NAME" in publish_text
+    assert "git tag -a" not in publish_text
     assert "python -m twine check dist/*" in publish_text
     assert "pypa/gh-action-pypi-publish@release/v1" in publish_text
     assert "Publish workflow scaffold only" not in publish_text
@@ -209,7 +214,10 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     assert "\n# mychat-cli\n\n" in readme_text
     assert "\n            # mychat-cli\n" not in readme_text
     assert "img.shields.io/pypi/v/mychat-cli.svg" in readme_text
+    assert "https://github.com/ChatArch/mychat-cli/actions/workflows/ci.yml" in readme_text
     assert "actions/workflows/ci.yml/badge.svg" in readme_text
+    assert "https://ChatArch.github.io/mychat-cli" in readme_text
+    assert "OWNER/REPO" not in readme_text
     assert "docs-mkdocs" in readme_text
     assert "CommandSchema" in readme_text
 
@@ -242,6 +250,8 @@ def test_chattool_pypi_init_chatarch_can_skip_optional_files(tmp_path):
     assert '"chatstyle>=0.1.0"' in pyproject_text
     assert '"chatenv>=0.1.1"' in pyproject_text
     assert 'docs = ["mkdocs' not in pyproject_text
+    assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
+    assert 'Documentation = "https://ChatArch.github.io/mychat-cli"' not in pyproject_text
     readme_text = (project_dir / "README.md").read_text(encoding="utf-8")
     assert "docs-mkdocs" not in readme_text
     assert "actions/workflows/ci.yml" not in readme_text

@@ -34,9 +34,10 @@
   1. 执行 `chattool pypi init mychat-cli -t chatarch --project-dir <tmp>/mychat-cli`。
   2. 预期额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`src/<module>/cli.py`、`docs/index.md`、`docs/index.en.md`、`tests/cli-tests/README.md`、`tests/mock-cli-tests/README.md`、`tests/code-tests/README.md`。
   3. 预期生成 `.github/workflows/ci.yml`、`publish.yml`、`deploy.yaml`、`preview.yaml`。
-  4. 默认 README 使用中文，并在开头包含 PyPI version、GitHub Actions 和 mkdocs docs badge；英文内容放在 `.en.md` 文件中。
-  5. 这些文件应体现 CLI 规范、开发规范、文档/测试约定和自动化基础说明。
-  6. 可通过 `--without-mkdocs` 跳过 mkdocs/docs 文件，通过 `--without-workflows` 跳过 `.github/workflows/`。
+  4. 默认 README 使用中文，并在开头包含 PyPI version、GitHub Actions 和 mkdocs docs badge；badge、`pyproject.toml` URL 与 `mkdocs.yml` 仓库链接默认指向 `ChatArch/<package>`。
+  5. `publish.yml` 只应由 `v*` tag 或手动 `workflow_dispatch` 触发，不应由普通分支 push 触发。
+  6. 这些文件应体现 CLI 规范、开发规范、文档/测试约定和自动化基础说明。
+  7. 可通过 `--without-mkdocs` 跳过 mkdocs/docs 文件，通过 `--without-workflows` 跳过 `.github/workflows/`。
 
 参考执行脚本（伪代码）：
 
