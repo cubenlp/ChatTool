@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
 ## 2026-06-15
-- 准备 `7.0.2` 版本：`chatpypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.1` 后，将包版本 bump 到 `7.0.2`。
+- 准备 `7.0.2` 版本：`chatpypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.1` 后，将包版本 bump 到 `7.0.2`；`v7.0.1` 对应的版本提交位于 `origin/rex/dev`，未合入当前 `master`，因此本 PR 从 `master` 的 `7.0.0` 直接提升到 `7.0.2`。
 - `chattool pypi init -t chatarch` 生成的仓库元数据默认指向 `ChatArch/<package>`，包括 README badge、`pyproject.toml` URLs 与 `mkdocs.yml` 仓库链接。
 - `chatarch` 模板生成的 `publish.yml` 改为只由 `v*` tag 或手动触发，并校验 tag 与包版本一致；不再由普通分支 push 触发发布，也不再自动创建 release tag。
 
