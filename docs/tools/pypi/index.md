@@ -72,4 +72,4 @@ chattool pypi upload --project-dir .
 其中 `tests/conftest.py` 会自动把 `src/` 加入导入路径，因此生成后可以直接运行 `python -m pytest -q`。
 default 模板生成的 `pyproject.toml` 默认写入 `requires-python = ">=3.9"`；`chatarch` 模板依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1`，默认写入 `requires-python = ">=3.10"`。
 
-`chattool pypi init <name> -t chatarch` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、合并主线后按 `__version__` 自动创建 `vX.Y.Z` tag 并通过 Trusted Publishing 发布 PyPI 的 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatArch 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。可用 `--without-mkdocs` 跳过 mkdocs/docs 相关文件，可用 `--without-workflows` 跳过 `.github/workflows/`。
+`chattool pypi init <name> -t chatarch` 会生成更完整的 CLI 仓库模板：默认中文 README、`README.en.md`、mkdocs 文档入口、`docs/index.en.md`、CI、由 `vX.Y.Z` tag 触发并校验 tag 与 `__version__` 一致后通过 Trusted Publishing 发布 PyPI 的 workflow、mkdocs docs deploy 和 PR preview workflow，并按 ChatArch 规范创建 `src/<module>/cli.py`、`tests/cli-tests`、`tests/mock-cli-tests`、`tests/code-tests`。可用 `--without-mkdocs` 跳过 mkdocs/docs 相关文件，可用 `--without-workflows` 跳过 `.github/workflows/`。
