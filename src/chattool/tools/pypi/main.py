@@ -339,6 +339,8 @@ def _build_chatarch_pyproject_content(
     email: str | None,
     include_mkdocs: bool = True,
 ) -> str:
+    repo_slug = _chatarch_repo_slug(package_name)
+    docs_url = _chatarch_docs_url(package_name)
     lines = [
         "[build-system]",
         'requires = ["setuptools>=61.0", "wheel"]',
@@ -369,6 +371,16 @@ def _build_chatarch_pyproject_content(
             '    "Operating System :: OS Independent",',
             "]",
             "",
+            "[project.urls]",
+            f'Homepage = "https://github.com/{_toml_escape(repo_slug)}"',
+            f'Repository = "https://github.com/{_toml_escape(repo_slug)}"',
+        ]
+    )
+    if include_mkdocs:
+        lines.append(f'Documentation = "{_toml_escape(docs_url)}"')
+    lines.extend(
+        [
+            "",
             "[project.scripts]",
             f'{module_name} = "{module_name}.cli:main"',
             "",
@@ -395,9 +407,19 @@ def _build_chatarch_pyproject_content(
     return "\n".join(lines)
 
 
+def _chatarch_repo_slug(package_name: str) -> str:
+    return f"ChatArch/{package_name}"
+
+
+def _chatarch_docs_url(package_name: str) -> str:
+    return f"https://ChatArch.github.io/{package_name}"
+
+
 def _chatarch_badge_block(
     package_name: str, *, include_mkdocs: bool, include_workflows: bool
 ) -> str:
+    repo_slug = _chatarch_repo_slug(package_name)
+    docs_url = _chatarch_docs_url(package_name)
     lines = [
         '<div align="center">',
         f'    <a href="https://pypi.python.org/pypi/{package_name}">',
@@ -407,15 +429,15 @@ def _chatarch_badge_block(
     if include_workflows:
         lines.extend(
             [
-                '    <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">',
-                '        <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />',
+                f'    <a href="https://github.com/{repo_slug}/actions/workflows/ci.yml">',
+                f'        <img src="https://github.com/{repo_slug}/actions/workflows/ci.yml/badge.svg" alt="Tests" />',
                 "    </a>",
             ]
         )
     if include_mkdocs:
         lines.extend(
             [
-                '    <a href="https://OWNER.github.io/REPO">',
+                f'    <a href="{docs_url}">',
                 '        <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />',
                 "    </a>",
             ]
@@ -707,12 +729,14 @@ def _build_chatarch_docs_index_en(package_name: str) -> str:
 
 
 def _build_chatarch_mkdocs_yml(package_name: str) -> str:
+    repo_slug = _chatarch_repo_slug(package_name)
+    docs_url = _chatarch_docs_url(package_name)
     return (
         textwrap.dedent(
             f"""
             site_name: {package_name} 文档
-            site_url: https://OWNER.github.io/REPO
-            repo_url: https://github.com/OWNER/REPO
+            site_url: {docs_url}
+            repo_url: https://github.com/{repo_slug}
             theme:
               name: material
               language: zh
@@ -940,9 +964,8 @@ def scaffold_package(
 
                     on:
                       push:
-                        branches:
-                          - main
-                          - master
+                        tags:
+                          - "v*"
                       workflow_dispatch:
 
                     permissions:
@@ -981,15 +1004,14 @@ def scaffold_package(
                                   print(f"version={version}", file=output)
                                   print(f"tag=v{version}", file=output)
                               PY
-                          - name: Check release tag
-                            id: tag
+                          - name: Check tag matches package version
+                            if: github.event_name == 'push'
                             env:
                               RELEASE_TAG: ${{ steps.meta.outputs.tag }}
                             run: |
-                              if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
-                                echo "exists=true" >> "$GITHUB_OUTPUT"
-                              else
-                                echo "exists=false" >> "$GITHUB_OUTPUT"
+                              if [ "${GITHUB_REF_NAME}" != "${RELEASE_TAG}" ]; then
+                                echo "Tag ${GITHUB_REF_NAME} does not match package version ${RELEASE_TAG}."
+                                exit 1
                               fi
                           - name: Check PyPI version
                             id: pypi
@@ -1018,15 +1040,6 @@ def scaffold_package(
                               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
                                   print(f"exists={exists}", file=output)
                               PY
-                          - name: Create release tag
-                            if: steps.pypi.outputs.exists == 'false' && steps.tag.outputs.exists == 'false'
-                            env:
-                              RELEASE_TAG: ${{ steps.meta.outputs.tag }}
-                            run: |
-                              git config user.name github-actions[bot]
-                              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-                              git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
-                              git push origin "${RELEASE_TAG}"
                           - name: Stop when version is already on PyPI
                             if: steps.pypi.outputs.exists == 'true'
                             run: echo "{package_name} ${{ steps.meta.outputs.version }} is already on PyPI; skipping publish."

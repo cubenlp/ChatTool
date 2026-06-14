@@ -270,6 +270,9 @@ def test_scaffold_chatarch_defaults_to_python_310_and_chatarch_deps(tmp_path):
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert '"chatstyle>=0.1.0"' in pyproject_text
     assert '"chatenv>=0.1.1"' in pyproject_text
+    assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
+    assert 'Repository = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
+    assert 'Documentation = "https://ChatArch.github.io/mychat-cli"' in pyproject_text
     assert "CommandSchema" in cli_text
     assert all('python-version: "3.10"' in text for text in workflow_texts)
     assert all("3.11" not in text for text in workflow_texts)
@@ -289,13 +292,15 @@ def test_scaffold_chatarch_publish_workflow_creates_tag_and_publishes(tmp_path):
         encoding="utf-8"
     )
 
-    assert "branches:\n      - main\n      - master" in publish_text
+    assert 'tags:\n      - "v*"' in publish_text
     assert "contents: write" in publish_text
     assert "id-token: write" in publish_text
     assert "Path(\"src/mychat_cli/__init__.py\")" in publish_text
     assert "tag=v{version}" in publish_text
-    assert "git tag -a" in publish_text
-    assert "git push origin" in publish_text
+    assert "Check tag matches package version" in publish_text
+    assert "GITHUB_REF_NAME" in publish_text
+    assert "git tag -a" not in publish_text
+    assert "git push origin" not in publish_text
     assert "https://pypi.org/pypi/" in publish_text
     assert "python -m twine check dist/*" in publish_text
     assert "pypa/gh-action-pypi-publish@release/v1" in publish_text
@@ -364,6 +369,8 @@ def test_scaffold_chatarch_can_skip_mkdocs_and_workflows(tmp_path):
     assert not (project_dir / ".github").exists()
     assert '"chatenv>=0.1.1"' in pyproject_text
     assert 'docs = ["mkdocs' not in pyproject_text
+    assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
+    assert 'Documentation = "https://ChatArch.github.io/mychat-cli"' not in pyproject_text
     assert "docs-mkdocs" not in readme_text
     assert "actions/workflows/ci.yml" not in readme_text
 
