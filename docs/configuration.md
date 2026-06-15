@@ -153,7 +153,7 @@ chatenv delete test -t openai
 ├── Feishu/
 │   ├── .env
 │   └── work.env
-└── GitHub/
+└── Zulip/
     └── .env
 ```
 
@@ -229,9 +229,8 @@ chatenv test -t oai
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
 - **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID`, `FEISHU_DEFAULT_CHAT_ID` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
-- **GitHub**: `GITHUB_ACCESS_TOKEN`, `GITHUB_DEFAULT_REPO`
 
-说明：`GITHUB_ACCESS_TOKEN` 是 ChatArch GitHub 工具的全局默认 token；如果你只想给当前 git 仓库配置独立的 HTTPS token，优先使用独立 `chatgh set-token`，它会按仓库路径写入本地 git credential，而不是覆盖全局默认 token。
+GitHub/gh 相关 typed env 已迁移到独立 `chatgh`，ChatTool 不再注册 `GITHUB_ACCESS_TOKEN` schema；需要配置 GitHub token 时请安装并使用 `chatgh set-token` / `chatenv -t gh`。
 
 其中飞书相关有两个额外约定：
 

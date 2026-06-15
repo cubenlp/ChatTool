@@ -268,7 +268,7 @@ INFO: Start opencode setup
 - 目录建议：
   - 默认在命令目录下平铺；当某个 CLI 下面已经形成稳定专题时，可引入一层 topic 目录保持与 skill / CLI 结构一致。
   - 例如：`tests/cli-tests/dns/test_chattool_dns_basic.md`
-  - 例如：`tests/mock-cli-tests/gh/test_chattool_gh_basic.md`
+  - 例如：`tests/mock-cli-tests/client/test_chattool_top_level_help_basic.md`
 - 文档结构建议：
   - 每个 case 优先保留“初始环境准备 / 相关文件 / 预期过程和结果 / 参考执行脚本（伪代码）”结构。
   - 根据需要，可在 case 开头写必要的文字说明。

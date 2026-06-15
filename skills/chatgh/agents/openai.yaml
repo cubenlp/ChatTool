@@ -1,4 +1,0 @@
-interface:
-  display_name: "ChatGH Helpers"
-  short_description: "Manage PRs and CI with chatgh"
-  default_prompt: "Use $chatgh to create or update this PR with a body file and wait for GitHub checks using chatgh."

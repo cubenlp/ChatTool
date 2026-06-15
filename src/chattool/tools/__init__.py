@@ -3,7 +3,6 @@ import importlib
 
 _LAZY_ATTRS = {
     "ZulipClient": ("chattool.tools.zulip", "ZulipClient"),
-    "GitHubClient": ("chattool.tools.github", "GitHubClient"),
     "InteractiveShell": ("chattool.tools.interact", "InteractiveShell"),
     "SimpleAsyncShell": ("chattool.tools.interact", "SimpleAsyncShell"),
     "create_dns_client": ("chattool.tools.dns", "create_dns_client"),
@@ -29,7 +28,6 @@ def __getattr__(name: str):
 
 __all__ = [
     "ZulipClient", 
-    "GitHubClient",
     "InteractiveShell", "SimpleAsyncShell",
     "create_dns_client",
     "AliyunDNSClient",

@@ -528,12 +528,18 @@ chattool network services
 
 ## 4. GitHub 工具 (`chatgh`)
 
+GitHub PR、CI、Actions 和 repo credential 工具已迁移到独立包 `chatgh`，不再作为 ChatTool 代码、依赖或 typed env schema 维护。需要使用时单独安装：
+
+```bash
+pip install chatgh --upgrade
+```
+
 ### 4.1 配置
-默认行为：
+`chatgh` 默认行为：
 
 - `repo`：优先从当前 git remote 推断
 - `token`：优先从当前仓库对应的 git credential 读取，再回退 `GITHUB_ACCESS_TOKEN`
-- GitHub CLI 能力已迁移到独立包 `chatgh>=0.2.1`；ChatTool 不再提供 `chattool gh` 入口
+- ChatTool 不再提供 `chattool gh` 入口，也不再注册 `gh` typed env schema
 
 ### 4.2 常用命令
 ```bash
@@ -575,7 +581,7 @@ chatgh pr-legacy edit --number 123 --title "New title" --body "Updated body"
 # 为当前 GitHub 仓库配置 repo 级 HTTPS token
 chatgh set-token --token github_pat_xxx
 
-# 如需顺手保存到 ChatTool GitHub 配置
+# 如需顺手保存到 ChatGH typed env 配置
 chatgh set-token --token github_pat_xxx --save-env
 
 # 查看当前 token 对仓库的权限列表
@@ -586,7 +592,7 @@ chatgh repo-perms --repo owner/repo --token github_pat_xxx
 
 `set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
 
-默认情况下，`set-token` 不会改写 `GITHUB_ACCESS_TOKEN`。只有显式传 `--save-env`，才会把 token 写入 `chatenv gh` 对应的 GitHub 配置。
+默认情况下，`set-token` 不会改写 `GITHUB_ACCESS_TOKEN`。只有显式传 `--save-env`，才会把 token 写入 `chatgh` 注册的 `chatenv gh` 配置。
 
 这里的 `ghp_xxx` / `github_pat_xxx` 都是 GitHub 的 Personal Access Token。来源是：
 
@@ -640,9 +646,6 @@ chatgh repo-perms --repo owner/repo --token github_pat_xxx
 - Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
 - Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs
 - Commit statuses API: https://docs.github.com/en/rest/commits/statuses
-- PyGithub 文档: https://pygithub.readthedocs.io/
-- PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
-- PyGithub `Repository` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html
 
 ---
 

@@ -41,5 +41,4 @@ jobs:
           tests/code-tests/test_setup_alias.py \
           tests/code-tests/skills/test_cli.py \
           tests/code-tests/skills/test_skill_assets.py \
-          tests/code-tests/tools/github/test_cli.py \
           tests/mock-cli-tests

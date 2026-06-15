@@ -96,7 +96,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - 目录建议：
   - 命令目录下优先平铺（通过文件名区分 `basic/topic`），避免无必要的层级嵌套。
   - 例如：`tests/cli-tests/dns/test_chattool_dns_basic.md`
-  - 例如：`tests/mock-cli-tests/gh/test_chattool_gh_basic.md`
+  - 例如：`tests/mock-cli-tests/client/test_chattool_top_level_help_basic.md`
 - 文档结构建议：
   - 每个 case 优先保留“初始环境准备 / 预期过程和结果 / 参考执行脚本（伪代码）”结构。
   - 根据需要，可在 case 开头写必要的文字说明。
