@@ -1,13 +1,30 @@
 from __future__ import annotations
 
-import http.server
-import socketserver
-import webbrowser
-from functools import partial
 from pathlib import Path
 from urllib.parse import quote
 
 import click
+
+from chattool.interaction.command_schema import (
+    CommandField,
+    CommandSchema,
+    add_interactive_option,
+    resolve_command_inputs,
+)
+
+
+LOCAL_SCHEMA = CommandSchema(
+    name="serve-local",
+    fields=(
+        CommandField(
+            "target",
+            prompt="HTML file or directory",
+            kind="path",
+            default=".",
+            prompt_if_missing=True,
+        ),
+    ),
+)
 
 
 def resolve_local_target(target: str | None, html_name: str | None) -> dict[str, str]:
@@ -50,16 +67,36 @@ def resolve_local_target(target: str | None, html_name: str | None) -> dict[str,
 @click.option("--port", default=8765, show_default=True, type=int, help="Bind port.")
 @click.option("--open/--no-open", "open_browser", default=True, show_default=True, help="Open the URL in a browser.")
 @click.option("--dry-run", is_flag=True, help="Print resolved server info without starting the server.")
-def local(target: str | None, html_name: str | None, host: str, port: int, open_browser: bool, dry_run: bool) -> None:
+@add_interactive_option
+def local(
+    target: str | None,
+    html_name: str | None,
+    host: str,
+    port: int,
+    open_browser: bool,
+    dry_run: bool,
+    interactive: bool | None,
+) -> None:
     """Serve a local directory or HTML file over HTTP."""
 
-    resolved = resolve_local_target(target, html_name)
+    values = resolve_command_inputs(
+        schema=LOCAL_SCHEMA,
+        provided={"target": target},
+        interactive=interactive,
+        usage="Usage: chattool serve local [TARGET] [--html FILE] [--host HOST] [--port PORT] [-i|-I]",
+    )
+    resolved = resolve_local_target(values["target"], html_name)
     url = f"http://{host}:{port}{resolved['path']}"
     click.echo(f"Root: {resolved['root']}")
     click.echo(f"HTML: {resolved['html']}")
     click.echo(f"URL:  {url}")
     if dry_run:
         return
+
+    import http.server
+    import socketserver
+    import webbrowser
+    from functools import partial
 
     handler = partial(http.server.SimpleHTTPRequestHandler, directory=resolved["root"])
     with socketserver.TCPServer((host, port), handler) as httpd:
