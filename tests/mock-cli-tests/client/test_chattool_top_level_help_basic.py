@@ -17,6 +17,7 @@ def test_chattool_top_level_help_entries(runner):
     assert "Run the screenshot capture server." in result.output
     assert "Run the certificate service." in result.output
     assert "Run the Lark webhook service." in result.output
+    assert "Serve a local directory or HTML file." in result.output
     assert "Run the SVG-to-GIF conversion service." in result.output
 
     result = runner.invoke(cli, ["skill", "--help"])

@@ -158,6 +158,16 @@ chattool explore arxiv get
 
 交互终端里，`chattool explore arxiv get` 缺少 arXiv ID 时会自动补问。
 
+### 本地服务 (`chattool serve`)
+
+```bash
+chattool serve local ./cli-tree.html --host 127.0.0.1 --port 8765
+chattool serve local ./reports --html cli-tree.html --port 8765
+chattool serve local . --html index.html --dry-run
+```
+
+`serve local` 可用本地端口打开 HTML 文件或目录；省略目标时默认使用当前目录，`-i` 会进入统一交互补问。
+
 ### 其他工具
 
 | 工具 | 命令 | 说明 |

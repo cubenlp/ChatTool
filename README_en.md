@@ -166,7 +166,17 @@ chattool nginx websocket-proxy ./websocket.conf --set SERVER_NAME=ws.example.com
 chattool nginx -i
 ```
 
-### 7. Other Tools
+### 7. Local Services (`chattool serve`)
+
+```bash
+chattool serve local ./cli-tree.html --host 127.0.0.1 --port 8765
+chattool serve local ./reports --html cli-tree.html --port 8765
+chattool serve local . --html index.html --dry-run
+```
+
+`serve local` opens a local HTML file or directory through a configurable local port. If `TARGET` is omitted, it defaults to the current directory; `-i` uses the shared interactive prompt flow.
+
+### 8. Other Tools
 
 | Tool | Command | Description |
 |------|---------|-------------|
@@ -174,6 +184,7 @@ chattool nginx -i
 | Nginx Config | `chattool nginx` | Generate template-based reverse proxy and static site configs |
 | MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
+| Local HTML | `chattool serve local` | Serve a local HTML file or directory |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
 | Setup | `chattool setup codex/claude/opencode/hermes` | Install or upgrade common agent CLIs; Hermes wraps the official installer and treats WebUI as explicit opt-in; supports `--install-only` for pure install/upgrade flows without writing config |
 | Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-opencode-loop` for a loop-aware OpenCode workspace variant |

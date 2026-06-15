@@ -1,6 +1,6 @@
 # test_chattool_serve_basic
 
-测试 `chattool serve` 的基础链路，覆盖 capture/cert/lark/svg2gif 子命令入口。
+测试 `chattool serve` 的基础链路，覆盖 local/capture/cert/lark/svg2gif 子命令入口。
 
 ## 元信息
 
@@ -27,7 +27,32 @@
 chattool serve --help
 ```
 
-## 用例 2：capture 服务
+## 用例 2：local 静态 HTML 服务
+
+- 初始环境准备：
+  - 准备一个本地 HTML 文件，例如 `reports/cli-tree.html`。
+- 相关文件：
+  - `reports/cli-tree.html`
+
+预期过程和结果：
+  1. 在 HTML 所在目录执行 `chattool serve local ./cli-tree.html --host 127.0.0.1 --port 8765`。
+  2. 预期命令输出静态服务根目录和可访问 URL。
+  3. 浏览器打开 `http://127.0.0.1:8765/cli-tree.html`。
+
+参考执行脚本（伪代码）：
+
+```sh
+cd reports
+chattool serve local ./cli-tree.html --host 127.0.0.1 --port 8765
+```
+
+也支持目录目标：
+
+```sh
+chattool serve local ./reports --html cli-tree.html --port 8765
+```
+
+## 用例 3：capture 服务
 
 - 初始环境准备：
   - 选定可用端口。
@@ -43,7 +68,7 @@ chattool serve --help
 chattool serve capture --port 8000
 ```
 
-## 用例 3：svg2gif 服务
+## 用例 4：svg2gif 服务
 
 - 初始环境准备：
   - 确保 chromedriver 服务可用并设置 URL。
@@ -59,7 +84,7 @@ chattool serve capture --port 8000
 chattool serve svg2gif --port 8001 --chromedriver-url http://127.0.0.1:9515
 ```
 
-## 用例 4：cert 与 lark 服务
+## 用例 5：cert 与 lark 服务
 
 - 初始环境准备：
   - 选定可用端口。
