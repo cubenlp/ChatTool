@@ -1,0 +1,1 @@
+2026-06-15T03:06:29Z | version=7.0.3 | tag=v7.0.3 | commit=3c1d143531ffe23c97501129b0585c8e4864c1bc | operator=Cursor agent | summary=Released chattool serve local and CLI-standard fixes after PR #198.
