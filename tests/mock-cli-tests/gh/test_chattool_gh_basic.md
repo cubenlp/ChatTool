@@ -7,7 +7,7 @@
 - 命令：`chattool gh`
 - 目的：确认 GitHub 工作流迁移到独立 `chatgh` 后，ChatTool 不再暴露旧入口。
 - 标签：`mock-cli`, `github`, `migration`
-- 前置条件：`chatgh>=0.2.0` 作为独立 CLI 使用。
+- 前置条件：`chatgh>=0.2.1` 作为独立 CLI 使用。
 
 ## 用例 1：不再注册 `chattool gh`
 

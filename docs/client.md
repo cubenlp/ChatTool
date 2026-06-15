@@ -533,7 +533,7 @@ chattool network services
 
 - `repo`：优先从当前 git remote 推断
 - `token`：优先从当前仓库对应的 git credential 读取，再回退 `GITHUB_ACCESS_TOKEN`
-- GitHub CLI 能力已迁移到独立包 `chatgh>=0.2.0`；ChatTool 不再提供 `chattool gh` 入口
+- GitHub CLI 能力已迁移到独立包 `chatgh>=0.2.1`；ChatTool 不再提供 `chattool gh` 入口
 
 ### 4.2 常用命令
 ```bash
