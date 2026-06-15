@@ -105,6 +105,7 @@ docs = [
     "mkdocs-awesome-pages-plugin>=2.8.0",
     "mkdocs-redirects>=1.2.0",
     "mike>=1.1.2",
+    "pyparsing>=3.0",
 ]
 dev = [
     "wheel",
