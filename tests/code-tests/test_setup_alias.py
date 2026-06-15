@@ -37,15 +37,17 @@ def test_render_alias_block():
 def test_apply_alias_block_replace(tmp_path):
     rc = tmp_path / ".zshrc"
     rc.write_text("export PATH=/usr/bin\n", encoding="utf-8")
-    first = render_alias_block(["chatgh"])
+    assert "chatgh" not in ALIAS_MAP
+
+    first = render_alias_block(["chatdns"])
     apply_alias_block(rc, first)
     content = rc.read_text(encoding="utf-8")
-    assert "alias chatgh='chattool gh'" in content
+    assert "alias chatdns='chattool dns'" in content
 
     second = render_alias_block(["chatskill"])
     apply_alias_block(rc, second)
     content = rc.read_text(encoding="utf-8")
-    assert "alias chatgh='chattool gh'" not in content
+    assert "alias chatdns='chattool dns'" not in content
     assert "alias chatskill='chattool skill'" in content
 
 
@@ -87,18 +89,18 @@ def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
         captured["default_values"] = default_values
         captured["instruction"] = instruction
         captured["select_all_label"] = select_all_label
-        return ["chatgh"]
+        return ["chatdns"]
 
     monkeypatch.setattr(
         "chattool.setup.alias.ask_checkbox_with_controls",
         fake_ask_checkbox_with_controls,
     )
-    selected = select_aliases_interactively(["chatgh"])
+    selected = select_aliases_interactively(["chatdns"])
 
-    assert selected == ["chatgh"]
+    assert selected == ["chatdns"]
     assert captured["message"] == "Select aliases"
-    assert captured["default_values"] == ["chatgh"]
+    assert captured["default_values"] == ["chatdns"]
     assert captured["select_all_label"] == "Select all aliases"
     checked = {choice.value: choice.checked for choice in captured["choices"]}
-    assert checked["chatgh"] is True
-    assert checked["chatdns"] is False
+    assert "chatgh" not in checked
+    assert checked["chatdns"] is True

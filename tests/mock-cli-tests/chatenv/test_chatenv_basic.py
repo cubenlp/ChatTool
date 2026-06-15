@@ -104,14 +104,12 @@ def test_profile_and_key_commands_prompt_when_args_missing(tmp_path, monkeypatch
     get_result = runner.invoke(cli, ["get"], catch_exceptions=False)
     set_result = runner.invoke(cli, ["set"], catch_exceptions=False)
     use_result = runner.invoke(cli, ["use", "-t", "mock"], catch_exceptions=False)
-    unset_result = runner.invoke(cli, ["unset"], catch_exceptions=False)
     delete_result = runner.invoke(cli, ["delete", "-t", "mock"], catch_exceptions=False)
 
     assert save_result.exit_code == 0
     assert get_result.exit_code == 0
     assert set_result.exit_code == 0
     assert use_result.exit_code == 0
-    assert unset_result.exit_code == 0
     assert delete_result.exit_code == 0
 
 

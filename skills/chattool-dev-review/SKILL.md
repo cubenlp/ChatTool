@@ -10,7 +10,7 @@ Use this skill after a ChatTool or ChatArch feature, CLI change, skill change, o
 
 Default scope: review the current change, not the whole repository, unless the user explicitly asks for a broad audit.
 
-Boundary: this skill stops at development review. Merge timing, tags, package publishing, PyPI verification, and `release.log` belong to `$chattool-release`.
+Boundary: this skill stops at development review. Merge timing, tags, package publishing, and PyPI verification belong to `$chattool-release`.
 
 ## What To Check
 
@@ -48,7 +48,7 @@ Boundary: this skill stops at development review. Merge timing, tags, package pu
    - Update `README.md` for user-facing behavior.
    - Update `CHANGELOG.md` for feature/fix/skill updates.
    - For CLI changes, keep doc-first cases under `tests/cli-tests/` or mock cases under `tests/mock-cli-tests/` aligned.
-   - If a PR is intended for a specific release, the version/changelog changes should be present before merge.
+   - If a PR is intended for a specific release, the version/changelog changes should already be in the diff before merge.
 
 ## Review Workflow
 

@@ -2,9 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
+本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-06-15
+- 移除 ChatTool 顶层 `chattool gh` 入口和默认 `chatgh='chattool gh'` shell alias，GitHub PR/CI/workflow 操作统一迁移到独立 `chatgh>=0.2.0`；相关 `skills/chatgh`、开发文档、配置说明和 mock CLI 测试同步更新。
 - 准备 `7.0.3` 版本：`chattool pypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.2` 后，将包版本 bump 到 `7.0.3`，用于随 `chattool serve local` 修正一起进入本次发布。
 - 新增 `chattool serve local`，可通过本地端口打开 HTML 文件或目录，支持 `--html`、`--host`、`--port`、`--open/--no-open` 与 `--dry-run`，并接入统一 `-i/-I` 交互规范。
 - 准备 `7.0.2` 版本：`chatpypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.1` 后，将包版本 bump 到 `7.0.2`；`v7.0.1` 对应的版本提交位于 `origin/rex/dev`，未合入当前 `master`，因此本 PR 从 `master` 的 `7.0.0` 直接提升到 `7.0.2`。
@@ -91,7 +92,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - CLI 测试规范现拆成双轨：`tests/cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入 `tests/mock-cli-tests/`
 - GitHub CI 的 stable smoke tests 现同步切到 `tests/mock-cli-tests/`，避免继续引用真实 CLI 用例目录
-- `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
+- `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package` 与 PyPI 校验的动作改由新 skill `skills/chattool-release/` 负责
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
 - `chattool setup` 相关的 `nvm` / `lark-cli` 子进程调用现统一避免使用 login shell，减少用户 shell 初始化把提示符和控制序列污染到当前交互页面的风险
@@ -105,7 +106,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 新增 `tests/mock-cli-tests/` 测试线，并补充 `chattool` 统一入口 lazy dispatch 的 mock CLI 测试
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
-- 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查、PyPI 校验和正式发版后的 `release.log` 记录
+- 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查与 PyPI 校验
 - 新增 `tests/cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `tests/cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
 - 新增 `tests/cli-tests/skill/test_chattool_release_tag_format.md` 与 `tests/cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
 - 新增 `tests/cli-tests/skill/test_chattool_release_version_bump.md` 与 `tests/cli-tests/skill/test_chattool_release_version_bump.py`，校对 release/practice/dev-review skill、开发文档与 workflow 都明确要求“版本号必须在 PR 阶段先 bump，PyPI 已有同版本时必须失败”

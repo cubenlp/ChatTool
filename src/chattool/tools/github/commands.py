@@ -138,7 +138,7 @@ def merge_pr(
             raise click.ClickException(
                 "Refusing to merge because CI checks are not green:\n"
                 f"{details}\n"
-                f"Run `chattool gh pr checks --number {number}` for details, "
+                f"Run `chatgh pr-legacy checks --number {number}` for details, "
                 "or rerun without `--check` if you intentionally want to merge anyway."
             )
     result = post_pr_merge(client, resolved_repo, number, method, title, message)

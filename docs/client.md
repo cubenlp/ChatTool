@@ -526,13 +526,14 @@ chattool network services
 
 ---
 
-## 4. GitHub 工具 (`gh`)
+## 4. GitHub 工具 (`chatgh`)
 
 ### 4.1 配置
 默认行为：
 
 - `repo`：优先从当前 git remote 推断
 - `token`：优先从当前仓库对应的 git credential 读取，再回退 `GITHUB_ACCESS_TOKEN`
+- GitHub CLI 能力已迁移到独立包 `chatgh>=0.2.0`；ChatTool 不再提供 `chattool gh` 入口
 
 ### 4.2 常用命令
 ```bash
@@ -541,48 +542,47 @@ chatenv cat -t gh
 export GITHUB_ACCESS_TOKEN="..."
 
 # 列出 PR
-chattool gh pr list --state open --limit 20
+chatgh pr list --state open --limit 20
 
 # 查看 PR 详情（含 mergeable / merge state）
-chattool gh pr view --number 123
-chattool gh pr view
+chatgh pr view 123
 
 # 查看 PR 的可合并状态与 CI / checks 状态
-chattool gh pr checks --number 123
-chattool gh pr checks --number 123 --wait
-chattool gh pr checks --number 123 --wait --interval 10 --timeout 600
+chatgh pr checks 123
+chatgh pr-legacy checks --number 123 --wait
+chatgh pr-legacy checks --number 123 --wait --interval 10 --timeout 600
 
 # 查看某次 workflow run 与 jobs
-chattool gh run view --run-id 23494900414
+chatgh run view --run-id 23494900414
 
 # 查看某个 job 的日志
-chattool gh run logs --job-id 68373094563
+chatgh run logs --job-id 68373094563
 
 # 创建 PR
-chattool gh pr create --base vibe/master --head feature-branch --title "Title" --body "Body"
-chattool gh pr create
+chatgh pr-legacy create --base vibe/master --head feature-branch --title "Title" --body "Body"
+chatgh pr-legacy create
 
 # 评论 PR
-chattool gh pr comment --number 123 --body "Looks good"
+chatgh pr-legacy comment --number 123 --body "Looks good"
 
 # 合并 PR
-chattool gh pr merge --number 123 --method squash
-chattool gh pr merge --number 123 --method squash --check
+chatgh pr-legacy merge --number 123 --method squash
+chatgh pr-legacy merge --number 123 --method squash --check
 
 # 更新 PR（标题/正文/状态/基线分支）
-chattool gh pr edit --number 123 --title "New title" --body "Updated body"
+chatgh pr-legacy edit --number 123 --title "New title" --body "Updated body"
 
 # 为当前 GitHub 仓库配置 repo 级 HTTPS token
-chattool gh set-token --token github_pat_xxx
+chatgh set-token --token github_pat_xxx
 
 # 如需顺手保存到 ChatTool GitHub 配置
-chattool gh set-token --token github_pat_xxx --save-env
+chatgh set-token --token github_pat_xxx --save-env
 
 # 查看当前 token 对仓库的权限列表
-chattool gh repo-perms --repo owner/repo --token github_pat_xxx
+chatgh repo-perms --repo owner/repo --token github_pat_xxx
 ```
 
-在交互终端里，`chattool gh pr create` / `view` / `checks` / `comment` / `merge` / `edit` 与 `chattool gh run view` / `logs` 缺少关键参数时都会自动补问；显式传 `-I` 才禁用交互并直接报错。
+在交互终端里，`chatgh pr-legacy create` / `view` / `checks` / `comment` / `merge` / `edit` 与 `chatgh run view` / `logs` 缺少关键参数时都会自动补问；显式传 `-I` 才禁用交互并直接报错。
 
 `set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
 
@@ -616,7 +616,7 @@ chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 - 可用 `--interval <seconds>` 控制轮询间隔
 - 只有显式传 `--timeout <seconds>` 时，才会在超时后报错退出
 
-如果希望在执行 `pr merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项，或者 PR 当前 `mergeable=False` / `mergeable_state` 处于 `dirty`、`blocked`、`behind`、`draft`、`unknown` 时，CLI 会拒绝合并并提示先运行 `pr checks`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
+如果希望在执行 `pr-legacy merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项，或者 PR 当前 `mergeable=False` / `mergeable_state` 处于 `dirty`、`blocked`、`behind`、`draft`、`unknown` 时，CLI 会拒绝合并并提示先运行 `pr checks`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
 
 如果 `pr checks` 已经定位到具体 workflow run / job，可以继续使用：
 
@@ -632,7 +632,7 @@ chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 
 ### 4.3 API Reference
 
-后续扩展 `chattool gh` 时，优先查这些官方文档：
+后续扩展 `chatgh` 时，优先查这些官方文档：
 
 - GitHub REST API 根文档: https://docs.github.com/en/rest
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls

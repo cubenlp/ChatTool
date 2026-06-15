@@ -95,7 +95,7 @@
 - 除非参数本身就是纯机械性的、且缺失后不需要恢复，否则不要再把交互可恢复参数直接写成 Click 的 `required=True` 或必填位置参数；这会让命令在进入 callback 之前就被 Click 拦截，统一交互机制无法执行。
 - 命令函数优先只做三件事：接入 Click 参数、调用共享 resolver 拿到完整输入、执行业务逻辑。缺参补问和约束校验应尽量声明在 schema 里。
 - 多字段依赖关系优先用 `CommandConstraint` 表达，例如“`full_domain` 或 `domain + rr` 二选一”；不要在 callback 里散落多段 if/else 校验。
-- 经过这一轮规范化后，`chattool dns`、`chattool client cert/svg2gif`、`chattool gh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key/test 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool tplogin ufw add` 都已经作为参考实现落到共享机制上；新增 CLI 应直接比照这些命令，而不是再复制旧样板。
+- 经过这一轮规范化后，`chattool dns`、`chattool client cert/svg2gif`、独立 `chatgh`、`chattool zulip`、`chattool image`、`chatenv` 高频 profile/key/test 命令、`chattool explore arxiv get`、`chattool network ping`、`chattool tplogin ufw add` 都已经作为参考实现落到共享机制上；新增 CLI 应直接比照这些命令，而不是再复制旧样板。
 - 进入 interactive 后，补全当前任务相关的关键参数。
 - prompt 默认值必须与实际执行一致。
 - `-i` 进入当前命令交互流程，`-I` 完全禁止交互。
@@ -253,7 +253,7 @@ INFO: Start opencode setup
 - Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
-- **发版记录**：每次正式发版完成后，必须先确保目标版本已在 PR/MR 阶段写入 `src/chattool/__init__.py` 与对应 `CHANGELOG.md`，再从已合并主线推送标准 tag `vX.Y.Z` 触发发布；若 PyPI 已存在该版本，必须先走新的版本 bump 变更，不能复用同版本 tag，并在仓库根目录 `release.log` 追加一条记录（时间、版本、tag、commit、执行者、摘要）。
+- **发版记录**：每次正式发版必须先确保目标版本已在 PR/MR 阶段写入 `src/chattool/__init__.py` 与对应 `CHANGELOG.md`，再从已合并主线推送标准 tag `vX.Y.Z` 触发发布；若 PyPI 已存在该版本，必须先走新的版本 bump 变更，不能复用同版本 tag；发版信息只维护在 `CHANGELOG.md`。
 
 ### CLI 测试文档驱动机制（`tests/cli-tests` / `tests/mock-cli-tests`）
 

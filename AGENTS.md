@@ -81,7 +81,7 @@ mkdocs serve --no-livereload # 本地预览文档
 - **第三方集成规则**：真实测试必须从默认 `chatenv` / 配置对象读取生效值；若改用 mock 验证，只能放到 `tests/mock-cli-tests/`，不能伪装成真实链路。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
-- **发版记录**：每次正式发版完成后，必须在仓库根目录 `release.log` 追加一条记录。
+- **发版记录**：每次正式发版信息只维护在 `CHANGELOG.md`。
 
 ### CLI 测试文档驱动机制（`tests/cli-tests` / `tests/mock-cli-tests`）
 

@@ -5,7 +5,7 @@
 ## 元信息
 
 - 命令：无
-- 目的：验证开发 review skill 只负责开发验收，版本 tag / 发布 / release.log 另由独立 release skill 处理。
+- 目的：验证开发 review skill 只负责开发验收，版本 tag / 发布另由独立 release skill 处理，发版记录只维护 `CHANGELOG.md`。
 - 标签：`doc-audit`, `skill`
 - 前置条件：仓库内相关 skill 已更新。
 - 环境准备：
@@ -30,8 +30,8 @@
   - `skills/practice-make-perfact/SKILL.zh.md`
 
 预期过程和结果：
-  1. `chattool-dev-review` 中英文 skill 都明确写出 release / tag / publish / `release.log` 不属于该 skill，需交给 `chattool-release`。
-  2. `chattool-release` 中英文 skill 都明确写出 tag 只能从已合并主线创建，并覆盖 `Publish Package`、PyPI 校验与 `release.log`。
+  1. `chattool-dev-review` 中英文 skill 都明确写出 release / tag / publish 不属于该 skill，需交给 `chattool-release`。
+  2. `chattool-release` 中英文 skill 都明确写出 tag 只能从已合并主线创建，并覆盖 `Publish Package` 与 PyPI 校验。
   3. `practice-make-perfact` 中英文 skill 都明确说明：如果任务进入正式发版阶段，应切到 `chattool-release`，而不是继续把发版动作混在 post-task review 里。
 
 参考执行脚本（伪代码）：

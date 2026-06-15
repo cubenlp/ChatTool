@@ -16,6 +16,7 @@ def test_chattool_skill_practice_make_perfact_reference():
 
     assert "cli-reference.md" in skill_en
     assert "cli-reference.md" in skill_zh
-    assert "chattool lark" in reference
-    assert "chattool gh" in reference
-    assert "chattool setup" in reference
+    assert "chattool pypi" in reference
+    assert "chatgh" in reference
+    assert "chattool gh" not in reference
+    assert "chattool dns" in reference

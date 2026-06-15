@@ -30,7 +30,7 @@ def get_client(
     token = resolve_token(token, credential_path=credential_path)
     if require_token and not token:
         raise click.ClickException(
-            "Missing token. Pass --token or run `chattool gh set-token` inside the current repository to configure a repo-scoped GitHub credential."
+            "Missing token. Pass --token or run `chatgh set-token` inside the current repository to configure a repo-scoped GitHub credential."
         )
     if not token:
         click.secho(
@@ -346,7 +346,7 @@ def github_api_request(
     except ValueError:
         pass
     raise click.ClickException(
-        f"GitHub API error ({response.status_code}) for {path}: {detail}. If this repository should use a dedicated token, run `chattool gh set-token` inside the repo to add a matching git credential entry."
+        f"GitHub API error ({response.status_code}) for {path}: {detail}. If this repository should use a dedicated token, run `chatgh set-token` inside the repo to add a matching git credential entry."
     )
 
 
@@ -354,7 +354,7 @@ def github_api_headers(token: Optional[str]) -> dict:
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "chattool-gh",
+        "User-Agent": "chatgh",
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
