@@ -17,6 +17,7 @@ pip install "chattool[images]"
 | **LiblibAI** | `liblib` | `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY` | [Liblib API](https://liblibai.feishu.cn/wiki/UAMVw67NcifQHukf8fpccgS5n6d) |
 | **Pollinations.ai** | `pollinations` | `POLLINATIONS_API_KEY`, `POLLINATIONS_MODEL_ID`(可选) | [Pollinations API](https://enter.pollinations.ai/api/docs) |
 | **SiliconFlow** | `siliconflow` | `SILICONFLOW_API_KEY`, `SILICONFLOW_MODEL_ID` | [SiliconFlow API](https://docs.siliconflow.cn/) |
+| **Codex OAuth 生图** | `codex` | `OPENAI_CODEX_ACCESS_TOKEN` 或 `OPENAI_CODEX_AUTH_JSON` | ChatGPT/Codex OAuth `responses` + `gpt-image-2` 桥接 |
 
 ### 选型建议（按目标）
 
@@ -25,6 +26,7 @@ pip install "chattool[images]"
 *   阿里云生态：通义万相
 *   开源模型生态：Hugging Face
 *   国内模型平台生态：LiblibAI
+*   已有 Hermes / Codex OAuth 登录：Codex OAuth 生图
 
 另见博客：[白嫖与低成本 AI 生图实战：ChatTool 全平台版](../blog/free-image-guide.md)。
 
@@ -74,6 +76,39 @@ chattool image pollinations generate "a cyberpunk cat"
 chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512 --height 512
 ```
 
+### Codex OAuth 说明
+
+Codex 渠道不是普通的 `OPENAI_API_KEY` 调用，而是复用 ChatGPT/Codex 的 OAuth access token。
+
+支持两种来源：
+
+*   直接设置 `OPENAI_CODEX_ACCESS_TOKEN`
+*   或设置 `OPENAI_CODEX_AUTH_JSON`，不设置时默认读取 `~/.hermes/auth.json`
+
+常用配置项：
+
+*   `OPENAI_CODEX_BASE_URL`（默认 `https://chatgpt.com/backend-api/codex`；OAuth token 会发送到该 host，只有信任目标服务时才覆盖）
+*   `OPENAI_CODEX_HOST_MODEL`（默认 `gpt-5.4`）
+*   `OPENAI_CODEX_IMAGE_MODEL`（默认 `gpt-image-2-medium`）
+*   `OPENAI_CODEX_ASPECT_RATIO`（默认 `square`）
+*   `OPENAI_CODEX_TIMEOUT`（默认 `300` 秒）
+
+### Codex OAuth 命令
+
+```bash
+# 查看内置图片模型 preset
+chattool image codex list-models
+
+# 生成图片；未传 -o 时默认写到 ./generated/image_codex_<model>_<timestamp>.png
+chattool image codex generate "a cinematic fox in the snow"
+
+# 指定纵横比、图片质量档位与输出路径
+chattool image codex generate "a cinematic fox in the snow" \
+  --aspect-ratio portrait \
+  --image-model gpt-image-2-high \
+  -o fox_codex.png
+```
+
 ### SiliconFlow
 
 ```bash
@@ -109,6 +144,12 @@ chattool image tongyi generate "一只在屋顶晒太阳的赛博朋克猫" --st
 chattool image huggingface generate "A futuristic city at night, neon lights" -o city_hf.png
 ```
 
+若未传 `-o/--output`，`huggingface` 与 `codex` 这类直接返回 PNG bytes 的 provider，会默认写入：
+
+```text
+./generated/image_<provider>_<model>_<timestamp>.png
+```
+
 不同 Provider 的参数不完全相同，请以对应子命令 `--help` 为准。
 
 ## 3. Python 代码调用
@@ -130,6 +171,10 @@ try:
     # LiblibAI 需要指定 model_id
     # liblib_gen = create_generator("liblib")
     # result = liblib_gen.generate("A cute cat", model_id="liblib-sdxl-model")
+    #
+    # Codex 渠道返回 PNG bytes，可自行保存到文件
+    # codex_gen = create_generator("codex")
+    # result = codex_gen.generate("A cute cat astronaut")
     
     print(result)
 except Exception as e:

@@ -11,20 +11,13 @@ pytestmark = pytest.mark.mock_cli
 def test_chattool_image_huggingface_generate_prompts_for_required_inputs(
     runner, monkeypatch, tmp_path
 ):
-    answers = {
-        "prompt": "a small robot",
-        "output": str(tmp_path / "robot.png"),
-    }
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         "chattool.interaction.policy.is_interactive_available", lambda: True
     )
     monkeypatch.setattr(
         "chattool.interaction.command_schema.ask_text",
-        lambda message, default="", password=False, style=None: answers[message],
-    )
-    monkeypatch.setattr(
-        "chattool.interaction.command_schema.ask_path",
-        lambda message, default="", style=None: answers[message],
+        lambda message, default="", password=False, style=None: "a small robot",
     )
     monkeypatch.setattr(
         "chattool.tools.image.cli.create_generator",
@@ -38,7 +31,9 @@ def test_chattool_image_huggingface_generate_prompts_for_required_inputs(
     )
 
     assert result.exit_code == 0
-    assert (tmp_path / "robot.png").exists()
+    generated_files = list((tmp_path / "generated").glob("image_huggingface_*.png"))
+    assert len(generated_files) == 1
+    assert generated_files[0].read_bytes() == b"pngbytes"
 
 
 def test_chattool_image_huggingface_generate_errors_with_no_interaction(runner):

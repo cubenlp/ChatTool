@@ -22,6 +22,7 @@ from .utils import (
 from .const import CHATTOOL_REPO_DIR, CHATARCH_ENV_DIR, CHATARCH_ENV_FILE
 from .config import (
     OpenAIConfig,
+    OpenAICodexConfig,
     AzureConfig,
     AliyunConfig,
     TencentConfig,
@@ -65,6 +66,7 @@ __all__ = [
     "mask_secret",
     "setup_logger",
     "OpenAIConfig",
+    "OpenAICodexConfig",
     "AzureConfig",
     "AliyunConfig",
     "TencentConfig",
