@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
+from unittest.mock import patch
 
+from chattool.config import OpenAIConfig
 from chattool.tools.crs.openai_oauth import refresh_openai_oauth_token
 
 
@@ -84,3 +86,40 @@ def test_refresh_openai_oauth_token_keeps_old_refresh_when_rotation_not_returned
     assert result["access_token"] == "new-access-token"
     assert result["refresh_token"] == "old-refresh-token"
     assert result["access_token_expires_at"] == "2026-06-21T01:03:03Z"
+
+
+def test_refresh_openai_oauth_token_uses_configured_token_url(monkeypatch):
+    captured = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "access_token": "new-access-token",
+                "expires_in": 60,
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def post(self, url, *, headers, data):
+            captured["url"] = url
+            return FakeResponse()
+
+    monkeypatch.setattr("chattool.tools.crs.openai_oauth.httpx.Client", FakeClient)
+    with patch.object(
+        OpenAIConfig.OPENAI_OAUTH_TOKEN_URL,
+        "value",
+        "https://oauth.example.test/token",
+    ):
+        refresh_openai_oauth_token("old-refresh-token")
+
+    assert captured["url"] == "https://oauth.example.test/token"

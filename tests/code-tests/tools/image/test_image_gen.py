@@ -59,6 +59,7 @@ class TestImageGenerators:
     def test_openai_config_contains_oauth_and_image_fields(self):
         assert hasattr(OpenAIConfig, "OPENAI_ACCESS_TOKEN")
         assert hasattr(OpenAIConfig, "OPENAI_REFRESH_TOKEN")
+        assert hasattr(OpenAIConfig, "OPENAI_OAUTH_TOKEN_URL")
         assert hasattr(OpenAIConfig, "OPENAI_ACCESS_TOKEN_EXPIRES_AT")
         assert hasattr(OpenAIConfig, "OPENAI_IMAGE_MODEL")
 

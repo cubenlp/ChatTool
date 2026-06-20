@@ -22,6 +22,11 @@ class OpenAIConfig(BaseEnvConfig):
         desc="OpenAI OAuth refresh token for OAuth-backed capabilities.",
         is_sensitive=True,
     )
+    OPENAI_OAUTH_TOKEN_URL = EnvField(
+        "OPENAI_OAUTH_TOKEN_URL",
+        default="https://auth.openai.com/oauth/token",
+        desc="OpenAI OAuth token endpoint used to refresh access tokens.",
+    )
     OPENAI_ACCESS_TOKEN_EXPIRES_AT = EnvField(
         "OPENAI_ACCESS_TOKEN_EXPIRES_AT",
         desc="UTC ISO timestamp when the OpenAI OAuth access token expires.",

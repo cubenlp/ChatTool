@@ -17,7 +17,7 @@ pip install "chattool[images]"
 | **LiblibAI** | `liblib` | `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY` | [Liblib API](https://liblibai.feishu.cn/wiki/UAMVw67NcifQHukf8fpccgS5n6d) |
 | **Pollinations.ai** | `pollinations` | `POLLINATIONS_API_KEY`, `POLLINATIONS_MODEL_ID`(可选) | [Pollinations API](https://enter.pollinations.ai/api/docs) |
 | **SiliconFlow** | `siliconflow` | `SILICONFLOW_API_KEY`, `SILICONFLOW_MODEL_ID` | [SiliconFlow API](https://docs.siliconflow.cn/) |
-| **OpenAI OAuth 生图** | `codex` | `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`；可选 `OPENAI_ACCESS_TOKEN_EXPIRES_AT`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`、`OPENAI_IMAGE_MODEL` | OpenAI/ChatGPT OAuth `responses` + `gpt-image-2` 桥接 |
+| **OpenAI OAuth 生图** | `codex` | `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`；可选 `OPENAI_OAUTH_TOKEN_URL`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`、`OPENAI_IMAGE_MODEL` | OpenAI/ChatGPT OAuth `responses` + `gpt-image-2` 桥接 |
 
 ### 选型建议（按目标）
 
@@ -82,6 +82,7 @@ chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512
 
 *   `OPENAI_ACCESS_TOKEN`：OAuth access token，用于发起 OAuth-backed image 请求。
 *   `OPENAI_REFRESH_TOKEN`：OAuth refresh token，用于在 access token 过期前/过期后向 OpenAI OAuth token endpoint 换取新的 access token。
+*   `OPENAI_OAUTH_TOKEN_URL`：OAuth token endpoint；默认 `https://auth.openai.com/oauth/token`，如后续接入自建 refresh server，可改为自建 endpoint。
 *   `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间（UTC ISO）；这是当前唯一需要持久化的 token 日期字段。`codex` provider 会在使用前读取它，发现过期时优先用 `OPENAI_REFRESH_TOKEN` 自动刷新。
 *   `OPENAI_API_BASE`：OpenAI/OAI API base，可用于覆盖默认 backend。
 *   `OPENAI_API_MODEL`：host model，用于 responses 调用中驱动 `image_generation` tool。

@@ -5,6 +5,8 @@ from typing import Any
 
 import httpx
 
+from chattool.config import OpenAIConfig
+
 OPENAI_OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
 OPENAI_CODEX_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
 OPENAI_OAUTH_SCOPE = "openid profile email"
@@ -18,7 +20,7 @@ def refresh_openai_oauth_token(
     refresh_token: str,
     *,
     client_id: str = OPENAI_CODEX_CLIENT_ID,
-    token_url: str = OPENAI_OAUTH_TOKEN_URL,
+    token_url: str | None = None,
     scope: str = OPENAI_OAUTH_SCOPE,
     timeout_seconds: float = 20.0,
     now: datetime | None = None,
@@ -34,10 +36,15 @@ def refresh_openai_oauth_token(
         raise ValueError("refresh_token is required")
 
     refreshed_at = now or datetime.now(timezone.utc)
+    resolved_token_url = (
+        token_url
+        or (OpenAIConfig.OPENAI_OAUTH_TOKEN_URL.value or "").strip()
+        or OPENAI_OAUTH_TOKEN_URL
+    )
     timeout = httpx.Timeout(max(5.0, float(timeout_seconds)))
     with httpx.Client(timeout=timeout, headers={"Accept": "application/json"}) as client:
         response = client.post(
-            token_url,
+            resolved_token_url,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             data={
                 "grant_type": "refresh_token",

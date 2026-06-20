@@ -8,7 +8,7 @@
 - 目的：验证图像生成 CLI 的基础能力。
 - 标签：`cli`
 - 前置条件：具备对应服务的 API 凭证。
-- 环境准备：配置各 provider 的环境变量（如 `DASHSCOPE_API_KEY`、`HUGGINGFACE_HUB_TOKEN`、`LIBLIB_ACCESS_KEY`、`LIBLIB_SECRET_KEY`、`POLLINATIONS_API_KEY`、`SILICONFLOW_API_KEY`、OpenAI/OAI 的 `OPENAI_ACCESS_TOKEN` / `OPENAI_REFRESH_TOKEN` / `OPENAI_ACCESS_TOKEN_EXPIRES_AT`）。
+- 环境准备：配置各 provider 的环境变量（如 `DASHSCOPE_API_KEY`、`HUGGINGFACE_HUB_TOKEN`、`LIBLIB_ACCESS_KEY`、`LIBLIB_SECRET_KEY`、`POLLINATIONS_API_KEY`、`SILICONFLOW_API_KEY`、OpenAI/OAI 的 `OPENAI_ACCESS_TOKEN` / `OPENAI_REFRESH_TOKEN` / `OPENAI_OAUTH_TOKEN_URL` / `OPENAI_ACCESS_TOKEN_EXPIRES_AT`）。
 - 回滚：删除生成的图片文件。
 
 ## 用例 1：tongyi 生成
@@ -101,7 +101,7 @@ chattool image siliconflow generate "a cat" --size 1024x1024 --output /tmp/silic
 ## 用例 6：codex 生成与列出模型
 
 - 初始环境准备：
-  - 在 OpenAI/OAI chatenv 中配置 `OPENAI_ACCESS_TOKEN`；建议同时配置 `OPENAI_REFRESH_TOKEN` 与 `OPENAI_ACCESS_TOKEN_EXPIRES_AT`，便于 provider 在 access token 过期时提前刷新；可选配置 `OPENAI_API_BASE`、`OPENAI_API_MODEL` 与 `OPENAI_IMAGE_MODEL`。
+  - 在 OpenAI/OAI chatenv 中配置 `OPENAI_ACCESS_TOKEN`；建议同时配置 `OPENAI_REFRESH_TOKEN` 与 `OPENAI_ACCESS_TOKEN_EXPIRES_AT`，便于 provider 在 access token 过期时提前刷新；可选配置 `OPENAI_OAUTH_TOKEN_URL`、`OPENAI_API_BASE`、`OPENAI_API_MODEL` 与 `OPENAI_IMAGE_MODEL`。
 - 相关文件：
   - `<tmp>/codex.png`
 
