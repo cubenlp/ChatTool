@@ -221,7 +221,7 @@ chatenv test -t oai
 
 目前支持以下服务的配置：
 
-- **OpenAI**: `OPENAI_API_KEY`, `OPENAI_API_BASE`, `OPENAI_API_MODEL`, `OPENAI_ACCESS_TOKEN`, `OPENAI_REFRESH_TOKEN`, `OPENAI_ACCESS_TOKEN_ISSUED_AT`, `OPENAI_ACCESS_TOKEN_EXPIRES_AT`, `OPENAI_TOKEN_LAST_REFRESHED_AT`, `OPENAI_IMAGE_MODEL` 等；OAuth token、token 日期元数据与默认 image model 也收纳在同一 OAI/OpenAI 配置类型下，不再拆分独立 Codex 配置类型。
+- **OpenAI**: `OPENAI_API_KEY`, `OPENAI_API_BASE`, `OPENAI_API_MODEL`, `OPENAI_ACCESS_TOKEN`, `OPENAI_REFRESH_TOKEN`, `OPENAI_ACCESS_TOKEN_EXPIRES_AT`, `OPENAI_IMAGE_MODEL` 等；OAuth token、access token 过期时间与默认 image model 也收纳在同一 OAI/OpenAI 配置类型下，不再拆分独立 Codex 配置类型。
 - **Claude Relay Service (CRS)**: `CRS_API_BASE`, `CRS_API_KEY`, `CRS_USERNAME`, `CRS_PASSWORD`, `CRS_ACCESS_TOKEN`；供 `chattool crs` 查询用量、自统计和只读 admin 信息。
 - **Azure OpenAI**: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` 等
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等

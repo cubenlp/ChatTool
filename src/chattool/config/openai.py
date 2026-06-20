@@ -22,17 +22,9 @@ class OpenAIConfig(BaseEnvConfig):
         desc="OpenAI OAuth refresh token for OAuth-backed capabilities.",
         is_sensitive=True,
     )
-    OPENAI_ACCESS_TOKEN_ISSUED_AT = EnvField(
-        "OPENAI_ACCESS_TOKEN_ISSUED_AT",
-        desc="UTC ISO timestamp when the OpenAI OAuth access token was issued, when known.",
-    )
     OPENAI_ACCESS_TOKEN_EXPIRES_AT = EnvField(
         "OPENAI_ACCESS_TOKEN_EXPIRES_AT",
         desc="UTC ISO timestamp when the OpenAI OAuth access token expires.",
-    )
-    OPENAI_TOKEN_LAST_REFRESHED_AT = EnvField(
-        "OPENAI_TOKEN_LAST_REFRESHED_AT",
-        desc="UTC ISO timestamp when the OpenAI OAuth token pair was last refreshed.",
     )
     OPENAI_IMAGE_MODEL = EnvField(
         "OPENAI_IMAGE_MODEL",

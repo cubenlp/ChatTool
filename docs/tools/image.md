@@ -82,9 +82,7 @@ chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512
 
 *   `OPENAI_ACCESS_TOKEN`：OAuth access token，用于发起 OAuth-backed image 请求。
 *   `OPENAI_REFRESH_TOKEN`：OAuth refresh token，用于在 access token 过期前/过期后向 OpenAI OAuth token endpoint 换取新的 access token。
-*   `OPENAI_ACCESS_TOKEN_ISSUED_AT`：access token 签发时间（UTC ISO，能从 JWT `iat` 或授权响应推导时填写）。
-*   `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间（UTC ISO）；`codex` provider 会在使用前读取它，发现过期时优先用 `OPENAI_REFRESH_TOKEN` 自动刷新。
-*   `OPENAI_TOKEN_LAST_REFRESHED_AT`：最近一次 refresh token 成功换取 access token 的时间（UTC ISO）。
+*   `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间（UTC ISO）；这是当前唯一需要持久化的 token 日期字段。`codex` provider 会在使用前读取它，发现过期时优先用 `OPENAI_REFRESH_TOKEN` 自动刷新。
 *   `OPENAI_API_BASE`：OpenAI/OAI API base，可用于覆盖默认 backend。
 *   `OPENAI_API_MODEL`：host model，用于 responses 调用中驱动 `image_generation` tool。
 *   `OPENAI_IMAGE_MODEL`：默认图片模型 preset，例如 `gpt-image-2-medium`。

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import base64
-import json
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -14,21 +12,6 @@ OPENAI_OAUTH_SCOPE = "openid profile email"
 
 def _iso_z(value: datetime) -> str:
     return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def _decode_jwt_claims(token: str) -> dict[str, Any]:
-    parts = token.split(".")
-    if len(parts) < 2:
-        return {}
-    try:
-        payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
-        return json.loads(base64.urlsafe_b64decode(payload_b64.encode()))
-    except Exception:
-        return {}
-
-
-def _unix_to_iso_z(value: Any) -> str:
-    return _iso_z(datetime.fromtimestamp(float(value), timezone.utc))
 
 
 def refresh_openai_oauth_token(
@@ -83,11 +66,7 @@ def refresh_openai_oauth_token(
         "access_token": access_token.strip(),
         "refresh_token": next_refresh.strip(),
         "access_token_expires_at": _iso_z(expires_at),
-        "last_refreshed_at": _iso_z(refreshed_at),
     }
-    claims = _decode_jwt_claims(access_token)
-    if claims.get("iat") is not None:
-        result["access_token_issued_at"] = _unix_to_iso_z(claims["iat"])
     id_token = payload.get("id_token")
     if isinstance(id_token, str) and id_token.strip():
         result["id_token"] = id_token.strip()

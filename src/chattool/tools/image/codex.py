@@ -131,15 +131,9 @@ class CodexImageGenerator(ImageGenerator):
         refresh_token = str(refreshed.get("refresh_token") or "").strip()
         if refresh_token:
             OpenAIConfig.OPENAI_REFRESH_TOKEN.value = refresh_token
-        issued_at = str(refreshed.get("access_token_issued_at") or "").strip()
-        if issued_at:
-            OpenAIConfig.OPENAI_ACCESS_TOKEN_ISSUED_AT.value = issued_at
         expires_at = str(refreshed.get("access_token_expires_at") or "").strip()
         if expires_at:
             OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT.value = expires_at
-        refreshed_at = str(refreshed.get("last_refreshed_at") or "").strip()
-        if refreshed_at:
-            OpenAIConfig.OPENAI_TOKEN_LAST_REFRESHED_AT.value = refreshed_at
         return access_token
 
     def _refresh_configured_access_token(self) -> str | None:
