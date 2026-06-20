@@ -7,7 +7,7 @@ import httpx
 
 from chattool.config import OpenAIConfig
 
-OPENAI_OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
+OPENAI_OAUTH_BASE_URL = "https://auth.openai.com"
 OPENAI_CODEX_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
 OPENAI_OAUTH_SCOPE = "openid profile email"
 
@@ -16,11 +16,15 @@ def _iso_z(value: datetime) -> str:
     return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def _token_url_from_base(base_url: str) -> str:
+    return f"{base_url.strip().rstrip('/')}/oauth/token"
+
+
 def refresh_openai_oauth_token(
     refresh_token: str,
     *,
     client_id: str = OPENAI_CODEX_CLIENT_ID,
-    token_url: str | None = None,
+    base_url: str | None = None,
     scope: str = OPENAI_OAUTH_SCOPE,
     timeout_seconds: float = 20.0,
     now: datetime | None = None,
@@ -36,11 +40,12 @@ def refresh_openai_oauth_token(
         raise ValueError("refresh_token is required")
 
     refreshed_at = now or datetime.now(timezone.utc)
-    resolved_token_url = (
-        token_url
-        or (OpenAIConfig.OPENAI_OAUTH_TOKEN_URL.value or "").strip()
-        or OPENAI_OAUTH_TOKEN_URL
+    resolved_base_url = (
+        base_url
+        or (OpenAIConfig.OPENAI_OAUTH_BASE_URL.value or "").strip()
+        or OPENAI_OAUTH_BASE_URL
     )
+    resolved_token_url = _token_url_from_base(resolved_base_url)
     timeout = httpx.Timeout(max(5.0, float(timeout_seconds)))
     with httpx.Client(timeout=timeout, headers={"Accept": "application/json"}) as client:
         response = client.post(

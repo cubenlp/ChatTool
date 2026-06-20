@@ -88,7 +88,7 @@ def test_refresh_openai_oauth_token_keeps_old_refresh_when_rotation_not_returned
     assert result["access_token_expires_at"] == "2026-06-21T01:03:03Z"
 
 
-def test_refresh_openai_oauth_token_uses_configured_token_url(monkeypatch):
+def test_refresh_openai_oauth_token_uses_configured_base_url(monkeypatch):
     captured = {}
 
     class FakeResponse:
@@ -116,10 +116,10 @@ def test_refresh_openai_oauth_token_uses_configured_token_url(monkeypatch):
 
     monkeypatch.setattr("chattool.tools.crs.openai_oauth.httpx.Client", FakeClient)
     with patch.object(
-        OpenAIConfig.OPENAI_OAUTH_TOKEN_URL,
+        OpenAIConfig.OPENAI_OAUTH_BASE_URL,
         "value",
-        "https://oauth.example.test/token",
+        "https://oauth.example.test",
     ):
         refresh_openai_oauth_token("old-refresh-token")
 
-    assert captured["url"] == "https://oauth.example.test/token"
+    assert captured["url"] == "https://oauth.example.test/oauth/token"
