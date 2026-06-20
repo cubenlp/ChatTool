@@ -13,7 +13,7 @@ from chattool.config import (
     TongyiConfig,
     HuggingFaceConfig,
     LiblibConfig,
-    OpenAICodexConfig,
+    OpenAIConfig,
 )
 
 
@@ -56,23 +56,83 @@ class TestImageGenerators:
         with pytest.raises(ValueError):
             create_generator("unknown")
 
-    def test_codex_resolve_access_token_from_auth_json(self, tmp_path):
+    def test_openai_config_contains_oauth_and_image_fields(self):
+        assert hasattr(OpenAIConfig, "OPENAI_ACCESS_TOKEN")
+        assert hasattr(OpenAIConfig, "OPENAI_REFRESH_TOKEN")
+        assert hasattr(OpenAIConfig, "OPENAI_OAUTH_BASE_URL")
+        assert hasattr(OpenAIConfig, "OPENAI_ACCESS_TOKEN_EXPIRES_AT")
+        assert hasattr(OpenAIConfig, "OPENAI_IMAGE_MODEL")
+
+    def test_openai_codex_config_is_not_exported_as_separate_env_type(self):
+        import chattool.config as config
+
+        assert not hasattr(config, "OpenAICodexConfig")
+
+    def test_codex_resolve_access_token_from_openai_config(self):
         token = _make_fake_jwt(int(time.time()) + 3600)
-        auth_path = tmp_path / "auth.json"
-        auth_path.write_text(
-            json.dumps(
-                {
-                    "credential_pool": {
-                        "openai-codex": [{"access_token": token}],
-                    }
-                }
-            ),
-            encoding="utf-8",
-        )
-        with patch.object(OpenAICodexConfig.OPENAI_CODEX_ACCESS_TOKEN, "value", ""), \
-             patch.object(OpenAICodexConfig.OPENAI_CODEX_AUTH_JSON, "value", str(auth_path)):
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token):
             gen = CodexImageGenerator()
             assert gen.resolve_access_token() == token
+
+    def test_codex_rejects_configured_access_token_when_expires_at_is_past(self):
+        token = _make_fake_jwt(int(time.time()) + 3600)
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token), \
+             patch.object(OpenAIConfig.OPENAI_REFRESH_TOKEN, "value", ""), \
+             patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT, "value", "2000-01-01T00:00:00Z"):
+            gen = CodexImageGenerator()
+            with pytest.raises(ValueError, match="OPENAI_ACCESS_TOKEN_EXPIRES_AT is expired"):
+                gen.resolve_access_token()
+
+    def test_codex_accepts_configured_access_token_when_expires_at_is_future(self):
+        token = _make_fake_jwt(int(time.time()) + 3600)
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token), \
+             patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT, "value", "2999-01-01T00:00:00Z"):
+            gen = CodexImageGenerator()
+            assert gen.resolve_access_token() == token
+
+    def test_codex_refreshes_configured_access_token_when_expires_at_is_past(self, monkeypatch):
+        old_token = _make_fake_jwt(int(time.time()) + 3600)
+        captured = {}
+
+        def fake_refresh(refresh_token, **kwargs):
+            captured["refresh_token"] = refresh_token
+            return {
+                "access_token": "new-access-token",
+                "refresh_token": "new-refresh-token",
+                "access_token_expires_at": "2026-06-29T02:53:17Z",
+            }
+
+        monkeypatch.setattr("chattool.tools.image.codex.refresh_openai_oauth_token", fake_refresh)
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", old_token), \
+             patch.object(OpenAIConfig.OPENAI_REFRESH_TOKEN, "value", "old-refresh-token"), \
+             patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT, "value", "2000-01-01T00:00:00Z"):
+            gen = CodexImageGenerator()
+            assert gen.resolve_access_token() == "new-access-token"
+            assert OpenAIConfig.OPENAI_ACCESS_TOKEN.value == "new-access-token"
+            assert OpenAIConfig.OPENAI_REFRESH_TOKEN.value == "new-refresh-token"
+            assert OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT.value == "2026-06-29T02:53:17Z"
+
+        assert captured["refresh_token"] == "old-refresh-token"
+
+    def test_codex_defaults_do_not_route_oauth_token_to_openai_api_config(self):
+        token = _make_fake_jwt(int(time.time()) + 3600)
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token), \
+             patch.object(OpenAIConfig.OPENAI_API_BASE, "value", "https://example.test/openai/v1"), \
+             patch.object(OpenAIConfig.OPENAI_API_MODEL, "value", "gpt-5.5"), \
+             patch.object(OpenAIConfig.OPENAI_IMAGE_MODEL, "value", "gpt-image-2-high"):
+            gen = CodexImageGenerator()
+            assert gen.resolve_access_token() == token
+            assert gen.base_url == "https://chatgpt.com/backend-api/codex"
+            assert gen.host_model == "gpt-5.4"
+            assert gen.image_model == "gpt-image-2-high"
+
+    def test_codex_explicit_base_and_host_model_overrides_are_used(self):
+        gen = CodexImageGenerator(
+            base_url="https://example.test/codex",
+            host_model="gpt-5.5",
+        )
+        assert gen.base_url == "https://example.test/codex"
+        assert gen.host_model == "gpt-5.5"
 
     def test_codex_generate(self, monkeypatch):
         token = _make_fake_jwt(int(time.time()) + 3600)

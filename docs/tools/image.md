@@ -17,7 +17,7 @@ pip install "chattool[images]"
 | **LiblibAI** | `liblib` | `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY` | [Liblib API](https://liblibai.feishu.cn/wiki/UAMVw67NcifQHukf8fpccgS5n6d) |
 | **Pollinations.ai** | `pollinations` | `POLLINATIONS_API_KEY`, `POLLINATIONS_MODEL_ID`(可选) | [Pollinations API](https://enter.pollinations.ai/api/docs) |
 | **SiliconFlow** | `siliconflow` | `SILICONFLOW_API_KEY`, `SILICONFLOW_MODEL_ID` | [SiliconFlow API](https://docs.siliconflow.cn/) |
-| **Codex OAuth 生图** | `codex` | `OPENAI_CODEX_ACCESS_TOKEN` 或 `OPENAI_CODEX_AUTH_JSON` | ChatGPT/Codex OAuth `responses` + `gpt-image-2` 桥接 |
+| **OpenAI OAuth 生图** | `codex` | `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`；可选 `OPENAI_OAUTH_BASE_URL`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT`、`OPENAI_IMAGE_MODEL` | OpenAI/ChatGPT OAuth `responses` + `gpt-image-2` 桥接 |
 
 ### 选型建议（按目标）
 
@@ -26,7 +26,7 @@ pip install "chattool[images]"
 *   阿里云生态：通义万相
 *   开源模型生态：Hugging Face
 *   国内模型平台生态：LiblibAI
-*   已有 Hermes / Codex OAuth 登录：Codex OAuth 生图
+*   已有 OpenAI OAuth token：OpenAI OAuth 生图
 
 另见博客：[白嫖与低成本 AI 生图实战：ChatTool 全平台版](../blog/free-image-guide.md)。
 
@@ -76,24 +76,19 @@ chattool image pollinations generate "a cyberpunk cat"
 chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512 --height 512
 ```
 
-### Codex OAuth 说明
+### OpenAI OAuth 生图说明
 
-Codex 渠道不是普通的 `OPENAI_API_KEY` 调用，而是复用 ChatGPT/Codex 的 OAuth access token。
+`codex` provider 走 OpenAI/ChatGPT OAuth access token，不会读取 Hermes 的本地登录文件。长期配置统一放在 OpenAI/OAI chatenv 下：
 
-支持两种来源：
+*   `OPENAI_ACCESS_TOKEN`：OAuth access token，用于发起 OAuth-backed image 请求。
+*   `OPENAI_REFRESH_TOKEN`：OAuth refresh token，用于在 access token 过期前/过期后向 OpenAI OAuth token endpoint 换取新的 access token。
+*   `OPENAI_OAUTH_BASE_URL`：OAuth auth server base URL；默认 `https://auth.openai.com`。`codex` provider 会在内部拼接 `/oauth/token`，如后续接入自建 refresh server，可改为自建 auth base URL。
+*   `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间（UTC ISO）；这是当前唯一需要持久化的 token 日期字段。`codex` provider 会在使用前读取它，发现过期时优先用 `OPENAI_REFRESH_TOKEN` 自动刷新。
+*   `OPENAI_IMAGE_MODEL`：默认图片模型 preset，例如 `gpt-image-2-medium`。
 
-*   直接设置 `OPENAI_CODEX_ACCESS_TOKEN`
-*   或设置 `OPENAI_CODEX_AUTH_JSON`，不设置时默认读取 `~/.hermes/auth.json`
+`--aspect-ratio`、`--timeout`、`--host-model`、`--base-url` 等是命令/调用级临时参数，不再作为独立 Codex chatenv 配置管理。尤其是 `codex` provider 默认不会读取普通 `OPENAI_API_BASE` / `OPENAI_API_MODEL`，避免把 OAuth bearer token 发送到已有 API-key/CRS proxy profile；需要覆盖 Codex backend 时请显式传 `--base-url`。
 
-常用配置项：
-
-*   `OPENAI_CODEX_BASE_URL`（默认 `https://chatgpt.com/backend-api/codex`；OAuth token 会发送到该 host，只有信任目标服务时才覆盖）
-*   `OPENAI_CODEX_HOST_MODEL`（默认 `gpt-5.4`）
-*   `OPENAI_CODEX_IMAGE_MODEL`（默认 `gpt-image-2-medium`）
-*   `OPENAI_CODEX_ASPECT_RATIO`（默认 `square`）
-*   `OPENAI_CODEX_TIMEOUT`（默认 `300` 秒）
-
-### Codex OAuth 命令
+### OpenAI OAuth 生图命令
 
 ```bash
 # 查看内置图片模型 preset

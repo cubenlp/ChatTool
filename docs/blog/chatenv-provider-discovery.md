@@ -195,7 +195,7 @@ class OpenAIConfig(BaseEnvConfig):
 
     OPENAI_API_BASE = EnvField("OPENAI_API_BASE", desc="The base url of the API")
     OPENAI_API_KEY = EnvField("OPENAI_API_KEY", desc="Your API key", is_sensitive=True)
-    OPENAI_API_MODEL = EnvField("OPENAI_API_MODEL", default="gpt-3.5-turbo")
+    OPENAI_API_MODEL = EnvField("OPENAI_API_MODEL", default="gpt-5.5")
 
     @classmethod
     def test(cls):
