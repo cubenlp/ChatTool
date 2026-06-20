@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
 ## 2026-06-15
+- `chattool image` 新增 `codex` provider：可复用 ChatGPT/Codex OAuth access token（或 `~/.hermes/auth.json` 中的 `openai-codex` 登录）调用 `gpt-image-2`，支持 `list-models`、默认输出到 `./generated/`，并补充对应 typed env、文档与测试。
+- `chattool image huggingface generate` 与 `chattool image codex generate` 的默认落盘策略现统一为 `./generated/image_<provider>_<model>_<timestamp>.png`；`huggingface` 不再强制要求 `--output`。
 - 准备 `7.0.3` 版本：`chattool pypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.2` 后，将包版本 bump 到 `7.0.3`，用于随 `chattool serve local` 修正一起进入本次发布。
 - 新增 `chattool serve local`，可通过本地端口打开 HTML 文件或目录，支持 `--html`、`--host`、`--port`、`--open/--no-open` 与 `--dry-run`，并接入统一 `-i/-I` 交互规范。
 - 准备 `7.0.2` 版本：`chatpypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.1` 后，将包版本 bump 到 `7.0.2`；`v7.0.1` 对应的版本提交位于 `origin/rex/dev`，未合入当前 `master`，因此本 PR 从 `master` 的 `7.0.0` 直接提升到 `7.0.2`。

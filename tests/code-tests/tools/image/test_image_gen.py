@@ -1,12 +1,28 @@
-import os
+import base64
+import json
 import pytest
 import sys
+import time
 from unittest.mock import MagicMock, patch
 from chattool.tools.image import create_generator
 from chattool.tools.image.tongyi import TongyiImageGenerator
 from chattool.tools.image.huggingface import HuggingFaceImageGenerator
 from chattool.tools.image.liblib import LiblibImageGenerator
-from chattool.config import TongyiConfig, HuggingFaceConfig, LiblibConfig
+from chattool.tools.image.codex import CodexImageGenerator
+from chattool.config import (
+    TongyiConfig,
+    HuggingFaceConfig,
+    LiblibConfig,
+    OpenAICodexConfig,
+)
+
+
+def _make_fake_jwt(exp: int) -> str:
+    header = base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').decode().rstrip("=")
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"exp": exp}).encode("utf-8")
+    ).decode().rstrip("=")
+    return f"{header}.{payload}.signature"
 
 class TestImageGenerators:
 
@@ -30,9 +46,97 @@ class TestImageGenerators:
             assert gen.access_key == "ak"
             assert gen.secret_key == "sk"
 
+    def test_factory_codex(self):
+        gen = create_generator("codex")
+        alias = create_generator("openai-codex")
+        assert isinstance(gen, CodexImageGenerator)
+        assert isinstance(alias, CodexImageGenerator)
+
     def test_factory_unknown(self):
         with pytest.raises(ValueError):
             create_generator("unknown")
+
+    def test_codex_resolve_access_token_from_auth_json(self, tmp_path):
+        token = _make_fake_jwt(int(time.time()) + 3600)
+        auth_path = tmp_path / "auth.json"
+        auth_path.write_text(
+            json.dumps(
+                {
+                    "credential_pool": {
+                        "openai-codex": [{"access_token": token}],
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        with patch.object(OpenAICodexConfig.OPENAI_CODEX_ACCESS_TOKEN, "value", ""), \
+             patch.object(OpenAICodexConfig.OPENAI_CODEX_AUTH_JSON, "value", str(auth_path)):
+            gen = CodexImageGenerator()
+            assert gen.resolve_access_token() == token
+
+    def test_codex_generate(self, monkeypatch):
+        token = _make_fake_jwt(int(time.time()) + 3600)
+        image_bytes = b"fake-png"
+        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+        captured = {}
+
+        class FakeResponse:
+            status_code = 200
+            text = ""
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def raise_for_status(self):
+                return None
+
+            def iter_lines(self):
+                payload = json.dumps(
+                    {"item": {"type": "image_generation_call", "result": image_b64}}
+                )
+                return iter(
+                    [
+                        "event: response.output_item.done",
+                        f"data: {payload}",
+                        "",
+                        "data: [DONE]",
+                        "",
+                    ]
+                )
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs):
+                captured["client_kwargs"] = kwargs
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def stream(self, method, url, json):
+                captured["method"] = method
+                captured["url"] = url
+                captured["payload"] = json
+                return FakeResponse()
+
+        monkeypatch.setattr("chattool.tools.image.codex.httpx.Client", FakeClient)
+
+        gen = CodexImageGenerator(
+            access_token=token,
+            image_model="gpt-image-2-high",
+            aspect_ratio="landscape",
+        )
+        result = gen.generate("test prompt")
+
+        assert result == image_bytes
+        assert captured["method"] == "POST"
+        assert captured["url"].endswith("/responses")
+        assert captured["payload"]["tools"][0]["size"] == "1536x1024"
+        assert captured["payload"]["tools"][0]["quality"] == "high"
 
     def test_tongyi_generate(self):
         # We need to mock dashscope import inside the method

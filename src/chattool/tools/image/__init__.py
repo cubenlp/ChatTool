@@ -4,6 +4,7 @@ from .huggingface import HuggingFaceImageGenerator
 from .liblib import LiblibImageGenerator
 from .pollinations import PollinationsImageGenerator
 from .siliconflow import SiliconFlowImageGenerator
+from .codex import CodexImageGenerator
 
 __all__ = [
     "ImageGenerator",
@@ -12,6 +13,7 @@ __all__ = [
     "LiblibImageGenerator",
     "PollinationsImageGenerator",
     "SiliconFlowImageGenerator",
+    "CodexImageGenerator",
 ]
 
 def create_generator(provider: str, **kwargs) -> ImageGenerator:
@@ -19,7 +21,8 @@ def create_generator(provider: str, **kwargs) -> ImageGenerator:
     Factory function to create an image generator instance.
     
     Args:
-        provider (str): 'tongyi', 'huggingface', 'liblib', 'pollinations', 'siliconflow'
+        provider (str): 'tongyi', 'huggingface', 'liblib', 'pollinations',
+            'siliconflow', 'codex', or 'openai-codex'
         **kwargs: Additional config (api_key, etc.)
         
     Returns:
@@ -35,6 +38,8 @@ def create_generator(provider: str, **kwargs) -> ImageGenerator:
         return PollinationsImageGenerator(**kwargs)
     elif provider == "siliconflow":
         return SiliconFlowImageGenerator(**kwargs)
+    elif provider in {"codex", "openai-codex"}:
+        return CodexImageGenerator(**kwargs)
 
     else:
         raise ValueError(f"Unknown provider: {provider}")

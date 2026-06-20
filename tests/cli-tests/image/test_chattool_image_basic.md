@@ -8,7 +8,7 @@
 - 目的：验证图像生成 CLI 的基础能力。
 - 标签：`cli`
 - 前置条件：具备对应服务的 API 凭证。
-- 环境准备：配置各 provider 的环境变量（如 `DASHSCOPE_API_KEY`、`HUGGINGFACE_HUB_TOKEN`、`LIBLIB_ACCESS_KEY`、`LIBLIB_SECRET_KEY`、`POLLINATIONS_API_KEY`、`SILICONFLOW_API_KEY`）。
+- 环境准备：配置各 provider 的环境变量（如 `DASHSCOPE_API_KEY`、`HUGGINGFACE_HUB_TOKEN`、`LIBLIB_ACCESS_KEY`、`LIBLIB_SECRET_KEY`、`POLLINATIONS_API_KEY`、`SILICONFLOW_API_KEY`、`OPENAI_CODEX_ACCESS_TOKEN` 或 `OPENAI_CODEX_AUTH_JSON`）。
 - 回滚：删除生成的图片文件。
 
 ## 用例 1：tongyi 生成
@@ -36,6 +36,7 @@ chattool image tongyi generate "a cat" --output /tmp/tongyi.png
 
 预期过程和结果：
   1. 执行 `chattool image huggingface generate "a cat" --output <path>`，预期保存输出文件。
+  2. 执行 `chattool image huggingface generate "a cat"`，预期默认写入当前目录下 `generated/image_huggingface_<model>_<timestamp>.png`。
 
 参考执行脚本（伪代码）：
 
@@ -95,6 +96,26 @@ chattool image pollinations generate "a cat" --model flux --output /tmp/pollinat
 ```sh
 chattool image siliconflow list-models
 chattool image siliconflow generate "a cat" --size 1024x1024 --output /tmp/siliconflow.png
+```
+
+## 用例 6：codex 生成与列出模型
+
+- 初始环境准备：
+  - 配置 `OPENAI_CODEX_ACCESS_TOKEN`，或准备包含 `openai-codex` 有效登录的 `OPENAI_CODEX_AUTH_JSON`。
+- 相关文件：
+  - `<tmp>/codex.png`
+
+预期过程和结果：
+  1. 执行 `chattool image codex list-models`，预期输出内置的 `gpt-image-2-low/medium/high` preset 列表。
+  2. 执行 `chattool image codex generate "a cat" --output <path>`，预期保存输出文件。
+  3. 执行 `chattool image codex generate "a cat"`，预期默认写入当前目录下 `generated/image_codex_<model>_<timestamp>.png`。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool image codex list-models
+chattool image codex generate "a cat" --output /tmp/codex.png
+chattool image codex generate "a cat"
 ```
 
 ## 清理 / 回滚
