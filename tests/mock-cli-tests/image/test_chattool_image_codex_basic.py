@@ -45,8 +45,6 @@ def test_chattool_image_codex_generate_forwards_overrides(
 ):
     captured = {}
     output_path = tmp_path / "fox.png"
-    auth_json_path = tmp_path / "auth.json"
-    auth_json_path.write_text("{}", encoding="utf-8")
 
     class FakeGenerator:
         host_model = "gpt-5.4"
@@ -80,8 +78,6 @@ def test_chattool_image_codex_generate_forwards_overrides(
             "gpt-5.4",
             "--base-url",
             "https://example.test/codex",
-            "--auth-json",
-            str(auth_json_path),
             "--timeout",
             "12",
             "--output",
@@ -94,7 +90,6 @@ def test_chattool_image_codex_generate_forwards_overrides(
     assert captured["provider"] == "codex"
     assert captured["prompt"] == "a fox"
     assert captured["kwargs"] == {
-        "auth_json_path": str(auth_json_path),
         "base_url": "https://example.test/codex",
         "host_model": "gpt-5.4",
         "image_model": "gpt-image-2-high",

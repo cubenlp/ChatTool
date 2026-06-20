@@ -12,8 +12,8 @@
 ## 用例 2：显式选项应透传给 provider，并保存到指定输出路径
 
 预期过程和结果：
-1. 执行 `chattool image codex generate "a fox" --aspect-ratio portrait --image-model gpt-image-2-high --host-model gpt-5.4 --base-url <url> --auth-json <path> --timeout 12 -o <path>`。
-2. CLI 应将这些选项传给 `create_generator("codex", ...)`。
+1. 执行 `chattool image codex generate "a fox" --aspect-ratio portrait --image-model gpt-image-2-high --host-model gpt-5.4 --base-url <url> --timeout 12 -o <path>`。
+2. CLI 应将这些临时选项传给 `create_generator("codex", ...)`；长期 token/base/model 默认值来自 OpenAI/OAI 配置，不再通过独立 Codex env 或 auth.json 路径管理。
 3. provider 返回的 PNG bytes 应写入指定路径。
 
 ## 用例 3：provider 失败时 CLI 应以非 0 状态退出

@@ -13,7 +13,7 @@ from chattool.config import (
     TongyiConfig,
     HuggingFaceConfig,
     LiblibConfig,
-    OpenAICodexConfig,
+    OpenAIConfig,
 )
 
 
@@ -56,23 +56,33 @@ class TestImageGenerators:
         with pytest.raises(ValueError):
             create_generator("unknown")
 
-    def test_codex_resolve_access_token_from_auth_json(self, tmp_path):
+    def test_openai_config_contains_oauth_and_image_fields(self):
+        assert hasattr(OpenAIConfig, "OPENAI_ACCESS_TOKEN")
+        assert hasattr(OpenAIConfig, "OPENAI_REFRESH_TOKEN")
+        assert hasattr(OpenAIConfig, "OPENAI_IMAGE_MODEL")
+
+    def test_openai_codex_config_is_not_exported_as_separate_env_type(self):
+        import chattool.config as config
+
+        assert not hasattr(config, "OpenAICodexConfig")
+
+    def test_codex_resolve_access_token_from_openai_config(self):
         token = _make_fake_jwt(int(time.time()) + 3600)
-        auth_path = tmp_path / "auth.json"
-        auth_path.write_text(
-            json.dumps(
-                {
-                    "credential_pool": {
-                        "openai-codex": [{"access_token": token}],
-                    }
-                }
-            ),
-            encoding="utf-8",
-        )
-        with patch.object(OpenAICodexConfig.OPENAI_CODEX_ACCESS_TOKEN, "value", ""), \
-             patch.object(OpenAICodexConfig.OPENAI_CODEX_AUTH_JSON, "value", str(auth_path)):
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token):
             gen = CodexImageGenerator()
             assert gen.resolve_access_token() == token
+
+    def test_codex_uses_openai_config_for_oauth_base_and_host_model(self):
+        token = _make_fake_jwt(int(time.time()) + 3600)
+        with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token), \
+             patch.object(OpenAIConfig.OPENAI_API_BASE, "value", "https://example.test/codex"), \
+             patch.object(OpenAIConfig.OPENAI_API_MODEL, "value", "gpt-5.5"), \
+             patch.object(OpenAIConfig.OPENAI_IMAGE_MODEL, "value", "gpt-image-2-high"):
+            gen = CodexImageGenerator()
+            assert gen.resolve_access_token() == token
+            assert gen.base_url == "https://example.test/codex"
+            assert gen.host_model == "gpt-5.5"
+            assert gen.image_model == "gpt-image-2-high"
 
     def test_codex_generate(self, monkeypatch):
         token = _make_fake_jwt(int(time.time()) + 3600)

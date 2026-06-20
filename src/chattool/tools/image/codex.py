@@ -3,12 +3,11 @@ from __future__ import annotations
 import base64
 import json
 import time
-from pathlib import Path
 from typing import Any, Iterable
 
 import httpx
 
-from chattool.config import OpenAICodexConfig
+from chattool.config import OpenAIConfig
 
 from .base import ImageGenerator
 
@@ -52,7 +51,6 @@ class CodexImageGenerator(ImageGenerator):
     def __init__(
         self,
         access_token: str | None = None,
-        auth_json_path: str | Path | None = None,
         base_url: str | None = None,
         host_model: str | None = None,
         image_model: str | None = None,
@@ -60,32 +58,27 @@ class CodexImageGenerator(ImageGenerator):
         timeout_seconds: float | None = None,
     ):
         self.access_token = (access_token or "").strip() or None
-        self.auth_json_path = (
-            Path(auth_json_path).expanduser() if auth_json_path else None
-        )
         self.base_url = (
             base_url
-            or OpenAICodexConfig.OPENAI_CODEX_BASE_URL.value
+            or OpenAIConfig.OPENAI_API_BASE.value
             or DEFAULT_BASE_URL
         )
         self.host_model = (
             host_model
-            or OpenAICodexConfig.OPENAI_CODEX_HOST_MODEL.value
+            or OpenAIConfig.OPENAI_API_MODEL.value
             or DEFAULT_HOST_MODEL
         )
         self.image_model = (
             image_model
-            or OpenAICodexConfig.OPENAI_CODEX_IMAGE_MODEL.value
+            or OpenAIConfig.OPENAI_IMAGE_MODEL.value
             or DEFAULT_IMAGE_MODEL
         )
         self.aspect_ratio = (
             aspect_ratio
-            or OpenAICodexConfig.OPENAI_CODEX_ASPECT_RATIO.value
             or DEFAULT_ASPECT_RATIO
         )
         self.timeout_seconds = float(
             timeout_seconds
-            or OpenAICodexConfig.OPENAI_CODEX_TIMEOUT.value
             or DEFAULT_TIMEOUT_SECONDS
         )
         self._validate_options(self.image_model, self.aspect_ratio)
@@ -115,65 +108,24 @@ class CodexImageGenerator(ImageGenerator):
         exp = claims.get("exp")
         return bool(exp and time.time() > float(exp))
 
-    def auth_json_candidates(self) -> Iterable[Path]:
-        if self.auth_json_path:
-            yield self.auth_json_path
-            return
-        configured_path = (OpenAICodexConfig.OPENAI_CODEX_AUTH_JSON.value or "").strip()
-        if configured_path:
-            yield Path(configured_path).expanduser()
-            return
-        yield Path.home() / ".hermes" / "auth.json"
-
-    def read_token_from_auth_json(self) -> str | None:
-        for path in self.auth_json_candidates():
-            if not path.exists():
-                continue
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-            except Exception:
-                continue
-
-            pool = data.get("credential_pool", {}).get("openai-codex")
-            if isinstance(pool, list):
-                for entry in pool:
-                    token = str((entry or {}).get("access_token") or "").strip()
-                    if token and not self.is_token_expired(token):
-                        return token
-
-            providers = data.get("providers", {})
-            codex = providers.get("openai-codex") if isinstance(providers, dict) else None
-            if isinstance(codex, dict):
-                token = str(
-                    ((codex.get("tokens") or {}).get("access_token")) or ""
-                ).strip()
-                if token and not self.is_token_expired(token):
-                    return token
-        return None
-
     def resolve_access_token(self) -> str:
         token = self.access_token
         if token:
             if self.is_token_expired(token):
-                raise ValueError("OPENAI_CODEX_ACCESS_TOKEN is expired")
+                raise ValueError("OPENAI_ACCESS_TOKEN is expired")
             return token
 
         configured_token = (
-            OpenAICodexConfig.OPENAI_CODEX_ACCESS_TOKEN.value or ""
+            OpenAIConfig.OPENAI_ACCESS_TOKEN.value or ""
         ).strip()
         if configured_token:
             if self.is_token_expired(configured_token):
-                raise ValueError("OPENAI_CODEX_ACCESS_TOKEN is expired")
+                raise ValueError("OPENAI_ACCESS_TOKEN is expired")
             return configured_token
 
-        token = self.read_token_from_auth_json()
-        if token:
-            return token
-
         raise ValueError(
-            "No usable Codex access token found. Set OPENAI_CODEX_ACCESS_TOKEN, "
-            "or point OPENAI_CODEX_AUTH_JSON to a Hermes auth.json with a valid "
-            "openai-codex login."
+            "No usable OpenAI OAuth access token found. Set OPENAI_ACCESS_TOKEN "
+            "in the OpenAI/OAI chatenv profile or pass access_token explicitly."
         )
 
     @classmethod

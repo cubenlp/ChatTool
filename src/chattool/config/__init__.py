@@ -12,7 +12,6 @@ from .huggingface import HuggingFaceConfig
 from .pollinations import PollinationsConfig
 from .liblib import LiblibConfig
 from .siliconflow import SiliconFlowConfig
-from .openai_codex import OpenAICodexConfig
 from .tplink import TPLinkConfig
 from .browser import BrowserConfig
 from .github import GitHubConfig
@@ -33,7 +32,6 @@ __all__ = [
     "PollinationsConfig",
     "LiblibConfig",
     "SiliconFlowConfig",
-    "OpenAICodexConfig",
     "GitHubConfig",
     "BrowserConfig",
     "TPLinkConfig",

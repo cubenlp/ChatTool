@@ -353,10 +353,6 @@ def siliconflow_list_models():
     help="Override the Codex backend base URL. The OAuth token is sent to this host.",
 )
 @click.option(
-    "--auth-json",
-    help="Optional auth.json path used to resolve the OAuth access token.",
-)
-@click.option(
     "--timeout",
     type=float,
     help="Request timeout in seconds.",
@@ -373,7 +369,6 @@ def codex_generate(
     image_model,
     host_model,
     base_url,
-    auth_json,
     timeout,
     output,
     interactive,
@@ -390,7 +385,6 @@ def codex_generate(
     try:
         generator = create_generator(
             "codex",
-            auth_json_path=auth_json,
             base_url=base_url,
             host_model=host_model,
             image_model=image_model,
