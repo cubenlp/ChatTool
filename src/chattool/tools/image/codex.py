@@ -3,11 +3,13 @@ from __future__ import annotations
 import base64
 import json
 import time
+from datetime import datetime, timezone
 from typing import Any, Iterable
 
 import httpx
 
 from chattool.config import OpenAIConfig
+from chattool.tools.crs.openai_oauth import refresh_openai_oauth_token
 
 from .base import ImageGenerator
 
@@ -108,6 +110,45 @@ class CodexImageGenerator(ImageGenerator):
         exp = claims.get("exp")
         return bool(exp and time.time() > float(exp))
 
+    @staticmethod
+    def is_datetime_expired(value: str) -> bool:
+        normalized = value.strip()
+        if not normalized:
+            return False
+        if normalized.endswith("Z"):
+            normalized = normalized[:-1] + "+00:00"
+        expires_at = datetime.fromisoformat(normalized)
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) > expires_at.astimezone(timezone.utc)
+
+    @staticmethod
+    def _apply_refreshed_openai_token(refreshed: dict[str, Any]) -> str:
+        access_token = str(refreshed.get("access_token") or "").strip()
+        if not access_token:
+            raise ValueError("OpenAI OAuth refresh response was missing access_token")
+        OpenAIConfig.OPENAI_ACCESS_TOKEN.value = access_token
+        refresh_token = str(refreshed.get("refresh_token") or "").strip()
+        if refresh_token:
+            OpenAIConfig.OPENAI_REFRESH_TOKEN.value = refresh_token
+        issued_at = str(refreshed.get("access_token_issued_at") or "").strip()
+        if issued_at:
+            OpenAIConfig.OPENAI_ACCESS_TOKEN_ISSUED_AT.value = issued_at
+        expires_at = str(refreshed.get("access_token_expires_at") or "").strip()
+        if expires_at:
+            OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT.value = expires_at
+        refreshed_at = str(refreshed.get("last_refreshed_at") or "").strip()
+        if refreshed_at:
+            OpenAIConfig.OPENAI_TOKEN_LAST_REFRESHED_AT.value = refreshed_at
+        return access_token
+
+    def _refresh_configured_access_token(self) -> str | None:
+        refresh_token = (OpenAIConfig.OPENAI_REFRESH_TOKEN.value or "").strip()
+        if not refresh_token:
+            return None
+        refreshed = refresh_openai_oauth_token(refresh_token)
+        return self._apply_refreshed_openai_token(refreshed)
+
     def resolve_access_token(self) -> str:
         token = self.access_token
         if token:
@@ -119,7 +160,18 @@ class CodexImageGenerator(ImageGenerator):
             OpenAIConfig.OPENAI_ACCESS_TOKEN.value or ""
         ).strip()
         if configured_token:
+            configured_expires_at = (
+                OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT.value or ""
+            ).strip()
+            if configured_expires_at and self.is_datetime_expired(configured_expires_at):
+                refreshed_token = self._refresh_configured_access_token()
+                if refreshed_token:
+                    return refreshed_token
+                raise ValueError("OPENAI_ACCESS_TOKEN_EXPIRES_AT is expired")
             if self.is_token_expired(configured_token):
+                refreshed_token = self._refresh_configured_access_token()
+                if refreshed_token:
+                    return refreshed_token
                 raise ValueError("OPENAI_ACCESS_TOKEN is expired")
             return configured_token
 
