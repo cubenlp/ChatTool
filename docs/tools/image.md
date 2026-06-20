@@ -78,7 +78,7 @@ chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512
 
 ### OpenAI OAuth 生图说明
 
-`codex` provider 走 OpenAI/ChatGPT OAuth access token，不会读取 Hermes/Ames 的本地登录文件。长期配置统一放在 OpenAI/OAI chatenv 下：
+`codex` provider 走 OpenAI/ChatGPT OAuth access token，不会读取 Hermes 的本地登录文件。长期配置统一放在 OpenAI/OAI chatenv 下：
 
 *   `OPENAI_ACCESS_TOKEN`：OAuth access token，用于发起 OAuth-backed image 请求。
 *   `OPENAI_REFRESH_TOKEN`：OAuth refresh token（当前 provider 不自动刷新，先作为 OAI 配置保留）。
