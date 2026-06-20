@@ -101,7 +101,7 @@ chattool image siliconflow generate "a cat" --size 1024x1024 --output /tmp/silic
 ## 用例 6：codex 生成与列出模型
 
 - 初始环境准备：
-  - 在 OpenAI/OAI chatenv 中配置 `OPENAI_ACCESS_TOKEN`；建议同时配置 `OPENAI_REFRESH_TOKEN` 与 `OPENAI_ACCESS_TOKEN_EXPIRES_AT`，便于 provider 在 access token 过期时提前刷新；可选配置 `OPENAI_OAUTH_BASE_URL`、`OPENAI_API_BASE`、`OPENAI_API_MODEL` 与 `OPENAI_IMAGE_MODEL`。
+  - 在 OpenAI/OAI chatenv 中配置 `OPENAI_ACCESS_TOKEN`；建议同时配置 `OPENAI_REFRESH_TOKEN` 与 `OPENAI_ACCESS_TOKEN_EXPIRES_AT`，便于 provider 在 access token 过期时提前刷新；可选配置 `OPENAI_OAUTH_BASE_URL` 与 `OPENAI_IMAGE_MODEL`。需要覆盖 Codex backend 或 host model 时，使用命令级 `--base-url` / `--host-model`。
 - 相关文件：
   - `<tmp>/codex.png`
 

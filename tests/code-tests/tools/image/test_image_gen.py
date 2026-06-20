@@ -114,17 +114,25 @@ class TestImageGenerators:
 
         assert captured["refresh_token"] == "old-refresh-token"
 
-    def test_codex_uses_openai_config_for_oauth_base_and_host_model(self):
+    def test_codex_defaults_do_not_route_oauth_token_to_openai_api_config(self):
         token = _make_fake_jwt(int(time.time()) + 3600)
         with patch.object(OpenAIConfig.OPENAI_ACCESS_TOKEN, "value", token), \
-             patch.object(OpenAIConfig.OPENAI_API_BASE, "value", "https://example.test/codex"), \
+             patch.object(OpenAIConfig.OPENAI_API_BASE, "value", "https://example.test/openai/v1"), \
              patch.object(OpenAIConfig.OPENAI_API_MODEL, "value", "gpt-5.5"), \
              patch.object(OpenAIConfig.OPENAI_IMAGE_MODEL, "value", "gpt-image-2-high"):
             gen = CodexImageGenerator()
             assert gen.resolve_access_token() == token
-            assert gen.base_url == "https://example.test/codex"
-            assert gen.host_model == "gpt-5.5"
+            assert gen.base_url == "https://chatgpt.com/backend-api/codex"
+            assert gen.host_model == "gpt-5.4"
             assert gen.image_model == "gpt-image-2-high"
+
+    def test_codex_explicit_base_and_host_model_overrides_are_used(self):
+        gen = CodexImageGenerator(
+            base_url="https://example.test/codex",
+            host_model="gpt-5.5",
+        )
+        assert gen.base_url == "https://example.test/codex"
+        assert gen.host_model == "gpt-5.5"
 
     def test_codex_generate(self, monkeypatch):
         token = _make_fake_jwt(int(time.time()) + 3600)

@@ -17,7 +17,7 @@ pip install "chattool[images]"
 | **LiblibAI** | `liblib` | `LIBLIB_ACCESS_KEY`, `LIBLIB_SECRET_KEY` | [Liblib API](https://liblibai.feishu.cn/wiki/UAMVw67NcifQHukf8fpccgS5n6d) |
 | **Pollinations.ai** | `pollinations` | `POLLINATIONS_API_KEY`, `POLLINATIONS_MODEL_ID`(可选) | [Pollinations API](https://enter.pollinations.ai/api/docs) |
 | **SiliconFlow** | `siliconflow` | `SILICONFLOW_API_KEY`, `SILICONFLOW_MODEL_ID` | [SiliconFlow API](https://docs.siliconflow.cn/) |
-| **OpenAI OAuth 生图** | `codex` | `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`；可选 `OPENAI_OAUTH_BASE_URL`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT`、`OPENAI_API_BASE`、`OPENAI_API_MODEL`、`OPENAI_IMAGE_MODEL` | OpenAI/ChatGPT OAuth `responses` + `gpt-image-2` 桥接 |
+| **OpenAI OAuth 生图** | `codex` | `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`；可选 `OPENAI_OAUTH_BASE_URL`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT`、`OPENAI_IMAGE_MODEL` | OpenAI/ChatGPT OAuth `responses` + `gpt-image-2` 桥接 |
 
 ### 选型建议（按目标）
 
@@ -84,11 +84,9 @@ chattool image pollinations generate "a cyberpunk cat" --model turbo --width 512
 *   `OPENAI_REFRESH_TOKEN`：OAuth refresh token，用于在 access token 过期前/过期后向 OpenAI OAuth token endpoint 换取新的 access token。
 *   `OPENAI_OAUTH_BASE_URL`：OAuth auth server base URL；默认 `https://auth.openai.com`。`codex` provider 会在内部拼接 `/oauth/token`，如后续接入自建 refresh server，可改为自建 auth base URL。
 *   `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间（UTC ISO）；这是当前唯一需要持久化的 token 日期字段。`codex` provider 会在使用前读取它，发现过期时优先用 `OPENAI_REFRESH_TOKEN` 自动刷新。
-*   `OPENAI_API_BASE`：OpenAI/OAI API base，可用于覆盖默认 backend。
-*   `OPENAI_API_MODEL`：host model，用于 responses 调用中驱动 `image_generation` tool。
 *   `OPENAI_IMAGE_MODEL`：默认图片模型 preset，例如 `gpt-image-2-medium`。
 
-`--aspect-ratio`、`--timeout`、`--host-model`、`--base-url` 等是命令/调用级临时参数，不再作为独立 Codex chatenv 配置管理。
+`--aspect-ratio`、`--timeout`、`--host-model`、`--base-url` 等是命令/调用级临时参数，不再作为独立 Codex chatenv 配置管理。尤其是 `codex` provider 默认不会读取普通 `OPENAI_API_BASE` / `OPENAI_API_MODEL`，避免把 OAuth bearer token 发送到已有 API-key/CRS proxy profile；需要覆盖 Codex backend 时请显式传 `--base-url`。
 
 ### OpenAI OAuth 生图命令
 

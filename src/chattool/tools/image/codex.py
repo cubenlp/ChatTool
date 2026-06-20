@@ -62,12 +62,10 @@ class CodexImageGenerator(ImageGenerator):
         self.access_token = (access_token or "").strip() or None
         self.base_url = (
             base_url
-            or OpenAIConfig.OPENAI_API_BASE.value
             or DEFAULT_BASE_URL
         )
         self.host_model = (
             host_model
-            or OpenAIConfig.OPENAI_API_MODEL.value
             or DEFAULT_HOST_MODEL
         )
         self.image_model = (

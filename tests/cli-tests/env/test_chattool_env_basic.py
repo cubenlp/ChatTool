@@ -225,7 +225,7 @@ def test_env_new_without_name_prompts_and_configures_type(tmp_path: Path):
     returncode, output = _run_chattool_env_pty(
         ["new", "-t", "openai"],
         config_dir=config_dir,
-        input_text="open1\nhttps://api.example/v1\nsk-open\n\n",
+        input_text="open1\nhttps://api.example/v1\nsk-open\n\n\n\n\n\n\n",
     )
     assert returncode == 0, output
     assert "[OpenAI Configuration]" in output
@@ -238,7 +238,7 @@ def test_env_new_without_name_prompts_and_configures_type(tmp_path: Path):
     content = profile_path.read_text(encoding="utf-8")
     assert "OPENAI_API_BASE='https://api.example/v1'" in content
     assert "OPENAI_API_KEY='sk-open'" in content
-    assert "OPENAI_API_MODEL='gpt-3.5-turbo'" in content
+    assert "OPENAI_API_MODEL='gpt-5.5'" in content
 
 
 def test_env_init_type_updates_real_typed_env(tmp_path: Path):

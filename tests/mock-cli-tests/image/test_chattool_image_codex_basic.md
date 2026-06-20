@@ -13,7 +13,7 @@
 
 预期过程和结果：
 1. 执行 `chattool image codex generate "a fox" --aspect-ratio portrait --image-model gpt-image-2-high --host-model gpt-5.4 --base-url <url> --timeout 12 -o <path>`。
-2. CLI 应将这些临时选项传给 `create_generator("codex", ...)`；长期 token/base/model 默认值来自 OpenAI/OAI 配置，不再通过独立 Codex env 或 auth.json 路径管理。OpenAI/OAI 配置可同时保存 access token 日期元数据，provider 在配置日期过期时优先通过 refresh token 换取新的 access token。
+2. CLI 应将这些临时选项传给 `create_generator("codex", ...)`；OAuth token、refresh token、OAuth base URL、过期时间与 image model 默认值来自 OpenAI/OAI 配置，但 Codex backend base URL 与 host model 只使用安全默认或命令级 `--base-url` / `--host-model` 覆盖，不读取普通 `OPENAI_API_BASE` / `OPENAI_API_MODEL`。
 3. provider 返回的 PNG bytes 应写入指定路径。
 
 ## 用例 3：provider 失败时 CLI 应以非 0 状态退出
