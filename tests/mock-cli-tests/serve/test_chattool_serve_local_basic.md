@@ -28,7 +28,24 @@
 chattool serve oauth --token service-token --env-dir ./envs --oauth-base-url https://oauth.example.test --dry-run
 ```
 
-## 用例 2：HTML 文件目标
+## 用例 2：OAuth service dry-run 使用环境变量 token
+
+- 初始环境准备：
+  - 设置 `CHATTOOL_OAUTH_SERVICE_TOKEN`。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+1. 执行 `chattool serve oauth --env-dir <dir> --dry-run`，预期无需 `--token` 也显示 `Service token: configured`。
+2. 输出不得包含环境变量中的 service token 明文。
+
+参考执行脚本（伪代码）：
+
+```sh
+CHATTOOL_OAUTH_SERVICE_TOKEN=*** chattool serve oauth --env-dir ./envs --dry-run
+```
+
+## 用例 3：HTML 文件目标
 
 - 初始环境准备：
   - 创建临时文件 `cli-tree.html`。
@@ -44,7 +61,7 @@ chattool serve oauth --token service-token --env-dir ./envs --oauth-base-url htt
 chattool serve local ./cli-tree.html --host 0.0.0.0 --port 9001 --dry-run
 ```
 
-## 用例 2：目录目标默认 index
+## 用例 4：目录目标默认 index
 
 - 初始环境准备：
   - 创建临时目录并写入 `index.html`。
@@ -60,7 +77,7 @@ chattool serve local ./cli-tree.html --host 0.0.0.0 --port 9001 --dry-run
 chattool serve local ./site --dry-run
 ```
 
-## 用例 3：目录目标指定 HTML
+## 用例 5：目录目标指定 HTML
 
 - 初始环境准备：
   - 创建临时目录并写入 `cli-tree.html`。
@@ -76,7 +93,7 @@ chattool serve local ./site --dry-run
 chattool serve local ./reports --html cli-tree.html --dry-run
 ```
 
-## 用例 4：交互补齐目标路径
+## 用例 6：交互补齐目标路径
 
 - 初始环境准备：
   - 当前目录存在 `index.html`。
@@ -92,7 +109,7 @@ chattool serve local ./reports --html cli-tree.html --dry-run
 chattool serve local -i --dry-run
 ```
 
-## 用例 5：目录缺少 HTML
+## 用例 7：目录缺少 HTML
 
 - 初始环境准备：
   - 创建不含 `index.html` 的临时目录。

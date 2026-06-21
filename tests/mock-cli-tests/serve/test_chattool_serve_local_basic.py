@@ -39,6 +39,25 @@ def test_chattool_serve_oauth_help_and_dry_run(runner, tmp_path):
     assert "service-token-secret" not in result.output
 
 
+def test_chattool_serve_oauth_uses_env_token_for_dry_run(runner, tmp_path, monkeypatch):
+    monkeypatch.setenv("CHATTOOL_OAUTH_SERVICE_TOKEN", "env-service-token-secret")
+
+    result = runner.invoke(
+        cli,
+        [
+            "serve",
+            "oauth",
+            "--env-dir",
+            str(tmp_path / "envs"),
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Service token: configured" in result.output
+    assert "env-service-token-secret" not in result.output
+
+
 def test_chattool_serve_local_resolves_html_file(runner, tmp_path):
     html_file = tmp_path / "cli-tree.html"
     html_file.write_text("<html></html>\n", encoding="utf-8")

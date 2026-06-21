@@ -121,7 +121,16 @@ chattool crs oauth refresh \
 
 `chattool serve oauth` 在本地启动一套最小 OAuth 鉴权服务，供未来工具以 HTTP 方式配置、刷新和获取可用 access token。当前服务使用 OpenAI typed env 作为后端存储；后续可以在不改变使用侧接口的前提下替换为加密存储或自建远程验证 API service。
 
-启动前建议准备一个 service token，用于保护所有敏感接口：
+启动前建议准备一个 service token，用于保护所有敏感接口。推荐用环境变量传入，避免 token 出现在 shell history 或进程参数中：
+
+```bash
+export CHATTOOL_OAUTH_SERVICE_TOKEN='<service-token>'
+chattool serve oauth \
+  --host 127.0.0.1 \
+  --port 8787
+```
+
+也可以显式传参：
 
 ```bash
 chattool serve oauth \

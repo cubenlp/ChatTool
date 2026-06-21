@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import os
 from pathlib import Path
+import secrets
 from typing import Any
 
 import click
@@ -69,7 +71,7 @@ def _configured_oauth_base_url(override: str | None = None) -> str:
 
 
 def _service_token() -> str | None:
-    value = config.get("token")
+    value = config.get("token") or os.getenv("CHATTOOL_OAUTH_SERVICE_TOKEN")
     return str(value) if value else None
 
 
@@ -85,7 +87,7 @@ async def require_service_token(
         prefix = "Bearer "
         if authorization.startswith(prefix):
             provided = authorization[len(prefix):]
-    if provided != expected:
+    if not provided or not secrets.compare_digest(str(provided), expected):
         raise HTTPException(status_code=403, detail="Invalid or missing service token")
     return str(provided)
 
@@ -223,7 +225,7 @@ def oauth_access_token(_: str = Depends(require_service_token)) -> dict[str, Any
 @click.command(name="oauth")
 @click.option("--host", default="127.0.0.1", show_default=True, help="Bind host.")
 @click.option("--port", default=8787, show_default=True, type=int, help="Bind port.")
-@click.option("--token", default=None, help="Service token required by protected endpoints.")
+@click.option("--token", default=None, help="Service token required by protected endpoints. Defaults to CHATTOOL_OAUTH_SERVICE_TOKEN.")
 @click.option("--env-dir", default=None, help="ChatArch env directory. Defaults to the active ChatTool env dir.")
 @click.option("--oauth-base-url", default=None, help="Default OAuth auth server base URL.")
 @click.option("--timeout", "timeout_seconds", default=20.0, type=float, show_default=True)
@@ -237,11 +239,11 @@ def oauth(host: str, port: int, token: str | None, env_dir: str | None, oauth_ba
     click.echo(f"OAuth service: http://{host}:{port}")
     click.echo(f"Env dir: {config['env_dir']}")
     click.echo(f"OAuth base: {_configured_oauth_base_url()}")
-    click.echo(f"Service token: {'configured' if token else 'missing'}")
+    click.echo(f"Service token: {'configured' if _service_token() else 'missing'}")
     if dry_run:
         return
-    if not token:
-        raise click.ClickException("--token is required unless --dry-run is used.")
+    if not _service_token():
+        raise click.ClickException("--token or CHATTOOL_OAUTH_SERVICE_TOKEN is required unless --dry-run is used.")
     import uvicorn
 
     uvicorn.run(app, host=host, port=port)
