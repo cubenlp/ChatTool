@@ -531,7 +531,7 @@ chattool network services
 GitHub PR、CI、Actions 和 repo credential 工具已迁移到独立包 `chatgh`，不再作为 ChatTool 代码、依赖或 typed env schema 维护。需要使用时单独安装：
 
 ```bash
-pip install chatgh --upgrade
+pip install "chatgh>=0.2.2" --upgrade
 ```
 
 ### 4.1 配置
