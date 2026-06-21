@@ -11,7 +11,31 @@ class OpenAIConfig(BaseEnvConfig):
 
     OPENAI_API_BASE = EnvField("OPENAI_API_BASE", desc="The base url of the API (with suffix /v1).")
     OPENAI_API_KEY = EnvField("OPENAI_API_KEY", desc="Your API key", is_sensitive=True)
-    OPENAI_API_MODEL = EnvField("OPENAI_API_MODEL", default="gpt-3.5-turbo", desc="The default model name")
+    OPENAI_API_MODEL = EnvField("OPENAI_API_MODEL", default="gpt-5.5", desc="The default model name")
+    OPENAI_ACCESS_TOKEN = EnvField(
+        "OPENAI_ACCESS_TOKEN",
+        desc="OpenAI OAuth access token for OAuth-backed capabilities.",
+        is_sensitive=True,
+    )
+    OPENAI_REFRESH_TOKEN = EnvField(
+        "OPENAI_REFRESH_TOKEN",
+        desc="OpenAI OAuth refresh token for OAuth-backed capabilities.",
+        is_sensitive=True,
+    )
+    OPENAI_OAUTH_BASE_URL = EnvField(
+        "OPENAI_OAUTH_BASE_URL",
+        default="https://auth.openai.com",
+        desc="OpenAI OAuth auth server base URL used to refresh access tokens.",
+    )
+    OPENAI_ACCESS_TOKEN_EXPIRES_AT = EnvField(
+        "OPENAI_ACCESS_TOKEN_EXPIRES_AT",
+        desc="UTC ISO timestamp when the OpenAI OAuth access token expires.",
+    )
+    OPENAI_IMAGE_MODEL = EnvField(
+        "OPENAI_IMAGE_MODEL",
+        default="gpt-image-2-medium",
+        desc="Default OpenAI image model preset.",
+    )
 
     @classmethod
     def _parse_responses_stream_event(cls, line: str):

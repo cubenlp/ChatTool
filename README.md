@@ -141,10 +141,11 @@ chattool nginx -i  # 交互式选择模板并逐项填写
 ```bash
 chattool image pollinations generate "a cat in space" -o cat.png
 chattool image siliconflow generate "a cute dog" -o dog.png
+chattool image codex generate "a watercolor fox"
 chattool image huggingface generate
 ```
 
-交互终端里，各家 `generate` 命令缺少 `prompt` 时会自动补问；`huggingface generate` 缺少 `-o/--output` 也会自动补问。显式传 `-I` 时保持直接报错。
+交互终端里，各家 `generate` 命令缺少 `prompt` 时会自动补问；`huggingface generate` 与 `codex generate` 未传 `-o` 时会默认写到当前目录下的 `generated/image_<provider>_<model>_<timestamp>.png`。显式传 `-I` 时保持直接报错。
 
 ### 数据探索 (`chattool explore`)
 

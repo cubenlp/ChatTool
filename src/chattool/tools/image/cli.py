@@ -6,7 +6,12 @@ from chattool.interaction import (
     resolve_command_inputs,
 )
 from chattool.tools.image import create_generator
-from chattool.tools.image.helpers import download_binary, echo_model_list
+from chattool.tools.image.helpers import (
+    download_binary,
+    echo_model_list,
+    resolve_generated_output_path,
+    save_binary,
+)
 
 
 PROMPT_SCHEMA = CommandSchema(
@@ -19,7 +24,6 @@ HF_GENERATE_SCHEMA = CommandSchema(
     name="image-huggingface-generate",
     fields=(
         CommandField("prompt", prompt="prompt", required=True),
-        CommandField("output", prompt="output", kind="path", required=True),
     ),
 )
 
@@ -99,29 +103,34 @@ def huggingface():
     "--output",
     "-o",
     required=False,
-    help="Output file path (required for bytes result).",
+    help="Optional output file path. Defaults to ./generated/image_huggingface_<model>_<timestamp>.png for bytes results.",
 )
 @add_interactive_option
 def huggingface_generate(prompt, output, interactive):
     """Generate an image using Hugging Face."""
     inputs = resolve_command_inputs(
         schema=HF_GENERATE_SCHEMA,
-        provided={"prompt": prompt, "output": output},
+        provided={"prompt": prompt},
         interactive=interactive,
-        usage="Usage: chattool image huggingface generate [PROMPT] -o PATH [-i|-I]",
+        usage="Usage: chattool image huggingface generate [PROMPT] [-o PATH] [-i|-I]",
     )
     prompt = inputs["prompt"]
-    output = inputs["output"]
 
     try:
+        from chattool.tools.image.huggingface import HuggingFaceImageGenerator
+
         generator = create_generator("huggingface")
         click.echo("Generating image with Hugging Face...")
         result = generator.generate(prompt)
 
         if isinstance(result, bytes):
-            with open(output, "wb") as f:
-                f.write(result)
-            click.echo(f"Image saved to {output}")
+            output_path = resolve_generated_output_path(
+                output,
+                provider="huggingface",
+                model=HuggingFaceImageGenerator.DEFAULT_MODEL,
+            )
+            save_binary(result, output_path)
+            click.echo(f"Image saved to {output_path}")
         else:
             click.echo(f"Result: {result}")
     except Exception as e:
@@ -239,6 +248,12 @@ def siliconflow():
     pass
 
 
+@cli.group()
+def codex():
+    """ChatGPT/Codex OAuth image tools."""
+    pass
+
+
 @siliconflow.command(name="generate")
 @click.argument("prompt", required=False)
 @click.option("--model", help="Model name.")
@@ -313,6 +328,95 @@ def siliconflow_list_models():
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
+
+
+@codex.command(name="generate")
+@click.argument("prompt", required=False)
+@click.option(
+    "--aspect-ratio",
+    type=click.Choice(["square", "landscape", "portrait"]),
+    help="Image aspect ratio.",
+)
+@click.option(
+    "--image-model",
+    type=click.Choice(
+        ["gpt-image-2-low", "gpt-image-2-medium", "gpt-image-2-high"]
+    ),
+    help="Codex image model preset.",
+)
+@click.option(
+    "--host-model",
+    help="Codex host model used to invoke the image_generation tool.",
+)
+@click.option(
+    "--base-url",
+    help="Override the Codex backend base URL. The OAuth token is sent to this host.",
+)
+@click.option(
+    "--timeout",
+    type=float,
+    help="Request timeout in seconds.",
+)
+@click.option(
+    "--output",
+    "-o",
+    help="Optional output file path. Defaults to ./generated/image_codex_<model>_<timestamp>.png",
+)
+@add_interactive_option
+def codex_generate(
+    prompt,
+    aspect_ratio,
+    image_model,
+    host_model,
+    base_url,
+    timeout,
+    output,
+    interactive,
+):
+    """Generate an image using the ChatGPT/Codex OAuth image bridge."""
+    inputs = resolve_command_inputs(
+        schema=PROMPT_SCHEMA,
+        provided={"prompt": prompt},
+        interactive=interactive,
+        usage="Usage: chattool image codex generate [PROMPT] [-i|-I]",
+    )
+    prompt = inputs["prompt"]
+
+    try:
+        generator = create_generator(
+            "codex",
+            base_url=base_url,
+            host_model=host_model,
+            image_model=image_model,
+            aspect_ratio=aspect_ratio,
+            timeout_seconds=timeout,
+        )
+        click.echo(
+            "Generating image with Codex "
+            f"(host: {generator.host_model}, image: {generator.image_model})..."
+        )
+        result = generator.generate(prompt)
+        output_path = resolve_generated_output_path(
+            output,
+            provider="codex",
+            model=generator.image_model,
+            prompt=prompt,
+        )
+        saved = save_binary(result, output_path)
+        click.echo(f"Image saved to {saved}")
+    except Exception as e:
+        raise click.ClickException(str(e)) from e
+
+
+@codex.command(name="list-models")
+def codex_list_models():
+    """List built-in Codex image model presets."""
+    try:
+        generator = create_generator("codex")
+        models = generator.get_models()
+        echo_model_list(models, "Available image models for Codex:")
+    except Exception as e:
+        raise click.ClickException(str(e)) from e
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 ## 目标
 
-验证 `chattool crs` 第一版只覆盖获取/查询相关能力，并遵守 ChatTool 的 lazy CLI、typed env、缺参交互和 mock CLI 测试约定。
+验证 `chattool crs` 第一版只覆盖获取/查询相关能力，并遵守 ChatTool 的 lazy CLI、typed env、缺参交互和 mock CLI 测试约定；同时验证 OpenAI OAuth token infra 的 CLI 入口可以安全查看状态、刷新 token 并按需保存到 OpenAI typed env。
 
 ## Case 1: 顶层 help 暴露命令组
 
@@ -13,15 +13,18 @@
 ### 预期过程和结果
 
 - 执行 `chattool crs --help`。
-- 输出包含 `auth`、`stats`、`models`、`admin`。
+- 输出包含 `auth`、`oauth`、`stats`、`models`、`admin`。
 - 执行 `chattool crs admin --help`。
 - 输出包含 `dashboard`、`api-keys`、`accounts`。
+- 执行 `chattool crs oauth --help`。
+- 输出包含 `status`、`refresh`。
 
 ### 参考执行脚本
 
 ```sh
 chattool crs --help
 chattool crs admin --help
+chattool crs oauth --help
 ```
 
 ## Case 2: stats 读取 CRS env 并调用 self stats
@@ -117,4 +120,62 @@ chattool crs admin accounts --type openai
 
 ```sh
 chattool crs auth login -I
+```
+
+## Case 7: oauth status 脱敏展示当前 OpenAI OAuth 状态
+
+### 初始环境准备
+
+- mock OpenAI typed env 中的 access token、refresh token、OAuth base URL 和 access token 过期时间。
+
+### 预期过程和结果
+
+- 执行 `chattool crs oauth status`。
+- 输出显示 access token / refresh token present，显示 OAuth base URL 和 expires_at。
+- 输出不得包含 access token 或 refresh token 明文。
+
+### 参考执行脚本
+
+```sh
+chattool crs oauth status
+```
+
+## Case 8: oauth refresh 刷新 token 但默认不保存、不泄露 token
+
+### 初始环境准备
+
+- mock `refresh_openai_oauth_token` 返回新的 access token、refresh token 和 expires_at。
+- mock OpenAI typed env 中已有 refresh token。
+
+### 预期过程和结果
+
+- 执行 `chattool crs oauth refresh -I`。
+- CLI 调用 refresh helper。
+- 输出 refresh 成功和新的 expires_at。
+- 不打印新旧 token 明文。
+- 未传 `--save` 时不写入 OpenAI env 文件。
+
+### 参考执行脚本
+
+```sh
+chattool crs oauth refresh -I
+```
+
+## Case 9: oauth refresh --save 写入 OpenAI typed env
+
+### 初始环境准备
+
+- 使用临时 OpenAI env 目录。
+- mock refresh helper 返回新的 token 元数据。
+
+### 预期过程和结果
+
+- 执行 `chattool crs oauth refresh --save -I`。
+- CLI 不打印 token 明文。
+- active OpenAI env 文件写入 `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT` 和 `OPENAI_OAUTH_BASE_URL`。
+
+### 参考执行脚本
+
+```sh
+chattool crs oauth refresh --save -I
 ```

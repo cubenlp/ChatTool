@@ -2,11 +2,12 @@
 
 测试 `chattool image` 各类 `generate` 子命令在缺参时的默认交互补问行为。
 
-## 用例 1：`huggingface generate` 缺少 prompt/output 时自动补问
+## 用例 1：`huggingface generate` 缺少 prompt 时自动补问，并使用默认输出文件名
 
 预期过程和结果：
 1. 在交互可用环境下执行 `chattool image huggingface generate`。
-2. CLI 应补问 `prompt` 和 `output`，随后保存结果文件。
+2. CLI 应补问 `prompt`，无需强制补问 `output`。
+3. 若未传 `-o/--output`，应默认写入当前目录下 `generated/image_huggingface_<model>_<timestamp>.png`。
 
 ## 用例 2：另一类 `generate` 命令也应沿用相同机制
 

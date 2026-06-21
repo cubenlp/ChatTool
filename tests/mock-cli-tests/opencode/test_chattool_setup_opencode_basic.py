@@ -437,9 +437,18 @@ def test_setup_opencode_interactive_can_select_auto_loop_plugin(
         "chattool.setup.opencode.resolve_interactive_mode",
         lambda interactive, auto_prompt_condition: (True, True, False, True, True),
     )
+    def fake_prompt_text_value(label, value, fallback=None):
+        if value:
+            return value
+        if fallback:
+            return fallback
+        if label == "model":
+            return "openai/gpt-4o-mini"
+        return value
+
     monkeypatch.setattr(
         "chattool.setup.opencode.prompt_text_value",
-        lambda label, value, fallback=None: value or fallback,
+        fake_prompt_text_value,
     )
     monkeypatch.setattr(
         "chattool.setup.opencode.prompt_sensitive_value",
