@@ -68,7 +68,7 @@ git ls-remote --tags origin 'v*'
 python -m build
 python -m twine check dist/*
 chatgh pr view <pr> --repo cubenlp/ChatTool
-chatgh pr-legacy checks --repo cubenlp/ChatTool --number <pr> --wait
+chatgh pr checks --repo cubenlp/ChatTool --number <pr> --wait
 chatgh run view --repo cubenlp/ChatTool --run-id <id>
 python - <<'PY'
 import json, urllib.request
@@ -80,6 +80,6 @@ PY
 
 - Be explicit about whether the repository is only release-ready or already released.
 - Use concrete commit hashes, tag names, workflow ids, and versions.
-- Before merge or tag creation, prefer `chatgh pr-legacy checks --wait` so CI reaches a terminal state before release decisions.
+- Before merge or tag creation, prefer `chatgh pr checks --wait` so CI reaches a terminal state before release decisions.
 - Say explicitly when a tag would only retrigger workflow without producing a new PyPI package.
 - If release timing is wrong, say so before doing anything destructive.

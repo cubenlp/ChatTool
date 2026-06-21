@@ -64,14 +64,14 @@
 
 ### GitHub
 
-- `chatgh pr-legacy create`
+- `chatgh pr create`
 - `chatgh pr view`
-- `chatgh pr-legacy checks`
+- `chatgh pr checks`
 - `chatgh run view`
 - `chatgh run logs`
-- `chatgh pr-legacy comment`
-- `chatgh pr-legacy merge`
-- `chatgh pr-legacy edit`
+- `chatgh pr comment`
+- `chatgh pr merge`
+- `chatgh pr edit`
 
 行为：
 

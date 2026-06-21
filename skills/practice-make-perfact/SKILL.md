@@ -46,8 +46,8 @@ This is a post-task normalization workflow, not a pre-task exploration guide.
 7. Carry the work to PR/MR stage
    - Commit and push the branch.
    - Use `chatgh` for GitHub PR operations.
-   - Prefer `chatgh pr-legacy create --body-file ...` and update the PR body when scope changes.
-   - Use `chatgh pr-legacy checks --wait` when CI status is part of the handoff.
+   - Prefer `chatgh pr create --body-file ...` and update the PR body when scope changes.
+   - Use `chatgh pr checks --wait` when CI status is part of the handoff.
 
 8. Hand off real release work
    - Tags, package publishing, and PyPI verification belong to `$chattool-release` after merge.

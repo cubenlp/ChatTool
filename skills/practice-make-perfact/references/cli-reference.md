@@ -45,9 +45,9 @@ Business packages register schemas through `[project.entry-points."chatenv.confi
 ## GitHub Helpers
 
 ```bash
-chatgh pr-legacy create --repo owner/repo --base master --head branch --title "..." --body-file /tmp/pr.md
-chatgh pr-legacy edit --repo owner/repo --number 123 --body-file /tmp/pr.md
-chatgh pr-legacy checks --repo owner/repo --number 123 --wait
+chatgh pr create --repo owner/repo --base master --head branch --title "..." --body-file /tmp/pr.md
+chatgh pr edit --repo owner/repo --number 123 --body-file /tmp/pr.md
+chatgh pr checks --repo owner/repo --number 123 --wait
 chatgh run view --repo owner/repo --run-id 123
 chatgh run logs --repo owner/repo --job-id 456
 ```
