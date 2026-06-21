@@ -74,6 +74,49 @@ chattool crs auth login \
 
 默认输出不会打印 token；如需调试原始响应，使用 `--json-output`，注意其中可能包含 session token。
 
+## OpenAI OAuth token infra
+
+`chattool crs oauth` 是当前先搭起来的 OpenAI/Codex OAuth token 基础设施 CLI。它不调用 CRS 管理端，也不把 token 发给 CRS；它复用 OpenAI/OAI typed env 中的 OAuth 字段，作为后续自建验证 API service / 加密存储机制的本地入口。
+
+```bash
+chattool crs oauth status
+chattool crs oauth refresh
+chattool crs oauth refresh --save
+```
+
+相关 OpenAI typed env 字段：
+
+- `OPENAI_ACCESS_TOKEN`：OAuth access token，敏感字段。
+- `OPENAI_REFRESH_TOKEN`：OAuth refresh token，敏感字段。
+- `OPENAI_OAUTH_BASE_URL`：OAuth auth server base URL，默认 `https://auth.openai.com`。
+- `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间。
+
+`status` 只展示 token 是否存在、OAuth base URL 与过期时间，不打印 token 明文：
+
+```bash
+chattool crs oauth status
+chattool crs oauth status --json-output
+```
+
+`refresh` 使用 `OPENAI_REFRESH_TOKEN` 请求 `{OPENAI_OAUTH_BASE_URL}/oauth/token`，默认只在当前进程返回脱敏结果，不写入本地配置；加 `--save` 才会把新的 `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT` 和 `OPENAI_OAUTH_BASE_URL` 写回 OpenAI typed env。
+
+```bash
+chattool crs oauth refresh -I
+chattool crs oauth refresh --save -I
+chattool crs oauth refresh --openai-env work --save -I
+```
+
+也可以临时覆盖 refresh token 或 auth base：
+
+```bash
+chattool crs oauth refresh \
+  --refresh-token '<refresh-token>' \
+  --oauth-base-url https://auth.openai.com \
+  -I
+```
+
+默认输出不会打印 access token / refresh token 明文；如后续引入自建验证 API service 或加密存储，优先复用 `chattool.tools.crs.openai_oauth` 中的 safe status、refresh result 与保存 helper。
+
 ## 只读 Admin 查询
 
 ```bash

@@ -4,7 +4,7 @@ import pytest
 
 from chattool.client.main import cli
 import chattool.tools.crs.cli as crs_cli
-from chattool.config import CRSConfig
+from chattool.config import CRSConfig, OpenAIConfig
 
 
 pytestmark = pytest.mark.mock_cli
@@ -75,6 +75,11 @@ def fake_crs_config(monkeypatch, tmp_path):
     FakeClient.calls = []
     monkeypatch.setattr(crs_cli, "CRSClient", FakeClient)
     monkeypatch.setattr(crs_cli, "_load_runtime_env", lambda env_ref=None, *, openai_env_ref=None: None)
+    monkeypatch.setattr(
+        crs_cli,
+        "_load_openai_runtime_env",
+        lambda openai_env_ref=None: tmp_path / "envs" / "OpenAI" / ".env",
+    )
     monkeypatch.setattr(crs_cli, "CHATARCH_ENV_DIR", tmp_path / "envs")
     monkeypatch.setattr(crs_cli, "CHATARCH_ENV_FILE", tmp_path / ".env")
     CRSConfig.CRS_API_BASE.value = "https://crs.example.com"
@@ -88,12 +93,17 @@ def fake_crs_config(monkeypatch, tmp_path):
 def test_chattool_crs_help_commands(runner):
     result = runner.invoke(cli, ["crs", "--help"])
     assert result.exit_code == 0
-    for command in ["auth", "stats", "models", "admin"]:
+    for command in ["auth", "oauth", "stats", "models", "admin"]:
         assert command in result.output
 
     result = runner.invoke(cli, ["crs", "admin", "--help"])
     assert result.exit_code == 0
     for command in ["dashboard", "api-keys", "accounts"]:
+        assert command in result.output
+
+    result = runner.invoke(cli, ["crs", "oauth", "--help"])
+    assert result.exit_code == 0
+    for command in ["status", "refresh"]:
         assert command in result.output
 
 
@@ -173,3 +183,73 @@ def test_chattool_crs_auth_login_errors_with_no_interaction(runner):
 
     assert result.exit_code != 0
     assert "Missing required value: api_base" in result.output
+
+
+def test_chattool_crs_oauth_status_masks_tokens(runner):
+    OpenAIConfig.OPENAI_ACCESS_TOKEN.value = "access-token-secret"
+    OpenAIConfig.OPENAI_REFRESH_TOKEN.value = "refresh-token-secret"
+    OpenAIConfig.OPENAI_OAUTH_BASE_URL.value = "https://oauth.example.test"
+    OpenAIConfig.OPENAI_ACCESS_TOKEN_EXPIRES_AT.value = "2026-06-21T02:02:03Z"
+
+    result = runner.invoke(cli, ["crs", "oauth", "status"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Access token: present" in result.output
+    assert "Refresh token: present" in result.output
+    assert "OAuth base: https://oauth.example.test" in result.output
+    assert "Expires at: 2026-06-21T02:02:03Z" in result.output
+    assert "access-token-secret" not in result.output
+    assert "refresh-token-secret" not in result.output
+
+
+def test_chattool_crs_oauth_refresh_does_not_save_or_leak_by_default(runner, monkeypatch, tmp_path):
+    calls = []
+    OpenAIConfig.OPENAI_REFRESH_TOKEN.value = "old-refresh-secret"
+    OpenAIConfig.OPENAI_OAUTH_BASE_URL.value = "https://oauth.example.test"
+
+    def fake_refresh(refresh_token, *, base_url=None, timeout_seconds=20.0, **kwargs):
+        calls.append((refresh_token, base_url, timeout_seconds))
+        return {
+            "access_token": "new-access-secret",
+            "refresh_token": "new-refresh-secret",
+            "access_token_expires_at": "2026-06-21T02:02:03Z",
+        }
+
+    monkeypatch.setattr(crs_cli, "refresh_openai_oauth_token", fake_refresh, raising=False)
+
+    result = runner.invoke(cli, ["crs", "oauth", "refresh", "-I"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert calls == [("old-refresh-secret", "https://oauth.example.test", 20.0)]
+    assert "Refreshed OpenAI OAuth token" in result.output
+    assert "2026-06-21T02:02:03Z" in result.output
+    assert "new-access-secret" not in result.output
+    assert "new-refresh-secret" not in result.output
+    assert not OpenAIConfig.get_active_env_file(tmp_path / "envs").exists()
+
+
+def test_chattool_crs_oauth_refresh_save_writes_openai_env(runner, monkeypatch, tmp_path):
+    OpenAIConfig.OPENAI_REFRESH_TOKEN.value = "old-refresh-secret"
+    OpenAIConfig.OPENAI_OAUTH_BASE_URL.value = "https://oauth.example.test"
+
+    def fake_refresh(refresh_token, *, base_url=None, timeout_seconds=20.0, **kwargs):
+        return {
+            "access_token": "new-access-secret",
+            "refresh_token": "new-refresh-secret",
+            "access_token_expires_at": "2026-06-21T02:02:03Z",
+        }
+
+    monkeypatch.setattr(crs_cli, "refresh_openai_oauth_token", fake_refresh, raising=False)
+
+    result = runner.invoke(cli, ["crs", "oauth", "refresh", "--save", "-I"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "new-access-secret" not in result.output
+    assert "new-refresh-secret" not in result.output
+    env_file = OpenAIConfig.get_active_env_file(tmp_path / "envs")
+    assert env_file.exists()
+    content = env_file.read_text()
+    assert "OPENAI_ACCESS_TOKEN='new-access-secret'" in content
+    assert "OPENAI_REFRESH_TOKEN='new-refresh-secret'" in content
+    assert "OPENAI_ACCESS_TOKEN_EXPIRES_AT='2026-06-21T02:02:03Z'" in content
+    assert "OPENAI_OAUTH_BASE_URL='https://oauth.example.test'" in content

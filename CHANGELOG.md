@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
 
 ## 2026-06-15
+- `chattool crs oauth` 新增 OpenAI/Codex OAuth token infra CLI：支持 `status` 脱敏查看 token 元数据、`refresh` 使用 `OPENAI_REFRESH_TOKEN` 刷新 access token，并可通过 `--save` 写回 OpenAI typed env；同时导出 safe status / refresh result / save helper，作为后续自建验证 API service 和加密存储机制的基础。
 - `chattool image` 新增 `codex` provider：通过 OpenAI/OAI 配置中的 OAuth access token 调用 `gpt-image-2`，支持 `list-models`、默认输出到 `./generated/`，并补充文档与测试；Codex 生图配置已收敛到现有 OpenAI typed env，不再拆分独立 Codex 配置类型；OpenAI/OAI 配置同步补充可覆盖的 OAuth auth server base URL 与唯一需要持久化的 access token 过期时间字段，并封装 refresh token 换取 access token + 过期时间的 CRS/OAuth helper；为避免 OAuth bearer token 泄露到 API-key/CRS proxy profile，Codex backend base URL 与 host model 只使用安全默认或命令级显式覆盖；OpenAI typed env 默认模型更新为 `gpt-5.5`。
 - `chattool image huggingface generate` 与 `chattool image codex generate` 的默认落盘策略现统一为 `./generated/image_<provider>_<model>_<timestamp>.png`；`huggingface` 不再强制要求 `--output`。
 - 准备 `7.0.3` 版本：`chattool pypi probe --project-dir .` 确认 PyPI 最新 `chattool` 为 `7.0.2` 后，将包版本 bump 到 `7.0.3`，用于随 `chattool serve local` 修正一起进入本次发布。
