@@ -7,6 +7,8 @@ _LAZY_ATTRS = {
     "cert_app": ("chattool.serve.cert_server", "cert_app"),
     "serve_cli": ("chattool.serve.cli", "serve_cli"),
     "lark_serve_cli": ("chattool.serve.lark_serve", "cli"),
+    "oauth_app": ("chattool.serve.oauth", "app"),
+    "oauth_serve_cli": ("chattool.serve.oauth", "oauth"),
     "svg2gif_app": ("chattool.serve.svg2gif", "svg2gif_app"),
 }
 
@@ -26,5 +28,7 @@ __all__ = [
     "cert_app",
     "serve_cli",
     "lark_serve_cli",
+    "oauth_app",
+    "oauth_serve_cli",
     "svg2gif_app",
 ]

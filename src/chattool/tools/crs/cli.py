@@ -10,6 +10,12 @@ from chattool.config import BaseEnvConfig, CRSConfig, OpenAIConfig
 from chattool.const import CHATARCH_ENV_DIR, CHATARCH_ENV_FILE
 from chattool.interaction import CommandField, CommandSchema, add_interactive_option, resolve_command_inputs
 from chattool.tools.crs.api import CRSAPIError, CRSClient, derive_crs_root_from_openai_base
+from chattool.tools.crs.openai_oauth import (
+    build_openai_oauth_refresh_result,
+    build_openai_oauth_status,
+    refresh_openai_oauth_token,
+    save_openai_oauth_token_data,
+)
 
 
 LOGIN_SCHEMA = CommandSchema(
@@ -77,6 +83,18 @@ def _unwrap_data(payload: Any) -> Any:
 
 def _echo_json(payload: Any) -> None:
     click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+def _load_openai_runtime_env(openai_env_ref: str | None = None) -> Path:
+    if openai_env_ref:
+        target_path = _resolve_env_path(OpenAIConfig, openai_env_ref)
+        BaseEnvConfig.load_all_with_override(
+            CHATARCH_ENV_DIR,
+            override_env_file=target_path,
+        )
+        return target_path
+    BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
+    return OpenAIConfig.get_active_env_file(CHATARCH_ENV_DIR)
 
 
 def _fmt_int(value: Any) -> str:
@@ -280,9 +298,83 @@ def auth_group():
     """Admin authentication helpers."""
 
 
+@cli.group(name="oauth")
+def oauth_group():
+    """OpenAI OAuth token helpers."""
+
+
 @cli.group(name="admin")
 def admin_group():
     """Read-only CRS admin queries."""
+
+
+@oauth_group.command(name="status")
+@click.option("--openai-env", default=None, help="OpenAI .env path or saved OpenAI profile.")
+@click.option("--json-output", is_flag=True, help="Output token metadata as JSON without secrets.")
+def oauth_status(openai_env, json_output):
+    """Show OpenAI OAuth token metadata without printing token values."""
+    target_path = _load_openai_runtime_env(openai_env)
+    payload = build_openai_oauth_status(env_file=target_path)
+    if json_output:
+        _echo_json(payload)
+        return
+    click.echo(f"Access token: {payload['access_token']}")
+    click.echo(f"Refresh token: {payload['refresh_token']}")
+    click.echo(f"OAuth base: {payload['oauth_base_url'] or '-'}")
+    click.echo(f"Expires at: {payload['access_token_expires_at'] or '-'}")
+    click.echo(f"Env file: {payload['env_file']}")
+
+
+@oauth_group.command(name="refresh")
+@click.option("--openai-env", default=None, help="OpenAI .env path or saved OpenAI profile.")
+@click.option("--refresh-token", default=None, help="Override refresh token for this run.")
+@click.option("--oauth-base-url", default=None, help="Override OpenAI OAuth auth server base URL.")
+@click.option("--timeout", "timeout_seconds", default=20.0, type=float, show_default=True)
+@click.option("--save", is_flag=True, help="Save refreshed token metadata to the OpenAI typed env.")
+@click.option("--json-output", is_flag=True, help="Output token metadata as JSON without secrets.")
+@add_interactive_option
+def oauth_refresh(openai_env, refresh_token, oauth_base_url, timeout_seconds, save, json_output, interactive):
+    """Refresh OpenAI OAuth access token and optionally save it."""
+    target_path = _load_openai_runtime_env(openai_env)
+    resolved_refresh_token = (refresh_token or OpenAIConfig.OPENAI_REFRESH_TOKEN.value or "").strip()
+    if not resolved_refresh_token:
+        raise click.ClickException("OPENAI_REFRESH_TOKEN is required. Configure OpenAI env or pass --refresh-token.")
+    resolved_base_url = (
+        oauth_base_url
+        or OpenAIConfig.OPENAI_OAUTH_BASE_URL.value
+        or "https://auth.openai.com"
+    ).strip().rstrip("/")
+    try:
+        token_data = refresh_openai_oauth_token(
+            resolved_refresh_token,
+            base_url=resolved_base_url,
+            timeout_seconds=timeout_seconds,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if save:
+        save_openai_oauth_token_data(
+            token_data=token_data,
+            oauth_base_url=resolved_base_url,
+            target_path=target_path,
+        )
+
+    payload = build_openai_oauth_refresh_result(
+        token_data=token_data,
+        oauth_base_url=resolved_base_url,
+        saved=save,
+        env_file=target_path if save else None,
+    )
+    if json_output:
+        _echo_json(payload)
+        return
+    click.echo("Refreshed OpenAI OAuth token")
+    click.echo(f"Access token: {payload['access_token']}")
+    click.echo(f"Refresh token: {payload['refresh_token']}")
+    click.echo(f"Expires at: {payload['access_token_expires_at'] or '-'}")
+    if save:
+        click.echo(f"Saved token metadata: {target_path}")
 
 
 @cli.command(name="stats")

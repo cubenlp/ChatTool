@@ -74,6 +74,122 @@ chattool crs auth login \
 
 默认输出不会打印 token；如需调试原始响应，使用 `--json-output`，注意其中可能包含 session token。
 
+## OpenAI OAuth token infra
+
+`chattool crs oauth` 是当前先搭起来的 OpenAI/Codex OAuth token 基础设施 CLI。它不调用 CRS 管理端，也不把 token 发给 CRS；它复用 OpenAI/OAI typed env 中的 OAuth 字段，作为后续自建验证 API service / 加密存储机制的本地入口。
+
+```bash
+chattool crs oauth status
+chattool crs oauth refresh
+chattool crs oauth refresh --save
+```
+
+相关 OpenAI typed env 字段：
+
+- `OPENAI_ACCESS_TOKEN`：OAuth access token，敏感字段。
+- `OPENAI_REFRESH_TOKEN`：OAuth refresh token，敏感字段。
+- `OPENAI_OAUTH_BASE_URL`：OAuth auth server base URL，默认 `https://auth.openai.com`。
+- `OPENAI_ACCESS_TOKEN_EXPIRES_AT`：access token 过期时间。
+
+`status` 只展示 token 是否存在、OAuth base URL 与过期时间，不打印 token 明文：
+
+```bash
+chattool crs oauth status
+chattool crs oauth status --json-output
+```
+
+`refresh` 使用 `OPENAI_REFRESH_TOKEN` 请求 `{OPENAI_OAUTH_BASE_URL}/oauth/token`，默认只在当前进程返回脱敏结果，不写入本地配置；加 `--save` 才会把新的 `OPENAI_ACCESS_TOKEN`、`OPENAI_REFRESH_TOKEN`、`OPENAI_ACCESS_TOKEN_EXPIRES_AT` 和 `OPENAI_OAUTH_BASE_URL` 写回 OpenAI typed env。
+
+```bash
+chattool crs oauth refresh -I
+chattool crs oauth refresh --save -I
+chattool crs oauth refresh --openai-env work --save -I
+```
+
+也可以临时覆盖 refresh token 或 auth base：
+
+```bash
+chattool crs oauth refresh \
+  --refresh-token '<refresh-token>' \
+  --oauth-base-url https://auth.openai.com \
+  -I
+```
+
+默认输出不会打印 access token / refresh token 明文；如后续引入自建验证 API service 或加密存储，优先复用 `chattool.tools.crs.openai_oauth` 中的 safe status、refresh result 与保存 helper。
+
+## Local OAuth token service
+
+`chattool serve oauth` 在本地启动一套最小 OAuth 鉴权服务，供未来工具以 HTTP 方式配置、刷新和获取可用 access token。当前服务使用 OpenAI typed env 作为后端存储；后续可以在不改变使用侧接口的前提下替换为加密存储或自建远程验证 API service。
+
+启动前建议准备一个 service token，用于保护所有敏感接口。推荐用环境变量传入，避免 token 出现在 shell history 或进程参数中：
+
+```bash
+export CHATTOOL_OAUTH_SERVICE_TOKEN='<service-token>'
+chattool serve oauth \
+  --host 127.0.0.1 \
+  --port 8787
+```
+
+也可以显式传参：
+
+```bash
+chattool serve oauth \
+  --host 127.0.0.1 \
+  --port 8787 \
+  --token '<service-token>'
+```
+
+也可以先 dry-run 检查配置，不启动服务：
+
+```bash
+chattool serve oauth \
+  --token '<service-token>' \
+  --env-dir ~/.chatarch/envs \
+  --oauth-base-url https://auth.openai.com \
+  --dry-run
+```
+
+### Service endpoints
+
+| Endpoint | Auth | Purpose | Secret behavior |
+|---|---:|---|---|
+| `GET /health` | no | 健康检查 | 不涉及 secret |
+| `GET /oauth/status` | yes | 查看 access/refresh token 是否存在、OAuth base 与过期时间 | 不返回 token 明文 |
+| `POST /oauth/config` | yes | 写入 access token、refresh token、OAuth base、expires_at | 响应脱敏，写入 OpenAI typed env |
+| `POST /oauth/refresh` | yes | 用 refresh token 刷新 access token，可保存 | 响应脱敏 |
+| `GET /oauth/access-token` | yes | 给使用侧工具取可用 access token；过期/缺失时自动 refresh | 返回 access token 明文，仅给已鉴权调用方 |
+
+受保护接口支持两种鉴权头：
+
+```text
+X-ChatTool-Token: <service-token>
+Authorization: Bearer <service-token>
+```
+
+最小调用示例：
+
+```bash
+curl -H "X-ChatTool-Token: <service-token>" \
+  http://127.0.0.1:8787/oauth/status
+
+curl -X POST \
+  -H "X-ChatTool-Token: <service-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"<refresh-token>","oauth_base_url":"https://auth.openai.com"}' \
+  http://127.0.0.1:8787/oauth/config
+
+curl -X POST \
+  -H "X-ChatTool-Token: <service-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"save":true}' \
+  http://127.0.0.1:8787/oauth/refresh
+
+curl -H "X-ChatTool-Token: <service-token>" \
+  http://127.0.0.1:8787/oauth/access-token
+```
+
+`/oauth/access-token` 是未来工具的“使用接口”：工具只需要持有 service token，即可拿到当前可用 access token；refresh token 留在服务侧配置中。
+
 ## 只读 Admin 查询
 
 ```bash
