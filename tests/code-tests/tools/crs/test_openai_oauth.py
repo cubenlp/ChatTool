@@ -42,10 +42,11 @@ def test_refresh_openai_oauth_token_returns_access_and_expiry(monkeypatch):
     fixed_now = datetime(2026, 6, 21, 1, 2, 3, tzinfo=timezone.utc)
     monkeypatch.setattr("chattool.tools.crs.openai_oauth.httpx.Client", FakeClient)
 
-    result = refresh_openai_oauth_token(
-        "old-refresh-token",
-        now=fixed_now,
-    )
+    with patch.object(OpenAIConfig.OPENAI_OAUTH_BASE_URL, "value", "https://auth.openai.com"):
+        result = refresh_openai_oauth_token(
+            "old-refresh-token",
+            now=fixed_now,
+        )
 
     assert captured["url"] == "https://auth.openai.com/oauth/token"
     assert captured["headers"]["Content-Type"] == "application/x-www-form-urlencoded"

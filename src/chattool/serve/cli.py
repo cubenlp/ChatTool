@@ -33,6 +33,12 @@ def _load_local():
     return command
 
 
+def _load_oauth():
+    command = _load_attr("chattool.serve.oauth", "oauth")
+    command.short_help = "Run the local OAuth token service."
+    return command
+
+
 def _load_svg2gif():
     command = _load_attr("chattool.serve.svg2gif", "svg2gif_app")
     command.short_help = "Run the SVG-to-GIF conversion service."
@@ -51,6 +57,7 @@ serve_cli._lazy_commands.update(
         "cert": _load_cert,
         "lark": _load_lark,
         "local": _load_local,
+        "oauth": _load_oauth,
         "svg2gif": _load_svg2gif,
     }
 )
@@ -60,6 +67,7 @@ serve_cli._lazy_command_help.update(
         "cert": "Run the certificate service.",
         "lark": "Run the Lark webhook service.",
         "local": "Serve a local directory or HTML file.",
+        "oauth": "Run the local OAuth token service.",
         "svg2gif": "Run the SVG-to-GIF conversion service.",
     }
 )

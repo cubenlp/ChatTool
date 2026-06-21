@@ -6,6 +6,39 @@ from chattool.client.main import cli
 pytestmark = pytest.mark.mock_cli
 
 
+def test_chattool_serve_oauth_help_and_dry_run(runner, tmp_path):
+    help_result = runner.invoke(cli, ["serve", "oauth", "--help"])
+    assert help_result.exit_code == 0, help_result.output
+    assert "Run the local OAuth token service" in help_result.output
+    assert "--token" in help_result.output
+
+    result = runner.invoke(
+        cli,
+        [
+            "serve",
+            "oauth",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "8788",
+            "--token",
+            "service-token-secret",
+            "--env-dir",
+            str(tmp_path / "envs"),
+            "--oauth-base-url",
+            "https://oauth.example.test",
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "OAuth service: http://127.0.0.1:8788" in result.output
+    assert f"Env dir: {tmp_path / 'envs'}" in result.output
+    assert "OAuth base: https://oauth.example.test" in result.output
+    assert "Service token: configured" in result.output
+    assert "service-token-secret" not in result.output
+
+
 def test_chattool_serve_local_resolves_html_file(runner, tmp_path):
     html_file = tmp_path / "cli-tree.html"
     html_file.write_text("<html></html>\n", encoding="utf-8")

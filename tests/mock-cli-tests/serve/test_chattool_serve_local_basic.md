@@ -1,6 +1,6 @@
 # test_chattool_serve_local_basic
 
-测试 `chattool serve local` 的 mock 基础链路，覆盖路径解析、统一交互入口和 dry-run 输出。
+测试 `chattool serve local` / `chattool serve oauth` 的 mock 基础链路，覆盖路径解析、OAuth service dry-run、统一交互入口和 dry-run 输出。
 
 ## 元信息
 
@@ -11,7 +11,24 @@
 - 环境准备：使用 `CliRunner` 构造临时 HTML 文件和目录。
 - 回滚：临时目录由测试框架清理。
 
-## 用例 1：HTML 文件目标
+## 用例 1：OAuth service dry-run
+
+- 初始环境准备：
+  - 使用 `CliRunner` 调用 `chattool serve oauth --dry-run`。
+- 相关文件：
+  - 无
+
+预期过程和结果：
+1. 执行 `chattool serve oauth --token <token> --env-dir <dir> --oauth-base-url <url> --dry-run`，预期输出服务地址、env 目录、OAuth base 和 token configured 状态。
+2. 输出不得包含 service token 明文。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool serve oauth --token service-token --env-dir ./envs --oauth-base-url https://oauth.example.test --dry-run
+```
+
+## 用例 2：HTML 文件目标
 
 - 初始环境准备：
   - 创建临时文件 `cli-tree.html`。
