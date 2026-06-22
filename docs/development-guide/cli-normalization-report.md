@@ -64,18 +64,17 @@
 
 ### GitHub
 
-- `chatgh pr create`
+- `chatgh pr list`
 - `chatgh pr view`
 - `chatgh pr checks`
 - `chatgh run view`
 - `chatgh run logs`
-- `chatgh pr comment`
-- `chatgh pr merge`
-- `chatgh pr edit`
+- `chatgh repo-perms`
+- `chatgh set-token`
 
 行为：
 
-- 缺少 PR 编号、run id、job id、base/head/title/comment body 等关键参数时自动补问
+- 缺少 PR 编号、run id、job id、repo/token 等关键参数时自动补问；PR 创建/编辑/合并等写操作在 ChatGH 暂未公开为稳定 CLI 前，不作为本表的公开命令面
 
 ### Zulip
 

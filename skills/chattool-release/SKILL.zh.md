@@ -68,7 +68,7 @@ git ls-remote --tags origin 'v*'
 python -m build
 python -m twine check dist/*
 chatgh pr view <pr> --repo cubenlp/ChatTool
-chatgh pr checks --repo cubenlp/ChatTool --number <pr> --wait
+chatgh pr checks <pr> --repo cubenlp/ChatTool
 chatgh run view --repo cubenlp/ChatTool --run-id <id>
 python - <<'PY'
 import json, urllib.request
@@ -80,6 +80,6 @@ PY
 
 - 明确区分“已具备发版条件”和“已经正式发版”。
 - 使用具体版本号、commit、tag、workflow id。
-- 在 merge 或打 tag 前，优先用 `chatgh pr checks --wait` 等 CI 到终态，再做发版判断。
+- 在 merge 或打 tag 前，先确认 `chatgh pr checks <pr> --repo cubenlp/ChatTool` 已经到达终态且为绿色；如果 GitHub checks 仍在运行，等结束后重新查询。
 - 如果某个 tag 只会重跑 workflow 而不会产出新的 PyPI 包，要明确指出这一点。
 - 如果当前时机不该发版，要先指出，再停止危险动作。

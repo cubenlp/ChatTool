@@ -45,9 +45,9 @@ version: 0.5.0
 
 7. 推进到 PR/MR 阶段
    - commit 并 push 当前分支。
-   - 使用 `chatgh` 做 GitHub PR 操作。
-   - 优先使用 `chatgh pr create --body-file ...`，范围变化时更新 PR body。
-   - 交付需要 CI 状态时使用 `chatgh pr checks --wait`。
+   - 使用 `chatgh` 做 GitHub 读取/检查操作，例如 `pr view`、`pr checks`、`run view`、`run logs`。
+   - PR 创建或正文更新在 ChatGH 公开写命令前，使用项目当前 GitHub workflow 或 API 路径。
+   - 交付需要 CI 状态时，在 GitHub checks 到达终态后查询 `chatgh pr checks <pr> --repo owner/repo`。
 
 8. 正式发版单独交接
    - tag、包发布和 PyPI 校验属于合并后的 `$chattool-release`。
