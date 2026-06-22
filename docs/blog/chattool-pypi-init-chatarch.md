@@ -218,17 +218,19 @@ nav:
   - English: index.en.md
 ```
 
-`.github/workflows/publish.yml` 默认在合并到 `main` / `master` 后读取 `src/<module>/__init__.py` 里的 `__version__`，当 PyPI 上还没有该版本时创建 `vX.Y.Z` tag、构建发行包，并通过 GitHub Trusted Publishing 上传 PyPI：
+`.github/workflows/publish.yml` 默认由显式 `v*` tag 或 `workflow_dispatch` 触发，读取 `src/<module>/__init__.py` 里的 `__version__` 并校验 tag 必须等于 `v<__version__>`；当 PyPI 上还没有该版本时构建发行包，并通过 GitHub Trusted Publishing 上传 PyPI：
 
 ```yaml
-- name: Create release tag
-  if: steps.pypi.outputs.exists == 'false' && steps.tag.outputs.exists == 'false'
+environment: pypi
+
+- name: Check tag matches package version
+  if: github.event_name == 'push'
 - name: Publish to PyPI
   if: steps.pypi.outputs.exists == 'false'
   uses: pypa/gh-action-pypi-publish@release/v1
 ```
 
-使用前需要在 PyPI 为该 GitHub 仓库配置 Trusted Publisher；如果同版本已经存在于 PyPI，workflow 会跳过发布，避免重复上传。
+使用前需要在 PyPI 为该 GitHub 仓库配置 Trusted Publisher，字段应匹配 GitHub owner、repo、workflow 文件名和 `pypi` environment；如果同版本已经存在于 PyPI，workflow 会跳过发布，避免重复上传。
 
 ---
 
