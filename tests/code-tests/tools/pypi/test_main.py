@@ -295,6 +295,7 @@ def test_scaffold_chatarch_publish_workflow_creates_tag_and_publishes(tmp_path):
     assert 'tags:\n      - "v*"' in publish_text
     assert "contents: write" in publish_text
     assert "id-token: write" in publish_text
+    assert "environment: pypi" in publish_text
     assert "Path(\"src/mychat_cli/__init__.py\")" in publish_text
     assert "tag=v{version}" in publish_text
     assert "Check tag matches package version" in publish_text
@@ -304,6 +305,12 @@ def test_scaffold_chatarch_publish_workflow_creates_tag_and_publishes(tmp_path):
     assert "https://pypi.org/pypi/" in publish_text
     assert "python -m twine check dist/*" in publish_text
     assert "pypa/gh-action-pypi-publish@release/v1" in publish_text
+    assert "PYPI_API_TOKEN" not in publish_text
+    assert "PYPI_TOKEN" not in publish_text
+    assert "TWINE_USERNAME" not in publish_text
+    assert "TWINE_PASSWORD" not in publish_text
+    assert "secrets.PYPI" not in publish_text
+    assert "twine upload" not in publish_text
     assert "Publish workflow scaffold only" not in publish_text
 
 

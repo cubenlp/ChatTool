@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-06-15
+- `chattool pypi init -t chatarch` 生成的 PyPI publish workflow 增加 `environment: pypi`，并补充测试防止重新引入仓库级 PyPI token secret。
 - 准备 `7.2.0` 版本但暂不发版：GitHub/gh 能力整体迁出 ChatTool，移除顶层 `chattool gh` 入口、默认 `chatgh='chattool gh'` alias、内部 `tools/github` helper、`GitHubClient` 导出、GitHub typed env schema、`github` optional extra、旧 gh mock 测试目录和 GitHub explore 草案；ChatTool 通过 package dependency 引用 `chatgh>=0.2.2`，后续 PR/CI/workflow 操作统一使用独立 `chatgh`。ChatTool 侧文档同步收敛为迁移入口和 token 解析规则，不再维护旧 deprecated 命令细节。
 - `chattool serve oauth` 新增本地 OAuth token service：提供 `GET /health`、`GET /oauth/status`、`POST /oauth/config`、`POST /oauth/refresh`、`GET /oauth/access-token`，用 service token 保护敏感接口，当前以后端 OpenAI typed env 打通配置/刷新/使用闭环，为后续加密存储和自建验证 API service 铺底。
 - `chattool crs oauth` 新增 OpenAI/Codex OAuth token infra CLI：支持 `status` 脱敏查看 token 元数据、`refresh` 使用 `OPENAI_REFRESH_TOKEN` 刷新 access token，并可通过 `--save` 写回 OpenAI typed env；同时导出 safe status / refresh result / save helper，作为后续自建验证 API service 和加密存储机制的基础。
