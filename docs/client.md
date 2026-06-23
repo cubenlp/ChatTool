@@ -315,11 +315,13 @@ chattool setup workspace ~/workspace/demo --language en
 它会生成一套独立骨架，包括：
 
 - `AGENTS.md`：模型主协议
-- - `ARCHIVE.md`：归档摘要日志
+- `TODO.md`：workspace 近期计划
+- `ARCHIVE.md`：归档操作指南，说明如何筛选、移动、审查和记录归档内容
 - `.trash/`：workspace 级软删除缓冲区
 - `projects/`：所有实际工作的执行容器
 - `archive/`：归档后的历史 project
-- - `core/`：源码仓库目录
+- `archive/index.md`：已归档内容索引，记录已经归档了哪些 project
+- `core/`：源码仓库目录
 - `scripts/`：workspace 级维护脚本目录
 - `skills/`：共享 skills 目录
 - `public/`：公开网站和发布目录
