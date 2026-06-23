@@ -557,14 +557,14 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--installer",),
                 kwargs={
                     "default": None,
-                    "help": "Path to a local Hermes official install.sh.",
+                    "help": "Path to a local ChatArch Hermes install.sh.",
                 },
             ),
             SetupOptionElement(
                 param_decls=("--update-installer",),
                 kwargs={
                     "is_flag": True,
-                    "help": "Download the latest official Hermes install.sh into the ChatTool cache before setup.",
+                    "help": "Download the latest ChatArch Hermes install.sh into the ChatTool cache before setup.",
                 },
             ),
             SetupOptionElement(

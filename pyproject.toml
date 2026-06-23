@@ -117,6 +117,7 @@ Repository = "https://github.com/cubenlp/chattool"
 [project.scripts]
 chattool = "chattool.client:main_cli"
 chatpypi = "chattool.client:main_pypi_cli"
+chatskill = "chattool.client:main_skill_cli"
 chatmcp = "chattool.mcp:main"
 
 [project.entry-points."chatenv.configs"]

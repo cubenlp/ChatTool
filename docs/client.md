@@ -247,7 +247,7 @@ chattool setup docker --sudo -i
 
 ### 0.6 Hermes (`setup hermes`)
 
-安装或检查 Hermes Agent，并在需要时配置基础 OpenAI-compatible 参数。该命令封装 Hermes 官方 `install.sh`；默认使用本地缓存或随包 installer，不主动访问 GitHub 更新，也不默认 clone Hermes / WebUI 仓库。
+安装或检查 ChatArch Hermes Agent，并在需要时配置基础 OpenAI-compatible 参数。该命令封装 ChatArch Hermes `install.sh`；默认使用本地缓存或随包 installer，不主动访问 GitHub 更新，也不安装 Hermes WebUI。
 
 ```bash
 chattool setup hermes
@@ -258,8 +258,8 @@ chattool setup hermes --with-webui-env --webui-dir ./hermes-webui --start-webui
 
 常用参数：
 
-- `--installer`：使用本地 Hermes 官方 `install.sh`。
-- `--update-installer`：从 Hermes 官方 URL 更新 ChatTool 缓存里的 installer。
+- `--installer`：使用本地 ChatArch Hermes `install.sh`。
+- `--update-installer`：从 ChatArch Hermes URL 更新 ChatTool 缓存里的 installer。
 - `--hermes-home`：指定 Hermes home，默认 `~/.hermes`。
 - `-e/--env`：OpenAI 配置来源，支持 `.env` 文件路径或保存的 OpenAI profile 名。
 - `--api-key` / `--base-url` / `--model`：显式写入 Hermes 基础模型配置。

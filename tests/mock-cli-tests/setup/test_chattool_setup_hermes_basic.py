@@ -2,9 +2,24 @@ import pytest
 from click.testing import CliRunner
 
 from chattool.client.main import cli
+from chattool.setup import hermes as hermes_setup_module
 
 
 pytestmark = pytest.mark.mock_cli
+
+
+def test_setup_hermes_defaults_to_chatarch_installer_asset():
+    assert hermes_setup_module.CHATARCH_HERMES_INSTALLER_URL == (
+        "https://raw.githubusercontent.com/ChatArch/hermes-agent/main/scripts/install.sh"
+    )
+
+    installer_text = hermes_setup_module._packaged_installer_path().read_text(
+        encoding="utf-8"
+    )
+    assert "git@github.com:ChatArch/hermes-agent.git" in installer_text
+    assert "https://github.com/ChatArch/hermes-agent.git" in installer_text
+    assert "NousResearch/hermes-agent" not in installer_text
+    assert "hermes-agent.nousresearch.com" not in installer_text
 
 
 def test_setup_hermes_existing_home_config_first_patches_keys(tmp_path, monkeypatch):
@@ -80,13 +95,17 @@ def test_setup_hermes_existing_home_config_first_patches_keys(tmp_path, monkeypa
 def test_setup_hermes_install_only_does_not_write_config(tmp_path, monkeypatch):
     home_dir = tmp_path / "home"
     hermes_home = home_dir / ".hermes"
+    installer_call = {}
 
     monkeypatch.setattr("pathlib.Path.home", lambda: home_dir)
     monkeypatch.setattr("chattool.setup.hermes._hermes_installed", lambda _home: False)
-    monkeypatch.setattr(
-        "chattool.setup.hermes._run_installer",
-        lambda *args, **kwargs: hermes_home.mkdir(parents=True, exist_ok=True),
-    )
+
+    def fake_run_installer(installer_path, target_home):
+        installer_call["installer_path"] = installer_path
+        installer_call["target_home"] = target_home
+        hermes_home.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr("chattool.setup.hermes._run_installer", fake_run_installer)
 
     result = CliRunner().invoke(
         cli,
@@ -102,6 +121,10 @@ def test_setup_hermes_install_only_does_not_write_config(tmp_path, monkeypatch):
 
     assert result.exit_code == 0
     assert "Hermes install-only completed." in result.output
+    assert installer_call["target_home"] == hermes_home
+    assert "ChatArch/hermes-agent.git" in installer_call[
+        "installer_path"
+    ].read_text(encoding="utf-8")
     assert not (hermes_home / ".env").exists()
     assert not (hermes_home / "config.yaml").exists()
 
