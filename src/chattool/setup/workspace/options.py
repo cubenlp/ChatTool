@@ -15,7 +15,15 @@ from chattool.interaction import (
 
 
 CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
-REXBLOG_REPO_URL = "https://github.com/RexWzh/RexBlog"
+CHATBLOG_REPO_URL = "https://github.com/ChatArch/ChatBlog.git"
+CHATMEMORY_REPO_URL = "https://github.com/ChatArch/ChatMemory.git"
+DEFAULT_MEMORY_SKILL_GROUPS = ("chatarch", "common", "agents")
+LOCAL_SKILL_GROUP_README = """# Local Skills
+
+Use this directory for machine-specific, workspace-specific, or private skills that should not be shared through ChatMemory.
+
+Shared skills should live in one of the linked ChatMemory groups: `chatarch`, `common`, or `agents`.
+"""
 
 
 def _run_git(
@@ -106,34 +114,84 @@ def apply_chattool_option(
 
 def _ensure_symlink(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists() or target.is_symlink():
-        if target.is_symlink() or target.is_file():
-            target.unlink()
-        else:
-            shutil.rmtree(target)
+    if target.is_symlink():
+        target.unlink()
+    elif target.exists():
+        raise click.ClickException(
+            f"Refusing to replace existing non-symlink path: {target}"
+        )
     target.symlink_to(source)
 
 
-def apply_rexblog_option(
+def _ensure_local_skill_group(workspace_dir: Path) -> Path:
+    local_dir = workspace_dir / "skills" / "local"
+    if local_dir.is_symlink():
+        raise click.ClickException(
+            f"Refusing to use symlink for local-only skill group: {local_dir}"
+        )
+    local_dir.mkdir(parents=True, exist_ok=True)
+    readme = local_dir / "README.md"
+    if not readme.exists():
+        readme.write_text(LOCAL_SKILL_GROUP_README, encoding="utf-8")
+    return local_dir
+
+
+def apply_chatblog_option(
     workspace_dir: Path,
     source: str,
     interactive,
     can_prompt: bool,
 ) -> dict:
-    repo_dir = workspace_dir / "core" / "RexBlog"
+    repo_dir = workspace_dir / "core" / "ChatBlog"
     repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
     posts_dir = repo_dir / "source" / "_posts"
     if not posts_dir.exists():
         raise click.ClickException(
-            f"RexBlog repo does not contain source/_posts: {posts_dir}"
+            f"ChatBlog repo does not contain source/_posts: {posts_dir}"
         )
-    public_link = workspace_dir / "public" / "hexo_blog"
+    public_link = workspace_dir / "public" / "chatblog"
     _ensure_symlink(posts_dir, public_link)
     return {
-        "name": "rexblog",
+        "name": "chatblog",
         "repo_dir": repo_dir,
         "repo_action": repo_action,
         "public_link": public_link,
+    }
+
+
+def apply_memory_option(
+    workspace_dir: Path,
+    source: str,
+    interactive,
+    can_prompt: bool,
+) -> dict:
+    repo_dir = workspace_dir / "core" / "ChatMemory"
+    repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
+    skills_root = repo_dir / "Skills"
+    if not skills_root.exists():
+        raise click.ClickException(
+            f"ChatMemory repo does not contain Skills/: {skills_root}"
+        )
+
+    linked_groups: list[str] = []
+    skipped_groups: list[str] = []
+    for group in DEFAULT_MEMORY_SKILL_GROUPS:
+        group_source = skills_root / group
+        if not group_source.exists():
+            skipped_groups.append(group)
+            continue
+        _ensure_symlink(group_source, workspace_dir / "skills" / group)
+        linked_groups.append(group)
+
+    local_group = _ensure_local_skill_group(workspace_dir)
+
+    return {
+        "name": "memory",
+        "repo_dir": repo_dir,
+        "repo_action": repo_action,
+        "linked_groups": linked_groups,
+        "skipped_groups": skipped_groups,
+        "local_group": local_group,
     }
 
 
@@ -143,9 +201,13 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
             "enabled": False,
             "source": CHATTOOL_REPO_URL,
         },
-        "rexblog": {
+        "chatblog": {
             "enabled": False,
-            "source": REXBLOG_REPO_URL,
+            "source": CHATBLOG_REPO_URL,
+        },
+        "memory": {
+            "enabled": False,
+            "source": CHATMEMORY_REPO_URL,
         },
     }
 
@@ -166,7 +228,8 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         else "选择额外的 workspace 模块",
         choices=[
             create_choice("ChatTool -> core/ChatTool + ./skills", "chattool"),
-            create_choice("RexBlog -> core/RexBlog + public/hexo_blog", "rexblog"),
+            create_choice("ChatBlog -> core/ChatBlog + public/chatblog", "chatblog"),
+            create_choice("ChatMemory -> core/ChatMemory + skills/chatarch, skills/common, skills/agents + local", "memory"),
         ],
         default_values=[],
         instruction="",

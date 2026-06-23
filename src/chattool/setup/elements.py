@@ -194,6 +194,10 @@ def workspace_setup(
     dry_run,
     with_chattool,
     chattool_source,
+    with_chatblog,
+    chatblog_source,
+    with_memory,
+    memory_source,
 ):
     setup_workspace(
         profile_name=profile,
@@ -204,6 +208,10 @@ def workspace_setup(
         dry_run=dry_run,
         with_chattool=with_chattool,
         chattool_source=chattool_source,
+        with_chatblog=with_chatblog,
+        chatblog_source=chatblog_source,
+        with_memory=with_memory,
+        memory_source=memory_source,
     )
 
 
@@ -678,7 +686,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--with-chattool/--no-chattool",),
                 kwargs={
                     "default": False,
-                    "help": "Optionally clone/update ChatTool in the workspace root and sync its skills into docs/skills/.",
+                    "help": "Optionally clone/update ChatTool into core/ChatTool and sync its skills into workspace skills/.",
                 },
             ),
             SetupOptionElement(
@@ -686,6 +694,34 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "default": None,
                     "help": "Git URL or local ChatTool repo path used when --with-chattool is enabled.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--with-chatblog/--no-chatblog",),
+                kwargs={
+                    "default": False,
+                    "help": "Optionally clone/update ChatBlog and link its posts into public/chatblog.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--chatblog-source",),
+                kwargs={
+                    "default": None,
+                    "help": "Git URL or local ChatBlog repo path used when --with-chatblog is enabled.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--with-memory/--no-memory",),
+                kwargs={
+                    "default": False,
+                    "help": "Optionally clone/update ChatMemory, link shared groups chatarch/common/agents, and create local skills.",
+                },
+            ),
+            SetupOptionElement(
+                param_decls=("--memory-source",),
+                kwargs={
+                    "default": None,
+                    "help": "Git URL or local ChatMemory repo path used when --with-memory is enabled.",
                 },
             ),
         ),

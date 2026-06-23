@@ -102,6 +102,10 @@ def setup_workspace(
     dry_run=False,
     with_chattool=False,
     chattool_source=None,
+    with_chatblog=False,
+    chatblog_source=None,
+    with_memory=False,
+    memory_source=None,
 ):
     profile_name, workspace_dir = coerce_profile_and_workspace(
         profile_name, workspace_dir
@@ -112,6 +116,8 @@ def setup_workspace(
     usage = (
         "Usage: chattool setup workspace [PROFILE] [WORKSPACE_DIR] "
         "[--language zh|en] [--with-chattool] [--chattool-source <path-or-url>] "
+        "[--with-chatblog] [--chatblog-source <path-or-url>] "
+        "[--with-memory] [--memory-source <path-or-url>] "
         "[--force] [--dry-run] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, _, need_prompt = (
@@ -128,7 +134,14 @@ def setup_workspace(
             "enabled": bool(with_chattool),
             "source": chattool_source or workspace_options.CHATTOOL_REPO_URL,
         },
-        "rexblog": {"enabled": False, "source": workspace_options.REXBLOG_REPO_URL},
+        "chatblog": {
+            "enabled": bool(with_chatblog),
+            "source": chatblog_source or workspace_options.CHATBLOG_REPO_URL,
+        },
+        "memory": {
+            "enabled": bool(with_memory),
+            "source": memory_source or workspace_options.CHATMEMORY_REPO_URL,
+        },
     }
 
     if need_prompt:
@@ -178,11 +191,20 @@ def setup_workspace(
                 can_prompt,
             )
         )
-    if option_settings["rexblog"]["enabled"]:
+    if option_settings["chatblog"]["enabled"]:
         applied.append(
-            workspace_options.apply_rexblog_option(
+            workspace_options.apply_chatblog_option(
                 workspace_path,
-                option_settings["rexblog"]["source"],
+                option_settings["chatblog"]["source"],
+                interactive,
+                can_prompt,
+            )
+        )
+    if option_settings["memory"]["enabled"]:
+        applied.append(
+            workspace_options.apply_memory_option(
+                workspace_path,
+                option_settings["memory"]["source"],
                 interactive,
                 can_prompt,
             )
@@ -203,7 +225,21 @@ def setup_workspace(
             click.echo(f"Repo action: {item['repo_action']}")
             click.echo(f"Skills: {workspace_path / 'skills'}")
             click.echo(f"Copied skills: {len(item['copied_skills'])}")
-        if item["name"] == "rexblog":
-            click.echo(f"RexBlog repo: {item['repo_dir']}")
+        if item["name"] == "chatblog":
+            click.echo(f"ChatBlog repo: {item['repo_dir']}")
             click.echo(f"Repo action: {item['repo_action']}")
             click.echo(f"Public link: {item['public_link']}")
+        if item["name"] == "memory":
+            click.echo(f"ChatMemory repo: {item['repo_dir']}")
+            click.echo(f"Repo action: {item['repo_action']}")
+            click.echo(
+                "Linked memory skill groups: "
+                f"{', '.join(item['linked_groups']) if item['linked_groups'] else 'none'}"
+            )
+            if item.get("local_group"):
+                click.echo(f"Local skill group: {item['local_group']}")
+            if item["skipped_groups"]:
+                click.echo(
+                    "Skipped missing memory skill groups: "
+                    f"{', '.join(item['skipped_groups'])}"
+                )

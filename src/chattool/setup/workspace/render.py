@@ -159,8 +159,8 @@ def base_file_map(
         "public/README.md": render_public_readme(language),
     }
     skill_md, skill_zh = render_workspace_maintenance_skill()
-    file_map["skills/workspace-maintenance/SKILL.md"] = skill_md
-    file_map["skills/workspace-maintenance/SKILL.zh.md"] = skill_zh
+    file_map["skills/local/workspace-maintenance/SKILL.md"] = skill_md
+    file_map["skills/local/workspace-maintenance/SKILL.zh.md"] = skill_zh
     agents_content = render_agents_md(workspace_dir, profile, language, enabled_options)
     if helper_agents_path:
         file_map[helper_agents_path] = agents_content

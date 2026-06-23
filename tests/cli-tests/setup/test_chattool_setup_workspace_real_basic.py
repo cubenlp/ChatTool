@@ -38,8 +38,8 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert (workspace_dir / "scripts" / "README.md").exists()
     assert not (workspace_dir / "reference" / "README.md").exists()
     assert (workspace_dir / "core").exists()
-    assert (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.md").exists()
-    assert (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.zh.md").exists()
+    assert (workspace_dir / "skills" / "local" / "workspace-maintenance" / "SKILL.md").exists()
+    assert (workspace_dir / "skills" / "local" / "workspace-maintenance" / "SKILL.zh.md").exists()
 
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     todo = (workspace_dir / "TODO.md").read_text(encoding="utf-8")
@@ -47,7 +47,7 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     archive_guide = (workspace_dir / "ARCHIVE.md").read_text(encoding="utf-8")
     archive_index = (workspace_dir / "archive" / "index.md").read_text(encoding="utf-8")
     scripts = (workspace_dir / "scripts" / "README.md").read_text(encoding="utf-8")
-    skill_zh = (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.zh.md").read_text(encoding="utf-8")
+    skill_zh = (workspace_dir / "skills" / "local" / "workspace-maintenance" / "SKILL.zh.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
     assert "AGENTS.md" in agents
     assert "TODO.md" in agents
@@ -99,6 +99,100 @@ def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
     assert (workspace_dir / "skills" / "practice-make-perfact").exists()
     assert (workspace_dir / "skills" / "practice-make-perfact" / "SKILL.md").exists()
     assert "ChatTool repo:" in result.stdout
+
+
+def test_setup_workspace_with_chatblog_links_posts(tmp_path: Path):
+    workspace_dir = tmp_path / "workspace"
+    chatblog_source = tmp_path / "ChatBlogSource"
+    posts_dir = chatblog_source / "source" / "_posts"
+    posts_dir.mkdir(parents=True)
+    (posts_dir / "hello.md").write_text("# hello\n", encoding="utf-8")
+    subprocess.run(["git", "init"], cwd=chatblog_source, check=True, capture_output=True)
+    subprocess.run(["git", "add", "."], cwd=chatblog_source, check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=ChatTool Test",
+            "-c",
+            "user.email=chattool-test@example.com",
+            "commit",
+            "-m",
+            "init chatblog fixture",
+        ],
+        cwd=chatblog_source,
+        check=True,
+        capture_output=True,
+    )
+
+    result = _run_chattool_setup_workspace(
+        [
+            str(workspace_dir),
+            "--with-chatblog",
+            "--chatblog-source",
+            str(chatblog_source),
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "core" / "ChatBlog").exists()
+    public_link = workspace_dir / "public" / "chatblog"
+    assert public_link.is_symlink()
+    assert public_link.resolve() == (
+        workspace_dir / "core" / "ChatBlog" / "source" / "_posts"
+    ).resolve()
+    assert "ChatBlog repo:" in result.stdout
+
+
+def test_setup_workspace_with_memory_links_shared_groups_and_creates_local(tmp_path: Path):
+    workspace_dir = tmp_path / "workspace"
+    memory_source = tmp_path / "ChatMemorySource"
+    for group in ["chatarch", "common", "agents", "machine"]:
+        skill = memory_source / "Skills" / group / "demo" / "SKILL.md"
+        skill.parent.mkdir(parents=True, exist_ok=True)
+        skill.write_text(f"# {group}\n", encoding="utf-8")
+    subprocess.run(["git", "init"], cwd=memory_source, check=True, capture_output=True)
+    subprocess.run(["git", "add", "."], cwd=memory_source, check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=ChatTool Test",
+            "-c",
+            "user.email=chattool-test@example.com",
+            "commit",
+            "-m",
+            "init chatmemory fixture",
+        ],
+        cwd=memory_source,
+        check=True,
+        capture_output=True,
+    )
+
+    result = _run_chattool_setup_workspace(
+        [
+            str(workspace_dir),
+            "--with-memory",
+            "--memory-source",
+            str(memory_source),
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "core" / "ChatMemory").exists()
+    for group in ["chatarch", "common", "agents"]:
+        link = workspace_dir / "skills" / group
+        assert link.is_symlink()
+        assert link.resolve() == (workspace_dir / "core" / "ChatMemory" / "Skills" / group).resolve()
+    local_group = workspace_dir / "skills" / "local"
+    assert local_group.is_dir()
+    assert not local_group.is_symlink()
+    assert (local_group / "README.md").exists()
+    assert not (workspace_dir / "skills" / "machine").exists()
+    assert "Linked memory skill groups: chatarch, common, agents" in result.stdout
+    assert "Local skill group:" in result.stdout
 
 
 def test_setup_workspace_force_overwrites_generated_files(tmp_path: Path):
