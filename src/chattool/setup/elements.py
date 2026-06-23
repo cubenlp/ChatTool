@@ -714,7 +714,7 @@ SETUP_COMMAND_ELEMENTS = (
                 param_decls=("--with-memory/--no-memory",),
                 kwargs={
                     "default": False,
-                    "help": "Optionally clone/update ChatMemory and link shared skill groups: common and chatarch.",
+                    "help": "Optionally clone/update ChatMemory, link shared groups chatarch/common/agents, and create local skills.",
                 },
             ),
             SetupOptionElement(

@@ -108,8 +108,9 @@ def test_setup_workspace_interactive_can_enable_workspace_extras(tmp_path, monke
             "name": "memory",
             "repo_dir": workspace_dir / "core" / "ChatMemory",
             "repo_action": "cloned",
-            "linked_groups": ["common", "chatarch"],
+            "linked_groups": ["chatarch", "common", "agents"],
             "skipped_groups": [],
+            "local_group": workspace_dir / "skills" / "local",
         },
     )
 
@@ -119,7 +120,8 @@ def test_setup_workspace_interactive_can_enable_workspace_extras(tmp_path, monke
     assert "Enabled options: chattool, chatblog, memory" in result.output
     assert "ChatBlog repo:" in result.output
     assert "ChatMemory repo:" in result.output
-    assert "Linked memory skill groups: common, chatarch" in result.output
+    assert "Linked memory skill groups: chatarch, common, agents" in result.output
+    assert "Local skill group:" in result.output
 
 
 def test_setup_workspace_dry_run_writes_nothing(tmp_path, runner):
@@ -195,7 +197,7 @@ def test_memory_option_links_only_default_shared_groups(tmp_path, monkeypatch):
 
     def fake_clone(source, repo_dir, interactive, can_prompt):
         assert repo_dir == memory_dir
-        for group in ["common", "chatarch", "prd-task", "machine"]:
+        for group in ["chatarch", "common", "agents", "prd-task", "machine"]:
             skill = repo_dir / "Skills" / group / "demo" / "SKILL.md"
             skill.parent.mkdir(parents=True, exist_ok=True)
             skill.write_text(f"# {group}\n", encoding="utf-8")
@@ -207,10 +209,15 @@ def test_memory_option_links_only_default_shared_groups(tmp_path, monkeypatch):
 
     result = apply_memory_option(workspace_dir, "https://example.invalid/repo.git", False, False)
 
-    assert result["linked_groups"] == ["common", "chatarch"]
+    assert result["linked_groups"] == ["chatarch", "common", "agents"]
     assert result["skipped_groups"] == []
+    assert result["local_group"] == workspace_dir / "skills" / "local"
     assert (workspace_dir / "skills" / "common").is_symlink()
     assert (workspace_dir / "skills" / "chatarch").is_symlink()
+    assert (workspace_dir / "skills" / "agents").is_symlink()
+    assert (workspace_dir / "skills" / "local").is_dir()
+    assert not (workspace_dir / "skills" / "local").is_symlink()
+    assert (workspace_dir / "skills" / "local" / "README.md").exists()
     assert not (workspace_dir / "skills" / "prd-task").exists()
     assert not (workspace_dir / "skills" / "machine").exists()
 
@@ -233,9 +240,11 @@ def test_memory_option_skips_missing_allowlist_group(tmp_path, monkeypatch):
     result = apply_memory_option(workspace_dir, "https://example.invalid/repo.git", False, False)
 
     assert result["linked_groups"] == ["chatarch"]
-    assert result["skipped_groups"] == ["common"]
+    assert result["skipped_groups"] == ["common", "agents"]
     assert not (workspace_dir / "skills" / "common").exists()
     assert (workspace_dir / "skills" / "chatarch").is_symlink()
+    assert not (workspace_dir / "skills" / "agents").exists()
+    assert (workspace_dir / "skills" / "local").is_dir()
 
 
 def test_memory_option_refuses_to_replace_existing_non_symlink_group(tmp_path, monkeypatch):

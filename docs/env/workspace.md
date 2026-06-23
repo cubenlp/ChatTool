@@ -72,4 +72,4 @@ workspace/
 
 - `ChatTool`：仓库放到 `core/ChatTool/`，并把仓库内 `skills/` 同步到 workspace 根目录 `skills/`
 - `ChatBlog`：仓库放到 `core/ChatBlog/`，并把 `source/_posts` 链接到 `public/chatblog`
-- `ChatMemory`：仓库放到 `core/ChatMemory/`，只把共享 skill groups `Skills/common` 和 `Skills/chatarch` 链接到 workspace 根目录 `skills/`；不默认 link `prd-task` 或机器/账号特定分组
+- `ChatMemory`：仓库放到 `core/ChatMemory/`，只把共享 skill groups `Skills/chatarch`、`Skills/common` 和 `Skills/agents` 链接到 workspace 根目录 `skills/`；同时创建本地非共享目录 `skills/local`。`local` 用于当前机器/当前 workspace 的特定内容，不从 ChatMemory link，也不公开共享

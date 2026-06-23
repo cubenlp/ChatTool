@@ -340,7 +340,7 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 
 - `ChatTool`：下载到 `core/ChatTool/`，并把相关 skills 同步到 `./skills/`
 - `ChatBlog` / `--with-chatblog`：下载到 `core/ChatBlog/`，并把 `source/_posts` 链接到 `./public/chatblog`
-- `ChatMemory` / `--with-memory`：下载到 `core/ChatMemory/`，只把共享 skill groups 链接到 workspace：`./skills/common` 与 `./skills/chatarch`
+- `ChatMemory` / `--with-memory`：下载到 `core/ChatMemory/`，只把共享 skill groups 链接到 workspace：`./skills/chatarch`、`./skills/common`、`./skills/agents`，并创建本地非共享目录 `./skills/local`
 
 也可以在非交互模式中显式启用：
 
@@ -348,7 +348,7 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 chattool setup workspace ~/workspace/demo --with-chatblog --with-memory -I
 ```
 
-ChatMemory 不会默认 link 全部 `Skills/`，也不会默认 link Playground 本地的 `Skills/prd-task` 或机器/账号特定分组。
+ChatMemory 不会默认 link 全部 `Skills/`，也不会默认 link 机器/账号特定分组。`skills/local` 是当前 workspace / 当前机器本地使用的非共享目录，不从 ChatMemory link。
 
 ## 1. DNS 管理 (`dns`)
 

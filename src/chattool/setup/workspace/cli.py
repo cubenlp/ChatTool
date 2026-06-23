@@ -236,6 +236,8 @@ def setup_workspace(
                 "Linked memory skill groups: "
                 f"{', '.join(item['linked_groups']) if item['linked_groups'] else 'none'}"
             )
+            if item.get("local_group"):
+                click.echo(f"Local skill group: {item['local_group']}")
             if item["skipped_groups"]:
                 click.echo(
                     "Skipped missing memory skill groups: "

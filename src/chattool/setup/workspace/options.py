@@ -17,7 +17,13 @@ from chattool.interaction import (
 CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
 CHATBLOG_REPO_URL = "https://github.com/ChatArch/ChatBlog.git"
 CHATMEMORY_REPO_URL = "https://github.com/ChatArch/ChatMemory.git"
-DEFAULT_MEMORY_SKILL_GROUPS = ("common", "chatarch")
+DEFAULT_MEMORY_SKILL_GROUPS = ("chatarch", "common", "agents")
+LOCAL_SKILL_GROUP_README = """# Local Skills
+
+Use this directory for machine-specific, workspace-specific, or private skills that should not be shared through ChatMemory.
+
+Shared skills should live in one of the linked ChatMemory groups: `chatarch`, `common`, or `agents`.
+"""
 
 
 def _run_git(
@@ -117,6 +123,19 @@ def _ensure_symlink(source: Path, target: Path) -> None:
     target.symlink_to(source)
 
 
+def _ensure_local_skill_group(workspace_dir: Path) -> Path:
+    local_dir = workspace_dir / "skills" / "local"
+    if local_dir.is_symlink():
+        raise click.ClickException(
+            f"Refusing to use symlink for local-only skill group: {local_dir}"
+        )
+    local_dir.mkdir(parents=True, exist_ok=True)
+    readme = local_dir / "README.md"
+    if not readme.exists():
+        readme.write_text(LOCAL_SKILL_GROUP_README, encoding="utf-8")
+    return local_dir
+
+
 def apply_chatblog_option(
     workspace_dir: Path,
     source: str,
@@ -164,12 +183,15 @@ def apply_memory_option(
         _ensure_symlink(group_source, workspace_dir / "skills" / group)
         linked_groups.append(group)
 
+    local_group = _ensure_local_skill_group(workspace_dir)
+
     return {
         "name": "memory",
         "repo_dir": repo_dir,
         "repo_action": repo_action,
         "linked_groups": linked_groups,
         "skipped_groups": skipped_groups,
+        "local_group": local_group,
     }
 
 
@@ -207,7 +229,7 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         choices=[
             create_choice("ChatTool -> core/ChatTool + ./skills", "chattool"),
             create_choice("ChatBlog -> core/ChatBlog + public/chatblog", "chatblog"),
-            create_choice("ChatMemory -> core/ChatMemory + skills/common, skills/chatarch", "memory"),
+            create_choice("ChatMemory -> core/ChatMemory + skills/chatarch, skills/common, skills/agents + local", "memory"),
         ],
         default_values=[],
         instruction="",
