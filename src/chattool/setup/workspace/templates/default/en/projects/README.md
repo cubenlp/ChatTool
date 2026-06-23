@@ -102,7 +102,7 @@ Notes:
 
 - `projects/` keeps active or recently active work
 - move clearly inactive projects into `../archive/YYYY-MM-DD/`
-- write archive summaries into workspace root `../ARCHIVE.md`
+- write archive index entries into `../archive/index.md`; the procedure lives in `../ARCHIVE.md`
 - archive by moving directories, not by deleting content
 - use “script candidate collection + model review” instead of blind script-only archiving
 

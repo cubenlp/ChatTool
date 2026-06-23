@@ -28,6 +28,7 @@ workspace/
 ├── .trash/
 ├── projects/
 ├── archive/
+│   └── index.md
 ├── core/
 ├── scripts/
 ├── skills/
@@ -38,10 +39,10 @@ workspace/
 
 - `AGENTS.md`：模型执行协议
 - `TODO.md`：这个 workspace 近期打算做的事
-- `ARCHIVE.md`：归档项目摘要日志
+- `ARCHIVE.md`：归档操作指南
 - `.trash/`：workspace 级软删除缓冲区
 - `projects/`：所有实际工作的执行容器
-- `archive/`：归档后的历史 project
+- `archive/`：归档后的历史 project；`archive/index.md` 记录已归档内容索引
 - `scripts/`：workspace 级维护脚本
 
 ## 3. `projects/` 模型
@@ -64,8 +65,8 @@ workspace/
 
 - 活跃或近期仍在推进的工作保留在 `projects/`
 - 明显不再活跃的项目移动到 `archive/YYYY-MM-DD/`
-- 归档摘要写入 workspace 根目录 `ARCHIVE.md`
-- 归档过程采用“脚本收集候选 + 模型审查 + 更新 `ARCHIVE.md`”的方式
+- 归档索引写入 `archive/index.md`
+- 归档过程采用“脚本收集候选 + 模型审查 + 更新 `archive/index.md`”的方式，具体流程见根 `ARCHIVE.md`
 
 ## 5. 可选模块
 

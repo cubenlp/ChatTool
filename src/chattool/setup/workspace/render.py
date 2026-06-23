@@ -28,30 +28,45 @@ def render_projects_readme(language: str) -> str:
     return _read_template(language, "projects/README.md")
 
 
-def render_archive_readme(language: str) -> str:
+def render_archive_index(language: str) -> str:
     if language == "en":
         return (
-            "# Archive README\n\n"
-            "`archive/` stores inactive projects by archive date.\n\n"
+            "# Archived Content Index\n\n"
+            "This file records what has already been archived in `archive/`. Keep entries in reverse chronological order.\n\n"
             "## Structure\n\n"
-            "```text\narchive/\n  README.md\n  YYYY-MM-DD/\n    <project-name>/\n```\n\n"
-            "Move inactive projects into `archive/YYYY-MM-DD/` and summarize them in the workspace root `ARCHIVE.md`.\n"
+            "```text\narchive/\n  index.md\n  YYYY-MM-DD/\n    <project-name>/\n```\n\n"
+            "## Entries\n\n"
+            "- No archived projects recorded yet.\n"
         )
     return (
-        "# Archive README\n\n"
-        "`archive/` 是 Playground 的历史日志区，按归档日期保存已不活跃的 project。\n\n"
+        "# 已归档内容索引\n\n"
+        "这里记录 `archive/` 里已经有哪些归档项目，按归档日期倒序维护。\n\n"
         "## 目录结构\n\n"
-        "```text\narchive/\n  README.md\n  YYYY-MM-DD/\n    <project-name>/\n```\n\n"
-        "每次归档时，把 project 移到 `archive/YYYY-MM-DD/`，并在 workspace 根目录 `ARCHIVE.md` 中补归档摘要。\n"
+        "```text\narchive/\n  index.md\n  YYYY-MM-DD/\n    <project-name>/\n```\n\n"
+        "## 条目\n\n"
+        "- 暂无已记录的归档项目。\n"
     )
 
 
 def render_archive_md(language: str) -> str:
     if language == "en":
-        return "# Archive\n\nRecord archived project summaries in reverse chronological order.\n"
+        return (
+            "# Archive Guide\n\n"
+            "This guide explains how to archive inactive workspace projects.\n\n"
+            "## Flow\n\n"
+            "1. Collect candidate projects with scripts or directory review.\n"
+            "2. Let the model review candidates before moving anything.\n"
+            "3. Move inactive projects to `archive/YYYY-MM-DD/<project-name>/`; do not delete content.\n"
+            "4. Update `archive/index.md` with a concise summary of what was archived and why.\n"
+        )
     return (
-        "# Archive\n\n"
-        "按日期倒序记录归档项目摘要。每个项目都说明“这是做什么的”和“本轮做了什么”。更具体的维护规则见 `archive/README.md`。\n"
+        "# 归档操作指南\n\n"
+        "这里说明如何归档不再活跃的 workspace project。\n\n"
+        "## 流程\n\n"
+        "1. 先用脚本或目录审查收集候选 project。\n"
+        "2. 由模型审查候选，不要纯脚本盲搬。\n"
+        "3. 将不活跃 project 移到 `archive/YYYY-MM-DD/<project-name>/`，不要删除内容。\n"
+        "4. 在 `archive/index.md` 记录本次已归档内容和简要原因。\n"
     )
 
 
@@ -87,7 +102,7 @@ def render_workspace_maintenance_skill() -> tuple[str, str]:
         "# Workspace Maintenance\n\n"
         "Use this skill when maintaining the outer workspace rather than editing a source repository.\n\n"
         "- keep active work under `projects/` and archive inactive work into `archive/YYYY-MM-DD/`\n"
-        "- update `ARCHIVE.md` when projects are archived or restored\n"
+        "- use root `ARCHIVE.md` as the archive procedure guide, and update `archive/index.md` when projects are archived or restored\n"
         "- keep workspace-level scripts under `scripts/`\n"
         "- prefer moving files into the nearest `.trash/` instead of deleting them directly\n"
         "- keep root protocol files (`AGENTS.md`, `ARCHIVE.md`, `TODO.md`) aligned with the real workspace structure\n"
@@ -101,7 +116,7 @@ def render_workspace_maintenance_skill() -> tuple[str, str]:
         "# Workspace Maintenance（中文）\n\n"
         "用于维护 workspace 外层结构，而不是直接修改源码仓库。\n\n"
         "- 活跃工作保留在 `projects/`，不活跃项目归档到 `archive/YYYY-MM-DD/`\n"
-        "- 发生归档或恢复时同步更新 `ARCHIVE.md`\n"
+        "- 根 `ARCHIVE.md` 作为归档操作指南；发生归档或恢复时同步更新 `archive/index.md`\n"
         "- workspace 级维护脚本统一放到 `scripts/`\n"
         "- 删除前优先移动到就近的 `.trash/`，不要直接删除\n"
         "- 保持根协议文件（`AGENTS.md`、`ARCHIVE.md`、`TODO.md`）与真实结构一致\n"
@@ -139,7 +154,7 @@ def base_file_map(
         "TODO.md": render_todo_md(language),
         "ARCHIVE.md": render_archive_md(language),
         "projects/README.md": render_projects_readme(language),
-        "archive/README.md": render_archive_readme(language),
+        "archive/index.md": render_archive_index(language),
         "scripts/README.md": render_scripts_readme(language),
         "public/README.md": render_public_readme(language),
     }

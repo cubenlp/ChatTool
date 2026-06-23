@@ -9,7 +9,7 @@
 - Project structure should stay minimal by default, while naming still allows more flexible grouping.
 - `PRD.md` records stable requirements, scope, constraints, and completion criteria; progress details belong in `progress.md`.
 - `progress.md` is the continuity log for each task. Update it after each substantive action.
-- Archiving should not be decided by scripts alone. Scripts can collect candidates and validate rules, but the final archive summary should be reviewed and written into `ARCHIVE.md` by the model.
+- Archiving should not be decided by scripts alone. Scripts can collect candidates and validate rules, but the final archive index should be reviewed and written into `archive/index.md` by the model.
 - If requirements are unclear, ask follow-up questions before execution.
 
 See `projects/README.md` for concrete project structures and naming rules.
@@ -24,6 +24,7 @@ Workspace/
   .trash/
   projects/
   archive/
+    index.md
     YYYY-MM-DD/
   core/
   scripts/
@@ -35,7 +36,7 @@ This workspace is an outer collaboration scaffold around source repositories.
 
 ## Current Options
 
-- Enabled options: `archive/`, `ARCHIVE.md`
+- Enabled options: `archive/`, `ARCHIVE.md`, `archive/index.md`
 - Source repositories go under `core/`
 - Workspace maintenance scripts go under `scripts/`
 - The workspace root keeps a `.trash/` directory; prefer moving files there before deleting them directly
@@ -56,8 +57,8 @@ This workspace is an outer collaboration scaffold around source repositories.
 9. Use `MM-DD-...` for new execution tasks by default; only clearly long-lived stable subprojects should omit the date prefix.
 10. Prefer `.trash/` at both workspace and project level; move files there before irreversible deletion.
 11. If a project needs a shorter repo path, create an on-demand symlink to `core/<repo-name>` instead of copying the repository.
-12. Finish with a report; if archiving happens, update `ARCHIVE.md`.
-13. Follow an archive flow of “script candidate collection + model review + `ARCHIVE.md` update”.
+12. Finish with a report; if archiving happens, update `archive/index.md`.
+13. Follow an archive flow of “script candidate collection + model review + `archive/index.md` update”; the procedure lives in root `ARCHIVE.md`.
 
 ## Write Rules
 
@@ -67,7 +68,8 @@ This workspace is an outer collaboration scaffold around source repositories.
 | Short-term project | Prefer `MM-DD-<project-name>` |
 | Long-lived project | Use a stable name without a date prefix |
 | Inactive old project | `archive/YYYY-MM-DD/<project-name>/` |
-| Archive summary | `ARCHIVE.md` |
+| Archive procedure guide | `ARCHIVE.md` |
+| Archived content index | `archive/index.md` |
 | Repositories to change | `core/<repo-name>/` |
 | Workspace maintenance scripts | `scripts/<name>.py` |
 
