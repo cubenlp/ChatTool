@@ -23,6 +23,7 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
+    "chatgh>=0.2.4",
     "chatstyle>=0.1.0",
     "chatenv>=0.1.1",
     "requests>=2.20",
@@ -76,9 +77,6 @@ serve = [
 mcp = [
     "fastmcp; python_version >= '3.10'",
 ]
-github = [
-    "PyGithub",
-]
 client = [
     "gitpython",
     "rich",
@@ -88,7 +86,7 @@ pypi = [
     "twine",
 ]
 tools = [
-    "chattool[batch,browser,client,dns,github,images,interactive,lark,mcp,serve,screenshot]",
+    "chattool[batch,browser,client,dns,images,interactive,lark,mcp,serve,screenshot]",
 ]
 tests = [
     "coverage",
@@ -104,6 +102,7 @@ docs = [
     "mkdocs-awesome-pages-plugin>=2.8.0",
     "mkdocs-redirects>=1.2.0",
     "mike>=1.1.2",
+    "pyparsing>=3.0",
 ]
 dev = [
     "wheel",

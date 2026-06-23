@@ -70,18 +70,6 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
         "chattool.setup.workspace.options.ask_confirm",
         lambda message, default=False: True,
     )
-    prompts = []
-    monkeypatch.setattr(
-        "chattool.setup.workspace.options.ask_text",
-        lambda label, default="", password=False, style=None: (
-            prompts.append(label),
-            default,
-        )[1],
-    )
-    monkeypatch.setattr(
-        "chattool.setup.workspace.options._read_current_repo_github_token",
-        lambda: "github_pat_existing_token",
-    )
     monkeypatch.setattr(
         "chattool.setup.workspace.options.ask_checkbox_with_controls",
         lambda *args, **kwargs: ["chattool", "rexblog"],
@@ -98,7 +86,7 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.options.apply_chattool_option",
-        lambda workspace_dir, source, interactive, can_prompt, github_token=None: {
+        lambda workspace_dir, source, interactive, can_prompt: {
             "name": "chattool",
             "repo_dir": workspace_dir / "core" / "ChatTool",
             "repo_action": "cloned",
@@ -107,7 +95,7 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.options.apply_rexblog_option",
-        lambda workspace_dir, source, interactive, can_prompt, github_token=None: {
+        lambda workspace_dir, source, interactive, can_prompt: {
             "name": "rexblog",
             "repo_dir": workspace_dir / "core" / "RexBlog",
             "repo_action": "cloned",
@@ -119,8 +107,6 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
 
     assert result.exit_code == 0
     assert "Enabled options: chattool, rexblog" in result.output
-    assert any("ChatTool github_token" in item for item in prompts)
-    assert any("RexBlog github_token" in item for item in prompts)
 
 
 def test_setup_workspace_dry_run_writes_nothing(tmp_path, runner):

@@ -1,6 +1,6 @@
 ---
 name: chattool-release
-description: 处理 ChatTool 的发版准备与合并后发版执行。适用于版本号调整、CHANGELOG 收口、tag 时机判断、Publish Package 工作流检查、PyPI 校验，以及正式发版后补记 release.log。
+description: 处理 ChatTool 的发版准备与合并后发版执行。适用于版本号调整、CHANGELOG 收口、tag 时机判断、Publish Package 工作流检查与 PyPI 校验。
 version: 0.1.3
 ---
 
@@ -15,7 +15,7 @@ version: 0.1.3
 - 用户明确要求发版或切版本。
 - 任务涉及 `src/chattool/__init__.py`、`CHANGELOG.md`、release tag、`Publish Package`。
 - 需要判断“现在该不该打 tag”。
-- 需要确认 PyPI 状态，或在正式发版后补写 `release.log`。
+- 需要在正式发版后确认 PyPI 状态。
 
 ## 发版规则
 
@@ -43,10 +43,6 @@ version: 0.1.3
    - 仅在验证通过后推送 tag。
    - 检查 `Publish Package` workflow，确认它会先剥离 tag 的 `v` 前缀再与 `__version__` 比对，并在 PyPI 已存在同版本时直接失败，而不是静默跳过，然后确认 PyPI 新版本已可见。
 
-5. `release.log` 只能在正式发版完成后追加
-   - 记录时间、版本、tag、commit、执行者和摘要。
-   - 不要在 tag / publish 成功前提前写入。
-
 ## 执行流程
 
 1. 先确认这次是“发版准备”还是“正式发版”。
@@ -57,7 +53,6 @@ version: 0.1.3
    - 跑验证
    - 创建并推送 tag
    - 检查 workflow 与 PyPI 结果
-   - 追加 `release.log`
 3. 如果只是准备：
    - 停在打 tag 之前
    - 明确告诉用户还差哪些 merge / release 动作
@@ -72,9 +67,9 @@ git tag --list 'v*'
 git ls-remote --tags origin 'v*'
 python -m build
 python -m twine check dist/*
-chattool gh pr view --repo cubenlp/ChatTool --number <pr>
-chattool gh pr checks --repo cubenlp/ChatTool --number <pr> --wait
-chattool gh run view --repo cubenlp/ChatTool --run-id <id>
+chatgh pr view <pr> --repo cubenlp/ChatTool
+chatgh pr checks <pr> --repo cubenlp/ChatTool
+chatgh run view --repo cubenlp/ChatTool --run-id <id>
 python - <<'PY'
 import json, urllib.request
 print(json.load(urllib.request.urlopen('https://pypi.org/pypi/chattool/json'))['info']['version'])
@@ -85,6 +80,6 @@ PY
 
 - 明确区分“已具备发版条件”和“已经正式发版”。
 - 使用具体版本号、commit、tag、workflow id。
-- 在 merge 或打 tag 前，优先用 `chattool gh pr checks --wait` 等 CI 到终态，再做发版判断。
+- 在 merge 或打 tag 前，先确认 `chatgh pr checks <pr> --repo cubenlp/ChatTool` 已经到达终态且为绿色；如果 GitHub checks 仍在运行，等结束后重新查询。
 - 如果某个 tag 只会重跑 workflow 而不会产出新的 PyPI 包，要明确指出这一点。
 - 如果当前时机不该发版，要先指出，再停止危险动作。

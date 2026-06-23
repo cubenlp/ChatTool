@@ -975,6 +975,7 @@ def scaffold_package(
                     jobs:
                       publish:
                         runs-on: ubuntu-latest
+                        environment: pypi
                         steps:
                           - uses: actions/checkout@v4
                             with:

@@ -25,9 +25,6 @@ tests/mock-cli-tests/
 │   └── test_chattool_pypi_init_interactive.md
 ├── nginx/
 │   └── test_chattool_nginx_dispatch_basic.md
-└── gh/
-    ├── test_chattool_gh_basic.md
-    └── test_chattool_gh_actions_diagnostics.md
 ```
 
 ## 文件级别说明

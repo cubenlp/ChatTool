@@ -7,6 +7,14 @@ pytestmark = pytest.mark.mock_cli
 
 
 def test_chattool_top_level_help_entries(runner):
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "\n  gh " not in result.output
+
+    result = runner.invoke(cli, ["gh", "--help"])
+    assert result.exit_code != 0
+    assert "No such command 'gh'" in result.output
+
     result = runner.invoke(cli, ["client", "--help"])
     assert result.exit_code == 0
     assert "Manage certificates through the remote cert service." in result.output

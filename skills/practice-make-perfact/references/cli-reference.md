@@ -45,11 +45,12 @@ Business packages register schemas through `[project.entry-points."chatenv.confi
 ## GitHub Helpers
 
 ```bash
-chattool gh pr create --repo owner/repo --base master --head branch --title "..." --body-file /tmp/pr.md
-chattool gh pr edit --repo owner/repo --number 123 --body-file /tmp/pr.md
-chattool gh pr checks --repo owner/repo --number 123 --wait
-chattool gh run view --repo owner/repo --run-id 123
-chattool gh run logs --repo owner/repo --job-id 456
+chatgh pr list --repo owner/repo --state open --limit 20
+chatgh pr view 123 --repo owner/repo
+chatgh pr checks 123 --repo owner/repo
+chatgh run view --repo owner/repo --run-id 123
+chatgh run logs --repo owner/repo --job-id 456
+# PR create/edit/merge are not public stable ChatGH CLI commands yet; use the project workflow or GitHub API path for those writes.
 ```
 
 ## DNS And Certificates

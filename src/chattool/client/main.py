@@ -98,7 +98,6 @@ cli._lazy_commands.update(
         "lark": lambda: _load_attr("chattool.tools.lark.cli", "cli"),
         "image": lambda: _load_attr("chattool.tools.image.cli", "cli"),
         "tplogin": lambda: _load_attr("chattool.tools.tplogin_cli", "cli"),
-        "gh": lambda: _load_attr("chattool.tools.github.cli", "cli"),
         "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
         "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
         "skill": lambda: _load_attr("chattool.skill.cli", "skill_cli"),

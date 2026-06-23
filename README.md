@@ -208,7 +208,7 @@ chatpypi mychat
 
 默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1`，默认写入 `requires-python = ">=3.10"`。
 
-`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1` 作为 ChatArch CLI/env 运行时；其中发布 workflow 会在合并到 `main` / `master` 后按包内 `__version__` 创建 `vX.Y.Z` tag，并通过 PyPI Trusted Publishing 发布尚未存在的版本。
+`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1` 作为 ChatArch CLI/env 运行时；其中发布 workflow 由显式 `v*` tag 或 `workflow_dispatch` 触发，校验 tag 与包内 `__version__` 一致，并通过 PyPI Trusted Publishing 的 `environment: pypi` 发布尚未存在的版本，不依赖仓库级 PyPI token secret。
 
 如只想生成代码与测试骨架，可以用 `--without-mkdocs` 跳过 mkdocs/docs，用 `--without-workflows` 跳过 `.github/workflows/`。
 

@@ -2,9 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-本项目按日期记录更新；正式发版信息另见 `release.log`，不再维护待发布分组。
+本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-06-15
+- `chattool pypi init -t chatarch` 生成的 PyPI publish workflow 增加 `environment: pypi`，并补充测试防止重新引入仓库级 PyPI token secret。
+- 准备 `7.2.0` 版本但暂不发版：GitHub/gh 能力整体迁出 ChatTool，移除顶层 `chattool gh` 入口、默认 `chatgh='chattool gh'` alias、内部 `tools/github` helper、`GitHubClient` 导出、GitHub typed env schema、`github` optional extra、旧 gh mock 测试目录和 GitHub explore 草案；ChatTool 通过 package dependency 引用 `chatgh>=0.2.4`，后续 PR/CI/workflow 操作统一使用独立 `chatgh`。ChatTool 侧文档同步收敛为迁移入口和 token 解析规则，不再维护旧 deprecated 命令细节。
 - `chattool serve oauth` 新增本地 OAuth token service：提供 `GET /health`、`GET /oauth/status`、`POST /oauth/config`、`POST /oauth/refresh`、`GET /oauth/access-token`，用 service token 保护敏感接口，当前以后端 OpenAI typed env 打通配置/刷新/使用闭环，为后续加密存储和自建验证 API service 铺底。
 - `chattool crs oauth` 新增 OpenAI/Codex OAuth token infra CLI：支持 `status` 脱敏查看 token 元数据、`refresh` 使用 `OPENAI_REFRESH_TOKEN` 刷新 access token，并可通过 `--save` 写回 OpenAI typed env；同时导出 safe status / refresh result / save helper，作为后续自建验证 API service 和加密存储机制的基础。
 - `chattool image` 新增 `codex` provider：通过 OpenAI/OAI 配置中的 OAuth access token 调用 `gpt-image-2`，支持 `list-models`、默认输出到 `./generated/`，并补充文档与测试；Codex 生图配置已收敛到现有 OpenAI typed env，不再拆分独立 Codex 配置类型；OpenAI/OAI 配置同步补充可覆盖的 OAuth auth server base URL 与唯一需要持久化的 access token 过期时间字段，并封装 refresh token 换取 access token + 过期时间的 CRS/OAuth helper；为避免 OAuth bearer token 泄露到 API-key/CRS proxy profile，Codex backend base URL 与 host model 只使用安全默认或命令级显式覆盖；OpenAI typed env 默认模型更新为 `gpt-5.5`。
@@ -95,7 +97,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - CLI 测试规范现拆成双轨：`tests/cli-tests/` 只维护真实 CLI 链路，所有基于 `mock` / `patch` / `monkeypatch` / fake client 的 CLI 测试统一迁入 `tests/mock-cli-tests/`
 - GitHub CI 的 stable smoke tests 现同步切到 `tests/mock-cli-tests/`，避免继续引用真实 CLI 用例目录
-- `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package`、PyPI 校验与 `release.log` 的动作改由新 skill `skills/chattool-release/` 负责
+- `skills/chattool-dev-review/` 现在收窄为纯开发验收 skill，不再混入正式发版边界；涉及版本 tag、`Publish Package` 与 PyPI 校验的动作改由新 skill `skills/chattool-release/` 负责
 - `skills/practice-make-perfact/` 现在明确把“任务后整理到 PR/MR 阶段”和“合并后的正式发版”拆成两个阶段：前者继续串联 `$chattool-dev-review`，后者显式切换到 `$chattool-release`
 - `Publish Package` workflow 现改为只响应合并后推送的 `vX.Y.Z` tag，并在工作流中去掉 `v` 前缀后与包版本做严格比对，避免继续沿用旧的裸版本 tag 习惯
 - `chattool setup` 相关的 `nvm` / `lark-cli` 子进程调用现统一避免使用 login shell，减少用户 shell 初始化把提示符和控制序列污染到当前交互页面的风险
@@ -109,7 +111,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 新增 `tests/mock-cli-tests/` 测试线，并补充 `chattool` 统一入口 lazy dispatch 的 mock CLI 测试
 - `chattool cc init` 现支持 `--quiet/--no-quiet`，可直接写入项目级 `quiet = true/false`；交互模式下也会提示并沿用已有 quiet 默认值
-- 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查、PyPI 校验和正式发版后的 `release.log` 记录
+- 新增 `skills/chattool-release/`，用于处理 ChatTool 的发版准备、tag 时机、发布工作流检查与 PyPI 校验
 - 新增 `tests/cli-tests/skill/test_chattool_skill_release_boundary.md` 与 `tests/cli-tests/skill/test_chattool_skill_release_boundary.py`，校对 `chattool-dev-review`、`chattool-release` 和 `practice-make-perfact` 的边界与串联关系
 - 新增 `tests/cli-tests/skill/test_chattool_release_tag_format.md` 与 `tests/cli-tests/skill/test_chattool_release_tag_format.py`，校对正式发版流程已统一使用 `vX.Y.Z` tag，并由 `Publish Package` workflow 正确剥离 `v` 前缀做版本校验
 - 新增 `tests/cli-tests/skill/test_chattool_release_version_bump.md` 与 `tests/cli-tests/skill/test_chattool_release_version_bump.py`，校对 release/practice/dev-review skill、开发文档与 workflow 都明确要求“版本号必须在 PR 阶段先 bump，PyPI 已有同版本时必须失败”

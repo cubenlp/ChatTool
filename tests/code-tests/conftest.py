@@ -2,7 +2,7 @@ import pytest
 import time
 import os
 from chattool.llm import Chat
-from chattool.tools import ZulipClient, GitHubClient, LarkBot
+from chattool.tools import ZulipClient, LarkBot
 from chattool.serve.capture import app as capture_app
 from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
@@ -50,23 +50,6 @@ def zulip_client():
     """Zulip 客户端"""
     zulip_client = ZulipClient()
     return zulip_client
-
-@pytest.fixture
-def github_client():
-    """GitHub 客户端"""
-    # 使用测试用户名，token从环境变量获取
-    github_client = GitHubClient(user_name="octocat")  # GitHub的官方测试用户
-    return github_client
-
-@pytest.fixture
-def github_client_with_token():
-    """带token的GitHub客户端（用于需要认证的测试）"""
-    import os
-    token = os.getenv('GITHUB_ACCESS_TOKEN')
-    if not token:
-        pytest.skip("需要GITHUB_ACCESS_TOKEN环境变量")
-    github_client = GitHubClient(user_name="octocat", token=token)
-    return github_client
 
 @pytest.fixture
 def lark_bot():

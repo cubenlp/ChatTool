@@ -526,113 +526,58 @@ chattool network services
 
 ---
 
-## 4. GitHub 工具 (`gh`)
+## 4. GitHub 工具 (`chatgh`)
+
+GitHub PR、CI、Actions 和 repo credential 工具已迁移到独立包 `chatgh`。ChatTool 不再内置 GitHub 子命令代码或 typed env schema，但会通过 package dependency 安装 `chatgh>=0.2.4`，因此安装 ChatTool 后可直接使用独立 `chatgh` 命令；也可单独升级：
+
+```bash
+pip install "chatgh>=0.2.4" --upgrade
+```
 
 ### 4.1 配置
-默认行为：
+`chatgh` 默认行为：
 
 - `repo`：优先从当前 git remote 推断
 - `token`：优先从当前仓库对应的 git credential 读取，再回退 `GITHUB_ACCESS_TOKEN`
+- ChatTool 不再提供 `chattool gh` 入口，也不再注册 `gh` typed env schema
 
-### 4.2 常用命令
+### 4.2 常用任务
+
+ChatTool 不再维护 GitHub 子命令的旧实现或 deprecated 兼容层；新增/修复 GitHub 能力时，请直接在独立 `chatgh` 仓库中推进。ChatTool 这里只保留迁移入口和常见任务示例：
+
 ```bash
+# 查看或配置 ChatGH 使用的 typed env
 chatenv cat -t gh
+export GITHUB_ACCESS_TOKEN="***"
 
-export GITHUB_ACCESS_TOKEN="..."
+# PR / CI / Actions 任务
+chatgh pr list --state open --limit 20
+chatgh pr view 123
+chatgh pr checks 123
+chatgh run view --run-id 23494900414
+chatgh run logs --job-id 68373094563
 
-# 列出 PR
-chattool gh pr list --state open --limit 20
-
-# 查看 PR 详情（含 mergeable / merge state）
-chattool gh pr view --number 123
-chattool gh pr view
-
-# 查看 PR 的可合并状态与 CI / checks 状态
-chattool gh pr checks --number 123
-chattool gh pr checks --number 123 --wait
-chattool gh pr checks --number 123 --wait --interval 10 --timeout 600
-
-# 查看某次 workflow run 与 jobs
-chattool gh run view --run-id 23494900414
-
-# 查看某个 job 的日志
-chattool gh run logs --job-id 68373094563
-
-# 创建 PR
-chattool gh pr create --base vibe/master --head feature-branch --title "Title" --body "Body"
-chattool gh pr create
-
-# 评论 PR
-chattool gh pr comment --number 123 --body "Looks good"
-
-# 合并 PR
-chattool gh pr merge --number 123 --method squash
-chattool gh pr merge --number 123 --method squash --check
-
-# 更新 PR（标题/正文/状态/基线分支）
-chattool gh pr edit --number 123 --title "New title" --body "Updated body"
-
-# 为当前 GitHub 仓库配置 repo 级 HTTPS token
-chattool gh set-token --token github_pat_xxx
-
-# 如需顺手保存到 ChatTool GitHub 配置
-chattool gh set-token --token github_pat_xxx --save-env
-
-# 查看当前 token 对仓库的权限列表
-chattool gh repo-perms --repo owner/repo --token github_pat_xxx
+# repo credential / permission 任务
+chatgh set-token --token github_pat_xxx
+chatgh set-token --token github_pat_xxx --save-env
+chatgh repo-perms --repo owner/repo --token github_pat_xxx
 ```
 
-在交互终端里，`chattool gh pr create` / `view` / `checks` / `comment` / `merge` / `edit` 与 `chattool gh run view` / `logs` 缺少关键参数时都会自动补问；显式传 `-I` 才禁用交互并直接报错。
+`chatgh` 的 token 解析顺序保持为：
 
-`set-token` 只在当前目录存在 git remote，且 `origin` 指向 GitHub 仓库时生效。它会按仓库路径写入本地 Git HTTPS credential，因此不同仓库可以使用不同 token。
+1. 显式 `--token`。
+2. 当前仓库对应的 repo-scoped git credential，路径按 `owner/repo` 规范化。
+3. `chatenv gh` / ChatEnv 中的默认 `GITHUB_ACCESS_TOKEN`。
 
-默认情况下，`set-token` 不会改写 `GITHUB_ACCESS_TOKEN`。只有显式传 `--save-env`，才会把 token 写入 `chatenv gh` 对应的 GitHub 配置。
+这个顺序让仓库级 token 可以优先隔离权限；没有 repo-scoped credential 时，再回退到默认 GitHub token。当前 ChatTool 不再注册 `GITHUB_ACCESS_TOKEN` schema，相关配置由 ChatGH / ChatEnv 负责。
 
-这里的 `ghp_xxx` / `github_pat_xxx` 都是 GitHub 的 Personal Access Token。来源是：
+如果只是 clone / fetch / push 某个仓库，通常至少需要 contents 读写权限；PR 评论、合并、Actions 读取等任务再按仓库策略补充对应权限。需要机器可读结果时，优先使用 ChatGH 命令的 `--json-output`。
 
-1. GitHub `Settings`
-2. `Developer settings`
-3. `Personal access tokens`
-4. 创建 classic token，或 fine-grained token
-
-如果只是 clone / fetch / push 某个仓库，通常至少需要该仓库的 contents 读写权限；更细的 issue / PR / Actions 操作，再按需补权限。
-
-如果你想直接验证 token 对某个仓库的权限，可用 `repo-perms` 查看 GitHub 返回的 `permissions` 字段，例如 `pull` / `push` / `admin`。
-
-`pr view` 和 `pr checks` 现在都会直接展示 PR 相对 base 分支的可合并状态：
-
-- `mergeable`
-- `mergeable_state`
-
-`pr checks` 还会按 PR 的 head commit 汇总三层信息，适合排查 CI：
-
-- combined status
-- check runs
-- workflow runs
-
-如果追加 `--wait`，CLI 会持续轮询直到 checks 和 workflow runs 都结束：
-
-- 默认不设超时，会一直等到全部结束
-- 可用 `--interval <seconds>` 控制轮询间隔
-- 只有显式传 `--timeout <seconds>` 时，才会在超时后报错退出
-
-如果希望在执行 `pr merge` 前顺手做一次强校验，可追加 `--check`。当 checks / workflow runs 里存在失败、取消或未完成项，或者 PR 当前 `mergeable=False` / `mergeable_state` 处于 `dirty`、`blocked`、`behind`、`draft`、`unknown` 时，CLI 会拒绝合并并提示先运行 `pr checks`；不带 `--check` 时则保持当前直接调用 GitHub merge 的行为。
-
-如果 `pr checks` 已经定位到具体 workflow run / job，可以继续使用：
-
-- `run view --run-id <id>`：查看某次 workflow run 的元信息、jobs 与 step 状态
-- `run logs --job-id <id>`：直接抓取 job 日志；默认输出尾部，可用 `--tail 0` 查看完整日志，或用 `--output` 落盘
-
-需要机器可读结果时可加 `--json-output`。
-
-在执行 `pr create`、汇报“CI 是否通过”或准备 merge 前，先 `git fetch origin <base>`，再确认两件事：
-
-- `pr view` / `pr checks` 显示 `mergeable` 不是 `False`，`mergeable_state` 不是 `dirty`
-- 本地基于最新 base 做一次 merge 或 rebase 演练，并在该结果上跑最相关测试
+后续 repo 发现、status、checkout 等能力也应作为 ChatGH 的任务导向能力推进，而不是重新放回 ChatTool。
 
 ### 4.3 API Reference
 
-后续扩展 `chattool gh` 时，优先查这些官方文档：
+后续扩展 `chatgh` 时，优先查这些官方文档：
 
 - GitHub REST API 根文档: https://docs.github.com/en/rest
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls
@@ -640,9 +585,6 @@ chattool gh repo-perms --repo owner/repo --token github_pat_xxx
 - Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
 - Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs
 - Commit statuses API: https://docs.github.com/en/rest/commits/statuses
-- PyGithub 文档: https://pygithub.readthedocs.io/
-- PyGithub `PullRequest` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
-- PyGithub `Repository` 参考: https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html
 
 ---
 

@@ -1,5 +1,5 @@
-"""Explore module — github, arxiv, wordpress."""
+"""Explore module — arxiv and wordpress helpers."""
 
-from . import github, arxiv, wordpress
+from . import arxiv, wordpress
 
-__all__ = ["github", "arxiv", "wordpress"]
+__all__ = ["arxiv", "wordpress"]

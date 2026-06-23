@@ -25,15 +25,14 @@ def test_chattool_skill_release_boundary():
 
     assert "$chattool-release" in dev_en
     assert "$chattool-release" in dev_zh
-    assert "release.log" in dev_en
-    assert "release.log" in dev_zh
 
     assert "Do not tag from an unmerged PR head." in release_en
     assert "Publish Package" in release_en
-    assert "release.log" in release_en
     assert "不要从未合并的 PR 分支 head 打 tag。" in release_zh
     assert "Publish Package" in release_zh
-    assert "release.log" in release_zh
 
     assert "$chattool-release" in practice_en
     assert "$chattool-release" in practice_zh
+
+    assert "CHANGELOG.md" in release_en
+    assert "CHANGELOG.md" in release_zh

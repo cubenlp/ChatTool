@@ -168,7 +168,7 @@ def demo(name, output, interactive):
 - `chattool dns`
 - `chattool client cert`
 - `chattool client svg2gif`
-- `chattool gh`
+- `chatgh`
 - `chattool zulip`
 - `chattool image`
 - `chatenv` 高频 profile/key/test 命令

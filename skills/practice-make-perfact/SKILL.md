@@ -24,7 +24,7 @@ This is a post-task normalization workflow, not a pre-task exploration guide.
 
 3. Check existing CLI surfaces before adding scripts
    - Look at `references/cli-reference.md` first.
-   - Prefer existing `chattool pypi`, `chatpypi`, `chattool skill`, `chatenv`, `chattool gh`, and `chattool dns` commands over ad hoc scripts.
+   - Prefer existing `chattool pypi`, `chatpypi`, `chattool skill`, `chatenv`, `chatgh`, and `chattool dns` commands over ad hoc scripts.
    - Add a script only when the action is repeatable, fragile, and not already covered by a CLI.
 
 4. Normalize ChatArch boundaries
@@ -45,13 +45,15 @@ This is a post-task normalization workflow, not a pre-task exploration guide.
 
 7. Carry the work to PR/MR stage
    - Commit and push the branch.
-   - Use `chattool gh` for GitHub PR operations.
-   - Prefer `chattool gh pr create --body-file ...` and update the PR body when scope changes.
-   - Use `chattool gh pr checks --wait` when CI status is part of the handoff.
+   - Use `chatgh` for GitHub read/check operations such as `pr view`, `pr checks`, `run view`, and `run logs`.
+   - For PR creation or body updates, use the project's current GitHub workflow or API path until ChatGH exposes public write commands.
+   - When CI status is part of the handoff, query `chatgh pr checks <pr> --repo owner/repo` after GitHub checks reach a terminal state.
 
 8. Hand off real release work
-   - Tags, package publishing, PyPI verification, and `release.log` belong to `$chattool-release` after merge.
+   - Tags, package publishing, and PyPI verification belong to `$chattool-release` after merge.
    - Do not tag from an unmerged PR head.
+   - Release version bumps happen before PR/MR, not after merge.
+   - If PyPI already has the target version, create a new PR with a new version.
 
 ## Required Outputs
 

@@ -10,7 +10,7 @@ version: 0.3.0
 
 默认范围是当前改动，不是全仓审计，除非用户明确要求扩大范围。
 
-边界：这个 skill 只负责开发验收。合并时机、tag、包发布、PyPI 校验和 `release.log` 交给 `$chattool-release`。
+边界：这个 skill 只负责开发验收。合并时机、tag、包发布和 PyPI 校验交给 `$chattool-release`。
 
 ## 检查重点
 
@@ -48,7 +48,7 @@ version: 0.3.0
    - 用户可见行为同步更新 `README.md`。
    - feature/fix/skill 更新同步更新 `CHANGELOG.md`。
    - CLI 变更保持 `tests/cli-tests/` 的 doc-first case 或 `tests/mock-cli-tests/` 的 mock case 对齐。
-   - 如果 PR 计划作为特定版本发出，版本和 changelog 应在合并前已进入 diff。
+   - 如果 PR 计划作为特定版本发出，版本和 changelog 必须在合并前就已经出现在 diff 里。
 
 ## Review 流程
 

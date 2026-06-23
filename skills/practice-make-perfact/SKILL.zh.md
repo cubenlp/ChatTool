@@ -24,7 +24,7 @@ version: 0.5.0
 
 3. 新增脚本前先查已有 CLI
    - 先看 `references/cli-reference.md`。
-   - 优先复用已有 `chattool pypi`、`chatpypi`、`chattool skill`、`chatenv`、`chattool gh` 和 `chattool dns` 命令。
+   - 优先复用已有 `chattool pypi`、`chatpypi`、`chattool skill`、`chatenv`、`chatgh` 和 `chattool dns` 命令。
    - 只有当动作可复用、容易出错且现有 CLI 没覆盖时，才考虑新增脚本。
 
 4. 规范 ChatArch 边界
@@ -45,13 +45,15 @@ version: 0.5.0
 
 7. 推进到 PR/MR 阶段
    - commit 并 push 当前分支。
-   - 使用 `chattool gh` 做 GitHub PR 操作。
-   - 优先使用 `chattool gh pr create --body-file ...`，范围变化时更新 PR body。
-   - 交付需要 CI 状态时使用 `chattool gh pr checks --wait`。
+   - 使用 `chatgh` 做 GitHub 读取/检查操作，例如 `pr view`、`pr checks`、`run view`、`run logs`。
+   - PR 创建或正文更新在 ChatGH 公开写命令前，使用项目当前 GitHub workflow 或 API 路径。
+   - 交付需要 CI 状态时，在 GitHub checks 到达终态后查询 `chatgh pr checks <pr> --repo owner/repo`。
 
 8. 正式发版单独交接
-   - tag、包发布、PyPI 校验和 `release.log` 属于合并后的 `$chattool-release`。
+   - tag、包发布和 PyPI 校验属于合并后的 `$chattool-release`。
    - 不要从未合并 PR head 直接打 tag。
+   - 版本号必须在 PR/MR 阶段前完成 bump，而不是合并后再改。
+   - 如果 PyPI 已经存在目标版本，先把版本号 bump 到下一个版本并重新走 PR。
 
 ## 结果要求
 
