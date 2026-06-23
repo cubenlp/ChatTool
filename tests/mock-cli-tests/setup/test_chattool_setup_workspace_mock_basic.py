@@ -59,7 +59,7 @@ def test_workspace_templates_can_be_loaded():
     )
 
 
-def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, runner):
+def test_setup_workspace_interactive_can_enable_workspace_extras(tmp_path, monkeypatch, runner):
     values = iter([str(tmp_path / "workspace")])
 
     monkeypatch.setattr(
@@ -72,7 +72,7 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.options.ask_checkbox_with_controls",
-        lambda *args, **kwargs: ["chattool", "rexblog", "memory"],
+        lambda *args, **kwargs: ["chattool", "chatblog", "memory"],
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.cli.resolve_interactive_mode",
@@ -94,12 +94,12 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
         },
     )
     monkeypatch.setattr(
-        "chattool.setup.workspace.options.apply_rexblog_option",
+        "chattool.setup.workspace.options.apply_chatblog_option",
         lambda workspace_dir, source, interactive, can_prompt: {
-            "name": "rexblog",
-            "repo_dir": workspace_dir / "core" / "RexBlog",
+            "name": "chatblog",
+            "repo_dir": workspace_dir / "core" / "ChatBlog",
             "repo_action": "cloned",
-            "public_link": workspace_dir / "public" / "hexo_blog",
+            "public_link": workspace_dir / "public" / "chatblog",
         },
     )
     monkeypatch.setattr(
@@ -116,7 +116,8 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
     result = runner.invoke(cli, ["setup", "workspace"])
 
     assert result.exit_code == 0
-    assert "Enabled options: chattool, rexblog, memory" in result.output
+    assert "Enabled options: chattool, chatblog, memory" in result.output
+    assert "ChatBlog repo:" in result.output
     assert "ChatMemory repo:" in result.output
     assert "Linked memory skill groups: common, chatarch" in result.output
 
@@ -257,3 +258,34 @@ def test_memory_option_refuses_to_replace_existing_non_symlink_group(tmp_path, m
 
     with pytest.raises(Exception, match="Refusing to replace existing non-symlink path"):
         apply_memory_option(workspace_dir, "https://example.invalid/repo.git", False, False)
+
+
+def test_setup_workspace_with_chatblog_refuses_existing_real_public_path(
+    tmp_path, monkeypatch, runner
+):
+    workspace_dir = tmp_path / "workspace"
+    chatblog_source = tmp_path / "ChatBlog"
+    posts_dir = chatblog_source / "source" / "_posts"
+    posts_dir.mkdir(parents=True)
+    (workspace_dir / "public" / "chatblog").mkdir(parents=True)
+
+    def fake_clone_or_update(source, repo_dir, interactive, can_prompt):
+        (repo_dir / "source" / "_posts").mkdir(parents=True)
+        return "updated"
+
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options._clone_or_update_repo",
+        fake_clone_or_update,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options.CHATBLOG_REPO_URL",
+        str(chatblog_source),
+    )
+
+    result = runner.invoke(
+        cli,
+        ["setup", "workspace", str(workspace_dir), "--with-chatblog", "-I"],
+    )
+
+    assert result.exit_code != 0
+    assert "Refusing to replace existing non-symlink path" in result.output

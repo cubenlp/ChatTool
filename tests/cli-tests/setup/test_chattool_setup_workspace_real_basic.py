@@ -101,6 +101,50 @@ def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
     assert "ChatTool repo:" in result.stdout
 
 
+def test_setup_workspace_with_chatblog_links_posts(tmp_path: Path):
+    workspace_dir = tmp_path / "workspace"
+    chatblog_source = tmp_path / "ChatBlogSource"
+    posts_dir = chatblog_source / "source" / "_posts"
+    posts_dir.mkdir(parents=True)
+    (posts_dir / "hello.md").write_text("# hello\n", encoding="utf-8")
+    subprocess.run(["git", "init"], cwd=chatblog_source, check=True, capture_output=True)
+    subprocess.run(["git", "add", "."], cwd=chatblog_source, check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=ChatTool Test",
+            "-c",
+            "user.email=chattool-test@example.com",
+            "commit",
+            "-m",
+            "init chatblog fixture",
+        ],
+        cwd=chatblog_source,
+        check=True,
+        capture_output=True,
+    )
+
+    result = _run_chattool_setup_workspace(
+        [
+            str(workspace_dir),
+            "--with-chatblog",
+            "--chatblog-source",
+            str(chatblog_source),
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "core" / "ChatBlog").exists()
+    public_link = workspace_dir / "public" / "chatblog"
+    assert public_link.is_symlink()
+    assert public_link.resolve() == (
+        workspace_dir / "core" / "ChatBlog" / "source" / "_posts"
+    ).resolve()
+    assert "ChatBlog repo:" in result.stdout
+
+
 def test_setup_workspace_force_overwrites_generated_files(tmp_path: Path):
     workspace_dir = tmp_path / "workspace"
 

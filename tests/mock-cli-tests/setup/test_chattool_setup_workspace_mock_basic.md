@@ -4,4 +4,6 @@
 
 归档相关文件职责：根 `ARCHIVE.md` 是归档操作指南，`archive/index.md` 是已归档内容索引；不再生成 `archive/README.md`。
 
+可选 workspace extras 使用明确的目标路径：`ChatBlog` clone 到 `core/ChatBlog`，并只把博客文章目录链接到 `public/chatblog`。如果 `public/chatblog` 已经是用户真实目录，命令必须拒绝覆盖。
+
 ChatMemory optional module 只 link 明确允许的共享 skill groups：`common` 和 `chatarch`。不应 link 整个 `ChatMemory/Skills`，也不应默认 link Playground 本地 `Skills/prd-task` 或机器/账号特定分组。
