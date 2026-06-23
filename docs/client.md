@@ -340,6 +340,15 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 
 - `ChatTool`：下载到 `core/ChatTool/`，并把相关 skills 同步到 `./skills/`
 - `RexBlog`：下载到 `core/RexBlog/`，并把 `source/_posts` 链接到 `./public/hexo_blog`
+- `ChatMemory`：下载到 `core/ChatMemory/`，只把共享 skill groups 链接到 workspace：`./skills/common` 与 `./skills/chatarch`
+
+也可以在非交互模式中显式启用 ChatMemory：
+
+```bash
+chattool setup workspace ~/workspace/demo --with-memory -I
+```
+
+ChatMemory 不会默认 link 全部 `Skills/`，也不会默认 link Playground 本地的 `Skills/prd-task` 或机器/账号特定分组。
 
 ## 1. DNS 管理 (`dns`)
 

@@ -16,6 +16,8 @@ from chattool.interaction import (
 
 CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
 REXBLOG_REPO_URL = "https://github.com/RexWzh/RexBlog"
+CHATMEMORY_REPO_URL = "https://github.com/ChatArch/ChatMemory.git"
+DEFAULT_MEMORY_SKILL_GROUPS = ("common", "chatarch")
 
 
 def _run_git(
@@ -106,11 +108,12 @@ def apply_chattool_option(
 
 def _ensure_symlink(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists() or target.is_symlink():
-        if target.is_symlink() or target.is_file():
-            target.unlink()
-        else:
-            shutil.rmtree(target)
+    if target.is_symlink():
+        target.unlink()
+    elif target.exists():
+        raise click.ClickException(
+            f"Refusing to replace existing non-symlink path: {target}"
+        )
     target.symlink_to(source)
 
 
@@ -137,6 +140,39 @@ def apply_rexblog_option(
     }
 
 
+def apply_memory_option(
+    workspace_dir: Path,
+    source: str,
+    interactive,
+    can_prompt: bool,
+) -> dict:
+    repo_dir = workspace_dir / "core" / "ChatMemory"
+    repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
+    skills_root = repo_dir / "Skills"
+    if not skills_root.exists():
+        raise click.ClickException(
+            f"ChatMemory repo does not contain Skills/: {skills_root}"
+        )
+
+    linked_groups: list[str] = []
+    skipped_groups: list[str] = []
+    for group in DEFAULT_MEMORY_SKILL_GROUPS:
+        group_source = skills_root / group
+        if not group_source.exists():
+            skipped_groups.append(group)
+            continue
+        _ensure_symlink(group_source, workspace_dir / "skills" / group)
+        linked_groups.append(group)
+
+    return {
+        "name": "memory",
+        "repo_dir": repo_dir,
+        "repo_action": repo_action,
+        "linked_groups": linked_groups,
+        "skipped_groups": skipped_groups,
+    }
+
+
 def prompt_optional_modules(language: str) -> dict[str, dict]:
     results = {
         "chattool": {
@@ -146,6 +182,10 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         "rexblog": {
             "enabled": False,
             "source": REXBLOG_REPO_URL,
+        },
+        "memory": {
+            "enabled": False,
+            "source": CHATMEMORY_REPO_URL,
         },
     }
 
@@ -167,6 +207,7 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         choices=[
             create_choice("ChatTool -> core/ChatTool + ./skills", "chattool"),
             create_choice("RexBlog -> core/RexBlog + public/hexo_blog", "rexblog"),
+            create_choice("ChatMemory -> core/ChatMemory + skills/common, skills/chatarch", "memory"),
         ],
         default_values=[],
         instruction="",

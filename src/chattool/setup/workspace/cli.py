@@ -102,6 +102,8 @@ def setup_workspace(
     dry_run=False,
     with_chattool=False,
     chattool_source=None,
+    with_memory=False,
+    memory_source=None,
 ):
     profile_name, workspace_dir = coerce_profile_and_workspace(
         profile_name, workspace_dir
@@ -112,6 +114,7 @@ def setup_workspace(
     usage = (
         "Usage: chattool setup workspace [PROFILE] [WORKSPACE_DIR] "
         "[--language zh|en] [--with-chattool] [--chattool-source <path-or-url>] "
+        "[--with-memory] [--memory-source <path-or-url>] "
         "[--force] [--dry-run] [-i|-I]"
     )
     interactive, can_prompt, force_interactive, _, need_prompt = (
@@ -129,6 +132,10 @@ def setup_workspace(
             "source": chattool_source or workspace_options.CHATTOOL_REPO_URL,
         },
         "rexblog": {"enabled": False, "source": workspace_options.REXBLOG_REPO_URL},
+        "memory": {
+            "enabled": bool(with_memory),
+            "source": memory_source or workspace_options.CHATMEMORY_REPO_URL,
+        },
     }
 
     if need_prompt:
@@ -187,6 +194,15 @@ def setup_workspace(
                 can_prompt,
             )
         )
+    if option_settings["memory"]["enabled"]:
+        applied.append(
+            workspace_options.apply_memory_option(
+                workspace_path,
+                option_settings["memory"]["source"],
+                interactive,
+                can_prompt,
+            )
+        )
 
     click.echo(
         "Workspace setup completed." if language == "en" else "Workspace 初始化完成。"
@@ -207,3 +223,15 @@ def setup_workspace(
             click.echo(f"RexBlog repo: {item['repo_dir']}")
             click.echo(f"Repo action: {item['repo_action']}")
             click.echo(f"Public link: {item['public_link']}")
+        if item["name"] == "memory":
+            click.echo(f"ChatMemory repo: {item['repo_dir']}")
+            click.echo(f"Repo action: {item['repo_action']}")
+            click.echo(
+                "Linked memory skill groups: "
+                f"{', '.join(item['linked_groups']) if item['linked_groups'] else 'none'}"
+            )
+            if item["skipped_groups"]:
+                click.echo(
+                    "Skipped missing memory skill groups: "
+                    f"{', '.join(item['skipped_groups'])}"
+                )
