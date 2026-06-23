@@ -23,7 +23,7 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
-    "chatgh>=0.2.2",
+    "chatgh>=0.2.4",
     "chatstyle>=0.1.0",
     "chatenv>=0.1.1",
     "requests>=2.20",

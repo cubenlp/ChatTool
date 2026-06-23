@@ -528,10 +528,10 @@ chattool network services
 
 ## 4. GitHub 工具 (`chatgh`)
 
-GitHub PR、CI、Actions 和 repo credential 工具已迁移到独立包 `chatgh`。ChatTool 不再内置 GitHub 子命令代码或 typed env schema，但会通过 package dependency 安装 `chatgh>=0.2.2`，因此安装 ChatTool 后可直接使用独立 `chatgh` 命令；也可单独升级：
+GitHub PR、CI、Actions 和 repo credential 工具已迁移到独立包 `chatgh`。ChatTool 不再内置 GitHub 子命令代码或 typed env schema，但会通过 package dependency 安装 `chatgh>=0.2.4`，因此安装 ChatTool 后可直接使用独立 `chatgh` 命令；也可单独升级：
 
 ```bash
-pip install "chatgh>=0.2.2" --upgrade
+pip install "chatgh>=0.2.4" --upgrade
 ```
 
 ### 4.1 配置
