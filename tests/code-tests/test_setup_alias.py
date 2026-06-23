@@ -40,6 +40,7 @@ def test_apply_alias_block_replace(tmp_path):
     assert "chatgh" not in ALIAS_MAP
     assert "chatpypi" not in ALIAS_MAP
     assert "chatskill" not in ALIAS_MAP
+    assert "chatnet" not in ALIAS_MAP
 
     first = render_alias_block(["chatdns"])
     apply_alias_block(rc, first)
@@ -116,4 +117,5 @@ def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
     assert "chatgh" not in checked
     assert "chatpypi" not in checked
     assert "chatskill" not in checked
+    assert "chatnet" not in checked
     assert checked["chatdns"] is True

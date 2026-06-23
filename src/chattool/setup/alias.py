@@ -24,7 +24,6 @@ ALIAS_MAP = {
     "chatup": "chattool setup",
     "chatlark": "chattool lark",
     "chatimg": "chattool image",
-    "chatnet": "chattool network",
     "chatcrs": "chattool crs",
 }
 
