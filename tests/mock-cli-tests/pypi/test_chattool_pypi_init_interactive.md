@@ -65,6 +65,28 @@ select template = chatarch
 assert scaffold contains DEVELOP.md and ChatArch-backed cli.py
 ```
 
+## 用例 4：`chatarch` 模板可显式生成 ChatEnv provider 接入
+
+- 初始环境准备：
+  - 准备临时目录。
+- 相关文件：
+  - `<tmp>/ChatGH/pyproject.toml`
+  - `<tmp>/ChatGH/src/chatgh/config.py`
+
+预期过程和结果：
+1. 执行 `chattool pypi init ChatGH -t chatarch --with-chatenv-provider --chatenv-provider-name github -I`。
+2. 预期 `pyproject.toml` 包含 `[project.entry-points."chatenv.configs"]`，并注册 `github = "chatgh.config"`。
+3. 预期生成 `src/chatgh/config.py`，包含 `BaseEnvConfig` / `EnvField` 示例 schema，并设置 `_aliases = ["github", "chatgh"]`。
+
+参考执行脚本（伪代码）：
+
+```sh
+chattool pypi init ChatGH -t chatarch \
+  --with-chatenv-provider \
+  --chatenv-provider-name github \
+  -I
+```
+
 ## 清理 / 回滚
 
 - 删除生成的临时目录。

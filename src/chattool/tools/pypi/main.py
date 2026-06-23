@@ -247,6 +247,17 @@ def _toml_escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def _py_string_literal(value: str) -> str:
+    return json.dumps(value)
+
+
+def _pascal_identifier(value: str) -> str:
+    parts = [part for part in re.split(r"[^A-Za-z0-9]+", value) if part]
+    if not parts:
+        return "Config"
+    return "".join(part[:1].upper() + part[1:].lower() for part in parts)
+
+
 def _workflow_python_version(requires_python: str) -> str:
     match = re.search(r">=\s*(\d+\.\d+)", requires_python)
     if match:
@@ -338,6 +349,7 @@ def _build_chatarch_pyproject_content(
     author: str | None,
     email: str | None,
     include_mkdocs: bool = True,
+    chatenv_provider_name: str | None = None,
 ) -> str:
     repo_slug = _chatarch_repo_slug(package_name)
     docs_url = _chatarch_docs_url(package_name)
@@ -383,6 +395,18 @@ def _build_chatarch_pyproject_content(
             "",
             "[project.scripts]",
             f'{module_name} = "{module_name}.cli:main"',
+        ]
+    )
+    if chatenv_provider_name:
+        lines.extend(
+            [
+                "",
+                '[project.entry-points."chatenv.configs"]',
+                f'{chatenv_provider_name} = "{module_name}.config"',
+            ]
+        )
+    lines.extend(
+        [
             "",
             "[project.optional-dependencies]",
             'dev = ["build", "pytest", "twine"]',
@@ -405,6 +429,48 @@ def _build_chatarch_pyproject_content(
         ]
     )
     return "\n".join(lines)
+
+
+def _build_chatarch_chatenv_config_py(
+    package_name: str,
+    module_name: str,
+    provider_name: str,
+) -> str:
+    class_name = f"{_pascal_identifier(module_name)}Config"
+    storage_dir = _pascal_identifier(provider_name)
+    env_key_prefix = module_name.upper()
+    aliases = [provider_name]
+    if module_name not in aliases:
+        aliases.append(module_name)
+    aliases_text = ", ".join(_py_string_literal(alias) for alias in aliases)
+    env_key = f"{env_key_prefix}_API_KEY"
+    return (
+        textwrap.dedent(
+            f'''\
+            {_py_string_literal(f"Typed environment configuration for {package_name}.")}
+
+            from chatenv import BaseEnvConfig, EnvField
+
+
+            class {class_name}(BaseEnvConfig):
+                {_py_string_literal(f"{package_name} ChatEnv configuration.")}
+
+                _title = {_py_string_literal(f"{package_name} Configuration")}
+                _aliases = [{aliases_text}]
+                _storage_dir = {_py_string_literal(storage_dir)}
+
+                {env_key_prefix}_API_KEY = EnvField(
+                    {_py_string_literal(env_key)},
+                    desc="API key",
+                    is_sensitive=True,
+                )
+
+
+            __all__ = ["{class_name}"]
+            '''
+        ).strip()
+        + "\n"
+    )
 
 
 def _chatarch_repo_slug(package_name: str) -> str:
@@ -780,6 +846,8 @@ def scaffold_package(
     template: str = "default",
     include_mkdocs: bool | None = None,
     include_workflows: bool | None = None,
+    include_chatenv_provider: bool = False,
+    chatenv_provider_name: str | None = None,
 ) -> ScaffoldResult:
     package_name = package_name.strip()
     if not package_name:
@@ -790,8 +858,21 @@ def scaffold_package(
         include_mkdocs = template == "chatarch"
     if include_workflows is None:
         include_workflows = template == "chatarch"
+    if chatenv_provider_name and not include_chatenv_provider:
+        raise PyPICommandError(
+            "chatenv_provider_name requires include_chatenv_provider=True."
+        )
+    if include_chatenv_provider and template != "chatarch":
+        raise PyPICommandError(
+            "include_chatenv_provider is only supported by the chatarch template."
+        )
 
     module_name = normalize_module_name(package_name)
+    resolved_chatenv_provider_name = (
+        normalize_module_name(chatenv_provider_name or module_name)
+        if include_chatenv_provider
+        else None
+    )
     workflow_python_version = _workflow_python_version(requires_python)
     project_dir = Path(project_dir)
     _ensure_empty_or_missing(project_dir)
@@ -887,6 +968,7 @@ def scaffold_package(
                     author=author,
                     email=email,
                     include_mkdocs=include_mkdocs,
+                    chatenv_provider_name=resolved_chatenv_provider_name,
                 ),
                 project_dir / "README.md": _build_chatarch_readme(
                     package_name,
@@ -1153,6 +1235,12 @@ def scaffold_package(
                 + "\n",
             }
         )
+        if resolved_chatenv_provider_name:
+            file_map[src_dir / "config.py"] = _build_chatarch_chatenv_config_py(
+                package_name=package_name,
+                module_name=module_name,
+                provider_name=resolved_chatenv_provider_name,
+            )
         if not include_mkdocs:
             for optional_path in (
                 project_dir / "mkdocs.yml",

@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-06-15
+- 准备 `7.0.6` 版本：先确认 PyPI 最新 `chattool` 为 `7.0.5`、远端 `v7.0.6` tag 不存在，本次按连续 patch 规则将包版本更新为 `7.0.6`，用于发布 ChatArch PyPI scaffold 的显式 ChatEnv provider 模板能力。
+- `chattool pypi init -t chatarch` 新增显式 `--with-chatenv-provider` / `--chatenv-provider-name` 选项；需要 typed env schema 的包可生成 `src/<module>/config.py` 与 `[project.entry-points."chatenv.configs"]`，默认仍不注册 provider，避免无 schema 包污染 ChatEnv discovery。
 - `chattool setup hermes` 默认安装源切换为 ChatArch Hermes 当前版本：`--update-installer` 拉取 `ChatArch/hermes-agent` installer，随包 `assets/hermes/install.sh` 也同步替换为 ChatArch clone 源，避免默认安装官方 NousResearch 版本。
 - `chatskill` 补齐为正式 console script；`chattool setup alias` 不再生成 `chatskill` / `chatpypi` / `chatnet` 这类独立或已迁出入口的 shell alias，只保留仍需快捷映射的 ChatTool 子命令，避免迁出入口被 alias 覆盖。
 - 准备 `7.0.5` 版本：先确认 PyPI 最新 `chattool` 为 `7.0.4`、本地/远端 `v7.0.5` tag 不存在，本次按连续 patch 规则将包版本更新为 `7.0.5`，用于随 workspace ChatBlog/ChatMemory extras 与四目录 skills 模型进入本次发布。
