@@ -19,8 +19,8 @@ from chattool.utils.custom_logger import setup_logger
 
 logger = setup_logger("setup_hermes")
 
-OFFICIAL_INSTALLER_URL = (
-    "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
+CHATARCH_HERMES_INSTALLER_URL = (
+    "https://raw.githubusercontent.com/ChatArch/hermes-agent/main/scripts/install.sh"
 )
 DEFAULT_MODEL = "gpt-5.4-mini"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
@@ -69,8 +69,8 @@ def _download_installer() -> Path:
     target = _cache_installer_path()
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(".tmp")
-    logger.info("Downloading Hermes installer")
-    with urllib.request.urlopen(OFFICIAL_INSTALLER_URL, timeout=60) as response:
+    logger.info("Downloading ChatArch Hermes installer")
+    with urllib.request.urlopen(CHATARCH_HERMES_INSTALLER_URL, timeout=60) as response:
         tmp.write_bytes(response.read())
     tmp.chmod(stat.S_IRUSR | stat.S_IWUSR)
     tmp.replace(target)

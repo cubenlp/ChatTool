@@ -38,17 +38,19 @@ def test_apply_alias_block_replace(tmp_path):
     rc = tmp_path / ".zshrc"
     rc.write_text("export PATH=/usr/bin\n", encoding="utf-8")
     assert "chatgh" not in ALIAS_MAP
+    assert "chatpypi" not in ALIAS_MAP
+    assert "chatskill" not in ALIAS_MAP
 
     first = render_alias_block(["chatdns"])
     apply_alias_block(rc, first)
     content = rc.read_text(encoding="utf-8")
     assert "alias chatdns='chattool dns'" in content
 
-    second = render_alias_block(["chatskill"])
+    second = render_alias_block(["chatcc"])
     apply_alias_block(rc, second)
     content = rc.read_text(encoding="utf-8")
     assert "alias chatdns='chattool dns'" not in content
-    assert "alias chatskill='chattool skill'" in content
+    assert "alias chatcc='chattool cc'" in content
 
 
 def test_apply_alias_block_remove(tmp_path):
@@ -101,6 +103,17 @@ def test_select_aliases_interactively_custom_uses_checkbox(monkeypatch):
     assert captured["message"] == "Select aliases"
     assert captured["default_values"] == ["chatdns"]
     assert captured["select_all_label"] == "Select all aliases"
-    checked = {choice.value: choice.checked for choice in captured["choices"]}
+    def _choice_value(choice):
+        return choice.get("value") if isinstance(choice, dict) else choice.value
+
+    def _choice_checked(choice):
+        return choice.get("checked") if isinstance(choice, dict) else choice.checked
+
+    checked = {
+        _choice_value(choice): _choice_checked(choice)
+        for choice in captured["choices"]
+    }
     assert "chatgh" not in checked
+    assert "chatpypi" not in checked
+    assert "chatskill" not in checked
     assert checked["chatdns"] is True

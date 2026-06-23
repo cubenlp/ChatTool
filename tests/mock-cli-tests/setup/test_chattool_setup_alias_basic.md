@@ -17,8 +17,8 @@
 
 ```sh
 run chattool setup alias --dry-run in pty
-use multi-select controls to keep chatskill only
-assert dry-run output contains chatskill and excludes chatdns
+use multi-select controls to keep chatcc only
+assert dry-run output contains chatcc and excludes chatdns
 ```
 
 ## Case 2: default shell detection should update all detected shells

@@ -1,6 +1,6 @@
 # chattool setup hermes
 
-`chattool setup hermes` 用于封装 Hermes 官方 `install.sh`，并在安装后做少量基础配置。它不是 Hermes 的第二套安装器：默认不 clone Hermes / WebUI 仓库，不安装全量 extras，不自动导入 Feishu，也不默认启动 WebUI。
+`chattool setup hermes` 用于封装 ChatArch 维护的 Hermes `install.sh`，并在安装后做少量基础配置。它不是 Hermes 的第二套安装器：默认安装 ChatArch 当前 Hermes 最新版，不安装 WebUI，不自动导入 Feishu，也不默认启动 WebUI。
 
 ## Installer 来源
 
@@ -10,10 +10,10 @@
 2. `~/.cache/chattool/hermes/install.sh`
 3. ChatTool 随包资源 `chattool/setup/assets/hermes/install.sh`
 
-只有显式传入 `--update-installer` 时，才从 Hermes 官方 URL 下载并更新缓存：
+只有显式传入 `--update-installer` 时，才从 ChatArch Hermes URL 下载并更新缓存：
 
 ```text
-https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh
+https://raw.githubusercontent.com/ChatArch/hermes-agent/main/scripts/install.sh
 ```
 
 命令会输出 installer path 和 sha256，便于确认实际使用的脚本。
@@ -29,7 +29,7 @@ chattool setup hermes --api-key sk-... --base-url https://api.example.com/v1 --m
 chattool setup hermes --install-only
 ```
 
-如果检测到 `hermes` 命令或目标 `HERMES_HOME` 已存在，命令优先进入配置流程，不重复安装。`--install-only` 只安装/检查 Hermes Agent，不写 `.env`、`config.yaml` 或 WebUI env。
+如果检测到 `hermes` 命令或目标 `HERMES_HOME` 已存在，命令优先进入配置流程，不重复安装。`--install-only` 只安装/检查 ChatArch Hermes Agent，不写 `.env`、`config.yaml` 或 WebUI env。
 
 ## 配置写入
 

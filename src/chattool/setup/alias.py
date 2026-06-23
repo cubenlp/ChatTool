@@ -17,12 +17,10 @@ logger = setup_logger("setup_alias")
 SUPPORTED_SHELLS = ("zsh", "bash")
 
 ALIAS_MAP = {
-    "chatskill": "chattool skill",
     "chatdns": "chattool dns",
     "chattp": "chattool tplogin",
     "chatcc": "chattool cc",
     "chatcli": "chattool client",
-    "chatpypi": "chatpypi",
     "chatup": "chattool setup",
     "chatlark": "chattool lark",
     "chatimg": "chattool image",
