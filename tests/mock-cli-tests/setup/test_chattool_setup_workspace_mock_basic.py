@@ -145,17 +145,20 @@ def test_setup_workspace_uses_current_workspace_model(tmp_path, runner):
 
     assert result.exit_code == 0
     assert (workspace_dir / "projects" / "README.md").exists()
-    assert (workspace_dir / "archive" / "README.md").exists()
+    assert (workspace_dir / "archive" / "index.md").exists()
+    assert not (workspace_dir / "archive" / "README.md").exists()
     assert (workspace_dir / "scripts" / "README.md").exists()
     assert not (workspace_dir / "README.md").exists()
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
-    archive = (workspace_dir / "archive" / "README.md").read_text(encoding="utf-8")
+    archive_guide = (workspace_dir / "ARCHIVE.md").read_text(encoding="utf-8")
+    archive_index = (workspace_dir / "archive" / "index.md").read_text(encoding="utf-8")
     todo = (workspace_dir / "TODO.md").read_text(encoding="utf-8")
     assert "projects/" in agents
     assert "archive/" in agents
     assert "scripts/" in agents
     assert "Workspace/\n  AGENTS.md\n  TODO.md\n  ARCHIVE.md" in agents
-    assert "归档日期" in archive
+    assert "归档操作指南" in archive_guide
+    assert "已归档内容索引" in archive_index
     assert "近期打算做的事" in todo
 
 

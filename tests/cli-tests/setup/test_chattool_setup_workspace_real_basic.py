@@ -33,7 +33,8 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert (workspace_dir / "TODO.md").exists()
     assert (workspace_dir / ".trash").exists()
     assert (workspace_dir / "projects" / "README.md").exists()
-    assert (workspace_dir / "archive" / "README.md").exists()
+    assert (workspace_dir / "archive" / "index.md").exists()
+    assert not (workspace_dir / "archive" / "README.md").exists()
     assert (workspace_dir / "scripts" / "README.md").exists()
     assert not (workspace_dir / "reference" / "README.md").exists()
     assert (workspace_dir / "core").exists()
@@ -43,7 +44,8 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     agents = (workspace_dir / "AGENTS.md").read_text(encoding="utf-8")
     todo = (workspace_dir / "TODO.md").read_text(encoding="utf-8")
     projects = (workspace_dir / "projects" / "README.md").read_text(encoding="utf-8")
-    archive = (workspace_dir / "archive" / "README.md").read_text(encoding="utf-8")
+    archive_guide = (workspace_dir / "ARCHIVE.md").read_text(encoding="utf-8")
+    archive_index = (workspace_dir / "archive" / "index.md").read_text(encoding="utf-8")
     scripts = (workspace_dir / "scripts" / "README.md").read_text(encoding="utf-8")
     skill_zh = (workspace_dir / "skills" / "workspace-maintenance" / "SKILL.zh.md").read_text(encoding="utf-8")
     assert "## 架构" in agents
@@ -56,7 +58,8 @@ def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     assert "PRD.md" in projects
     assert "reports/" in projects
     assert "topic 分组" in projects
-    assert "Archive README" in archive
+    assert "归档操作指南" in archive_guide
+    assert "已归档内容索引" in archive_index
     assert "workspace 级维护脚本" in scripts
     assert "docs/themes" not in skill_zh
     assert "TODO.md" in skill_zh

@@ -110,7 +110,7 @@ projects/chatrss/auth-debug/
 
 - `projects/` 只保留当前活跃或近期仍在推进的工作
 - 对明显不再活跃的 project，归档到 `../archive/YYYY-MM-DD/`
-- 归档摘要写入 workspace 根目录 `../ARCHIVE.md`
+- 归档索引写入 `../archive/index.md`，归档流程见 `../ARCHIVE.md`
 - 归档不删除内容，只移动位置，并保留原 project 目录名
 - 归档过程应采用“脚本筛候选 + 模型审查”的方式，而不是纯脚本盲搬
 
