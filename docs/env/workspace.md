@@ -15,7 +15,7 @@ chattool setup workspace ~/workspace/demo --language en
 命令形态：
 
 ```bash
-chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-chattool] [--chattool-source PATH_OR_URL] [--with-chatblog] [--chatblog-source PATH_OR_URL] [--with-memory] [--memory-source PATH_OR_URL] [--force] [--dry-run] [-i|-I]
+chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-chatblog] [--chatblog-source PATH_OR_URL] [--with-memory] [--memory-source PATH_OR_URL] [--force] [--dry-run] [-i|-I]
 ```
 
 ## 2. 基础结构
@@ -70,6 +70,7 @@ workspace/
 
 ## 5. 可选模块
 
-- `ChatTool`：仓库放到 `core/ChatTool/`，并把仓库内 `skills/` 同步到 workspace 根目录 `skills/`
-- `ChatBlog`：仓库放到 `core/ChatBlog/`，并把 `source/_posts` 链接到 `public/chatblog`
+- `ChatBlog`：仓库放到 `core/ChatBlog/`；如果仓库包含旧 Hexo 结构 `source/_posts`，则链接到 `public/chatblog`，否则只保留 `core/ChatBlog` 并跳过 posts link
 - `ChatMemory`：仓库放到 `core/ChatMemory/`，只把共享 skill groups `Skills/chatarch`、`Skills/common` 和 `Skills/agents` 链接到 workspace 根目录 `skills/`；同时创建本地非共享目录 `skills/local`。`local` 用于当前机器/当前 workspace 的特定内容，不从 ChatMemory link，也不公开共享
+
+`chattool setup workspace` 不再提供 ChatTool skills 同步选项；ChatTool 自带 skills 不作为 workspace skill 系统的维护来源。

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-06-24
+- `chattool setup workspace` 移除 ChatTool extra module，不再克隆 ChatTool 并复制仓库内 `skills/` 到 workspace，避免把不再维护的 ChatTool skills 污染用户 workspace；共享 skill groups 继续由 `--with-memory` / ChatMemory 负责链接 `chatarch`、`common`、`agents` 和本地 `skills/local`。
+- `chattool setup workspace --with-chatblog` 对新版 Python 包结构的 ChatBlog 不再因缺少旧 Hexo `source/_posts` 目录失败；缺目录时只跳过 `public/chatblog` link 并继续执行后续 extras。
+
 ## 2026-06-15
 - 准备 `7.0.6` 版本：先确认 PyPI 最新 `chattool` 为 `7.0.5`、远端 `v7.0.6` tag 不存在，本次按连续 patch 规则将包版本更新为 `7.0.6`，用于发布 ChatArch PyPI scaffold 的显式 ChatEnv provider 模板能力。
 - `chattool pypi init -t chatarch` 新增显式 `--with-chatenv-provider` / `--chatenv-provider-name` 选项；需要 typed env schema 的包可生成 `src/<module>/config.py` 与 `[project.entry-points."chatenv.configs"]`，默认仍不注册 provider，避免无 schema 包污染 ChatEnv discovery。

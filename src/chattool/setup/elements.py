@@ -192,8 +192,6 @@ def workspace_setup(
     interactive,
     force,
     dry_run,
-    with_chattool,
-    chattool_source,
     with_chatblog,
     chatblog_source,
     with_memory,
@@ -206,8 +204,6 @@ def workspace_setup(
         interactive=interactive,
         force=force,
         dry_run=dry_run,
-        with_chattool=with_chattool,
-        chattool_source=chattool_source,
         with_chatblog=with_chatblog,
         chatblog_source=chatblog_source,
         with_memory=with_memory,
@@ -680,20 +676,6 @@ SETUP_COMMAND_ELEMENTS = (
                 kwargs={
                     "is_flag": True,
                     "help": "Print planned workspace files and directories without writing anything.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--with-chattool/--no-chattool",),
-                kwargs={
-                    "default": False,
-                    "help": "Optionally clone/update ChatTool into core/ChatTool and sync its skills into workspace skills/.",
-                },
-            ),
-            SetupOptionElement(
-                param_decls=("--chattool-source", "--source"),
-                kwargs={
-                    "default": None,
-                    "help": "Git URL or local ChatTool repo path used when --with-chattool is enabled.",
                 },
             ),
             SetupOptionElement(

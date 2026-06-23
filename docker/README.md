@@ -86,7 +86,7 @@ docker build -f Dockerfile.playground -t chattool-playground .
 
 这个镜像会在线性启动流程里依次执行：
 
-1. `chattool setup workspace /workspace --with-chattool --chattool-source /playground/ChatTool -I`
+1. `chattool setup workspace /workspace -I`
 2. `chattool env set CHATTOOL_SKILLS_DIR=/workspace/skills`
 3. `chattool setup alias`
 

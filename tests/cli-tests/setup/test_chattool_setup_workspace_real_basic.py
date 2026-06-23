@@ -80,25 +80,40 @@ def test_setup_workspace_english_language_creates_english_templates(tmp_path: Pa
     assert "Near-term plans" in todo
 
 
-def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
+def _init_git_repo(path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=path, check=True, capture_output=True)
+    subprocess.run(["git", "add", "."], cwd=path, check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=ChatTool Test",
+            "-c",
+            "user.email=chattool-test@example.com",
+            "commit",
+            "-m",
+            "init fixture",
+        ],
+        cwd=path,
+        check=True,
+        capture_output=True,
+    )
+
+
+def test_setup_workspace_rejects_removed_chattool_extra_option(tmp_path: Path):
     workspace_dir = tmp_path / "workspace"
-    source_dir = Path(__file__).resolve().parents[3]
 
     result = _run_chattool_setup_workspace(
         [
             str(workspace_dir),
             "--with-chattool",
-            "--chattool-source",
-            str(source_dir),
             "-I",
         ]
     )
 
-    assert result.returncode == 0, result.stderr
-    assert (workspace_dir / "core" / "ChatTool").exists()
-    assert (workspace_dir / "skills" / "practice-make-perfact").exists()
-    assert (workspace_dir / "skills" / "practice-make-perfact" / "SKILL.md").exists()
-    assert "ChatTool repo:" in result.stdout
+    assert result.returncode != 0
+    assert "No such option" in result.stderr
+    assert not workspace_dir.exists()
 
 
 def test_setup_workspace_with_chatblog_links_posts(tmp_path: Path):
@@ -143,6 +158,51 @@ def test_setup_workspace_with_chatblog_links_posts(tmp_path: Path):
         workspace_dir / "core" / "ChatBlog" / "source" / "_posts"
     ).resolve()
     assert "ChatBlog repo:" in result.stdout
+
+
+def test_setup_workspace_with_chatblog_python_package_skips_posts_link_and_continues_to_memory(
+    tmp_path: Path,
+):
+    workspace_dir = tmp_path / "workspace"
+
+    chatblog_source = tmp_path / "ChatBlogSource"
+    package_dir = chatblog_source / "src" / "chatblog"
+    package_dir.mkdir(parents=True)
+    (package_dir / "__init__.py").write_text("__version__ = '0.1.0'\n", encoding="utf-8")
+    _init_git_repo(chatblog_source)
+
+    memory_source = tmp_path / "ChatMemorySource"
+    for group in ["chatarch", "common", "agents", "machine"]:
+        skill = memory_source / "Skills" / group / "demo" / "SKILL.md"
+        skill.parent.mkdir(parents=True, exist_ok=True)
+        skill.write_text(f"# {group}\n", encoding="utf-8")
+    _init_git_repo(memory_source)
+
+    result = _run_chattool_setup_workspace(
+        [
+            str(workspace_dir),
+            "--with-chatblog",
+            "--chatblog-source",
+            str(chatblog_source),
+            "--with-memory",
+            "--memory-source",
+            str(memory_source),
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "core" / "ChatBlog").exists()
+    assert (workspace_dir / "core" / "ChatMemory").exists()
+    assert not (workspace_dir / "public" / "chatblog").exists()
+    assert "Skipped ChatBlog posts link:" in result.stdout
+    assert sorted(path.name for path in (workspace_dir / "skills").iterdir()) == [
+        "agents",
+        "chatarch",
+        "common",
+        "local",
+    ]
+    assert not (workspace_dir / "skills" / "machine").exists()
 
 
 def test_setup_workspace_with_memory_links_shared_groups_and_creates_local(tmp_path: Path):

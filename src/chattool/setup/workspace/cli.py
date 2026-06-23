@@ -100,8 +100,6 @@ def setup_workspace(
     interactive=None,
     force=False,
     dry_run=False,
-    with_chattool=False,
-    chattool_source=None,
     with_chatblog=False,
     chatblog_source=None,
     with_memory=False,
@@ -115,8 +113,7 @@ def setup_workspace(
     needs_prompt = profile_name is None or workspace_dir is None
     usage = (
         "Usage: chattool setup workspace [PROFILE] [WORKSPACE_DIR] "
-        "[--language zh|en] [--with-chattool] [--chattool-source <path-or-url>] "
-        "[--with-chatblog] [--chatblog-source <path-or-url>] "
+        "[--language zh|en] [--with-chatblog] [--chatblog-source <path-or-url>] "
         "[--with-memory] [--memory-source <path-or-url>] "
         "[--force] [--dry-run] [-i|-I]"
     )
@@ -130,10 +127,6 @@ def setup_workspace(
     abort_if_force_without_tty(force_interactive, can_prompt, usage)
 
     option_settings = {
-        "chattool": {
-            "enabled": bool(with_chattool),
-            "source": chattool_source or workspace_options.CHATTOOL_REPO_URL,
-        },
         "chatblog": {
             "enabled": bool(with_chatblog),
             "source": chatblog_source or workspace_options.CHATBLOG_REPO_URL,
@@ -182,15 +175,6 @@ def setup_workspace(
         write_text_file(path, content, force=force)
 
     applied = []
-    if option_settings["chattool"]["enabled"]:
-        applied.append(
-            workspace_options.apply_chattool_option(
-                workspace_path,
-                option_settings["chattool"]["source"],
-                interactive,
-                can_prompt,
-            )
-        )
     if option_settings["chatblog"]["enabled"]:
         applied.append(
             workspace_options.apply_chatblog_option(
@@ -220,15 +204,13 @@ def setup_workspace(
         f"Enabled options: {', '.join(enabled_options) if enabled_options else 'none'}"
     )
     for item in applied:
-        if item["name"] == "chattool":
-            click.echo(f"ChatTool repo: {item['repo_dir']}")
-            click.echo(f"Repo action: {item['repo_action']}")
-            click.echo(f"Skills: {workspace_path / 'skills'}")
-            click.echo(f"Copied skills: {len(item['copied_skills'])}")
         if item["name"] == "chatblog":
             click.echo(f"ChatBlog repo: {item['repo_dir']}")
             click.echo(f"Repo action: {item['repo_action']}")
-            click.echo(f"Public link: {item['public_link']}")
+            if item["posts_linked"]:
+                click.echo(f"Public link: {item['public_link']}")
+            else:
+                click.echo(f"Skipped ChatBlog posts link: {item['posts_dir']}")
         if item["name"] == "memory":
             click.echo(f"ChatMemory repo: {item['repo_dir']}")
             click.echo(f"Repo action: {item['repo_action']}")

@@ -187,7 +187,7 @@ chattool serve local . --html index.html --dry-run
 | Local HTML | `chattool serve local` | Serve a local HTML file or directory |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
 | Setup | `chattool setup codex/claude/opencode/hermes` | Install or upgrade common agent CLIs; Hermes installs the ChatArch Hermes distribution by default and treats WebUI as explicit opt-in; supports `--install-only` for pure install/upgrade flows without writing config |
-| Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-chattool` and `--with-chatblog` to attach ChatTool and ChatBlog |
+| Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-chatblog` for ChatBlog and `--with-memory` for ChatMemory shared skill groups |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 

@@ -72,7 +72,7 @@ def test_setup_workspace_interactive_can_enable_workspace_extras(tmp_path, monke
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.options.ask_checkbox_with_controls",
-        lambda *args, **kwargs: ["chattool", "chatblog", "memory"],
+        lambda *args, **kwargs: ["chatblog", "memory"],
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.cli.resolve_interactive_mode",
@@ -85,21 +85,13 @@ def test_setup_workspace_interactive_can_enable_workspace_extras(tmp_path, monke
         ),
     )
     monkeypatch.setattr(
-        "chattool.setup.workspace.options.apply_chattool_option",
-        lambda workspace_dir, source, interactive, can_prompt: {
-            "name": "chattool",
-            "repo_dir": workspace_dir / "core" / "ChatTool",
-            "repo_action": "cloned",
-            "copied_skills": ["demo-skill"],
-        },
-    )
-    monkeypatch.setattr(
         "chattool.setup.workspace.options.apply_chatblog_option",
         lambda workspace_dir, source, interactive, can_prompt: {
             "name": "chatblog",
             "repo_dir": workspace_dir / "core" / "ChatBlog",
             "repo_action": "cloned",
             "public_link": workspace_dir / "public" / "chatblog",
+            "posts_linked": True,
         },
     )
     monkeypatch.setattr(
@@ -117,11 +109,38 @@ def test_setup_workspace_interactive_can_enable_workspace_extras(tmp_path, monke
     result = runner.invoke(cli, ["setup", "workspace"])
 
     assert result.exit_code == 0
-    assert "Enabled options: chattool, chatblog, memory" in result.output
+    assert "Enabled options: chatblog, memory" in result.output
+    assert "ChatTool repo:" not in result.output
+    assert "Copied skills:" not in result.output
     assert "ChatBlog repo:" in result.output
     assert "ChatMemory repo:" in result.output
     assert "Linked memory skill groups: chatarch, common, agents" in result.output
     assert "Local skill group:" in result.output
+
+
+def test_prompt_optional_modules_does_not_offer_chattool_extra(monkeypatch):
+    from chattool.setup.workspace.options import prompt_optional_modules
+
+    captured_choices = []
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options.ask_confirm",
+        lambda message, default=False: True,
+    )
+
+    def fake_checkbox(*args, **kwargs):
+        captured_choices.extend(kwargs["choices"])
+        return []
+
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options.ask_checkbox_with_controls",
+        fake_checkbox,
+    )
+
+    result = prompt_optional_modules("en")
+
+    rendered_choices = "\n".join(str(choice) for choice in captured_choices)
+    assert "ChatTool" not in rendered_choices
+    assert "chattool" not in result
 
 
 def test_setup_workspace_dry_run_writes_nothing(tmp_path, runner):

@@ -105,7 +105,7 @@ docker build -f Dockerfile.playground -t chattool-playground .
 
 镜像启动后会按固定顺序执行：
 
-1. `chattool setup workspace /workspace --with-chattool --chattool-source /playground/ChatTool -I`
+1. `chattool setup workspace /workspace -I`
 2. `chatenv set CHATTOOL_SKILLS_DIR=/workspace/skills`
 3. `chattool setup alias`
 
