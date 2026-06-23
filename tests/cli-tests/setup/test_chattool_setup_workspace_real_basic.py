@@ -19,6 +19,26 @@ def _run_chattool_setup_workspace(args: list[str]):
     )
 
 
+def _init_git_repo(path: Path) -> None:
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), "add", "."], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(path),
+            "-c",
+            "user.name=ChatTool Test",
+            "-c",
+            "user.email=chattool-test@example.invalid",
+            "commit",
+            "-qm",
+            "initial",
+        ],
+        check=True,
+    )
+
+
 def test_setup_workspace_base_creates_scaffold(tmp_path: Path):
     workspace_dir = tmp_path / "workspace"
 
@@ -96,6 +116,55 @@ def test_setup_workspace_with_chattool_syncs_repo_and_skills(tmp_path: Path):
     assert (workspace_dir / "skills" / "practice-make-perfact").exists()
     assert (workspace_dir / "skills" / "practice-make-perfact" / "SKILL.md").exists()
     assert "ChatTool repo:" in result.stdout
+
+
+def test_setup_workspace_with_chatblog_and_memory_links_assets(tmp_path: Path):
+    workspace_dir = tmp_path / "workspace"
+    chatblog_source = tmp_path / "ChatBlogSource"
+    chatmemory_source = tmp_path / "ChatMemorySource"
+
+    posts_dir = chatblog_source / "source" / "_posts"
+    posts_dir.mkdir(parents=True)
+    (posts_dir / "demo.md").write_text("# Demo\n", encoding="utf-8")
+    _init_git_repo(chatblog_source)
+
+    skill_dir = chatmemory_source / "Skills" / "chatarch" / "demo-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: demo-skill\ndescription: demo\n---\n\n# Demo\n",
+        encoding="utf-8",
+    )
+    _init_git_repo(chatmemory_source)
+
+    result = _run_chattool_setup_workspace(
+        [
+            str(workspace_dir),
+            "--with-chatblog",
+            "--chatblog-source",
+            str(chatblog_source),
+            "--with-memory",
+            "--memory-source",
+            str(chatmemory_source),
+            "-I",
+        ]
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (workspace_dir / "core" / "ChatBlog").exists()
+    assert (workspace_dir / "core" / "ChatMemory").exists()
+    public_link = workspace_dir / "public" / "chatblog"
+    skills_link = workspace_dir / "skills" / "chatarch"
+    assert public_link.is_symlink()
+    assert public_link.resolve() == (
+        workspace_dir / "core" / "ChatBlog" / "source" / "_posts"
+    ).resolve()
+    assert skills_link.is_symlink()
+    assert skills_link.resolve() == (
+        workspace_dir / "core" / "ChatMemory" / "Skills" / "chatarch"
+    ).resolve()
+    assert "ChatBlog repo:" in result.stdout
+    assert "ChatMemory repo:" in result.stdout
+    assert "RexBlog repo:" not in result.stdout
 
 
 def test_setup_workspace_force_overwrites_generated_files(tmp_path: Path):

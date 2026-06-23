@@ -15,7 +15,7 @@ chattool setup workspace ~/workspace/demo --language en
 命令形态：
 
 ```bash
-chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--force] [--dry-run] [-i|-I]
+chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-chattool] [--with-chatblog] [--with-memory] [--force] [--dry-run] [-i|-I]
 ```
 
 ## 2. 基础结构
@@ -70,4 +70,5 @@ workspace/
 ## 5. 可选模块
 
 - `ChatTool`：仓库放到 `core/ChatTool/`，并把仓库内 `skills/` 同步到 workspace 根目录 `skills/`
-- `RexBlog`：仓库放到 `core/RexBlog/`，并把 `source/_posts` 链接到 `public/hexo_blog`
+- `ChatBlog`：仓库放到 `core/ChatBlog/`，并把 `source/_posts` 链接到 `public/chatblog`
+- `ChatMemory`：仓库放到 `core/ChatMemory/`，并把 `Skills/chatarch` 链接到 `skills/chatarch`；如果没有 clone 权限或仓库不可达，会跳过该模块并保留 workspace 初始化结果

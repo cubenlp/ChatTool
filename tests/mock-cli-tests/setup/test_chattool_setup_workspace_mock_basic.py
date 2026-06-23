@@ -1,8 +1,10 @@
 from pathlib import Path
 
+import click
 import pytest
 
 from chattool.client.main import cli
+from chattool.setup.workspace import options as workspace_options
 from chattool.setup.workspace.render import render_agents_md, render_projects_readme
 
 
@@ -59,7 +61,9 @@ def test_workspace_templates_can_be_loaded():
     )
 
 
-def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, runner):
+def test_setup_workspace_interactive_can_enable_chattool_chatblog_memory(
+    tmp_path, monkeypatch, runner
+):
     values = iter([str(tmp_path / "workspace")])
 
     monkeypatch.setattr(
@@ -72,7 +76,7 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.options.ask_checkbox_with_controls",
-        lambda *args, **kwargs: ["chattool", "rexblog"],
+        lambda *args, **kwargs: ["chattool", "chatblog", "memory"],
     )
     monkeypatch.setattr(
         "chattool.setup.workspace.cli.resolve_interactive_mode",
@@ -94,19 +98,113 @@ def test_setup_workspace_interactive_can_enable_chattool(tmp_path, monkeypatch, 
         },
     )
     monkeypatch.setattr(
-        "chattool.setup.workspace.options.apply_rexblog_option",
+        "chattool.setup.workspace.options.apply_chatblog_option",
         lambda workspace_dir, source, interactive, can_prompt: {
-            "name": "rexblog",
-            "repo_dir": workspace_dir / "core" / "RexBlog",
+            "name": "chatblog",
+            "repo_dir": workspace_dir / "core" / "ChatBlog",
             "repo_action": "cloned",
-            "public_link": workspace_dir / "public" / "hexo_blog",
+            "public_link": workspace_dir / "public" / "chatblog",
         },
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options.apply_memory_option",
+        lambda workspace_dir, source, interactive, can_prompt: {
+            "name": "memory",
+            "repo_dir": workspace_dir / "core" / "ChatMemory",
+            "repo_action": "cloned",
+            "skills_link": workspace_dir / "skills" / "chatarch",
+            "skipped": False,
+        },
+        raising=False,
     )
 
     result = runner.invoke(cli, ["setup", "workspace"])
 
     assert result.exit_code == 0
-    assert "Enabled options: chattool, rexblog" in result.output
+    assert "Enabled options: chattool, chatblog, memory" in result.output
+    assert "ChatBlog repo:" in result.output
+    assert "ChatMemory repo:" in result.output
+    assert "RexBlog repo:" not in result.output
+
+
+def test_setup_workspace_memory_option_skips_without_clone_permission(
+    tmp_path, monkeypatch, runner
+):
+    values = iter([str(tmp_path / "workspace")])
+
+    monkeypatch.setattr(
+        "chattool.setup.workspace.cli.ask_text",
+        lambda label, default=None, **kwargs: next(values),
+    )
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options.ask_confirm",
+        lambda message, default=False: True,
+    )
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options.ask_checkbox_with_controls",
+        lambda *args, **kwargs: ["memory"],
+    )
+    monkeypatch.setattr(
+        "chattool.setup.workspace.cli.resolve_interactive_mode",
+        lambda interactive, auto_prompt_condition: (
+            interactive,
+            True,
+            False,
+            True,
+            True,
+        ),
+    )
+    monkeypatch.setattr(
+        "chattool.setup.workspace.options._clone_or_update_repo",
+        lambda *args, **kwargs: (_ for _ in ()).throw(click.ClickException("no clone permission")),
+    )
+
+    result = runner.invoke(cli, ["setup", "workspace"])
+
+    assert result.exit_code == 0
+    assert "Enabled options: memory" in result.output
+    assert "ChatMemory skipped: no clone permission" in result.output
+    assert not (tmp_path / "workspace" / "skills" / "chatarch").exists()
+
+
+def test_memory_option_refuses_to_replace_existing_chatarch_directory(
+    tmp_path, monkeypatch
+):
+    workspace_dir = tmp_path / "workspace"
+    existing_chatarch = workspace_dir / "skills" / "chatarch"
+    existing_chatarch.mkdir(parents=True)
+    marker = existing_chatarch / "KEEP.md"
+    marker.write_text("keep me\n", encoding="utf-8")
+
+    fake_memory = tmp_path / "ChatMemory"
+    (fake_memory / "Skills" / "chatarch").mkdir(parents=True)
+
+    def fake_clone(source, repo_dir, interactive, can_prompt):
+        (repo_dir / "Skills" / "chatarch").mkdir(parents=True)
+        return "updated"
+
+    monkeypatch.setattr(
+        workspace_options,
+        "_clone_or_update_repo",
+        fake_clone,
+    )
+    monkeypatch.setattr(
+        workspace_options,
+        "CHATMEMORY_REPO_URL",
+        str(fake_memory),
+    )
+
+    with pytest.raises(click.ClickException, match="Refusing to replace"):
+        workspace_options.apply_memory_option(
+            workspace_dir,
+            str(fake_memory),
+            interactive=False,
+            can_prompt=False,
+        )
+
+    assert existing_chatarch.is_dir()
+    assert marker.read_text(encoding="utf-8") == "keep me\n"
 
 
 def test_setup_workspace_dry_run_writes_nothing(tmp_path, runner):

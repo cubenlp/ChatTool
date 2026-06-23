@@ -178,7 +178,7 @@ chattool serve local . --html index.html --dry-run
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chattool setup zsh/codex/claude/opencode/hermes/lark-cli/docker` | 配置 zsh，安装或检查常用 Agent CLI / WebUI / Docker 环境，并在确认后执行建议的系统命令；`setup hermes` 封装 Hermes 官方 installer，WebUI 需显式启用；`setup opencode/codex/claude/hermes` 支持 `--install-only` 纯安装/升级，`setup opencode` 也支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
-| Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-opencode-loop` 启用 OpenCode loop-aware 模板并安装本地 `chatloop` 资产 |
+| Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-chattool`、`--with-chatblog`、`--with-memory` 分别挂载 ChatTool、ChatBlog 和 ChatMemory/ChatArch skills |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
 | CRS 查询 | `chattool crs` | 查询 Claude Relay Service API key 用量、模型统计和只读 admin 信息 |

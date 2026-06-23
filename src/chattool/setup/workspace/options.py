@@ -15,7 +15,8 @@ from chattool.interaction import (
 
 
 CHATTOOL_REPO_URL = "https://github.com/cubenlp/ChatTool.git"
-REXBLOG_REPO_URL = "https://github.com/RexWzh/RexBlog"
+CHATBLOG_REPO_URL = "https://github.com/ChatArch/ChatBlog.git"
+CHATMEMORY_REPO_URL = "https://github.com/ChatArch/ChatMemory.git"
 
 
 def _run_git(
@@ -106,34 +107,69 @@ def apply_chattool_option(
 
 def _ensure_symlink(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists() or target.is_symlink():
-        if target.is_symlink() or target.is_file():
-            target.unlink()
-        else:
-            shutil.rmtree(target)
+    if target.is_symlink():
+        target.unlink()
+    elif target.exists():
+        raise click.ClickException(
+            f"Refusing to replace existing non-symlink path: {target}"
+        )
     target.symlink_to(source)
 
 
-def apply_rexblog_option(
+def apply_chatblog_option(
     workspace_dir: Path,
     source: str,
     interactive,
     can_prompt: bool,
 ) -> dict:
-    repo_dir = workspace_dir / "core" / "RexBlog"
+    repo_dir = workspace_dir / "core" / "ChatBlog"
     repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
     posts_dir = repo_dir / "source" / "_posts"
     if not posts_dir.exists():
         raise click.ClickException(
-            f"RexBlog repo does not contain source/_posts: {posts_dir}"
+            f"ChatBlog repo does not contain source/_posts: {posts_dir}"
         )
-    public_link = workspace_dir / "public" / "hexo_blog"
+    public_link = workspace_dir / "public" / "chatblog"
     _ensure_symlink(posts_dir, public_link)
     return {
-        "name": "rexblog",
+        "name": "chatblog",
         "repo_dir": repo_dir,
         "repo_action": repo_action,
         "public_link": public_link,
+    }
+
+
+def apply_memory_option(
+    workspace_dir: Path,
+    source: str,
+    interactive,
+    can_prompt: bool,
+) -> dict:
+    repo_dir = workspace_dir / "core" / "ChatMemory"
+    try:
+        repo_action = _clone_or_update_repo(source, repo_dir, interactive, can_prompt)
+    except click.ClickException as exc:
+        return {
+            "name": "memory",
+            "repo_dir": repo_dir,
+            "repo_action": "skipped",
+            "skipped": True,
+            "error": str(exc),
+        }
+
+    chatarch_skills = repo_dir / "Skills" / "chatarch"
+    if not chatarch_skills.exists():
+        raise click.ClickException(
+            f"ChatMemory repo does not contain Skills/chatarch: {chatarch_skills}"
+        )
+    skills_link = workspace_dir / "skills" / "chatarch"
+    _ensure_symlink(chatarch_skills, skills_link)
+    return {
+        "name": "memory",
+        "repo_dir": repo_dir,
+        "repo_action": repo_action,
+        "skills_link": skills_link,
+        "skipped": False,
     }
 
 
@@ -143,9 +179,13 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
             "enabled": False,
             "source": CHATTOOL_REPO_URL,
         },
-        "rexblog": {
+        "chatblog": {
             "enabled": False,
-            "source": REXBLOG_REPO_URL,
+            "source": CHATBLOG_REPO_URL,
+        },
+        "memory": {
+            "enabled": False,
+            "source": CHATMEMORY_REPO_URL,
         },
     }
 
@@ -166,7 +206,8 @@ def prompt_optional_modules(language: str) -> dict[str, dict]:
         else "选择额外的 workspace 模块",
         choices=[
             create_choice("ChatTool -> core/ChatTool + ./skills", "chattool"),
-            create_choice("RexBlog -> core/RexBlog + public/hexo_blog", "rexblog"),
+            create_choice("ChatBlog -> core/ChatBlog + public/chatblog", "chatblog"),
+            create_choice("ChatMemory -> core/ChatMemory + skills/chatarch", "memory"),
         ],
         default_values=[],
         instruction="",

@@ -334,10 +334,11 @@ chattool setup workspace ~/workspace/demo --language en
 chattool setup workspace ~/workspace/demo --dry-run -I
 ```
 
-交互模式下还可以额外勾选模块，例如：
+交互模式下还可以额外勾选模块，也可以用显式开关启用：
 
-- `ChatTool`：下载到 `core/ChatTool/`，并把相关 skills 同步到 `./skills/`
-- `RexBlog`：下载到 `core/RexBlog/`，并把 `source/_posts` 链接到 `./public/hexo_blog`
+- `ChatTool` / `--with-chattool`：下载到 `core/ChatTool/`，并把相关 skills 同步到 `./skills/`
+- `ChatBlog` / `--with-chatblog`：下载到 `core/ChatBlog/`，并把 `source/_posts` 链接到 `./public/chatblog`
+- `ChatMemory` / `--with-memory`：下载到 `core/ChatMemory/`，并把 `Skills/chatarch` 链接为 `./skills/chatarch`；如果没有 clone 权限或仓库不可达，会跳过该模块并保留 workspace 初始化结果
 
 ## 1. DNS 管理 (`dns`)
 
