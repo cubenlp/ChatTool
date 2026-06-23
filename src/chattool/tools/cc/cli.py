@@ -418,20 +418,6 @@ def _run_with_retries(
 
 @cli.command()
 @click.option(
-    "--interactive/--no-interactive",
-    "-i/-I",
-    default=None,
-    help=INTERACTIVE_OPTION_HELP,
-)
-def setup(interactive: bool | None) -> None:
-    """安装/检查 cc-connect 依赖（`chattool setup cc-connect` 的别名）。"""
-    from chattool.setup.cc_connect import setup_cc_connect
-
-    setup_cc_connect(interactive=interactive)
-
-
-@cli.command()
-@click.option(
     "--project", default=None, help="Project name (defaults to work dir name)."
 )
 @click.option(
@@ -641,7 +627,11 @@ def start(
         raise click.Abort()
 
     if not _check_binary("cc-connect"):
-        click.secho("未找到 cc-connect，请先运行 `chattool cc setup`", fg="red")
+        click.secho(
+            "未找到 cc-connect，请先安装 ChatUp 并运行 `chatup cc-connect`。"
+            "可使用 `pip install 'chattool[setup]'` 安装 ChatUp。",
+            fg="red",
+        )
         raise click.Abort()
 
     env = os.environ.copy()

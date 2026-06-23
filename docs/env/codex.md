@@ -5,23 +5,23 @@
 默认安装 LTS：
 
 ```bash
-chattool setup nodejs
+chatup nodejs
 ```
 
-`chattool setup nodejs` 现在会直接写入内置的 `nvm.sh`，不再通过 `curl` 访问 GitHub 获取安装脚本。
+`chatup nodejs` 现在会直接写入内置的 `nvm.sh`，不再通过 `curl` 访问 GitHub 获取安装脚本。
 默认会把 ChatTool 管理的 nvm 初始化块同步写入所有已探测到的 shell rc 文件（当前支持 `~/.zshrc` 和 `~/.bashrc`）；使用 `-i` 时可先交互选择要更新的 shell。
 后续的 `nvm install` 仍会联网下载 Node.js 本体。
 
 交互式选择版本：
 
 ```bash
-chattool setup nodejs -i
+chatup nodejs -i
 ```
 
 如需更详细地查看 runtime 检测、shell rc 更新和 `nvm install` 阶段，可附加：
 
 ```bash
-chattool setup nodejs --log-level DEBUG
+chatup nodejs --log-level DEBUG
 ```
 
 ## 2) 安装并配置 Codex
@@ -29,22 +29,22 @@ chattool setup nodejs --log-level DEBUG
 默认就是交互输入密钥：
 
 ```bash
-chattool setup codex
+chatup codex
 ```
 
-命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chatup nodejs` 进行安装或升级。
 
 如果你已经有变量，直接传 API key：
 
 ```bash
-chattool setup codex --api-key "sk-xxx"
+chatup codex --api-key "sk-xxx"
 ```
 
 如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
 
 ```bash
-chattool setup codex -e work
-chattool setup codex -e ~/.chatarch/envs/OpenAI/work.env
+chatup codex -e work
+chatup codex -e ~/.chatarch/envs/OpenAI/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：
@@ -64,7 +64,7 @@ chattool setup codex -e ~/.chatarch/envs/OpenAI/work.env
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --api-key "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
+chatup codex --api-key "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 如需更详细地查看依赖检测、npm 安装和配置写入阶段，可附加 `--log-level DEBUG`。

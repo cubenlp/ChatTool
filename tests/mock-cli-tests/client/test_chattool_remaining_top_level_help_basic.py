@@ -7,6 +7,10 @@ pytestmark = pytest.mark.mock_cli
 
 
 def test_chattool_remaining_top_level_help_entries(runner):
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "setup" not in result.output
+
     result = runner.invoke(cli, ["dns", "--help"])
     assert result.exit_code == 0
     assert "dynamic IP updates and record management" in result.output
@@ -27,3 +31,12 @@ def test_chattool_remaining_top_level_help_entries(runner):
     assert "cc-connect" in result.output
     assert "doctor" in result.output
     assert "init" in result.output
+    assert "setup" not in result.output
+
+    result = runner.invoke(cli, ["setup", "--help"])
+    assert result.exit_code != 0
+    assert "No such command" in result.output
+
+    result = runner.invoke(cli, ["cc", "setup", "--help"])
+    assert result.exit_code != 0
+    assert "No such command" in result.output

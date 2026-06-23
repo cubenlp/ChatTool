@@ -6,7 +6,7 @@
 
 - 一键可用：新手只需 1~3 个命令即可跑通最小可用链路
 - 极简接口：一阶段只保留高频必需命令
-- 与 `chattool setup` 协同：复用已有环境变量/安装逻辑
+- 与 `chatup` 协同：setup/bootstrap 逻辑由独立 ChatUp 维护
 - 明确可见：配置、运行状态、日志可查询
 
 ## 非目标
@@ -23,8 +23,7 @@
 ## 命令总览（阶段一：最小可用）
 
 ```
-chattool setup cc-connect
-chattool cc setup   # alias
+chatup cc-connect
 chattool cc init
 chattool cc start
 chattool cc status
@@ -36,12 +35,12 @@ chattool cc doctor
 
 ### 1) 安装与诊断
 
-#### `chattool setup cc-connect` / `chattool cc setup`
+#### `chatup cc-connect`
 - 作用：安装/检查 cc-connect 运行依赖（Node.js/npm、cc-connect 包、平台 SDK）
 - 选项：
   - `-i/--interactive`：强制交互
   - `-I/--no-interactive`：禁止交互，缺参时报错
-  - 一阶段：自动处理依赖安装，不暴露额外开关（对齐 `chattool setup codex`）
+  - 一阶段：自动处理依赖安装，不暴露额外开关（对齐 `chatup codex`）
 
 
 #### `chattool cc doctor`
@@ -94,6 +93,6 @@ chattool cc init -i
 
 ## 后续实现建议
 
-- `chattool setup cc-connect` 复用 `src/chattool/setup/*` 逻辑，并由 `chattool cc setup` 复用同一实现
+- `chatup cc-connect` 由独立 ChatUp 维护；ChatTool 不再保留 `chattool cc setup` 别名
 - TOML 读写复用 `chattool.config` 或引入专用 cc-connect config 模块
 - 日志：默认输出 cc-connect stdout/stderr，同时可持久化到 `~/.cc-connect/cc-connect.log`

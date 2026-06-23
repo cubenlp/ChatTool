@@ -113,7 +113,7 @@ chattool lark chat --user debug_user
 推荐直接执行：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 lark-cli auth login --recommend
 ```
 

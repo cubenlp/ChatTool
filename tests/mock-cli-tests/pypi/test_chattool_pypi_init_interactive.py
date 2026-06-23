@@ -108,8 +108,8 @@ def test_chattool_pypi_init_chatarch_template_interactive(
     pyproject_text = (tmp_path / "demo-pkg" / "pyproject.toml").read_text(
         encoding="utf-8"
     )
-    assert '"chatstyle>=0.1.0"' in pyproject_text
-    assert '"chatenv>=0.1.1"' in pyproject_text
+    assert '"chatstyle>=0.1.0,<0.2.0"' in pyproject_text
+    assert '"chatenv>=0.2.0,<0.3.0"' in pyproject_text
     assert '[project.entry-points."chatenv.configs"]' not in pyproject_text
 
 

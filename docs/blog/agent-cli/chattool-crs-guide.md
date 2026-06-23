@@ -289,15 +289,15 @@ chattool crs auth login --json-output
 
 ---
 
-## 快捷 alias
+## 快捷入口
 
-`chattool setup alias` 的 alias 集合里新增了：
+ChatTool 不再维护 shell alias；如需快捷入口，可以在自己的 shell 配置中手动添加：
 
 ```bash
-chatcrs='chattool crs'
+alias chatcrs='chattool crs'
 ```
 
-配置 alias 后可以直接：
+之后可以直接：
 
 ```bash
 chatcrs stats

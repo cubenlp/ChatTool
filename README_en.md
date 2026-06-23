@@ -30,6 +30,7 @@ A Python toolkit integrating LLM chat, Feishu/Lark bots, DNS management, SSL cer
 
 ```bash
 pip install chattool --upgrade
+pip install "chattool[setup]"  # installs ChatUp; use chatup workspace/hermes/cc-connect
 ```
 
 Minimum supported Python version: `3.10`.
@@ -186,8 +187,8 @@ chattool serve local . --html index.html --dry-run
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
 | Local HTML | `chattool serve local` | Serve a local HTML file or directory |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
-| Setup | `chattool setup codex/claude/opencode/hermes` | Install or upgrade common agent CLIs; Hermes installs the ChatArch Hermes distribution by default and treats WebUI as explicit opt-in; supports `--install-only` for pure install/upgrade flows without writing config |
-| Workspace | `chattool setup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-chattool` and `--with-chatblog` to attach ChatTool and ChatBlog |
+| Setup | `chatup codex/claude/opencode/hermes` | ChatTool setup has moved to the standalone ChatUp package. Install `chattool[setup]` or `chatup`, then use first-level `chatup ...` commands. |
+| Workspace | `chatup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-chattool`, `--with-chatblog`, and `--with-memory` |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
 

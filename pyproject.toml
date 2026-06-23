@@ -23,9 +23,9 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
-    "chatgh>=0.2.4",
-    "chatstyle>=0.1.0",
-    "chatenv>=0.1.1",
+    "chatgh>=0.2.6,<0.3.0",
+    "chatstyle>=0.1.0,<0.2.0",
+    "chatenv>=0.2.0,<0.3.0",
     "requests>=2.20",
     "python-dotenv>=0.17.0",
     "colorama",
@@ -85,6 +85,9 @@ pypi = [
     "build",
     "twine",
 ]
+setup = [
+    "chatup>=0.2.0,<0.3.0",
+]
 tools = [
     "chattool[batch,browser,client,dns,images,interactive,lark,mcp,serve,screenshot]",
 ]
@@ -108,7 +111,7 @@ dev = [
     "wheel",
     "build",
     "twine",
-    "chattool[docs,tests,tools]",
+    "chattool[docs,setup,tests,tools]",
 ]
 [project.urls]
 Homepage = "https://github.com/cubenlp/chattool"
@@ -131,23 +134,6 @@ where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
-
-[tool.setuptools.package-data]
-"chattool.setup" = [
-    "assets/*.sh",
-    "assets/hermes/*.sh",
-    "assets/opencode_chatloop/README.md",
-    "assets/opencode_chatloop/plugins/chatloop/*",
-    "assets/opencode_chatloop/commands/*.md",
-    "workspace/templates/default/zh/*.md",
-    "workspace/templates/default/zh/projects/*.md",
-    "workspace/templates/default/en/*.md",
-    "workspace/templates/default/en/projects/*.md",
-    "workspace/templates/opencode-loop/zh/*.md",
-    "workspace/templates/opencode-loop/zh/projects/*.md",
-    "workspace/templates/opencode-loop/en/*.md",
-    "workspace/templates/opencode-loop/en/projects/*.md",
-]
 
 [tool.pytest.ini_options]
 markers = [

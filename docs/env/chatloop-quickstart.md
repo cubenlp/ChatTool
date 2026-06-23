@@ -6,14 +6,14 @@
 
 ## 1. 先安装 OpenCode 和 ChatLoop
 
-确保本机已有 Node.js，然后安装 OpenCode CLI 与全局 `chatloop` 插件：
+确保本机已有 Node.js，然后安装 OpenCode CLI 并启用当前支持的 auto-loop 插件配置：
 
 ```bash
-chattool setup nodejs
-chattool setup opencode --install-only --plugin chatloop
+chatup nodejs
+chatup opencode --install-only --plugin auto-loop
 ```
 
-安装完成后，`chatloop` 的 plugin 和 slash commands 会写到 OpenCode home。默认是：
+旧的本地 ChatLoop plugin 和 slash commands 已不再由 ChatTool/ChatUp 分发；需要 loop 能力时优先使用当前维护的 RuffleLoop / auto-loop 路径。
 
 ```text
 ~/.config/opencode/
@@ -31,10 +31,10 @@ chattool setup opencode --install-only --plugin chatloop
 
 ## 2. 创建 workspace
 
-初始化一个带 OpenCode loop-aware 模板的 workspace：
+初始化一个普通 workspace：
 
 ```bash
-chattool setup workspace ~/workspace/arxiv-demo --with-opencode-loop
+chatup workspace ~/workspace/arxiv-demo
 ```
 
 生成后，核心目录大致如下：
@@ -234,8 +234,8 @@ tail -f .opencode/chatloop.events.log
 
 最短流程就是：
 
-1. `chattool setup opencode --install-only --plugin chatloop`
-2. `chattool setup workspace ~/workspace/demo --with-opencode-loop`
+1. `chatup opencode --install-only --plugin auto-loop`
+2. `chatup workspace ~/workspace/demo`
 3. 在 `projects/` 下创建 project 并写好 `PRD.md`
 4. 进入 project 根目录执行 `/chatloop ...`
 5. 用 `/chatloop-status` 和 `.opencode/chatloop.events.log` 调试是否生效

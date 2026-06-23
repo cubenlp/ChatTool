@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-06-24
+- 准备 `7.1.0` minor 版本：适配 ChatEnv `0.3.x` shared OpenAI/Feishu schema，并按 ChatArch 内部依赖规范为 `chatgh`、`chatstyle`、`chatenv` 增加上界窗口。
+- `chattool.config.OpenAIConfig` / `FeishuConfig` 改为继承 ChatEnv shared configs，字段事实源上移到 ChatEnv；ChatTool 保留兼容 import 和自身连接测试逻辑。
+- `chattool pypi init -t chatarch` 模板生成的 ChatArch 内部依赖现在同时包含下界和上界，例如 `chatstyle>=0.1.0,<0.2.0`、`chatenv>=0.2.0,<0.3.0`。
+- ChatTool 内置 `chattool setup` 已迁移到独立 `chatup` 包并从 ChatTool 移除；需要 setup/workspace/bootstrap 能力时安装 `chattool[setup]` 或 `chatup>=0.2.0,<0.3.0`，使用 `chatup workspace`、`chatup hermes`、`chatup cc-connect` 等一级命令。
+- `chattool cc setup` 旧别名已移除；`cc-connect` 安装入口统一为 `chatup cc-connect`，避免 ChatTool 继续维护重复 setup 逻辑。
+
 ## 2026-06-15
 - 准备 `7.0.6` 版本：先确认 PyPI 最新 `chattool` 为 `7.0.5`、远端 `v7.0.6` tag 不存在，本次按连续 patch 规则将包版本更新为 `7.0.6`，用于发布 ChatArch PyPI scaffold 的显式 ChatEnv provider 模板能力。
 - `chattool pypi init -t chatarch` 新增显式 `--with-chatenv-provider` / `--chatenv-provider-name` 选项；需要 typed env schema 的包可生成 `src/<module>/config.py` 与 `[project.entry-points."chatenv.configs"]`，默认仍不注册 provider，避免无 schema 包污染 ChatEnv discovery。

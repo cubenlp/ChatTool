@@ -10,7 +10,7 @@
 
 ```bash
 # 自动检测版本并下载 Chromedriver
-chattool setup chrome
+chatup chrome
 ```
 
 该命令会执行以下操作：
@@ -26,9 +26,9 @@ chattool setup chrome
 如果你希望自定义安装路径或确认每一步操作，可以使用交互模式：
 
 ```bash
-chattool setup chrome -i
+chatup chrome -i
 # 或
-chattool setup chrome --interactive
+chatup chrome --interactive
 ```
 
 ## 2. 启动服务

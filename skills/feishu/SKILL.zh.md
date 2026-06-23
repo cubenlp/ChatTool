@@ -19,7 +19,7 @@ version: 1.0.0
 - 飞书文档创建、读取、更新、评论、授权
 - wiki 链接解析
 - `chattool lark` 与 `lark-cli` 的边界判断
-- `chattool setup lark-cli` 配置迁移
+- `chatup lark-cli` 配置迁移
 
 ## 先记住边界
 
@@ -45,7 +45,7 @@ version: 1.0.0
 配置与认证起点：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 lark-cli auth status
 lark-cli auth login --recommend
 ```
@@ -129,7 +129,7 @@ wiki URL / token 先解析，不要直接当 doc token：
 
 ## 决策规则
 
-1. 配置迁移或安装：先 `chattool setup lark-cli`
+1. 配置迁移或安装：先 `chatup lark-cli`
 2. 发最短文本消息：可用 `chattool lark send`
 3. 需要 reply、搜索、message/chat/thread 定位：转 `lark-cli im`
 4. 需要文档正文：转 `lark-cli docs`

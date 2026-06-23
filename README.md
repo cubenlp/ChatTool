@@ -33,6 +33,7 @@ pip install "chattool[tools]"        # 常用工具全集
 pip install "chattool[mcp,dns]"      # MCP 服务 + DNS 工具
 pip install "chattool[images]"       # 含图像工具
 pip install "chattool[pypi]"         # 含 Python 包构建/发布依赖
+pip install "chattool[setup]"        # 安装独立 ChatUp，用 chatup workspace/hermes/cc-connect 等命令做环境初始化
 pip install "chattool[dev]"          # 仓库开发依赖
 ```
 
@@ -92,7 +93,7 @@ chattool lark send USER_ID "Hello"
 chattool lark send "Hello"                  # 使用 FEISHU_DEFAULT_RECEIVER_ID
 chattool lark send -t chat_id "Hello team" # 使用 FEISHU_DEFAULT_CHAT_ID
 chattool lark info
-chattool setup lark-cli
+chatup lark-cli                         # 需安装 chattool[setup] 或 chatup
 chattool serve lark echo                        # 回显机器人
 chattool serve lark ai --system "你是工作助手"  # AI 对话机器人
 ```
@@ -177,8 +178,8 @@ chattool serve local . --html index.html --dry-run
 | Nginx 配置 | `chattool nginx` | 按模板生成常见的反向代理、路径转发和静态目录配置 |
 | PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
-| 环境安装 | `chattool setup zsh/codex/claude/opencode/hermes/lark-cli/docker` | 配置 zsh，安装或检查常用 Agent CLI / WebUI / Docker 环境，并在确认后执行建议的系统命令；`setup hermes` 默认安装 ChatArch Hermes distribution，WebUI 需显式启用；`setup opencode/codex/claude/hermes` 支持 `--install-only` 纯安装/升级，`setup opencode` 也支持 `--plugin auto-loop` 追加写入 `opencode-auto-loop` |
-| Workspace | `chattool setup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-chattool`、`--with-chatblog` 分别挂载 ChatTool 和 ChatBlog |
+| 环境安装 | `chatup zsh/codex/claude/opencode/hermes/lark-cli/docker` | ChatTool 的 setup 能力已迁移到独立 ChatUp；安装 `chattool[setup]` 或 `chatup` 后使用 `chatup ...` 一级命令配置常用 Agent CLI / WebUI / Docker 环境 |
+| Workspace | `chatup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-chattool`、`--with-chatblog`、`--with-memory` 分别挂载 ChatTool、ChatBlog、ChatMemory |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
 | CRS 查询 | `chattool crs` | 查询 Claude Relay Service API key 用量、模型统计和只读 admin 信息 |

@@ -179,8 +179,8 @@ def test_chattool_pypi_init_chatarch_template(tmp_path):
     assert (project_dir / ".github" / "workflows" / "deploy.yaml").exists()
     assert (project_dir / ".github" / "workflows" / "preview.yaml").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"chatstyle>=0.1.0"' in pyproject_text
-    assert '"chatenv>=0.1.1"' in pyproject_text
+    assert '"chatstyle>=0.1.0,<0.2.0"' in pyproject_text
+    assert '"chatenv>=0.2.0,<0.3.0"' in pyproject_text
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert 'docs = ["mkdocs' in pyproject_text
     assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
@@ -254,8 +254,8 @@ def test_chattool_pypi_init_chatarch_can_skip_optional_files(tmp_path):
     assert not (project_dir / "docs").exists()
     assert not (project_dir / ".github").exists()
     pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"chatstyle>=0.1.0"' in pyproject_text
-    assert '"chatenv>=0.1.1"' in pyproject_text
+    assert '"chatstyle>=0.1.0,<0.2.0"' in pyproject_text
+    assert '"chatenv>=0.2.0,<0.3.0"' in pyproject_text
     assert 'docs = ["mkdocs' not in pyproject_text
     assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
     assert 'Documentation = "https://ChatArch.github.io/mychat-cli"' not in pyproject_text

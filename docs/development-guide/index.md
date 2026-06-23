@@ -182,7 +182,7 @@ Select a category to configure:
   Other
 ```
 
-- 对于目标非常明确、输入项很少的命令，可以直接进入逐项提问，例如 `chattool setup opencode`：
+- 对于目标非常明确、输入项很少的命令，可以直接进入逐项提问，例如 `chatup opencode`：
 
 ```text
 INFO: Start opencode setup
@@ -223,8 +223,8 @@ INFO: Start opencode setup
 - `-l/--log-level` 只是诊断增强，不替代正常用户提示；即使用户不打开 DEBUG，也应能从默认输出快速理解“现在在做什么、是否成功、下一步该做什么”。
 - 默认日志级别应保持 `INFO`，并优先统一使用 `-l/--log-level` 这一对参数名；不要在相邻命令里混用新的日志参数命名。
 - 当前推荐的典型边界：
-  - `chattool setup alias` 这类本地即时配置命令，保持简洁提示即可
-  - `chattool setup nodejs`、`setup codex/opencode/claude/lark-cli`、`setup frp`、`setup docker`、`dns cert apply` 这类复杂等待命令，应有阶段日志，并优先支持 `-l/--log-level`
+  - 本地 shell alias 不再由 ChatTool/ChatUp 维护，避免迁出入口被 alias 覆盖
+  - `chatup nodejs`、`chatup codex/opencode/claude/lark-cli`、`chatup frp`、`chatup docker`、`dns cert apply` 这类复杂等待命令，应有阶段日志，并优先支持 `-l/--log-level`
 
 ## 文档组织
 
