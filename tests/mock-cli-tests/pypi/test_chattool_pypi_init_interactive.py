@@ -110,6 +110,85 @@ def test_chattool_pypi_init_chatarch_template_interactive(
     )
     assert '"chatstyle>=0.1.0"' in pyproject_text
     assert '"chatenv>=0.1.1"' in pyproject_text
+    assert '[project.entry-points."chatenv.configs"]' not in pyproject_text
+
+
+def test_chattool_pypi_init_chatarch_can_generate_chatenv_provider(
+    tmp_path, runner
+):
+    project_dir = tmp_path / "ChatGH"
+
+    result = runner.invoke(
+        cli,
+        [
+            "pypi",
+            "init",
+            "ChatGH",
+            "-t",
+            "chatarch",
+            "--project-dir",
+            str(project_dir),
+            "--with-chatenv-provider",
+            "--chatenv-provider-name",
+            "github",
+            "-I",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    pyproject_text = (project_dir / "pyproject.toml").read_text(encoding="utf-8")
+    assert '[project.entry-points."chatenv.configs"]' in pyproject_text
+    assert 'github = "chatgh.config"' in pyproject_text
+    config_text = (project_dir / "src" / "chatgh" / "config.py").read_text(
+        encoding="utf-8"
+    )
+    assert "class ChatghConfig(BaseEnvConfig):" in config_text
+    assert '_aliases = ["github", "chatgh"]' in config_text
+    assert '_storage_dir = "Github"' in config_text
+
+
+def test_chattool_pypi_init_rejects_chatenv_provider_name_without_provider(
+    tmp_path, runner
+):
+    result = runner.invoke(
+        cli,
+        [
+            "pypi",
+            "init",
+            "demo-pkg",
+            "-t",
+            "chatarch",
+            "--project-dir",
+            str(tmp_path / "demo-pkg"),
+            "--chatenv-provider-name",
+            "demo",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "--chatenv-provider-name requires --with-chatenv-provider" in result.output
+
+
+def test_chattool_pypi_init_rejects_chatenv_provider_for_default_template(
+    tmp_path, runner
+):
+    result = runner.invoke(
+        cli,
+        [
+            "pypi",
+            "init",
+            "demo-pkg",
+            "--project-dir",
+            str(tmp_path / "demo-pkg"),
+            "--with-chatenv-provider",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "--with-chatenv-provider is only supported by the chatarch template" in result.output
 
 
 def test_chattool_pypi_init_stops_early_when_project_dir_not_empty(

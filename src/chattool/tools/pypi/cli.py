@@ -215,6 +215,18 @@ def cli():
     help="Create GitHub workflow files for chatarch template. Defaults to on for chatarch.",
 )
 @click.option(
+    "--with-chatenv-provider/--without-chatenv-provider",
+    "include_chatenv_provider",
+    default=False,
+    show_default=True,
+    help="Create ChatEnv provider config.py and chatenv.configs entry point for chatarch template.",
+)
+@click.option(
+    "--chatenv-provider-name",
+    default=None,
+    help="Entry point name for --with-chatenv-provider. Defaults to the module name.",
+)
+@click.option(
     "--interactive/--no-interactive",
     "interactive",
     "-i/-I",
@@ -233,6 +245,8 @@ def init(
     project_dir: Path | None,
     include_mkdocs: bool | None,
     include_workflows: bool | None,
+    include_chatenv_provider: bool,
+    chatenv_provider_name: str | None,
     interactive: bool | None,
 ):
     """Scaffold a minimal src-layout Python package."""
@@ -343,6 +357,14 @@ def init(
         project_dir=project_dir,
         template=template,
     )
+    if chatenv_provider_name and not include_chatenv_provider:
+        raise click.ClickException(
+            "--chatenv-provider-name requires --with-chatenv-provider."
+        )
+    if include_chatenv_provider and template != "chatarch":
+        raise click.ClickException(
+            "--with-chatenv-provider is only supported by the chatarch template."
+        )
     try:
         result = scaffold_package(
             package_name=package_name,
@@ -356,6 +378,8 @@ def init(
             template=template,
             include_mkdocs=include_mkdocs,
             include_workflows=include_workflows,
+            include_chatenv_provider=include_chatenv_provider,
+            chatenv_provider_name=chatenv_provider_name,
         )
     except PyPICommandError as exc:
         _raise_click_error(exc)
