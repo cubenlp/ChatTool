@@ -18,6 +18,31 @@ def test_cc_help():
     assert result.exit_code == 0
     assert "init" in result.output
     assert "start" in result.output
+    assert "setup" not in result.output
+
+
+def test_cc_setup_alias_is_removed():
+    runner = CliRunner()
+    result = runner.invoke(cli, ["cc", "setup", "--help"])
+
+    assert result.exit_code != 0
+    assert "No such command" in result.output
+
+
+def test_cc_start_missing_binary_points_to_chatup(tmp_path, monkeypatch):
+    runner = CliRunner()
+    config_path = tmp_path / "config.toml"
+    config_path.write_text('[[projects]]\nname = "demo"\n', encoding="utf-8")
+    monkeypatch.setattr(cc_cli, "_check_binary", lambda name: None)
+
+    result = runner.invoke(
+        cli,
+        ["cc", "start", "--config", str(config_path)],
+    )
+
+    assert result.exit_code != 0
+    assert "chatup cc-connect" in result.output
+    assert "chattool[setup]" in result.output
 
 
 def test_cc_init_non_interactive(tmp_path):

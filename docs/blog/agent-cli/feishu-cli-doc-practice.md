@@ -134,7 +134,7 @@ lark-cli docs +search --as bot ...
 如果已经在 ChatTool 里维护飞书配置，最省事的入口不是手工装，而是：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 ```
 
 这条命令的价值不在于“帮你安装个 npm 包”，而在于它把开发过程里最烦的迁移工作做掉了：

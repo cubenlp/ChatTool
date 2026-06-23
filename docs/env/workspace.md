@@ -1,21 +1,21 @@
 # Workspace 协作脚手架（setup workspace）
 
-`chattool setup workspace` 用来初始化一个围绕核心项目的人类-AI 协作工作区。
+`chatup workspace` 用来初始化一个围绕核心项目的人类-AI 协作工作区。
 
 当前模板以 `projects/` 为执行中心，同时显式区分活跃工作、归档历史和 workspace 级脚本。生成结果默认对齐当前 Playground 工作区风格，不再默认生成根 `README.md`、`IDENTITY.md` 或 `MEMORY.md`。
 
 ## 1. 基本用法
 
 ```bash
-chattool setup workspace
-chattool setup workspace ~/workspace/demo
-chattool setup workspace ~/workspace/demo --language en
+chatup workspace
+chatup workspace ~/workspace/demo
+chatup workspace ~/workspace/demo --language en
 ```
 
 命令形态：
 
 ```bash
-chattool setup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-chattool] [--chattool-source PATH_OR_URL] [--with-chatblog] [--chatblog-source PATH_OR_URL] [--with-memory] [--memory-source PATH_OR_URL] [--force] [--dry-run] [-i|-I]
+chatup workspace [PROFILE] [WORKSPACE_DIR] [--language zh|en] [--with-chattool] [--chattool-source PATH_OR_URL] [--with-chatblog] [--chatblog-source PATH_OR_URL] [--with-memory] [--memory-source PATH_OR_URL] [--force] [--dry-run] [-i|-I]
 ```
 
 ## 2. 基础结构

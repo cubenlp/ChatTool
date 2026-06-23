@@ -1,19 +1,19 @@
 # Docker 模板生成与环境检查
 
-## `chattool setup docker`
+## `chatup docker`
 
-`chattool setup docker` 用于检查本机 Docker / Docker Compose / docker 组状态。
+`chatup docker` 用于检查本机 Docker / Docker Compose / docker 组状态。
 
 默认模式下只打印建议命令，不直接执行 `sudo`。
 
 ```bash
-chattool setup docker
+chatup docker
 ```
 
 如果你希望在交互确认后直接执行建议的 `sudo` 命令，需要显式传入 `--sudo`：
 
 ```bash
-chattool setup docker --sudo -i
+chatup docker --sudo -i
 ```
 
 当前命令不会自动修改共享目录权限或所有权；这类权限操作需要用户自行管理。
@@ -105,8 +105,7 @@ docker build -f Dockerfile.playground -t chattool-playground .
 
 镜像启动后会按固定顺序执行：
 
-1. `chattool setup workspace /workspace --with-chattool --chattool-source /playground/ChatTool -I`
+1. `chatup workspace /workspace --with-chattool --chattool-source /playground/ChatTool -I`
 2. `chatenv set CHATTOOL_SKILLS_DIR=/workspace/skills`
-3. `chattool setup alias`
 
-镜像构建阶段会先在 `/opt/venv` 虚拟环境中安装 ChatTool，然后启动 `sshd`。默认工作目录是 `/workspace`。
+镜像构建阶段会先在 `/opt/venv` 虚拟环境中安装 ChatTool 与 ChatUp，然后启动 `sshd`。默认工作目录是 `/workspace`。

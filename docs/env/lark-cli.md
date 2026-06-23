@@ -1,6 +1,6 @@
 # Lark CLI 配置（setup 命令）
 
-`chattool setup lark-cli` 用来安装官方 `lark-cli`，并把 ChatTool 当前保存的 Feishu 配置迁过去。
+`chatup lark-cli` 用来安装官方 `lark-cli`，并把 ChatTool 当前保存的 Feishu 配置迁过去。
 
 ## 先看默认配置位置
 
@@ -35,20 +35,20 @@ $CHATARCH_HOME/envs/Feishu/.env
 直接复用当前保存的 Feishu 配置：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 ```
 
 显式指定某个 Feishu profile：
 
 ```bash
-chattool setup lark-cli -e work
-chattool setup lark-cli -e ~/.chatarch/envs/Feishu/work.env
+chatup lark-cli -e work
+chatup lark-cli -e ~/.chatarch/envs/Feishu/work.env
 ```
 
 也可以完全手工传参：
 
 ```bash
-chattool setup lark-cli \
+chatup lark-cli \
   --app-id cli_xxx \
   --app-secret xxx \
   --brand feishu
@@ -57,7 +57,7 @@ chattool setup lark-cli \
 如需更详细地查看 Node.js 检查、npm 安装与 `lark-cli config init` 阶段，可附加：
 
 ```bash
-chattool setup lark-cli --log-level DEBUG
+chatup lark-cli --log-level DEBUG
 ```
 
 ## 参数优先级

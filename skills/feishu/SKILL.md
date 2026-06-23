@@ -19,7 +19,7 @@ Use this skill when the task involves any of these:
 - creating, fetching, updating, commenting on, or sharing Feishu docs
 - resolving wiki links
 - deciding between `chattool lark` and `lark-cli`
-- migrating Feishu config with `chattool setup lark-cli`
+- migrating Feishu config with `chatup lark-cli`
 
 ## Boundary First
 
@@ -45,7 +45,7 @@ High-value repo references:
 Config and auth starting points:
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 lark-cli auth status
 lark-cli auth login --recommend
 ```
@@ -129,7 +129,7 @@ These are consistent with the current repo docs and are safe defaults:
 
 ## Decision Rules
 
-1. install or migrate config: `chattool setup lark-cli`
+1. install or migrate config: `chatup lark-cli`
 2. send one minimal text message: `chattool lark send`
 3. reply, search, or inspect message/chat/thread state: `lark-cli im`
 4. edit document body: `lark-cli docs`

@@ -9,7 +9,7 @@ ChatTool 提供了一系列辅助工具的安装和配置功能。
 使用 `setup codex` 快速安装并写入配置。
 
 ```bash
-chattool setup codex
+chatup codex
 ```
 
 详细文档：[codex.md](codex.md)
@@ -19,7 +19,7 @@ chattool setup codex
 使用 `setup claude` 快速安装 Claude Code 并写入配置。
 
 ```bash
-chattool setup claude
+chatup claude
 ```
 
 ### OpenCode 配置
@@ -27,8 +27,8 @@ chattool setup claude
 使用 `setup opencode` 快速安装并写入配置。
 
 ```bash
-chattool setup opencode
-chattool setup opencode --install-only
+chatup opencode
+chatup opencode --install-only
 ```
 
 详细文档：[opencode.md](opencode.md)
@@ -38,8 +38,8 @@ chattool setup opencode --install-only
 使用 `setup docker` 检查 Docker / Docker Compose / docker 组状态。
 
 ```bash
-chattool setup docker
-chattool setup docker --sudo -i
+chatup docker
+chatup docker --sudo -i
 ```
 
 详细文档：[docker.md](docker.md)
@@ -49,8 +49,8 @@ chattool setup docker --sudo -i
 使用 `setup workspace` 快速生成围绕核心项目的人类-AI 协作工作区骨架。当前默认采用 `projects/` 为中心的最小 `PRD.md` project 执行模型，需要更复杂层级时再按项目自己的 `PRD.md` 自然演化。
 
 ```bash
-chattool setup workspace
-chattool setup workspace ~/workspace/demo
+chatup workspace
+chatup workspace ~/workspace/demo
 ```
 
 详细文档：[workspace.md](workspace.md)
@@ -60,7 +60,7 @@ chattool setup workspace ~/workspace/demo
 使用 `setup lark-cli` 快速安装官方 `lark-cli`，并复用 ChatTool 现有的 Feishu 配置。
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 ```
 
 详细文档：[lark-cli.md](lark-cli.md)
@@ -71,10 +71,10 @@ chattool setup lark-cli
 
 ```bash
 # 交互式安装
-chattool setup chrome -i
+chatup chrome -i
 
 # 自动安装
-chattool setup chrome
+chatup chrome
 ```
 
 详细文档：[chrome.md](chrome.md)
@@ -84,7 +84,7 @@ chattool setup chrome
 FRP (Fast Reverse Proxy) 客户端/服务端配置工具。
 
 ```bash
-chattool setup frp
+chatup frp
 ```
 
 详细文档：[frp.md](frp.md) (TODO)

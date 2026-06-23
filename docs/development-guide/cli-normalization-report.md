@@ -136,15 +136,15 @@
 
 - `chattool pypi init`
 - `chattool cc` 的部分交互命令
-- `chattool setup workspace`
-- `chattool setup frp`
-- `chattool setup opencode`
-- `chattool setup lark-cli`
-- `chattool setup claude`
-- `chattool setup codex`
-- `chattool setup chrome`
-- `chattool setup docker`
-- `chattool setup cc-connect`
+- `chatup workspace`
+- `chatup frp`
+- `chatup opencode`
+- `chatup lark-cli`
+- `chatup claude`
+- `chatup codex`
+- `chatup chrome`
+- `chatup docker`
+- `chatup cc-connect`
 
 判断建议：
 
@@ -166,9 +166,9 @@
 
 这属于明确例外，目的是优化高频初始化体验。后续如果引入类似快捷入口，应在设计文档里单独说明，不要隐式扩散。
 
-### `setup alias` 的输出
+### shell alias 的边界
 
-`chattool setup alias` 现在在 dry-run / 更新提示中使用了带颜色的 `[info]` 和 `[dry-run]` 风格输出。这属于展示层改进，不影响共享交互 schema 本身。
+本地 shell alias 不再由 ChatTool/ChatUp 维护，避免独立迁出的入口被 alias 覆盖；需要快捷命令时应优先使用对应包提供的 console script。
 
 ## 当前文档对齐情况
 

@@ -36,19 +36,19 @@ CLI按功能分为几个命令组：
 安装或检查 `cc-connect` CLI，并在需要时先补齐 `Node.js >= 20` 与 `npm`：
 
 ```bash
-chattool setup cc-connect
+chatup cc-connect
 ```
 
 如需看更详细的阶段日志，可附加：
 
 ```bash
-chattool setup cc-connect --log-level DEBUG
+chatup cc-connect --log-level DEBUG
 ```
 
 如果你更习惯从 `cc` 分组进入，也可以继续使用别名：
 
 ```bash
-chattool cc setup
+chatup cc-connect
 ```
 
 生成最小可用配置时，如需默认隐藏思考和工具进度中间消息，可直接写入项目级 quiet 配置：
@@ -63,28 +63,28 @@ chattool cc start --max-failures 5
 默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
 
 ```bash
-chattool setup codex
+chatup codex
 ```
 
 如需更详细地查看依赖检测、npm 安装和配置写入阶段，可附加：
 
 ```bash
-chattool setup codex --log-level DEBUG
+chatup codex --log-level DEBUG
 ```
 
-命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chattool setup nodejs` 进行安装或升级。
+命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`。如果当前终端可交互且依赖不满足，会先提示是否执行 `chatup nodejs` 进行安装或升级。
 
 直接传 API key：
 
 ```bash
-chattool setup codex --api-key "sk-xxx"
+chatup codex --api-key "sk-xxx"
 ```
 
 如果你已经在 `chatenv` 里维护了 `oai/openai` 配置，也可以显式复用：
 
 ```bash
-chattool setup codex -e work
-chattool setup codex -e ~/.chatarch/envs/OpenAI/work.env
+chatup codex -e work
+chatup codex -e ~/.chatarch/envs/OpenAI/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：
@@ -104,7 +104,7 @@ chattool setup codex -e ~/.chatarch/envs/OpenAI/work.env
 可选覆盖 `base_url` 和默认模型：
 
 ```bash
-chattool setup codex --api-key "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
+chatup codex --api-key "sk-xxx" --base-url "https://example.com/openai" --model "gpt-5.4"
 ```
 
 ### 0.2 Claude Code (`setup claude`)
@@ -112,13 +112,13 @@ chattool setup codex --api-key "sk-xxx" --base-url "https://example.com/openai" 
 默认交互输入密钥（会读取已有配置并以 mask 形式展示）：
 
 ```bash
-chattool setup claude
+chatup claude
 ```
 
 如需查看更详细的安装和写入日志，可附加：
 
 ```bash
-chattool setup claude --log-level DEBUG
+chatup claude --log-level DEBUG
 ```
 
 命令同样会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续收集 Claude Code 配置。
@@ -126,13 +126,13 @@ chattool setup claude --log-level DEBUG
 直接传参：
 
 ```bash
-chattool setup claude --auth-token "sk-ant-xxx"
+chatup claude --auth-token "sk-ant-xxx"
 ```
 
 可选覆盖 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_SMALL_FAST_MODEL`：
 
 ```bash
-chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-opus-4-6"
+chatup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/anthropic" --small-fast-model "claude-opus-4-6"
 ```
 
 ### 0.3 OpenCode (`setup opencode`)
@@ -140,13 +140,13 @@ chattool setup claude --auth-token "sk-ant-xxx" --base-url "https://example.com/
 默认交互输入配置项（会读取已有配置并以 mask 形式展示）：
 
 ```bash
-chattool setup opencode
+chatup opencode
 ```
 
 如需更详细的依赖检查和配置写入日志，可附加：
 
 ```bash
-chattool setup opencode --log-level DEBUG
+chatup opencode --log-level DEBUG
 ```
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 OpenCode 的配置流程。
@@ -154,15 +154,15 @@ chattool setup opencode --log-level DEBUG
 直接传参：
 
 ```bash
-chattool setup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
+chatup opencode --base-url "https://example.com/openai" --api-key "sk-xxx" --model "gpt-4.1-mini"
 ```
 
 也可以显式复用 `chatenv` 里的 OpenAI 配置：
 
 ```bash
-chattool setup opencode -e work
-chattool setup opencode -e ~/.chatarch/envs/OpenAI/work.env
-chattool setup opencode -e work --plugin auto-loop
+chatup opencode -e work
+chatup opencode -e ~/.chatarch/envs/OpenAI/work.env
+chatup opencode -e work --plugin auto-loop
 ```
 
 解析顺序为：
@@ -177,7 +177,7 @@ chattool setup opencode -e work --plugin auto-loop
 如果你希望顺手把 `opencode-auto-loop` 写入 OpenCode 配置，也可以显式加上：
 
 ```bash
-chattool setup opencode --plugin auto-loop
+chatup opencode --plugin auto-loop
 ```
 
 ### 0.4 Lark CLI (`setup lark-cli`)
@@ -185,13 +185,13 @@ chattool setup opencode --plugin auto-loop
 安装官方 `lark-cli`，并把 ChatTool 当前保存的 Feishu 配置复用过去：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 ```
 
 如需更详细地查看 Node.js 检查、npm 安装和 `lark-cli` 初始化阶段，可附加：
 
 ```bash
-chattool setup lark-cli --log-level DEBUG
+chatup lark-cli --log-level DEBUG
 ```
 
 命令会先检查本机是否已有 `Node.js >= 20` 和 `npm`；不满足时会优先提示安装/升级，再继续进入 `lark-cli` 的配置流程。
@@ -199,8 +199,8 @@ chattool setup lark-cli --log-level DEBUG
 如果你已经在 `chatenv` 里维护了 `feishu/lark` 配置，也可以显式复用：
 
 ```bash
-chattool setup lark-cli -e work
-chattool setup lark-cli -e ~/.chatarch/envs/Feishu/work.env
+chatup lark-cli -e work
+chatup lark-cli -e ~/.chatarch/envs/Feishu/work.env
 ```
 
 这里的 `-e/--env` 支持两种形式：
@@ -230,19 +230,19 @@ lark-cli auth login --recommend
 检查 Docker、Docker Compose 和当前用户的 docker 组状态：
 
 ```bash
-chattool setup docker
+chatup docker
 ```
 
 如需更详细地查看环境检查分支和建议命令判断，可附加：
 
 ```bash
-chattool setup docker --log-level DEBUG
+chatup docker --log-level DEBUG
 ```
 
 默认只打印建议命令，不会直接执行 `sudo`。如需允许命令在确认后直接执行，显式传入：
 
 ```bash
-chattool setup docker --sudo -i
+chatup docker --sudo -i
 ```
 
 ### 0.6 Hermes (`setup hermes`)
@@ -250,10 +250,10 @@ chattool setup docker --sudo -i
 安装或检查 ChatArch Hermes Agent，并在需要时配置基础 OpenAI-compatible 参数。该命令封装 ChatArch Hermes `install.sh`；默认使用本地缓存或随包 installer，不主动访问 GitHub 更新，也不安装 Hermes WebUI。
 
 ```bash
-chattool setup hermes
-chattool setup hermes -e apple --model openai/gpt-5.4-mini
-chattool setup hermes --installer /path/to/install.sh
-chattool setup hermes --with-webui-env --webui-dir ./hermes-webui --start-webui
+chatup hermes
+chatup hermes -e apple --model openai/gpt-5.4-mini
+chatup hermes --installer /path/to/install.sh
+chatup hermes --with-webui-env --webui-dir ./hermes-webui --start-webui
 ```
 
 常用参数：
@@ -275,9 +275,9 @@ chattool setup hermes --with-webui-env --webui-dir ./hermes-webui --start-webui
 参考 QuickSetup-Ubuntu 的 zsh 初始化方式，配置 `zsh`、oh-my-zsh、常用插件、powerlevel10k 主题以及 `~/.zsh_aliases`：
 
 ```bash
-chattool setup zsh
-chattool setup zsh --no-omz
-chattool setup zsh -i
+chatup zsh
+chatup zsh --no-omz
+chatup zsh -i
 ```
 
 默认行为：
@@ -307,9 +307,9 @@ source ~/.zshrc
 如果你已经有自己的核心项目，只想在项目外围加一层“人类-AI 协作协议 + 多任务并发面 + 知识沉淀”工作区，可以用：
 
 ```bash
-chattool setup workspace
-chattool setup workspace ~/workspace/demo
-chattool setup workspace ~/workspace/demo --language en
+chatup workspace
+chatup workspace ~/workspace/demo
+chatup workspace ~/workspace/demo --language en
 ```
 
 它会生成一套独立骨架，包括：
@@ -333,7 +333,7 @@ chattool setup workspace ~/workspace/demo --language en
 如果只想先看计划不落盘：
 
 ```bash
-chattool setup workspace ~/workspace/demo --dry-run -I
+chatup workspace ~/workspace/demo --dry-run -I
 ```
 
 交互模式下还可以额外勾选模块，例如：
@@ -345,7 +345,7 @@ chattool setup workspace ~/workspace/demo --dry-run -I
 也可以在非交互模式中显式启用：
 
 ```bash
-chattool setup workspace ~/workspace/demo --with-chatblog --with-memory -I
+chatup workspace ~/workspace/demo --with-chatblog --with-memory -I
 ```
 
 ChatMemory 不会默认 link 全部 `Skills/`，也不会默认 link 机器/账号特定分组。`skills/local` 是当前 workspace / 当前机器本地使用的非共享目录，不从 ChatMemory link。

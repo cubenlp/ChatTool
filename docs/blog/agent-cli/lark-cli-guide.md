@@ -19,7 +19,7 @@
 如果你已经在用 ChatTool，最直接的方式不是手工抄配置，而是直接：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 ```
 
 这条命令现在会做几件事：
@@ -691,7 +691,7 @@ Error: --as bot is not supported, this command only supports: user
 至少对于文档这块，已经可以很明确地分成两类：
 
 - ChatTool 负责：
-  - `chattool setup lark-cli`
+  - `chatup lark-cli`
   - 配置复用
   - 最短调试链路
 - 官方 `lark-cli` 负责：
@@ -710,7 +710,7 @@ Error: --as bot is not supported, this command only supports: user
 如果你现在就想把飞书文档能力真正用起来，建议按这个 quickstart 顺序：
 
 ```bash
-chattool setup lark-cli
+chatup lark-cli
 lark-cli auth status
 ```
 

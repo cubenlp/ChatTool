@@ -6,7 +6,7 @@
 
 - 飞书 / Lark 自动化默认优先使用官方 `lark-cli`
 - ChatTool 内的 `skills/feishu/` 只保留紧凑入口文档 `SKILL.md` / `SKILL.zh.md`，把使用者路由到上游 CLI 和仓库内教程
-- `chattool setup lark-cli` 负责安装官方 CLI，并复用 ChatTool 现有的 Feishu 配置
+- `chatup lark-cli` 负责安装官方 CLI，并复用 ChatTool 现有的 Feishu 配置
 
 ## `chattool lark` 的当前边界
 
@@ -45,7 +45,7 @@
 如果后续还要处理飞书需求，优先顺序应固定为：
 
 1. 判断官方 `lark-cli` 是否已经覆盖
-2. 如果只是安装 / 配置迁移问题，优先扩 `chattool setup lark-cli`
+2. 如果只是安装 / 配置迁移问题，优先扩 `chatup lark-cli`
 3. 如果只是最短调试需求，再考虑是否值得进入 `chattool lark`
 
 默认不再往 `chattool lark` 里追加新的飞书域命令。

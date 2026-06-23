@@ -101,7 +101,6 @@ cli._lazy_commands.update(
         "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
         "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
         "skill": lambda: _load_attr("chattool.skill.cli", "skill_cli"),
-        "setup": lambda: _load_attr("chattool.setup.cli", "setup_group"),
         "cc": lambda: _load_attr("chattool.tools.cc.cli", "cli"),
         "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
         "explore": lambda: _load_attr("chattool.explore.cli", "explore_cli"),
