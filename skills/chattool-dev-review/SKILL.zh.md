@@ -39,9 +39,9 @@ version: 0.3.0
    - 示例应使用 `chatenv init -t <alias>` 和 `chatenv cat -t <alias>`，不要写嵌套在 ChatTool 下的 env 命令。
 
 5. PyPI scaffold 正确性
-   - `chattool pypi` 示例必须匹配当前命令面：`init/build/check/probe/upload`。
+   - `chatpypi` 示例必须匹配独立 ChatPyPI 命令面：`init/build/check/probe/upload`。
    - `chatarch` scaffold 示例应包含 `chatstyle` / `chatenv` 依赖和当前 mkdocs/workflow 选项。
-   - 可以说明 `chatpypi <name>` 是 `chattool pypi init <name>` 的便捷 wrapper。
+   - 可以说明 `chatpypi <name>` 是 `chatpypi init <name>` 的便捷 wrapper。
 
 6. 文档、测试和变更记录
    - 行为变更同步更新相关 `docs/`。

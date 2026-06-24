@@ -24,7 +24,7 @@ This is a post-task normalization workflow, not a pre-task exploration guide.
 
 3. Check existing CLI surfaces before adding scripts
    - Look at `references/cli-reference.md` first.
-   - Prefer existing `chattool pypi`, `chatpypi`, `chattool skill`, `chatenv`, `chatgh`, and `chattool dns` commands over ad hoc scripts.
+   - Prefer existing `chatpypi`, `chattool skill`, `chatenv`, `chatgh`, and `chattool dns` commands over ad hoc scripts.
    - Add a script only when the action is repeatable, fragile, and not already covered by a CLI.
 
 4. Normalize ChatArch boundaries

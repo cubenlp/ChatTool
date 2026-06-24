@@ -24,7 +24,7 @@ version: 0.5.0
 
 3. 新增脚本前先查已有 CLI
    - 先看 `references/cli-reference.md`。
-   - 优先复用已有 `chattool pypi`、`chatpypi`、`chattool skill`、`chatenv`、`chatgh` 和 `chattool dns` 命令。
+   - 优先复用已有 `chatpypi`、`chattool skill`、`chatenv`、`chatgh` 和 `chattool dns` 命令。
    - 只有当动作可复用、容易出错且现有 CLI 没覆盖时，才考虑新增脚本。
 
 4. 规范 ChatArch 边界

@@ -1,6 +1,6 @@
 ---
 name: python-package-starter
-description: 使用 `chattool pypi init` 或 `chatpypi` 创建 Python 包，包括 ChatArch 模板，并用 pytest/build/check/probe 验证。
+description: 使用 `chatpypi init` 或 `chatpypi` 创建 Python 包，包括 ChatArch 模板，并用 pytest/build/check/probe 验证。
 version: 0.2.0
 ---
 
@@ -12,17 +12,17 @@ version: 0.2.0
 
 ## 当前命令面
 
-`chattool pypi` 当前提供：
+`chatpypi` 当前提供：
 
 ```bash
-chattool pypi init
-chattool pypi build
-chattool pypi check
-chattool pypi probe
-chattool pypi upload
+chatpypi init
+chatpypi build
+chatpypi check
+chatpypi probe
+chatpypi upload
 ```
 
-`chatpypi` 是便捷入口。如果第一个参数不是已知 pypi 子命令，会转发到 `chattool pypi init`：
+`chatpypi` 是便捷入口。如果第一个参数不是已知 pypi 子命令，会转发到 `chatpypi init`：
 
 ```bash
 chatpypi mychat --description "My chat package"
@@ -31,11 +31,11 @@ chatpypi mychat --description "My chat package"
 ## 默认包最短路径
 
 ```bash
-chattool pypi init mychat --description "My chat package"
+chatpypi init mychat --description "My chat package"
 cd mychat
 python -m pytest -q
-chattool pypi build --project-dir .
-chattool pypi check --project-dir .
+chatpypi build --project-dir .
+chatpypi check --project-dir .
 ```
 
 等价 wrapper 写法：
@@ -51,7 +51,7 @@ chatpypi mychat --description "My chat package"
 独立 ChatArch CLI 包使用 `chatarch` 模板：
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo
 ```
 
 等价 wrapper 写法：
@@ -65,7 +65,7 @@ chatpypi chatfoo -t chatarch --project-dir ./chatfoo
 如需跳过可选文件：
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## 默认生成结构
@@ -90,9 +90,9 @@ mychat/
 
 ```bash
 python -m pytest -q
-chattool pypi build --project-dir .
-chattool pypi check --project-dir .
-chattool pypi probe mychat
+chatpypi build --project-dir .
+chatpypi check --project-dir .
+chatpypi probe mychat
 ```
 
 只有需要检查 PyPI 包名可用性时才运行 `probe`。

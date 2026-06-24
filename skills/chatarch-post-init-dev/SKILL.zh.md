@@ -1,12 +1,12 @@
 ---
 name: chatarch-post-init-dev
-description: 在 `chatpypi` 或 `chattool pypi init -t chatarch` 创建项目后继续开发，保持 chatenv schema、chatstyle 交互式 CLI、文档、测试和 changelog 对齐。
+description: 在独立 `chatpypi init -t chatarch` 创建项目后继续开发，保持 chatenv schema、chatstyle 交互式 CLI、文档、测试和 changelog 对齐。
 version: 0.1.0
 ---
 
 # ChatArch 初始化后开发规范
 
-当 ChatArch / chatxxx 项目已经通过 `chatpypi <name> -t chatarch` 或 `chattool pypi init <name> -t chatarch` 生成后，使用这个 skill 指导后续开发。
+当 ChatArch / chatxxx 项目已经通过 `chatpypi <name> -t chatarch` 或 `chatpypi init <name> -t chatarch` 生成后，使用这个 skill 指导后续开发。
 
 目标：把 scaffold 继续扩展成可维护的 ChatArch 包，同时不偏离共享的 `chatstyle` 和 `chatenv` 约定。
 

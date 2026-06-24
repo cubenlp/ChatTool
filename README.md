@@ -32,8 +32,9 @@ pip install chattool --upgrade
 pip install "chattool[tools]"        # 常用工具全集
 pip install "chattool[mcp,dns]"      # MCP 服务 + DNS 工具
 pip install "chattool[images]"       # 含图像工具
-pip install "chattool[pypi]"         # 含 Python 包构建/发布依赖
+pip install "chattool[pypi]"         # 安装独立 ChatPyPI，用 chatpypi 管理 Python 包创建/构建/发布
 pip install "chattool[setup]"        # 安装独立 ChatUp，用 chatup workspace/hermes/cc-connect 等命令做环境初始化
+pip install "chattool[arch]"         # 一次性安装 ChatGH / ChatUp / ChatPyPI 这三个平行 ChatArch 工具
 pip install "chattool[dev]"          # 仓库开发依赖
 ```
 
@@ -176,7 +177,7 @@ chattool serve local . --html index.html --dry-run
 |------|------|------|
 | 网络扫描 | `chattool network` | 扫描局域网主机和端口 |
 | Nginx 配置 | `chattool nginx` | 按模板生成常见的反向代理、路径转发和静态目录配置 |
-| PyPI 工具 | `chattool pypi` | 创建、构建、校验、上传与探测 Python 包 |
+| PyPI 工具 | `chatpypi`（来自 `chattool[pypi]` / `chattool[arch]` / `ChatPyPI`） | 创建、构建、校验、上传与探测 Python 包；ChatTool 不再内置 `chattool pypi` |
 | MCP 服务 | `chattool mcp start` | 标准 MCP Server，供 Claude/Cursor 调用 |
 | 环境安装 | `chatup zsh/codex/claude/opencode/hermes/lark-cli/docker` | ChatTool 的 setup 能力已迁移到独立 ChatUp；安装 `chattool[setup]` 或 `chatup` 后使用 `chatup ...` 一级命令配置常用 Agent CLI / WebUI / Docker 环境 |
 | Workspace | `chatup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-chattool`、`--with-chatblog`、`--with-memory` 分别挂载 ChatTool、ChatBlog、ChatMemory |
@@ -188,7 +189,7 @@ chattool serve local . --html index.html --dry-run
 
 完整文档见 [chattool.wzhecnu.cn](https://chattool.wzhecnu.cn)
 仓库结构设计草案见 `docs/design/python-library-repo-structure.md`
-PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
+PyPI 包管理能力已迁移到独立 `ChatPyPI` / `chatpypi` 包。
 
 ## 测试约定
 
@@ -196,26 +197,25 @@ PyPI 发布命令设计草案见 `docs/design/chattool-pypi-cli-design.md`
 - `tests/mock-cli-tests/`：所有基于 `mock`、`patch`、`monkeypatch`、fake client / API 的 CLI 测试，统一集中到这里。
 - `tests/code-tests/`：非 CLI 的代码测试与历史测试迁移落点。
 
-快速建包可直接运行：
+快速建包请安装并使用独立 `chatpypi`：
 
 ```bash
-chattool pypi init mychat
-chattool pypi init mycli -t chatarch
-chattool pypi init -i                  # 交互式选择模板、mkdocs/workflow 等选项
-chatpypi mychat
+pip install "chattool[pypi]"
+chatpypi init mychat
+chatpypi init mycli -t chatarch
+chatpypi init -i                  # 交互式选择模板、mkdocs/workflow 等选项
+chatpypi probe mychat
 ```
 
-`chatpypi` 现在是更直接的快捷入口：传入普通首参数时，会自动按 `chattool pypi init <name>` 处理；如果首参数本身就是 `init/build/check/upload/probe` 之一，则保持原样透传给 `chattool pypi`。
+也可以通过 `pip install "chattool[arch]"` 一次性安装 ChatGH、ChatUp、ChatPyPI。
 
-默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1`，默认写入 `requires-python = ">=3.10"`。
+`ChatPyPI` / `chatpypi` 是 Python 包创建、构建、校验、上传与探测能力的 canonical owner；ChatTool 不再内置 `chattool pypi` 或 `chatpypi` wrapper。
 
-`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架，并默认依赖 `chatstyle>=0.1.0` 与 `chatenv>=0.1.1` 作为 ChatArch CLI/env 运行时；其中发布 workflow 由显式 `v*` tag 或 `workflow_dispatch` 触发，校验 tag 与包内 `__version__` 一致，并通过 PyPI Trusted Publishing 的 `environment: pypi` 发布尚未存在的版本，不依赖仓库级 PyPI token secret。
+默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板默认写入 `requires-python = ">=3.10"`，并依赖 `chatstyle>=0.1.0,<0.2.0` 与 `chatenv>=0.2.0,<0.3.0`。
+
+`chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架；发布 workflow 由显式 `v*` tag 或 `workflow_dispatch` 触发，校验 tag 与包内 `__version__` 一致，并通过 PyPI Trusted Publishing 发布。默认不写 `environment: pypi`，除非 PyPI Trusted Publisher 明确配置了同名 environment。
 
 如只想生成代码与测试骨架，可以用 `--without-mkdocs` 跳过 mkdocs/docs，用 `--without-workflows` 跳过 `.github/workflows/`。
-
-`chattool pypi` 现在只保留最小命令集：`init/build/check/upload/probe`。其中 `upload` 只是对原始 `twine upload` 的薄封装，不再接管凭证、仓库和交互逻辑。
-
-其中 `chattool pypi probe <name>` 现在默认面向正式 `pypi`，按精确项目名检查名称是否已被占用；若命中现有项目，会顺手输出少量项目摘要信息和最新 release 日期，便于快速判断是否需要换名。
 
 ## 开源协议
 

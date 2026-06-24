@@ -206,16 +206,17 @@ python scripts/migrate_chattool_envs_to_chatarch.py
 ## PyPI Package Scaffolding
 
 ```bash
-chattool pypi init mychat
-chattool pypi init mycli -t chatarch
-chattool pypi init -i                  # Interactive template, mkdocs, and workflow options
-chattool pypi probe mychat
+pip install "chattool[pypi]"
+chatpypi init mychat
+chatpypi init mycli -t chatarch
+chatpypi init -i                  # Interactive template, mkdocs, and workflow options
+chatpypi probe mychat
 chatpypi mychat
 ```
 
-The default template writes `requires-python = ">=3.9"`. The `chatarch` template writes `requires-python = ">=3.10"`, depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`, and adds `README.en.md`, `mkdocs.yml`, docs, tests, and GitHub workflows. Its publish workflow is triggered by explicit `v*` tags or `workflow_dispatch`, checks that the tag matches package `__version__`, and publishes missing versions through PyPI Trusted Publishing with `environment: pypi` instead of repository-level PyPI token secrets. Use `--without-mkdocs` or `--without-workflows` to skip those optional files.
+ChatTool no longer embeds `chattool pypi`; install `chattool[pypi]` or `ChatPyPI` and use the standalone `chatpypi` CLI. The `chattool[arch]` extra installs the three parallel ChatArch tools: ChatGH, ChatUp, and ChatPyPI. Use `--without-mkdocs` or `--without-workflows` to skip optional scaffold files.
 
-`chattool pypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata, including the latest release date, when the name already exists.
+`chatpypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata, including the latest release date, when the name already exists.
 
 ## License
 

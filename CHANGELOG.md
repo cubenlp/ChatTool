@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-25
+- ChatTool 移除内置 `chattool pypi` / `chatpypi` wrapper 与 `src/chattool/tools/pypi` 实现；Python 包创建、构建、校验、上传与探测能力改由独立 `ChatPyPI` / `chatpypi` 负责。
+- `chattool[pypi]` 现在安装 `ChatPyPI>=0.1.4,<0.2.0`；新增 `chattool[arch]` 聚合三个已发版且与 ChatTool 平行解耦的 ChatArch 工具：`ChatGH>=0.2.6,<0.3.0`、`ChatUp>=0.2.0,<0.3.0`、`ChatPyPI>=0.1.4,<0.2.0`。
+- `chatgh` 从 ChatTool base dependencies 移入 `chattool[arch]`，避免默认安装路径继续绑定已平行拆出的工具。
+
 All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。

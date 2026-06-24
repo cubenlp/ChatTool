@@ -23,7 +23,6 @@ keywords = ["chattool"]
 license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
-    "chatgh>=0.2.6,<0.3.0",
     "chatstyle>=0.1.0,<0.2.0",
     "chatenv>=0.2.0,<0.3.0",
     "requests>=2.20",
@@ -34,6 +33,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+arch = [
+    "ChatGH>=0.2.6,<0.3.0",
+    "ChatUp>=0.2.0,<0.3.0",
+    "ChatPyPI>=0.1.4,<0.2.0",
+]
 interactive = [
     "questionary>=2.1.0",
     "prompt_toolkit",
@@ -82,8 +86,7 @@ client = [
     "rich",
 ]
 pypi = [
-    "build",
-    "twine",
+    "ChatPyPI>=0.1.4,<0.2.0",
 ]
 setup = [
     "chatup>=0.2.0,<0.3.0",
@@ -111,7 +114,7 @@ dev = [
     "wheel",
     "build",
     "twine",
-    "chattool[docs,setup,tests,tools]",
+    "chattool[arch,docs,setup,tests,tools]",
 ]
 [project.urls]
 Homepage = "https://github.com/cubenlp/chattool"
@@ -119,7 +122,6 @@ Repository = "https://github.com/cubenlp/chattool"
 
 [project.scripts]
 chattool = "chattool.client:main_cli"
-chatpypi = "chattool.client:main_pypi_cli"
 chatskill = "chattool.client:main_skill_cli"
 chatmcp = "chattool.mcp:main"
 
