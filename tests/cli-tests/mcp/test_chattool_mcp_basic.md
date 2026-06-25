@@ -20,6 +20,7 @@
 
 预期过程和结果：
   1. 执行 `chattool mcp info --json-output`，预期输出包含 tools 列表。
+  2. DNS MCP 不在本次 ChatDNS parent 分离范围内；info 不应广告 DNS MCP tools。
 
 参考执行脚本（伪代码）：
 

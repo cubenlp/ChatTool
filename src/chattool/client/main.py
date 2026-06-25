@@ -52,13 +52,6 @@ def _load_attr(module_path: str, attr: str) -> click.Command:
     return getattr(module, attr)
 
 
-def _load_dns_group() -> click.Command:
-    dns_group = _load_attr("chattool.tools.dns.cli", "cli")
-    cert_group = _load_attr("chattool.tools.cert.cli", "cert_cli")
-    dns_group.add_command(cert_group, name="cert")
-    return dns_group
-
-
 def _build_serve_group() -> click.Command:
     return _load_attr("chattool.serve.cli", "serve_cli")
 
@@ -88,7 +81,6 @@ def cli():
 
 cli._lazy_commands.update(
     {
-        "dns": _load_dns_group,
         "pypi": lambda: _load_attr("chattool.tools.pypi.cli", "cli"),
         "serve": _build_serve_group,
         "client": _build_client_group,

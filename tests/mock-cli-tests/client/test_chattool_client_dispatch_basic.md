@@ -1,6 +1,6 @@
 # test_chattool_client_dispatch_basic
 
-测试统一入口 `chattool` 的 mock 分发链路，覆盖根帮助、`dns` 组装和 `client` 嵌套懒加载。
+测试统一入口 `chattool` 的 mock 分发链路，覆盖根帮助、已迁移命令缺席和 `client` 嵌套懒加载。
 
 ## 元信息
 
@@ -19,7 +19,7 @@
   - 无
 
 预期过程和结果：
-  1. 执行 `chattool --help`，预期输出包含 `dns`、`client`、`skill` 等子命令。
+  1. 执行 `chattool --help`，预期输出包含 `client`、`skill` 等子命令，且不包含已迁移到 `ChatDNS` 的 `dns`。
   2. 帮助输出阶段不应触发 `_load_attr`。
 
 参考执行脚本（伪代码）：
@@ -28,17 +28,16 @@
 chattool --help
 ```
 
-## 用例 2：dns 组会挂上 cert 子命令组
+## 用例 2：dns 已迁移，旧 nested 命令不再懒加载
 
 - 初始环境准备：
-  - patch `_load_attr`，为 `chattool.tools.dns.cli:cli` 返回一个空 group。
-  - patch `_load_attr`，为 `chattool.tools.cert.cli:cert_cli` 返回一个最小 group。
+  - patch `chattool.client.main._load_attr`，确认不会尝试加载 `chattool.tools.dns.cli:cli`。
 - 相关文件：
   - 无
 
 预期过程和结果：
-  1. 执行 `chattool dns --help`，预期输出包含 `cert`，不包含旧的 `cert-update`。
-  2. `_load_attr` 应按 `dns cli -> cert cli` 的顺序被调用。
+  1. 执行 `chattool dns --help`，预期返回 `No such command 'dns'`。
+  2. `_load_attr` 不应被调用；DNS 实现由独立 `chatdns` CLI 和 package 负责。
 
 参考执行脚本（伪代码）：
 

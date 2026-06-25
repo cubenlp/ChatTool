@@ -37,9 +37,6 @@ BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 _LAZY_ATTRS = {
     "LarkBot": ("chattool.tools.lark", "LarkBot"),
-    "AliyunDNSClient": ("chattool.tools.dns", "AliyunDNSClient"),
-    "TencentDNSClient": ("chattool.tools.dns", "TencentDNSClient"),
-    "DynamicIPUpdater": ("chattool.tools.dns", "DynamicIPUpdater"),
     "SSLCertUpdater": ("chattool.tools.cert", "SSLCertUpdater"),
 }
 
@@ -70,8 +67,5 @@ __all__ = [
     "TencentConfig",
     "ZulipConfig",
     "LarkBot",
-    "AliyunDNSClient",
-    "TencentDNSClient",
-    "DynamicIPUpdater",
     "SSLCertUpdater",
 ]

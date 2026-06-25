@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-06-25
+- DNS record management, DDNS, IP detection, and provider clients have been extracted to standalone `ChatDNS`; ChatTool's `dns` optional extra now depends on `ChatDNS>=0.1.0,<0.2.0` and the nested `chattool dns` command plus parent-owned DNS implementation/tests/skill have been removed.
+- DNS MCP and certificate automation are not part of this parent update; `dns_cert_apply` and DNS MCP routes remain out of scope pending a separate MCP/certificate boundary review.
+
 ## 2026-06-24
 - 准备 `7.1.0` minor 版本：适配 ChatEnv `0.3.x` shared OpenAI/Feishu schema，并按 ChatArch 内部依赖规范为 `chatgh`、`chatstyle`、`chatenv` 增加上界窗口。
 - `chattool.config.OpenAIConfig` / `FeishuConfig` 改为继承 ChatEnv shared configs，字段事实源上移到 ChatEnv；ChatTool 保留兼容 import 和自身连接测试逻辑。

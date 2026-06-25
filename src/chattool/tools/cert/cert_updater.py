@@ -13,7 +13,7 @@ from typing import List, Dict, Optional, Union
 from pathlib import Path
 
 from chattool.utils import setup_logger
-from chattool.tools.dns.utils import create_dns_client, DNSClientType
+from chatdns import create_dns_client, DNSClientType
 
 from .acme_dns_tiny import get_crt
 

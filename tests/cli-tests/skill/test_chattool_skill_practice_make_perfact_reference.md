@@ -25,7 +25,7 @@
 
 预期过程和结果：
   1. 检查中英文 skill 都提到 CLI reference / 现有 CLI 检查。
-  2. 检查 `references/cli-reference.md` 存在，并覆盖 `chattool pypi`、`chatgh`、`chattool dns` 等主线入口。
+  2. 检查 `references/cli-reference.md` 存在，并覆盖 `chattool pypi`、`chatgh`、`chatdns` 等主线入口；不再把 `chattool dns` 当作当前入口。
 
 参考执行脚本（伪代码）：
 

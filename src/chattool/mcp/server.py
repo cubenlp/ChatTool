@@ -12,7 +12,6 @@ logger = setup_logger("mcp_server", log_level="INFO")
 SERVER_NAME = "ChatTool MCP Server"
 REGISTER_MODULES = (
     "chattool.tools.zulip.mcp",
-    "chattool.tools.dns.mcp",
     "chattool.tools.network.mcp",
 )
 

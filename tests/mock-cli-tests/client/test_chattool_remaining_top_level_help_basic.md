@@ -5,17 +5,17 @@
 ## 元信息
 
 - 命令：`chattool <command> --help`
-- 目的：覆盖 `dns`、`lark`、`tplogin`、`cc` 等剩余一级入口的 help 一致性。
+- 目的：覆盖 `lark`、`tplogin`、`cc` 等剩余一级入口的 help 一致性，并确认已迁移能力不再出现在顶层入口。
 - 标签：`cli`、`mock`
 - 前置条件：无外部服务依赖。
 - 环境准备：使用 `CliRunner` 调用统一入口 `chattool`。
 - 回滚：无。
 
-## 用例 1：`dns --help`
+## 用例 1：`dns` 已迁移
 
 预期过程和结果：
 1. 执行 `chattool dns --help`。
-2. 顶层描述应为英文，并覆盖动态 DNS 与记录管理语义。
+2. 应返回 `No such command 'dns'`，DNS 记录管理与 DDNS 已迁移到独立 `chatdns` CLI。
 
 ## 用例 2：`lark --help`
 

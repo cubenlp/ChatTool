@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""SSL certificate CLI for ``chattool dns cert``."""
+"""SSL certificate CLI group for certificate boundary experiments."""
 
 from __future__ import annotations
 
@@ -127,7 +127,7 @@ def apply(
         provided={"domains": tuple(domains), "email": email},
         interactive=interactive,
         usage=(
-            "Usage: chattool dns cert apply -d DOMAIN... "
+            "Usage: cert apply -d DOMAIN... "
             "[-e EMAIL] [--provider aliyun|tencent] [-i|-I]"
         ),
     )
@@ -201,7 +201,7 @@ def check(domains, cert_dir, log_file, log_level, interactive):
         schema=CERT_CHECK_SCHEMA,
         provided={"domains": tuple(domains)},
         interactive=interactive,
-        usage="Usage: chattool dns cert check -d DOMAIN... [--cert-dir PATH] [-i|-I]",
+        usage="Usage: cert check -d DOMAIN... [--cert-dir PATH] [-i|-I]",
     )
     domains = inputs["domains"]
     if isinstance(domains, str):
