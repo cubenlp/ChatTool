@@ -21,6 +21,7 @@
 预期过程和结果：
   1. 执行 `chattool mcp info --json-output`，预期输出包含 tools 列表。
   2. DNS MCP 不在本次 ChatDNS parent 分离范围内；info 不应广告 DNS MCP tools。
+  3. Network MCP 不在本次 ChatNet parent 分离范围内；info 不应广告 `network_ping_scan` / `network_port_scan`。
 
 参考执行脚本（伪代码）：
 

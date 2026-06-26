@@ -5,8 +5,10 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-06-25
+- `chattool network` 与 `src/chattool/tools/network` 已移除；网络扫描、链接检查、service URL 和相关 MCP 能力由独立 `ChatNet>=0.2.0,<0.3.0` / `chatnet` 负责。ChatTool 不保留 parent 兼容 wrapper；需要 ChatArch 全家桶时通过 `chattool[arch]` 安装 ChatNet。
+- `chattool[arch]` / `chattool[pypi]` 的 ChatPyPI 下界更新到 `ChatPyPI>=0.2.3,<0.3.0`，以包含直接可用的 Publisher `detail/add-github/pending-*` 接口。
 - ChatTool 移除内置 `chattool pypi` / `chatpypi` wrapper 与 `src/chattool/tools/pypi` 实现；Python 包创建、构建、校验、上传与探测能力改由独立 `ChatPyPI` / `chatpypi` 负责。
-- `chattool[pypi]` 现在安装 `ChatPyPI>=0.2.2,<0.3.0`；新增 `chattool[arch]` 聚合三个已发版且与 ChatTool 平行解耦的 ChatArch 工具：`ChatGH>=0.2.6,<0.3.0`、`ChatUp>=0.2.0,<0.3.0`、`ChatPyPI>=0.2.2,<0.3.0`。
+- `chattool[pypi]` 现在安装 `ChatPyPI>=0.2.3,<0.3.0`；`chattool[arch]` 聚合四个已发版且与 ChatTool 平行解耦的 ChatArch 工具：`ChatGH>=0.2.6,<0.3.0`、`ChatUp>=0.2.0,<0.3.0`、`ChatPyPI>=0.2.3,<0.3.0`、`ChatNet>=0.2.0,<0.3.0`。
 - `chatgh` 从 ChatTool base dependencies 移入 `chattool[arch]`，避免默认安装路径继续绑定已平行拆出的工具。
 - DNS record management, DDNS, IP detection, provider clients, and DNS-01 certificate automation have been extracted to standalone `ChatDNS`; ChatTool's `dns` optional extra now depends on `ChatDNS>=0.1.1,<0.2.0`, the `serve` extra includes ChatDNS for `chattool serve cert`, and the nested `chattool dns` command plus parent-owned DNS/cert implementation/tests/skill have been removed.
 - DNS MCP remains out of scope for this parent update; `dns_cert_apply` is removed from ChatTool MCP until a separate ChatDNS/ChatTool MCP boundary is reviewed. Local certificate automation is now available through `chatdns cert`.

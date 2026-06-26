@@ -36,7 +36,8 @@ dependencies = [
 arch = [
     "ChatGH>=0.2.6,<0.3.0",
     "ChatUp>=0.2.0,<0.3.0",
-    "ChatPyPI>=0.2.2,<0.3.0",
+    "ChatPyPI>=0.2.3,<0.3.0",
+    "ChatNet>=0.2.0,<0.3.0",
 ]
 interactive = [
     "questionary>=2.1.0",
@@ -81,7 +82,7 @@ client = [
     "rich",
 ]
 pypi = [
-    "ChatPyPI>=0.2.2,<0.3.0",
+    "ChatPyPI>=0.2.3,<0.3.0",
 ]
 setup = [
     "chatup>=0.2.0,<0.3.0",
