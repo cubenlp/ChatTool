@@ -16,7 +16,7 @@ class TencentConfig(BaseEnvConfig):
     def test(cls):
         print(f"Testing {cls._title}...")
         try:
-            from chattool.tools.dns.tencent import TencentDNSClient
+            from chatdns import TencentDNSClient
             client = TencentDNSClient()
             domains = client.describe_domains(page_size=1)
             print(f"✅ Success! API call successful. Found {len(domains)} domains (in first page).")

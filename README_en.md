@@ -124,22 +124,21 @@ def handle(ctx):
 bot.start()
 ```
 
-### 4. DNS Management (`chattool dns`)
+### 4. DNS Management (moved to ChatDNS)
 
-Unified DNS interface for Alibaba Cloud and Tencent Cloud, with DDNS and automatic SSL certificate renewal.
+DNS record management, DDNS, IP detection, and DNS-01 certificate automation now live in the standalone `ChatDNS` package. Use the first-level `chatdns` CLI:
 
 ```bash
-# Query / set DNS records
-chattool dns get test.example.com
-chattool dns set test.example.com -v 1.2.3.4
-
-# DDNS (public / LAN IP)
-chattool dns ddns -d example.com -r home --monitor
-chattool dns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
-
-# SSL certificate auto-renewal
-chattool dns cert-update -d example.com -e admin@example.com --cert-dir ./certs
+chatdns --help
+chatdns records test.example.com
+chatdns set test.example.com -v 1.2.3.4
+chatdns ddns -d example.com -r home --monitor
+chatdns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
+chatdns cert apply -d example.com -e admin@example.com --provider aliyun --staging
+chatdns cert check -d example.com
 ```
+
+Install through ChatTool's optional dependency with `pip install "chattool[dns]"`. The nested `chattool dns` command has been removed so ChatTool no longer carries duplicate DNS/certificate business logic.
 
 ### 5. AI Image Generation (`chattool image`)
 

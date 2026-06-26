@@ -165,7 +165,7 @@ def demo(name, output, interactive):
 
 这一轮已经迁移的代表命令包括：
 
-- `chattool dns`
+- `chatdns`（迁移前代表命令为 `chattool dns`；当前 ChatTool parent 不再暴露 nested DNS）
 - `chattool client cert`
 - `chattool client svg2gif`
 - `chatgh`

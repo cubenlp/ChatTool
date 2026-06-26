@@ -4,11 +4,12 @@ ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprot
 
 ## 功能模块
 
-ChatTool MCP Server 包含以下核心模块：
+ChatTool MCP Server 当前保留以下 legacy 模块：
 
-- [DNS 管理](../tools/dns/index.md): 域名解析、DDNS 和 SSL 证书管理
 - [Zulip 集成](./zulip.md): 消息收发、频道管理
 - [Network Scanner](../tools/network/index.md)
+
+DNS 管理已迁移到独立 `ChatDNS` / `chatdns` CLI；ChatTool parent 暂不在本次 DNS 分离中维护 DNS MCP 接入，后续如需 MCP 支持再单独 review。
 
 ## 安装与使用
 
@@ -35,11 +36,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```json
 {
   "mcpServers": {
-    "chattool-dns": {
+    "chattool": {
       "command": "uvx",
       "args": [
         "--from",
-        "chattool[mcp,dns]",
+        "chattool[mcp]",
         "mcp-server-chattool"
       ]
     }
@@ -52,7 +53,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```json
 {
   "mcpServers": {
-    "chattool-dns": {
+    "chattool": {
       "command": "uv",
       "args": [
         "run",
@@ -60,8 +61,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
         "/absolute/path/to/ChatTool",
         "--extra",
         "mcp",
-        "--extra",
-        "dns",
         "mcp-server-chattool"
       ]
     }
@@ -97,7 +96,7 @@ chattool mcp info --json-output
 
 ## 配置说明
 
-MCP 服务会自动读取 ChatTool 的全局配置。请确保你已经通过 `chatenv init` 或 `.env` 文件配置了相应的云厂商凭证（阿里云或腾讯云）。
+MCP 服务会自动读取 ChatTool 的全局配置。当前 DNS MCP 不在本次分离范围内；DNS 记录管理请使用独立 `chatdns` CLI。
 
 ```bash
 # 检查当前配置
@@ -114,29 +113,29 @@ chatenv cat
 
 ![20260202012331](https://qiniu.wzhecnu.cn/FileBed/source/20260202012331.png)
 
-3. 通过该智能体进行聊天，此时智能体会根据帮你处理域名解析问题
+3. 通过该智能体进行聊天，此时智能体可使用当前 legacy MCP 中仍保留的 Zulip / Network 工具。DNS 相关 MCP 能力本轮不维护。
 
 ![20260202012244](https://qiniu.wzhecnu.cn/FileBed/source/20260202012244.png)
 
 
 ## 工具组织与安全配置
 
-ChatTool MCP 服务支持对工具进行分组和权限控制，你可以通过环境变量来配置只启用特定的工具组。这对于保护敏感操作（如修改 DNS 记录）非常有用。
+ChatTool MCP 服务支持对工具进行分组和权限控制，你可以通过环境变量来配置只启用特定的工具组。
 
 ### 可用的标签 (Tags)
 
-- `dns`: 所有 DNS 相关工具
-- `cert`: 所有证书相关工具
 - `zulip`: 所有 Zulip 聊天工具
-- `read`: 只读工具（如查询域名、记录、消息）
-- `write`: 写入工具（如添加/删除记录、申请证书、发送消息）
+- `network`: Network scanner 工具
+- `read`: 只读工具（如查询消息、扫描网络信息）
+- `write`: 写入工具（如发送消息）
 
 ## 在 Claude Desktop 中使用
 
 1. 完成上述配置。
 2. 重启 Claude Desktop。
 3. 在对话中，你现在可以直接要求 Claude：
-   - "帮我列出阿里云上的所有域名"
-   - "给 example.com 添加一个 www 解析到 1.1.1.1"
-   - "帮我更新 home.example.com 的 DDNS"
-   - "为 *.example.com 申请一个 SSL 证书"
+   - "帮我列出 Zulip 频道"
+   - "帮我查询某个 Zulip 话题下的最近消息"
+   - "帮我扫描局域网里在线的主机"
+
+DNS 记录管理、DDNS 与证书自动化不属于当前 ChatTool MCP 范围；请使用 `chatdns` / `chatdns cert` CLI。DNS MCP 如需恢复，应单独 review ChatDNS/ChatTool MCP 边界。

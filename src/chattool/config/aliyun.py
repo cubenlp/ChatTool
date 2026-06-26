@@ -16,7 +16,7 @@ class AliyunConfig(BaseEnvConfig):
     def test(cls):
         print(f"Testing {cls._title}...")
         try:
-            from chattool.tools.dns.aliyun import AliyunDNSClient
+            from chatdns import AliyunDNSClient
             client = AliyunDNSClient()
             # 尝试获取域名列表，只取1个来验证
             domains = client.describe_domains(page_size=1)

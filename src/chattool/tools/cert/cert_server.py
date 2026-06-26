@@ -10,7 +10,7 @@ from typing import List, Optional, Dict
 from pathlib import Path
 
 from chattool.utils import setup_logger
-from .cert_updater import SSLCertUpdater
+from chatdns import SSLCertUpdater
 
 # 全局配置
 config = {
@@ -125,12 +125,12 @@ async def run_cert_update_task(token: str, req: ApplyRequest):
         success = await updater.run_once()
         
         if success:
-            main_domain = req.domains[0]
-            # Handle wildcard replacement in path
+            main_domain = updater.domains[0]
+            # ChatDNS normalizes certificate domains before writing files.
             file_domain_name = main_domain.replace("*", "_")
             
             # 解析证书有效期
-            expiry_date = updater.check_cert_expiry(file_domain_name)
+            expiry_date = updater.check_cert_expiry(main_domain)
             created_at = datetime.now().isoformat()
             expires_at = expiry_date.isoformat() if expiry_date else None
             days_remaining = (expiry_date - datetime.now()).days if expiry_date else None

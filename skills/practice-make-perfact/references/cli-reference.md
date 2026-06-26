@@ -53,17 +53,15 @@ chatgh run logs --repo owner/repo --job-id 456
 # PR create/edit/merge are not public stable ChatGH CLI commands yet; use the project workflow or GitHub API path for those writes.
 ```
 
-## DNS And Certificates
+## DNS
 
 ```bash
-chattool dns list
-chattool dns records --domain example.com
-chattool dns set --domain example.com --rr www --type A --value 1.2.3.4
-chattool dns delete --domain example.com --rr www --type A --yes
-chattool dns ip
-chattool dns ddns
-chattool dns cert apply -d example.com -e admin@example.com -p aliyun
-chattool dns cert check -d example.com --cert-dir certs
+chatdns list
+chatdns records --domain example.com
+chatdns set --domain example.com --rr www --type A --value 1.2.3.4
+chatdns delete --domain example.com --rr www --type A --yes
+chatdns ip
+chatdns ddns
 ```
 
-MCP tool names include `dns_list_domains`, `dns_get_records`, `dns_add_record`, `dns_delete_record`, `dns_ddns_update`, and `dns_cert_apply`.
+DNS MCP is not part of the current ChatTool parent route after DNS extraction. Use `chatdns` for DNS CLI/package workflows; review MCP support separately before advertising DNS MCP tools.

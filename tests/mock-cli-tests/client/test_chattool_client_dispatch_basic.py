@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 import click
 import pytest
@@ -36,28 +36,17 @@ def test_main_help_lists_lazy_commands_without_loading_them(runner, monkeypatch)
     result = runner.invoke(client_main.cli, ["--help"])
 
     assert result.exit_code == 0
-    assert "dns" in result.output
+    assert "dns" not in result.output
     assert "client" in result.output
     assert "skill" in result.output
     load_attr.assert_not_called()
 
 
-def test_dns_help_mounts_cert_group(runner, monkeypatch):
-    dns_group = _make_group("dns", "Mock DNS group.")
-    cert_group = _make_group("cert", "Mock cert management group.")
-    load_attr = Mock(side_effect=[dns_group, cert_group])
-    monkeypatch.setattr(client_main, "_load_attr", load_attr)
-
+def test_dns_command_is_removed_from_chattool(runner):
     result = runner.invoke(client_main.cli, ["dns", "--help"])
 
-    assert result.exit_code == 0
-    assert "cert" in result.output
-    assert "Mock cert management group." in result.output
-    assert "cert-update" not in result.output
-    assert load_attr.mock_calls == [
-        call("chattool.tools.dns.cli", "cli"),
-        call("chattool.tools.cert.cli", "cert_cli"),
-    ]
+    assert result.exit_code != 0
+    assert "No such command" in result.output
 
 
 def test_client_subcommand_loads_nested_command_on_demand(runner, monkeypatch):

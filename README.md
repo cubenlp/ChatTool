@@ -30,7 +30,7 @@
 ```bash
 pip install chattool --upgrade
 pip install "chattool[tools]"        # 常用工具全集
-pip install "chattool[mcp,dns]"      # MCP 服务 + DNS 工具
+pip install "chattool[mcp]"          # legacy MCP 服务（DNS MCP 本轮不维护）
 pip install "chattool[images]"       # 含图像工具
 pip install "chattool[pypi]"         # 安装独立 ChatPyPI，用 chatpypi 管理 Python 包创建/构建/发布
 pip install "chattool[setup]"        # 安装独立 ChatUp，用 chatup workspace/hermes/cc-connect 等命令做环境初始化
@@ -112,21 +112,23 @@ def chat(ctx):
 bot.start()
 ```
 
-### DNS 管理 (`chattool dns`)
+### DNS 管理（已迁移到 ChatDNS）
+
+DNS 记录管理、DDNS、IP 探测和 DNS-01 证书自动化已经从 ChatTool 分离到独立包 `ChatDNS`，请使用一等 CLI `chatdns`：
 
 ```bash
-chattool dns
-chattool dns list
-chattool dns records home.example.com
-chattool dns set home.example.com -v 1.2.3.4
-chattool dns delete home.example.com -t A --yes
-chattool dns ip
-chattool dns ddns home.example.com --monitor
-chattool dns cert apply -d example.com -e admin@example.com
-chattool dns cert check -d example.com
+chatdns --help
+chatdns list
+chatdns records home.example.com
+chatdns set home.example.com -v 1.2.3.4
+chatdns delete home.example.com -t A --yes
+chatdns ip
+chatdns ddns home.example.com --monitor
+chatdns cert apply -d example.com -e admin@example.com --provider aliyun --staging
+chatdns cert check -d example.com
 ```
 
-交互终端里直接运行 `chattool dns` 会先进入命令选择；`records` / `set` / `delete` / `ddns` / `cert apply` 缺少必要参数时会自动补问，`cert apply` 的邮箱默认读取 `git config user.email`，`-I` 才会禁用交互并直接报错。
+在 ChatTool 中可通过可选依赖安装：`pip install "chattool[dns]"`。旧的 nested `chattool dns` 命令已移除，避免 ChatTool 继续持有重复 DNS/证书业务实现。
 
 ### Nginx 配置生成 (`chattool nginx`)
 

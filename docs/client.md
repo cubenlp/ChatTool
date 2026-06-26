@@ -8,7 +8,6 @@ ChatTool 提供了两个主要的命令行工具：`chattool` 用于各种服务
 
 CLI按功能分为几个命令组：
 
-- **`dns`**: DNS 记录管理和动态 DNS (DDNS) 工具。
 - **`serve`**: 本地服务器实用工具（例如，请求捕获）。
 - **`client`**: 远程服务客户端工具。
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
@@ -17,6 +16,8 @@ CLI按功能分为几个命令组：
 - **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
 - **`setup`**: 环境初始化与依赖安装（Node.js / zsh / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
+
+DNS 记录管理和动态 DNS (DDNS) 已迁移到独立 `ChatDNS` / `chatdns` CLI；ChatTool 不再暴露 `chattool dns`。
 
 ### chatenv
 
@@ -350,112 +351,28 @@ chatup workspace ~/workspace/demo --with-chatblog --with-memory -I
 
 ChatMemory 不会默认 link 全部 `Skills/`，也不会默认 link 机器/账号特定分组。`skills/local` 是当前 workspace / 当前机器本地使用的非共享目录，不从 ChatMemory link。
 
-## 1. DNS 管理 (`dns`)
+## 1. DNS 管理（已迁移到 ChatDNS）
 
-管理 DNS 记录并自动更新动态 DNS。支持阿里云 (Aliyun) 和腾讯云 (Tencent) DNS 提供商。
-
-### 1.1 动态 DNS (DDNS)
-
-使用当前 IP 地址更新 DNS 记录。支持公网 (Public) 和局域网 (Local) IP，以及持续监控模式。
+DNS 记录管理、DDNS 和 IP 探测已经从 ChatTool parent 分离到独立包 `ChatDNS`。ChatTool 不再暴露 nested `chattool dns` 命令；请使用一等 CLI：
 
 ```bash
-# 更新域名的公网 IP (一次性)
-chattool dns ddns public.example.com
-
-# 以监控模式运行 (每 120 秒检查一次)
-chattool dns ddns public.example.com --monitor
-
-# 更新局域网 IP，并指定子网过滤器
-chattool dns ddns local.example.com --ip-type local --local-ip-cidr 192.168.1.0/24
-
-# 指定 TTL 和重试参数
-chattool dns ddns public.example.com --ttl 600 --max-retries 5 --retry-delay 10
+chatdns --help
+chatdns list
+chatdns records example.com
+chatdns records test.example.com
+chatdns set test.example.com -v 1.2.3.4
+chatdns delete test.example.com -t A --yes
+chatdns ip
+chatdns ddns public.example.com --monitor
 ```
 
-**完整选项说明:**
-- `full_domain`: 完整域名 (例如 `sub.example.com`)。
-- `-d, --domain`: 域名 (例如 `example.com`)。
-- `-r, --rr`: 主机记录 (例如 `sub`)。
-- `--monitor`: 启用持续监控模式。
-- `-i, --interval`: 检查间隔，单位为秒 (默认: 120)。
-- `--ip-type`: 更新的 IP 类型: `public` (默认) 或 `local`。
-- `--local-ip-cidr`: 局域网 IP 过滤网段 (例如 `192.168.0.0/16`)，仅当 `--ip-type=local` 时有效。
-- `-p, --provider`: DNS 提供商: `aliyun` (默认) 或 `tencent`。
-- `--ttl`: TTL 值 (默认: 600)。
-- `--max-retries`: 最大重试次数 (默认: 3)。
-- `--retry-delay`: 重试延迟秒数 (默认: 5)。
-- `--log-file`: 日志文件路径 (默认不记录到文件，除非开启监控模式且未指定则使用默认)。
-- `--log-level`: 日志级别 (默认: INFO)。
-
-### 1.2 记录管理
-
-**获取记录 (`records`):**
-```bash
-# 获取域名的所有记录
-chattool dns records example.com
-
-# 获取特定记录
-chattool dns records test.example.com
-```
-**选项:**
-- `-t, --type`: 记录类型过滤 (例如 `A`, `TXT`, `CNAME`)。
-- `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
-
-**设置/更新记录 (`set`):**
-```bash
-# 设置 A 记录
-chattool dns set test.example.com -v 1.2.3.4
-
-# 设置 TXT 记录
-chattool dns set -d example.com -r _test -t TXT -v "some-value"
-```
-**选项:**
-- `-v, --value`: 记录值。交互终端里缺少时会自动补问；显式传 `-I` 时才保持直接报错。
-- `-t, --type`: 记录类型 (默认: `A`)。
-- `--ttl`: TTL 值 (默认: 600)。
-- `-p, --provider`: DNS 提供商 (默认: `aliyun`)。
-
-### 1.3 域名列表与删除记录
+通过 ChatTool 安装依赖时可使用：
 
 ```bash
-chattool dns list
-chattool dns list --provider tencent --page-size 50
-chattool dns delete test.example.com -t A --yes
-chattool dns delete test.example.com -t A -v 1.2.3.4 --yes
-chattool dns ip
+pip install "chattool[dns]"
 ```
 
-- `list` 会调用云厂商域名列表接口，输出 `DomainName`、`DomainId`、`Status`、记录数量和备注。
-- `delete` 需要显式传入 `--type/-t`，避免误删整个主机记录；可选 `--value/-v` 进一步限制删除目标；非交互删除需要 `--yes`。
-- `ip` 只输出当前探测到的 public/local IP，不初始化 DNS provider。
-
-### 1.4 SSL 证书 (`dns cert`)
-
-使用 Let's Encrypt 和 DNS 验证自动申请和续期 SSL 证书。
-
-```bash
-chattool dns cert apply -d example.com -d *.example.com -e admin@example.com
-chattool dns cert apply -d example.com
-chattool dns cert check -d example.com
-```
-
-在交互终端里，缺少域名或邮箱时会自动补问；邮箱未显式传入时默认读取 `git config user.email`；显式传 `-I` 时才会禁用交互并直接报错。旧入口 `chattool dns cert-update` 已移除。
-
-**输出文件结构:**
-证书将保存在 `<cert-dir>/<domain>/` 目录下，包含以下文件：
-- `fullchain.pem`: 完整证书链 (适用于 Nginx/Apache 配置)。
-- `privkey.pem`: 私钥文件 (适用于 Nginx/Apache 配置)。
-- `cert.pem`: 叶子证书。
-- `chain.pem`: 中间证书。
-
-**完整选项说明:**
-- `-d, --domain`: 域名列表 (可多次使用，支持通配符)。
-- `-e, --email`: 用于 Let's Encrypt 注册的邮箱；未传时读取 `git config user.email`。
-- `-p, --provider`: 用于验证的 DNS 提供商 (`aliyun` 或 `tencent`，默认: `aliyun`)。
-- `--cert-dir`: 证书存储根目录 (默认: `certs`)。
-- `--staging`: 使用 Let's Encrypt 测试环境 (用于测试)。
-- `--force`: 跳过本地过期判断，强制申请/续期。
-- `--log-file`: 日志文件路径 (默认不记录到文件)。
+`chattool dns cert` 旧 nested 入口已移除；本地 DNS-01 证书申请/检查由 `ChatDNS>=0.1.1` 的一等 CLI `chatdns cert apply/check` 维护。ChatTool 仅保留 `chattool serve cert` / `chattool client cert` 远程服务入口。
 
 ---
 
