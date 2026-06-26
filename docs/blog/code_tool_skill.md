@@ -36,7 +36,7 @@
 以我们的 SSL 证书工具为例，核心逻辑是 `SSLCertUpdater` 类，它负责和 ACME 协议交互、调用 DNS 接口验证域名。
 
 ```python
-# src/chattool/tools/cert/cert_updater.py
+# ChatDNS: src/chatdns/cert.py
 class SSLCertUpdater:
     def __init__(self, domains, email, ...):
         # ... 初始化逻辑 ...
@@ -54,14 +54,14 @@ class SSLCertUpdater:
 **“一行命令解决问题。”**
 
 为了让非 Python 开发者（或者不想打开 IDE 的自己）也能用，我给代码穿上了一层外衣——CLI。
-使用 `click` 这样的库，我们将 `SSLCertUpdater` 包装成了 `chattool dns cert apply`。
+能力迁入 ChatDNS 后，`SSLCertUpdater` 被包装成一等 CLI：`chatdns cert apply`。ChatTool 不再维护 nested `chattool dns cert` 入口。
 
 ```bash
 # 申请证书
-chattool dns cert apply -d example.com -d *.example.com -e admin@example.com --provider aliyun
+chatdns cert apply -d example.com -d *.example.com -e admin@example.com --provider aliyun
 
 # 使用测试环境（Staging）
-chattool dns cert apply -d example.com --staging
+chatdns cert apply -d example.com --staging
 ```
 
 **输出结构**：
@@ -136,11 +136,11 @@ Client 负责发送指令，查询状态，下载结果。
 
     > **Route 1: Code Import**
     > *Scenario*: Python script development.
-    > *Tool*: `chattool.tools.cert.cert_updater.SSLCertUpdater`
+    > *Tool*: `chatdns.SSLCertUpdater`
     >
     > **Route 2: CLI**
     > *Scenario*: Local machine ops.
-    > *Tool*: `chattool dns cert apply`
+    > *Tool*: `chatdns cert apply`
     >
     > **Route 3: Server-Client**
     > *Scenario*: Remote management, multi-tenant.

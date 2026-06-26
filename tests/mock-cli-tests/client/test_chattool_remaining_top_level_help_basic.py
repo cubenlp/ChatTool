@@ -12,8 +12,8 @@ def test_chattool_remaining_top_level_help_entries(runner):
     assert "setup" not in result.output
 
     result = runner.invoke(cli, ["dns", "--help"])
-    assert result.exit_code == 0
-    assert "dynamic IP updates and record management" in result.output
+    assert result.exit_code != 0
+    assert "No such command" in result.output
 
     result = runner.invoke(cli, ["lark", "--help"])
     assert result.exit_code == 0

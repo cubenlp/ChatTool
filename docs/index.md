@@ -64,8 +64,8 @@ pip install "chattool[tools]"
 # 含图像工具
 pip install "chattool[images]"
 
-# 含 MCP 服务与 DNS 工具
-pip install "chattool[mcp,dns]"
+# 含 legacy MCP 服务（DNS MCP 本轮不维护）
+pip install "chattool[mcp]"
 
 # 含开发依赖
 pip install "chattool[dev]"
@@ -99,11 +99,11 @@ chattool lark info
 chattool serve lark ai --system "你是工作助手"
 ```
 
-### DNS 管理
+### DNS 管理（ChatDNS）
 
 ```bash
-chattool dns records home.example.com
-chattool dns ddns home.example.com --monitor
+chatdns records home.example.com
+chatdns ddns home.example.com --monitor
 ```
 
 ### Workspace 协作脚手架

@@ -39,17 +39,19 @@
 
 以下命令已经接入共享的 `command_schema` 机制，可作为新命令实现时的直接参考。
 
-### DNS
+### DNS / ChatDNS
 
-- `chattool dns ddns`
-- `chattool dns set`
-- `chattool dns records`
-- `chattool dns cert apply`
+DNS 是已迁出能力，不再是当前 ChatTool parent 的 nested 命令。以下迁移前命令曾经接入共享 `command_schema`，但当前入口已经迁到独立 `ChatDNS` / `chatdns`：
 
-行为：
+- historical: `chattool dns ddns` -> current: `chatdns ddns`
+- historical: `chattool dns set` -> current: `chatdns set`
+- historical: `chattool dns records` -> current: `chatdns records`
+- historical: `chattool dns cert apply` -> current: `chatdns cert apply`
 
-- 在交互终端里缺少关键参数时会自动补问
-- `dns` 根命令可先进入命令选择页
+行为参考：
+
+- 迁移前 nested `dns` 根命令可先进入命令选择页；迁移后应以 `ChatDNS` 仓库中的 `chatdns` CLI 实现为准。
+- ChatTool parent 当前只保留 `chattool serve cert` / `chattool client cert` 远程服务路线，不再维护本地 `chattool dns` 或 `chattool dns cert`。
 
 ### Client
 
@@ -177,22 +179,18 @@
 - `docs/development-guide/index.md`
 - `docs/design/chattool-cli-interaction-design.md`
 - `README.md`
-- `docs/tools/dns/index.md`（大部分场景）
+- `docs/tools/dns/index.md`（迁移说明已对齐到 `chatdns`）
 
 ### 仍建议继续校对的点
 
 截至本报告编写时，仍建议继续检查以下文档中是否保留旧式“必填参数”表述：
 
 - `docs/client.md`
-  - `dns set` 的 `--value`
-  - `dns cert apply`
   - `client cert`
   - `network ping`
   - `gh`
   - `zulip`
   - `env/chatenv` 章节
-- `docs/tools/dns/index.md`
-  - `cert apply` 参数说明是否仍写成“必填”而未说明交互补问
 - `docs/tools/network/index.md`
   - `network ping --network` 是否仍只描述为“必填”
 

@@ -1,5 +1,5 @@
-from .cert_updater import SSLCertUpdater
+"""Certificate compatibility exports backed by ChatDNS."""
 
-__all__ = [
-    "SSLCertUpdater"
-]
+from chatdns import SSLCertUpdater
+
+__all__ = ["SSLCertUpdater"]

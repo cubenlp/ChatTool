@@ -19,4 +19,5 @@ def test_chattool_skill_practice_make_perfact_reference():
     assert "chattool pypi" in reference
     assert "chatgh" in reference
     assert "chattool gh" not in reference
-    assert "chattool dns" in reference
+    assert "chatdns" in reference
+    assert "chattool dns" not in reference
