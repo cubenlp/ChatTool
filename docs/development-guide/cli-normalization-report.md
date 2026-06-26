@@ -136,7 +136,7 @@ DNS 是已迁出能力，不再是当前 ChatTool parent 的 nested 命令。以
 
 当前主要包括：
 
-- `chattool pypi init`
+- `chatpypi init`（独立 ChatPyPI 包）
 - `chattool cc` 的部分交互命令
 - `chatup workspace`
 - `chatup frp`
@@ -157,16 +157,14 @@ DNS 是已迁出能力，不再是当前 ChatTool parent 的 nested 命令。以
 
 ### `chatpypi`
 
-当前新增了独立脚本入口：
+`chatpypi` 已迁移到独立 `ChatPyPI` 包，不再是 ChatTool 内部 shortcut。
 
-- `chatpypi`
+它保留高频初始化体验：
 
-它的行为不是简单 alias，而是带路由规则的快捷入口：
+- `chatpypi mypkg` 会自动转成 `chatpypi init mypkg`
+- `chatpypi build` / `chatpypi check` 由独立 ChatPyPI 实现
 
-- `chatpypi mypkg` 会自动转成 `chattool pypi init mypkg`
-- `chatpypi build` 会转成 `chattool pypi build`
-
-这属于明确例外，目的是优化高频初始化体验。后续如果引入类似快捷入口，应在设计文档里单独说明，不要隐式扩散。
+ChatTool 不再维护 `chattool pypi` 或 `chatpypi` wrapper；需要该能力时安装 `chattool[pypi]`、`chattool[arch]` 或 `ChatPyPI`。
 
 ### shell alias 的边界
 

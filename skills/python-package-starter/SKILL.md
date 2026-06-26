@@ -1,6 +1,6 @@
 ---
 name: python-package-starter
-description: Use `chattool pypi init` or `chatpypi` to scaffold Python packages, including ChatArch templates, then validate with pytest/build/check/probe.
+description: Use standalone `chatpypi` to scaffold Python packages, including ChatArch templates, then validate with pytest/build/check/probe.
 version: 0.2.0
 ---
 
@@ -12,17 +12,17 @@ For a generic package, use the `default` template. For a ChatArch / chatxxx CLI 
 
 ## Current Command Surface
 
-`chattool pypi` currently provides:
+`chatpypi` currently provides:
 
 ```bash
-chattool pypi init
-chattool pypi build
-chattool pypi check
-chattool pypi probe
-chattool pypi upload
+chatpypi init
+chatpypi build
+chatpypi check
+chatpypi probe
+chatpypi upload
 ```
 
-`chatpypi` is a convenience wrapper. When its first argument is not a known pypi subcommand, it dispatches to `chattool pypi init`:
+`chatpypi` is a convenience wrapper. When its first argument is not a known pypi subcommand, it dispatches to `chatpypi init`:
 
 ```bash
 chatpypi mychat --description "My chat package"
@@ -31,11 +31,11 @@ chatpypi mychat --description "My chat package"
 ## Default Package Quick Start
 
 ```bash
-chattool pypi init mychat --description "My chat package"
+chatpypi init mychat --description "My chat package"
 cd mychat
 python -m pytest -q
-chattool pypi build --project-dir .
-chattool pypi check --project-dir .
+chatpypi build --project-dir .
+chatpypi check --project-dir .
 ```
 
 Equivalent wrapper form:
@@ -51,7 +51,7 @@ The default template creates a minimal `setuptools` + `src/` layout with Python 
 Use `chatarch` for a standalone ChatArch CLI package:
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo
 ```
 
 Equivalent wrapper form:
@@ -65,7 +65,7 @@ The `chatarch` template defaults to Python `>=3.10`, includes `chatstyle` and `c
 Optional files can be skipped:
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## Generated Default Structure
@@ -90,9 +90,9 @@ Run the smallest relevant checks before handing off:
 
 ```bash
 python -m pytest -q
-chattool pypi build --project-dir .
-chattool pypi check --project-dir .
-chattool pypi probe mychat
+chatpypi build --project-dir .
+chatpypi check --project-dir .
+chatpypi probe mychat
 ```
 
 Use `probe` only when checking package-name availability against PyPI is relevant.

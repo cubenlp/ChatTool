@@ -33,9 +33,6 @@ tests/cli-tests/
 │   └── test_chattool_network_basic.md
 ├── nginx/
 │   └── test_chattool_nginx_render_basic.md
-├── pypi/
-│   ├── test_chattool_pypi_basic.md
-│   └── test_chattool_pypi_probe.md
 ├── serve/
 │   └── test_chattool_serve_basic.md
 ├── setup/

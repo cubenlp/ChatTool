@@ -1,6 +1,6 @@
 ---
 name: chatarch-package-dev
-description: 使用 `chattool pypi init -t chatarch` 创建或维护 ChatArch/chatxxx Python CLI 包，并正确集成外部 `chatstyle` 与 `chatenv`。
+description: 使用独立 `chatpypi init -t chatarch` 创建或维护 ChatArch/chatxxx Python CLI 包，并正确集成外部 `chatstyle` 与 `chatenv`。
 version: 0.1.0
 ---
 
@@ -13,7 +13,7 @@ version: 0.1.0
 ## 从模板开始
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo
 ```
 
 等价 wrapper 写法：
@@ -25,7 +25,7 @@ chatpypi chatfoo -t chatarch --project-dir ./chatfoo
 只有在确实不需要 docs 或 workflows 时才跳过可选文件：
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## 生成物职责

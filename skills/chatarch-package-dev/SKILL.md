@@ -1,6 +1,6 @@
 ---
 name: chatarch-package-dev
-description: Create or maintain ChatArch/chatxxx Python CLI packages with `chattool pypi init -t chatarch`, integrating external `chatstyle` and `chatenv` correctly.
+description: Create or maintain ChatArch/chatxxx Python CLI packages with standalone `chatpypi init -t chatarch`, integrating external `chatstyle` and `chatenv` correctly.
 version: 0.1.0
 ---
 
@@ -13,7 +13,7 @@ The package should be independently installable. It is not a ChatTool plugin.
 ## Start From The Template
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo
 ```
 
 Equivalent wrapper form:
@@ -25,7 +25,7 @@ chatpypi chatfoo -t chatarch --project-dir ./chatfoo
 Skip optional docs or workflows only when the package does not need them:
 
 ```bash
-chattool pypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
+chatpypi init chatfoo -t chatarch --project-dir ./chatfoo --without-mkdocs --without-workflows
 ```
 
 ## Generated Responsibilities

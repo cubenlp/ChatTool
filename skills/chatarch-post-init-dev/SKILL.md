@@ -1,12 +1,12 @@
 ---
 name: chatarch-post-init-dev
-description: Continue development after `chatpypi` or `chattool pypi init -t chatarch` creates a project, keeping chatenv schemas, chatstyle interactive CLI behavior, docs, tests, and changelog aligned.
+description: Continue development after standalone `chatpypi init -t chatarch` creates a project, keeping chatenv schemas, chatstyle interactive CLI behavior, docs, tests, and changelog aligned.
 version: 0.1.0
 ---
 
 # ChatArch Post-Init Development
 
-Use this skill after a ChatArch / chatxxx project has already been generated with `chatpypi <name> -t chatarch` or `chattool pypi init <name> -t chatarch`.
+Use this skill after a ChatArch / chatxxx project has already been generated with `chatpypi <name> -t chatarch` or `chatpypi init <name> -t chatarch`.
 
 Goal: turn the scaffold into a maintainable ChatArch package without drifting from the shared `chatstyle` and `chatenv` conventions.
 

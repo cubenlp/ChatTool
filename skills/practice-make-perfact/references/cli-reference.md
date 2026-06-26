@@ -5,16 +5,16 @@ Use this as a quick index before adding ad hoc scripts or new instructions.
 ## Package Helpers
 
 ```bash
-chattool pypi init <name>
-chattool pypi init <name> -t chatarch --project-dir ./<name>
-chattool pypi build --project-dir .
-chattool pypi check --project-dir .
-chattool pypi probe <name>
-chattool pypi upload --project-dir .
+chatpypi init <name>
+chatpypi init <name> -t chatarch --project-dir ./<name>
+chatpypi build --project-dir .
+chatpypi check --project-dir .
+chatpypi probe <name>
+chatpypi upload --project-dir .
 chatpypi <name> -t chatarch --project-dir ./<name>
 ```
 
-`chatpypi <name>` is a convenience wrapper for `chattool pypi init <name>` when `<name>` is not a known pypi subcommand.
+`chatpypi <name>` is a convenience wrapper for `chatpypi init <name>` when `<name>` is not a known pypi subcommand.
 
 ## Skill Helpers
 

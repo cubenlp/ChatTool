@@ -133,7 +133,6 @@ nav:
     - 概览: tools/index.md
     - 工具接口规范: tools/interfaces.md
     - DNS 工具: tools/dns/index.md
-    - PyPI 工具: tools/pypi/index.md
     - Explore 数据探索: tools/explore/index.md
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
@@ -172,7 +171,6 @@ nav:
     - 飞书任务编排工作流设计: design/feishu-task-orchestration-workflow.md
     - 创建 Python 包: development-guide/create-python-package.md
     - Python 库仓库构成设计: design/python-library-repo-structure.md
-    - ChatTool PyPI CLI 设计: design/chattool-pypi-cli-design.md
 
   - 博客:
     - Agent CLI 系列:
@@ -190,6 +188,5 @@ nav:
     - 白嫖 AI 生图实战: blog/free-image-guide.md
     - 从代码到 Agent 技能: blog/code_tool_skill.md
     - chatenv 配置发现机制: blog/chatenv-provider-discovery.md
-    - ChatArch Python 包初始化: blog/chattool-pypi-init-chatarch.md
     - v0.5.3 飞书机器人: blog/larkbot_v053.md
     - 飞书机器人教程: blog/larkbot-tutorial.md

@@ -15,6 +15,10 @@ def test_chattool_remaining_top_level_help_entries(runner):
     assert result.exit_code != 0
     assert "No such command" in result.output
 
+    result = runner.invoke(cli, ["pypi", "--help"])
+    assert result.exit_code != 0
+    assert "No such command" in result.output
+
     result = runner.invoke(cli, ["lark", "--help"])
     assert result.exit_code == 0
     assert "Show bot profile info and validate credentials." in result.output

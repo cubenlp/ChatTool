@@ -17,19 +17,25 @@
 1. 执行 `chattool dns --help`。
 2. 应返回 `No such command 'dns'`，DNS 记录管理与 DDNS 已迁移到独立 `chatdns` CLI。
 
-## 用例 2：`lark --help`
+## 用例 2：`pypi` 已迁移
+
+预期过程和结果：
+1. 执行 `chattool pypi --help`。
+2. 应返回 `No such command 'pypi'`，Python package lifecycle 能力由独立 `chatpypi` CLI 提供。
+
+## 用例 3：`lark --help`
 
 预期过程和结果：
 1. 执行 `chattool lark --help`。
 2. 子命令 short help 应与顶层英文风格一致。
 
-## 用例 3：`tplogin --help`
+## 用例 4：`tplogin --help`
 
 预期过程和结果：
 1. 执行 `chattool tplogin --help`。
 2. 顶层描述和子命令 short help 应为英文，并能表达 router / ufw 语义。
 
-## 用例 4：`cc --help`
+## 用例 5：`cc --help`
 
 预期过程和结果：
 1. 执行 `chattool cc --help`。

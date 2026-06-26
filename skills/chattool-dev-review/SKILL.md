@@ -39,9 +39,9 @@ Boundary: this skill stops at development review. Merge timing, tags, package pu
    - Examples should use `chatenv init -t <alias>` and `chatenv cat -t <alias>`, not a nested ChatTool env command.
 
 5. PyPI scaffold correctness
-   - `chattool pypi` examples must match the current command surface: `init/build/check/probe/upload`.
+   - `chatpypi` examples must match the standalone ChatPyPI command surface: `init/build/check/probe/upload`.
    - `chatarch` scaffold examples should include `chatstyle` and `chatenv` dependencies and current mkdocs/workflow options.
-   - `chatpypi <name>` may be documented as a convenience wrapper for `chattool pypi init <name>`.
+   - `chatpypi <name>` may be documented as a convenience wrapper for `chatpypi init <name>`.
 
 6. Docs, tests, and changelog
    - Update relevant docs under `docs/` when behavior changes.
