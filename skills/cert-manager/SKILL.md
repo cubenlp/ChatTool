@@ -1,6 +1,6 @@
 ---
 name: cert-manager
-description: Manage SSL certificates through ChatTool certificate helpers, typed DNS provider envs, and server/client routes. The old `chattool dns cert` and `dns_cert_apply` routes were removed during ChatDNS extraction pending a separate certificate boundary review.
+description: Manage SSL certificates through ChatDNS DNS-01 helpers plus ChatTool server/client routes. The old `chattool dns cert` and `dns_cert_apply` routes were removed during ChatDNS extraction; use `chatdns cert` for local certificate automation.
 version: 0.3.0
 ---
 
@@ -25,16 +25,16 @@ Relevant providers are `aliyun` and `tencent`. DNS provider clients are now supp
 
 | Route | Scenario | Core Tool |
 | :--- | :--- | :--- |
-| Code import | Python integration | `chattool.tools.cert.cert_updater.SSLCertUpdater` |
+| Code import | Python integration | `chatdns.SSLCertUpdater` |
 | Server-client | Remote certificate service | `chattool serve cert` and `chattool client cert` |
 
-The old nested CLI route `chattool dns cert apply/check` and MCP route `dns_cert_apply` are intentionally not documented as current entry points after DNS was extracted to `ChatDNS`. Certificate automation should be reviewed as its own package/CLI boundary before restoring a first-class local CLI or MCP tool.
+The old nested CLI route `chattool dns cert apply/check` and MCP route `dns_cert_apply` are intentionally not documented as current ChatTool entry points after DNS was extracted to `ChatDNS`. Use `chatdns cert apply/check` for first-class local certificate automation; ChatTool keeps `serve/client cert` only for the remote service path.
 
 ## Code Import
 
 ```python
 import asyncio
-from chattool.tools.cert.cert_updater import SSLCertUpdater
+from chatdns import SSLCertUpdater
 
 async def main():
     updater = SSLCertUpdater(

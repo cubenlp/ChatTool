@@ -92,7 +92,7 @@ ChatTool 强调“能力实现”和“能力接入”分离。
 - 业务逻辑不会散落在 CLI、MCP、服务端多个位置，降低维护成本。
 - 同一个能力可以被多种出口复用，不需要复制实现。
 
-例如迁移前 DNS 能力曾同时支撑 nested CLI、证书自动化和 MCP 工具；这类能力边界成熟后应拆分为独立包。当前 DNS 记录管理、DDNS、IP 探测已迁移到 `ChatDNS` / `chatdns`，ChatTool parent 只通过可选依赖接入已发布包；DNS MCP 与证书自动化作为独立边界等待后续 review。
+例如迁移前 DNS 能力曾同时支撑 nested CLI、证书自动化和 MCP 工具；这类能力边界成熟后应拆分为独立包。当前 DNS 记录管理、DDNS、IP 探测和 DNS-01 证书自动化已迁移到 `ChatDNS` / `chatdns`，ChatTool parent 只通过可选依赖接入已发布包；DNS MCP 作为独立边界等待后续 review。
 
 ### 3. 基础设施前置，把环境问题单独治理
 

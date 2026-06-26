@@ -372,7 +372,7 @@ chatdns ddns public.example.com --monitor
 pip install "chattool[dns]"
 ```
 
-`chattool dns cert` 的旧证书入口不属于第一阶段 DNS-only 分离；证书管理仍作为单独边界保留后续 review。
+`chattool dns cert` 旧 nested 入口已移除；本地 DNS-01 证书申请/检查由 `ChatDNS>=0.1.1` 的一等 CLI `chatdns cert apply/check` 维护。ChatTool 仅保留 `chattool serve cert` / `chattool client cert` 远程服务入口。
 
 ---
 

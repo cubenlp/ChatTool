@@ -126,7 +126,7 @@ bot.start()
 
 ### 4. DNS Management (moved to ChatDNS)
 
-DNS record management, DDNS, and IP detection now live in the standalone `ChatDNS` package. Use the first-level `chatdns` CLI:
+DNS record management, DDNS, IP detection, and DNS-01 certificate automation now live in the standalone `ChatDNS` package. Use the first-level `chatdns` CLI:
 
 ```bash
 chatdns --help
@@ -134,9 +134,11 @@ chatdns records test.example.com
 chatdns set test.example.com -v 1.2.3.4
 chatdns ddns -d example.com -r home --monitor
 chatdns ddns -d example.com -r nas --ip-type local --local-ip-cidr 192.168.1.0/24
+chatdns cert apply -d example.com -e admin@example.com --provider aliyun --staging
+chatdns cert check -d example.com
 ```
 
-Install through ChatTool's optional dependency with `pip install "chattool[dns]"`. The nested `chattool dns` command has been removed so ChatTool no longer carries duplicate DNS implementation.
+Install through ChatTool's optional dependency with `pip install "chattool[dns]"`. The nested `chattool dns` command has been removed so ChatTool no longer carries duplicate DNS/certificate business logic.
 
 ### 5. AI Image Generation (`chattool image`)
 

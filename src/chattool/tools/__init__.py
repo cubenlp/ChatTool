@@ -5,7 +5,7 @@ _LAZY_ATTRS = {
     "ZulipClient": ("chattool.tools.zulip", "ZulipClient"),
     "InteractiveShell": ("chattool.tools.interact", "InteractiveShell"),
     "SimpleAsyncShell": ("chattool.tools.interact", "SimpleAsyncShell"),
-    "SSLCertUpdater": ("chattool.tools.cert", "SSLCertUpdater"),
+    "SSLCertUpdater": ("chatdns", "SSLCertUpdater"),
     "LarkBot": ("chattool.tools.lark", "LarkBot"),
     "ChatSession": ("chattool.tools.lark", "ChatSession"),
     "MessageContext": ("chattool.tools.lark", "MessageContext"),

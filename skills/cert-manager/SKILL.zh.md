@@ -1,6 +1,6 @@
 ---
 name: cert-manager
-description: 通过 ChatTool 证书 helper、typed DNS provider env 与 server/client 路线管理 SSL 证书。旧 `chattool dns cert` 与 `dns_cert_apply` 路线已随 ChatDNS 分离撤出，等待单独证书边界 review。
+description: 通过 ChatDNS DNS-01 helper 以及 ChatTool server/client 路线管理 SSL 证书。旧 `chattool dns cert` 与 `dns_cert_apply` 路线已随 ChatDNS 分离撤出；本地证书自动化使用 `chatdns cert`。
 version: 0.3.0
 ---
 
@@ -25,16 +25,16 @@ chatenv cat -t ali
 
 | 路线 | 场景 | 核心工具 |
 | :--- | :--- | :--- |
-| 代码导入 | Python 集成 | `chattool.tools.cert.cert_updater.SSLCertUpdater` |
+| 代码导入 | Python 集成 | `chatdns.SSLCertUpdater` |
 | Server-client | 远程证书服务 | `chattool serve cert` 与 `chattool client cert` |
 
-DNS 分离后，旧 nested CLI 路线 `chattool dns cert apply/check` 与 MCP 路线 `dns_cert_apply` 不再作为当前入口记录。证书自动化需要作为独立包/CLI 边界单独 review 后，再恢复一等本地 CLI 或 MCP 工具。
+DNS 分离后，旧 nested CLI 路线 `chattool dns cert apply/check` 与 MCP 路线 `dns_cert_apply` 不再作为当前 ChatTool 入口记录。本地证书自动化使用 `chatdns cert apply/check`；ChatTool 仅保留 `serve/client cert` 远程服务路线。
 
 ## 代码导入
 
 ```python
 import asyncio
-from chattool.tools.cert.cert_updater import SSLCertUpdater
+from chatdns import SSLCertUpdater
 
 async def main():
     updater = SSLCertUpdater(

@@ -37,7 +37,7 @@ BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 _LAZY_ATTRS = {
     "LarkBot": ("chattool.tools.lark", "LarkBot"),
-    "SSLCertUpdater": ("chattool.tools.cert", "SSLCertUpdater"),
+    "SSLCertUpdater": ("chatdns", "SSLCertUpdater"),
 }
 
 
