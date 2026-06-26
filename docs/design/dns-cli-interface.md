@@ -1,11 +1,14 @@
 # DNS CLI Interface Design
 
 Date: 2026-05-07
-Status: accepted for `rex/chatdns`
+Status: historical pre-extraction design for `rex/chatdns`
+
+!!! note "Current ownership after ChatDNS extraction"
+    This page records the pre-extraction nested `chattool dns` interface design. ChatTool no longer exposes `chattool dns` and no longer owns DNS/cert business logic. Current DNS, DDNS, IP, and DNS-01 certificate automation lives in the standalone `ChatDNS` package and first-level `chatdns` CLI, including `chatdns cert apply/check`. DNS MCP remains a separate follow-up boundary.
 
 ## Goal
 
-Make `chattool dns` map cleanly to the DNS provider capabilities while keeping task-oriented commands easy to discover.
+Document the historical design that made `chattool dns` map cleanly to DNS provider capabilities while keeping task-oriented commands easy to discover.
 
 ## Command Tree
 
