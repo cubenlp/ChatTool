@@ -339,7 +339,7 @@ chatup workspace ~/workspace/demo --dry-run -I
 
 交互模式下还可以额外勾选模块，例如：
 
-- `ChatTool`：下载到 `core/ChatTool/`，并把相关 skills 同步到 `./skills/`
+- `ChatTool`：下载到 `core/ChatTool/`；ChatTool 不再携带或同步仓库内置 `skills/`
 - `ChatBlog` / `--with-chatblog`：下载到 `core/ChatBlog/`，并把 `source/_posts` 链接到 `./public/chatblog`
 - `ChatMemory` / `--with-memory`：下载到 `core/ChatMemory/`，只把共享 skill groups 链接到 workspace：`./skills/chatarch`、`./skills/common`、`./skills/agents`，并创建本地非共享目录 `./skills/local`
 
@@ -695,31 +695,31 @@ chattool serve cert --host 0.0.0.0 --port 8080 --output ./my-certs
 
 ## 7. Skill 管理 (`skill`)
 
-用于安装和管理 ChatTool skills（默认从项目 `skills/` 目录读取）。
+用于安装和管理外部 skills。ChatTool 不再随仓库携带默认 `skills/` 目录；必须通过 `--source` 显式指定源目录，或配置 `CHATTOOL_SKILLS_DIR` / ChatEnv。
 
 ```bash
-# 列出可用 skills
-chattool skill list
+# 列出指定源目录中的可用 skills
+chattool skill list --source ./skills
 
 # 安装单个 skill 到 Codex
-chattool skill install cert-manager -p codex
+chattool skill install cert-manager --source ./skills -p codex
 
 # 安装到 Claude（可显式指定目标目录）
-chattool skill install cert-manager -p claude -d ~/.claude/skills
+chattool skill install cert-manager --source ./skills -p claude -d ~/.claude/skills
 
 # 安装到 OpenCode
-chattool skill install cert-manager -p opencode
+chattool skill install cert-manager --source ./skills -p opencode
 
 # 安装全部 skills
-chattool skill install -a -p codex
+chattool skill install -a --source ./skills -p codex
 
 # 安装时添加 chattool- 前缀
-chattool skill install cert-manager -p codex --prefix
+chattool skill install cert-manager --source ./skills -p codex --prefix
 ```
 
 **选项说明 (`install`):**
 - `-p/--platform`: 目标平台（`codex` / `claude` / `opencode`）。
-- `-s/--source`: Skills 源目录（默认自动定位项目的 `skills/`）。
+- `-s/--source`: Skills 源目录；未传时读取 `CHATTOOL_SKILLS_DIR` / ChatEnv，不再自动定位仓库 `skills/`。
 - `-d/--dest`: 目标目录（可覆盖平台默认目录）。
 - `--prefix`: 安装时为 skill 名称添加 `chattool-` 前缀（默认不加）。
 - `-f/--force`: 覆盖已存在的 skill（未指定时会提示是否覆盖，输入 `a` 可允许后续全部覆盖）。

@@ -5,7 +5,7 @@
 ## 当前默认路线
 
 - 飞书 / Lark 自动化默认优先使用官方 `lark-cli`
-- ChatTool 内的 `skills/feishu/` 只保留紧凑入口文档 `SKILL.md` / `SKILL.zh.md`，把使用者路由到上游 CLI 和仓库内教程
+- ChatTool 不再维护仓库内 `skills/feishu/` 入口；当前 agent workflow 应使用 workspace/ChatMemory 共享 skills 或外部文档
 - `chatup lark-cli` 负责安装官方 CLI，并复用 ChatTool 现有的 Feishu 配置
 
 ## `chattool lark` 的当前边界

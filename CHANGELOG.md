@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-06-28
+- 移除仓库根 `skills/` 旧随包资产；ChatTool 不再把 repo-local skills 当作当前 agent workflow 或默认安装源。
+- `chattool skill` / `chatskill` 继续保留安装/列出能力，但源目录必须来自显式 `--source`、`CHATTOOL_SKILLS_DIR` 或 ChatEnv 配置；不再自动定位仓库 `skills/`。
+- 清理依赖旧 `skills/` 内容的测试与文档，改为验证外部 source/env 边界，为后续独立 ChatSkill / `chatskill` 拆包做准备。
+
 ## 2026-06-25
 - ChatTool 移除内置 `chattool pypi` / `chatpypi` wrapper 与 `src/chattool/tools/pypi` 实现；Python 包创建、构建、校验、上传与探测能力改由独立 `ChatPyPI` / `chatpypi` 负责。
 - `chattool[pypi]` 现在安装 `ChatPyPI>=0.2.2,<0.3.0`；新增 `chattool[arch]` 聚合三个已发版且与 ChatTool 平行解耦的 ChatArch 工具：`ChatGH>=0.2.6,<0.3.0`、`ChatUp>=0.2.0,<0.3.0`、`ChatPyPI>=0.2.2,<0.3.0`。
