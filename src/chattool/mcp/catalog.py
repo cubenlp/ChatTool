@@ -18,8 +18,6 @@ TOOL_SPECS: Sequence[MCPToolSpec] = (
     MCPToolSpec("zulip_send_message", "zulip", ("zulip", "write"), "发送 Zulip 消息"),
     MCPToolSpec("zulip_react", "zulip", ("zulip", "write"), "添加 Zulip 表情反应"),
     MCPToolSpec("zulip_upload_file", "zulip", ("zulip", "write"), "上传 Zulip 文件"),
-    MCPToolSpec("network_ping_scan", "network", ("network", "read"), "扫描在线主机"),
-    MCPToolSpec("network_port_scan", "network", ("network", "read"), "扫描端口开放主机"),
 )
 
 

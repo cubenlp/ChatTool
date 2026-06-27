@@ -22,11 +22,12 @@ def test_mcp_info_json(monkeypatch):
     assert result.exit_code == 0
     payload = json.loads(result.output)
     assert payload["name"] == "Dummy MCP"
-    assert payload["tool_count"] >= 7
+    assert payload["tool_count"] == 5
     names = {item["name"] for item in payload["tools"]}
     assert "dns_list_domains" not in names
+    assert "network_ping_scan" not in names
+    assert "network_port_scan" not in names
     assert "zulip_send_message" in names
-    assert "network_ping_scan" in names
 
 
 def test_mcp_inspect_alias(monkeypatch):

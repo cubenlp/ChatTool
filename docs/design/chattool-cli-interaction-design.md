@@ -173,10 +173,10 @@ def demo(name, output, interactive):
 - `chattool image`
 - `chatenv` 高频 profile/key/test 命令
 - `chattool explore arxiv get`
-- `chattool network ping`
 - `chattool tplogin ufw add`
+- 历史项：`chattool network ping` 已迁出到独立 `ChatNet` / `chatnet`，不再作为 ChatTool parent 的当前交互样例。
 
-这些命令可以作为后续新增 CLI 的直接参考实现。
+除历史项外，这些命令可以作为后续新增 CLI 的直接参考实现。
 
 ## 测试规范
 

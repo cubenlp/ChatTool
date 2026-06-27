@@ -180,7 +180,7 @@ chattool serve local . --html index.html --dry-run
 
 | Tool | Command | Description |
 |------|---------|-------------|
-| Network Scan | `chattool network scan` | Scan LAN for active hosts and SSH ports |
+| Network Tools | `chatnet` (from `chattool[arch]` / `ChatNet`) | Scan hosts, check ports, validate links, and inspect service URLs through the standalone ChatNet package |
 | Nginx Config | `chattool nginx` | Generate template-based reverse proxy and static site configs |
 | MCP Server | `chattool mcp info` / `chattool mcp inspect` | Inspect MCP server capabilities (JSON supported) |
 | Screenshot | `chattool serve capture` | Local webpage screenshot service |
@@ -213,7 +213,7 @@ chatpypi probe mychat
 chatpypi mychat
 ```
 
-ChatTool no longer embeds `chattool pypi`; install `chattool[pypi]` or `ChatPyPI` and use the standalone `chatpypi` CLI. The `chattool[arch]` extra installs the three parallel ChatArch tools: ChatGH, ChatUp, and ChatPyPI. Use `--without-mkdocs` or `--without-workflows` to skip optional scaffold files.
+ChatTool no longer embeds `chattool pypi`; install `chattool[pypi]` or `ChatPyPI` and use the standalone `chatpypi` CLI. The `chattool[arch]` extra installs the parallel ChatArch tools: ChatGH, ChatUp, ChatPyPI, and ChatNet. Use `--without-mkdocs` or `--without-workflows` to skip optional scaffold files.
 
 `chatpypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata, including the latest release date, when the name already exists.
 

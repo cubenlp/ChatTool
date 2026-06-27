@@ -29,8 +29,6 @@ tests/cli-tests/
 │   └── documents/
 ├── mcp/
 │   └── test_chattool_mcp_basic.md
-├── network/
-│   └── test_chattool_network_basic.md
 ├── nginx/
 │   └── test_chattool_nginx_render_basic.md
 ├── serve/

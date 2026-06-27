@@ -414,42 +414,22 @@ chattool client cert download
 
 ---
 
-## 3. 网络工具 (`network`)
+## 3. 网络工具 (`chatnet`)
 
-提供基础的网络探测与链接校验能力。
-
-### 3.1 存活扫描 (`network ping`)
-```bash
-chattool network ping --network 192.168.1.0/24
-chattool network ping
-```
-
-交互终端里缺少 `--network` 时会自动补问；`-I` 会禁用交互。
-
-### 3.2 端口扫描 (`network ssh`)
-```bash
-chattool network ssh --network 192.168.1.0/24 --port 22
-```
-
-### 3.3 链接有效性检查 (`network links`)
-```bash
-# 从目录内扫描 URL
-chattool network links --path ./docs --glob "*.md"
-
-# 直接检查 URL
-chattool network links --url https://example.com
-```
-
-### 3.4 服务校验 (`network services`)
-用于统一验证 Chromium/Chromedriver/Playwright 服务的连通性与响应特征。
+网络扫描、端口扫描、链接检查和 service URL 检查已从 ChatTool parent 迁出到独立 `ChatNet` / `chatnet`。ChatTool 不再提供 `chattool network` 子命令，也不在 MCP 中保留 Network 兼容工具。
 
 ```bash
-export CHATTOOL_CHROMIUM_URL="http://host:8080/token/chromium/json/version"
-export CHATTOOL_CHROMIUM_TOKEN="your-token"
-export CHATTOOL_CHROMEDRIVER_URL="http://host:8080/token/chromedriver/"
-export CHATTOOL_PLAYWRIGHT_URL="http://host:8080/token/playwright/"
+# 随 ChatArch 聚合工具安装
+pip install 'chattool[arch]'
 
-chattool network services
+# 或单独安装/升级
+pip install 'ChatNet>=0.2.0,<0.3.0'
+
+# 使用独立 CLI
+chatnet --help
+chatnet ping --network 192.168.1.0/24
+chatnet ssh --network 192.168.1.0/24 --port 22
+chatnet links --url https://example.com
 ```
 
 ---

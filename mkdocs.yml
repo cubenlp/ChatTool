@@ -136,7 +136,6 @@ nav:
     - Explore 数据探索: tools/explore/index.md
     - AI 绘图: tools/image.md
     - FRP 内网穿透: tools/frp.md
-    - 网络扫描: tools/network/index.md
     - Nginx 配置生成: tools/nginx/index.md
     - Serve 本地服务: tools/serve/index.md
     - SVG 转 GIF: tools/svg2gif.md
