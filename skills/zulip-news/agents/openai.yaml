@@ -1,4 +1,0 @@
-interface:
-  display_name: "Zulip News"
-  short_description: "Summarize Zulip updates with ChatTool"
-  default_prompt: "Use $zulip-news to fetch and summarize Zulip updates from the configured typed env streams and topics."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "ChatArch Post-Init Dev"
-  short_description: "Develop ChatArch projects after scaffold"
-  default_prompt: "Use $chatarch-post-init-dev after chatpypi creates the project to keep chatstyle CLI behavior, chatenv schemas, docs, tests, and changelog aligned."

@@ -78,7 +78,7 @@ def install_skill(
     if not source or not source.exists():
         click.echo("Skills source directory not found.", err=True)
         click.echo(
-            "Use --source or set CHATTOOL_SKILLS_DIR to point at the skills folder.",
+            "Use --source or set CHATTOOL_SKILLS_DIR / ChatEnv to point at an external skills folder.",
             err=True,
         )
         raise click.Abort()
@@ -189,7 +189,7 @@ def list_skills(source_dir):
     if not source or not source.exists():
         click.echo("Skills source directory not found.", err=True)
         click.echo(
-            "Use --source or set CHATTOOL_SKILLS_DIR to point at the skills folder.",
+            "Use --source or set CHATTOOL_SKILLS_DIR / ChatEnv to point at an external skills folder.",
             err=True,
         )
         raise click.Abort()

@@ -123,4 +123,4 @@ lark-cli auth login --recommend
 - `docs/blog/agent-cli/feishu-cli-doc-practice.md`
 - `docs/blog/lark-message-session-debug.md`
 - `docs/env/lark-cli.md`
-- `skills/feishu/SKILL.md`
+- workspace/ChatMemory 共享 Feishu skill（不再来自 ChatTool 仓库根 `skills/`）

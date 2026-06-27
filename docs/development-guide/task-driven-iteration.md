@@ -24,19 +24,18 @@
 
 4. **能力归类**  
    - 通用、可复用：补充到 `src/`（工具层、CLI、MCP）。  
-   - 任务特定：补充到 `skills/<name>/`。
+   - 任务特定或 agent workflow 知识：维护在 workspace/ChatMemory 的共享 skills 中，不再写入 ChatTool 仓库根 `skills/`。
 
-5. **技能落地要求**  
-   - 必须包含 `SKILL.md` 与 `SKILL.zh.md`。  
-   - `SKILL.md` 与 `SKILL.zh.md` 的 frontmatter 至少维护 `name`、`description`；`version` 仅在确有需要时作为可选元信息维护。  
-   - 分阶段输出约定：`0_` 表示原始或起点；`1_` 起为加工内容。  
+5. **技能落地要求**
+   - ChatTool 仓库不再携带随包 `skills/` 目录；不要把历史 `skills/<name>/` 当作当前工作流事实源。
+   - 需要沉淀 skill 时，先进入当前 workspace 的 `skills/` / ChatMemory 共享技能流程，并保持 source repo 与 workspace skill 的职责分离。
    - 若任务需要阶段化产物，目录层级保持简洁，优先使用仓库外目录下的 `<频道>/<主题>/` 或 `<任务>/<阶段>/`。
 
 6. **任务后复盘**  
    - 做一次代码 review，统一命名、结构与文档。  
-   - 若需要把已完成任务统一整理成仓库规范，显式调用 `skills/practice-make-perfact/` 作为后处理阶段，而不是在任务开始前套流程。
-   - 在这个后处理阶段，默认串联 `skills/chattool-dev-review/` 做开发规范检查。
-   - 若任务继续进入合并后的版本 tag / 发布阶段，再切到 `skills/chattool-release/`，不要把正式发版动作混进开发 review。
+   - 开发规范、发版规范和包拆分规范使用当前 workspace / ChatMemory / Hermes skills；不要调用 ChatTool 仓库旧 `skills/` 路径。
+   - 在这个后处理阶段，使用当前共享/Hermes 的 ChatTool/ChatArch 开发 review skill；不要引用仓库内旧 `skills/chattool-dev-review/` 路径。
+   - 若任务继续进入合并后的版本 tag / 发布阶段，再切到当前共享/Hermes 的 release skill，不要把正式发版动作混进开发 review。
    - 若这次任务要进入正式发版，开发分支在 PR/MR 前就要更新 `src/chattool/__init__.py` 和对应 `CHANGELOG.md` 到目标版本；合并后只负责从主线打同版本的 `vX.Y.Z` tag，不要等到合并后再补改版本号。
    - 正式发版的标准 tag 统一为 `vX.Y.Z`，且只能从已合并并同步到最新的主线创建。
    - 如果 PyPI 已经存在该版本，禁止继续推同版本 tag 试图“重发”；必须先提交新的版本 bump 变更，再走下一次合并后发版。

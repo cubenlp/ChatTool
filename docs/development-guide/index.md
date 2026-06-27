@@ -247,7 +247,7 @@ INFO: Start opencode setup
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
 - 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值；如果改用 mock，只能放到 `tests/mock-cli-tests/`。
 - 如果测试依赖接收者、群聊或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`，并在对应 `.md` 中写清配置要求与回滚方式。
-- Feishu 相关测试设计应统一落在 `tests/cli-tests/lark/<topic>/`；`skills/feishu/` 现在只保留紧凑入口文档，不再要求和 skill 子目录一一对齐。
+- Feishu 相关测试设计应统一落在 `tests/cli-tests/lark/<topic>/`；不再维护仓库内 `skills/feishu/` 入口。
 - Feishu 的真实执行测试只能以这些 `tests/cli-tests/lark/<topic>/*.md` 为准；`tests/code-tests/tools/lark/` 中的历史文件不再作为主规范依据。
 - Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`。
 - Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
@@ -299,4 +299,4 @@ INFO: Start opencode setup
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。
 - [CLI 交互统一设计](../design/chattool-cli-interaction-design.md)：统一 interactive 策略、TUI 模块边界与迁移顺序。
 - [Mock CLI Tests](mock-cli-tests.md)：mock CLI 测试的目录边界、doc-first 规则与使用边界。
-- [飞书能力设计](../design/feishu-cli.md)：`chattool lark` 与单目录 `skills/feishu/` 的目标形态。
+- [飞书能力设计](../design/feishu-cli.md)：`chattool lark` 与外部 lark-cli/workspace skill 的边界。

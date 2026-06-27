@@ -48,11 +48,12 @@ PLATFORM_CHOICES = tuple(sorted(PLATFORMS.keys()))
 
 
 def find_repo_skills_dir() -> Path | None:
-    current = Path(__file__).resolve()
-    for parent in [current, *current.parents]:
-        candidate = parent / "skills"
-        if candidate.is_dir():
-            return candidate
+    """Return a repo-bundled skills directory if one is supported.
+
+    ChatTool no longer ships or auto-discovers repository-bundled skills.
+    Skills must come from an explicit --source path or CHATTOOL_SKILLS_DIR / ChatEnv.
+    The function remains as a compatibility seam for older callers/tests.
+    """
     return None
 
 
