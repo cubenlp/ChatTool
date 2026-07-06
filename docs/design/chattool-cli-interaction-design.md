@@ -170,7 +170,7 @@ def demo(name, output, interactive):
 - `chattool client svg2gif`
 - `chatgh`
 - `chattool zulip`
-- `chattool image`
+- `chatimg`
 - `chatenv` 高频 profile/key/test 命令
 - `chattool explore arxiv get`
 - `chattool tplogin ufw add`

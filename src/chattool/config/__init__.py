@@ -6,11 +6,6 @@ from .azure import AzureConfig
 from .aliyun import AliyunConfig
 from .tencent import TencentConfig
 from .zulip import ZulipConfig
-from .tongyi import TongyiConfig
-from .huggingface import HuggingFaceConfig
-from .pollinations import PollinationsConfig
-from .liblib import LiblibConfig
-from .siliconflow import SiliconFlowConfig
 from .tplink import TPLinkConfig
 from .browser import BrowserConfig
 
@@ -24,11 +19,6 @@ __all__ = [
     "ZulipConfig",
     "AliyunConfig",
     "TencentConfig",
-    "TongyiConfig",
-    "HuggingFaceConfig",
-    "PollinationsConfig",
-    "LiblibConfig",
-    "SiliconFlowConfig",
     "BrowserConfig",
     "TPLinkConfig",
     "SkillsConfig",

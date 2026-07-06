@@ -182,7 +182,7 @@ ChatTool 当前架构很重要的一点，是它不是先抽象一套理想架�
 
 代表目录：
 
-- [src/chattool/tools/image](../../src/chattool/tools/image)
+- AI image providers have moved to standalone `ChatImg` / `chatimg`; ChatTool no longer keeps `src/chattool/tools/image` as a parent-owned implementation.
 - [src/chattool/tools/zulip](../../src/chattool/tools/zulip)
 - [src/chattool/tools/browser](../../src/chattool/tools/browser)
 
@@ -192,7 +192,7 @@ ChatTool 当前架构很重要的一点，是它不是先抽象一套理想架�
 - 工具实现可以同时面向 Python、CLI、MCP 多种形式开放。
 - 新增能力时，优先进入 `tools/<name>/`，保证项目归位规则稳定。
 
-它解决的是“真正的能力应该放在哪里”的问题。成熟并已独立发布的能力（例如 DNS -> `ChatDNS`、Lark bot helper -> `ChatLark`）应从 parent 业务实现中移出，只保留必要的依赖/注册边界。
+它解决的是“真正的能力应该放在哪里”的问题。成熟并已独立发布的能力（例如 DNS -> `ChatDNS`、Lark bot helper -> `ChatLark`、AI image providers -> `ChatImg`）应从 parent 业务实现中移出，只保留必要的依赖/注册边界。
 
 ### `client/`：统一 CLI 门面
 

@@ -11,25 +11,33 @@
 - 环境准备：使用 `CliRunner` 调用统一入口 `chattool`。
 - 回滚：无。
 
-## 用例 1：`client --help` 应显示子命令说明
+## 用例 1：顶层 help 不再列出已拆分命令
+
+预期过程和结果：
+1. 执行 `chattool --help`。
+2. 输出中不应包含 `gh` 或 `image`；GitHub 能力由独立 `chatgh` 提供，image provider 能力由独立 `chatimg` 提供。
+3. 执行 `chattool image --help`。
+4. 应返回 `No such command 'image'`。
+
+## 用例 2：`client --help` 应显示子命令说明
 
 预期过程和结果：
 1. 执行 `chattool client --help`。
 2. 输出中应包含 `cert`、`svg2gif`，且两者都带 short help。
 
-## 用例 2：`serve --help` 应显示子命令说明
+## 用例 3：`serve --help` 应显示子命令说明
 
 预期过程和结果：
 1. 执行 `chattool serve --help`。
 2. 输出中应包含 `capture`、`cert`、`local`、`oauth`、`svg2gif` 的 short help，且不再包含 `lark`。
 
-## 用例 3：`skill --help` 应显示子命令说明
+## 用例 4：`skill --help` 应显示子命令说明
 
 预期过程和结果：
 1. 执行 `chattool skill --help`。
 2. 输出中应包含 `install`、`list` 的 short help。
 
-## 用例 4：`explore --help` 文案应与当前能力一致
+## 用例 5：`explore --help` 文案应与当前能力一致
 
 预期过程和结果：
 1. 执行 `chattool explore --help`。

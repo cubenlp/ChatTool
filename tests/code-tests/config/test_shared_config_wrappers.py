@@ -10,8 +10,17 @@ def test_openai_config_reexports_chatenv_shared_fields_and_keeps_chattool_test()
     assert callable(OpenAIConfig._test_responses_api)
 
 
-def test_chattool_does_not_reexport_feishu_config():
+def test_chattool_does_not_reexport_feishu_or_image_provider_configs():
     import chattool.config as config
 
-    assert "FeishuConfig" not in config.__all__
-    assert not hasattr(config, "FeishuConfig")
+    removed = {
+        "FeishuConfig",
+        "TongyiConfig",
+        "HuggingFaceConfig",
+        "PollinationsConfig",
+        "LiblibConfig",
+        "SiliconFlowConfig",
+    }
+    for name in removed:
+        assert name not in config.__all__
+        assert not hasattr(config, name)

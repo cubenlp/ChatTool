@@ -24,7 +24,7 @@ license = {text = "MIT license"}
 dependencies = [
     "Click>=7.0",
     "chatstyle>=0.1.0,<0.2.0",
-    "chatenv>=0.2.0,<0.3.0",
+    "chatenv>=0.2.2,<0.3.0",
     "requests>=2.20",
     "python-dotenv>=0.17.0",
     "colorama",
@@ -39,6 +39,7 @@ arch = [
     "ChatPyPI>=0.2.3,<0.3.0",
     "ChatNet>=0.2.0,<0.3.0",
     "ChatLark>=0.1.1,<0.2.0",
+    "ChatImg[images]>=0.1.1,<0.2.0",
 ]
 interactive = [
     "questionary>=2.1.0",
@@ -55,7 +56,7 @@ lark = [
     "ChatLark>=0.1.1,<0.2.0",
 ]
 images = [
-    "dashscope"
+    "ChatImg[images]>=0.1.1,<0.2.0",
 ]
 screenshot = [
     "selenium",

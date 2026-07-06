@@ -89,16 +89,20 @@ DNS 是已迁出能力，不再是当前 ChatTool parent 的 nested 命令。以
 
 ### Image
 
-- `chattool image liblib generate`
-- `chattool image huggingface generate`
-- `chattool image tongyi generate`
-- `chattool image pollinations generate`
-- `chattool image siliconflow generate`
+`chattool image` 已迁移到独立 `ChatImg` / `chatimg`，ChatTool parent 不再维护 image provider CLI。历史上完成过统一交互策略的命令面现在由 `chatimg` 继续承接：
+
+- `chatimg liblib generate`
+- `chatimg huggingface generate`
+- `chatimg tongyi generate`
+- `chatimg pollinations generate`
+- `chatimg siliconflow generate`
+- `chatimg codex generate`
+- `chatimg openai generate`
 
 行为：
 
 - 各家 `generate` 在缺少 `prompt` 时自动补问
-- `huggingface generate` 缺少 `output` 时也会自动补问
+- 具体 provider 参数和默认输出路径由独立 `chatimg` 维护
 
 ### Chatenv
 

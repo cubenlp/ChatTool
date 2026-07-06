@@ -221,7 +221,7 @@ chatenv test -t oai
 
 目前支持以下服务的配置：
 
-- **OpenAI**: `OPENAI_API_KEY`, `OPENAI_API_BASE`, `OPENAI_API_MODEL`, `OPENAI_ACCESS_TOKEN`, `OPENAI_REFRESH_TOKEN`, `OPENAI_OAUTH_BASE_URL`, `OPENAI_ACCESS_TOKEN_EXPIRES_AT`, `OPENAI_IMAGE_MODEL` 等；OAuth token、OAuth auth server base URL、access token 过期时间与默认 image model 也收纳在同一 OAI/OpenAI 配置类型下，不再拆分独立 Codex 配置类型。
+- **OpenAI**: `OPENAI_API_KEY`, `OPENAI_API_BASE`, `OPENAI_API_MODEL`, `OPENAI_ACCESS_TOKEN`, `OPENAI_REFRESH_TOKEN`, `OPENAI_OAUTH_BASE_URL`, `OPENAI_ACCESS_TOKEN_EXPIRES_AT` 等；OAuth token、OAuth auth server base URL 与 access token 过期时间也收纳在同一 OAI/OpenAI 配置类型下，不再拆分独立 Codex 配置类型。
 - **Claude Relay Service (CRS)**: `CRS_API_BASE`, `CRS_API_KEY`, `CRS_USERNAME`, `CRS_PASSWORD`, `CRS_ACCESS_TOKEN`；供 `chattool crs` 查询用量、自统计和只读 admin 信息。
 - **Azure OpenAI**: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` 等
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
@@ -230,6 +230,8 @@ chatenv test -t oai
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 
 GitHub/gh 相关 typed env 已迁移到独立 `chatgh`，ChatTool 不再注册 `GITHUB_ACCESS_TOKEN` schema；需要配置 GitHub token 时请安装并使用 `chatgh set-token` / `chatenv -t gh`。
+
+AI image provider typed env schemas 已迁移到独立 `ChatImg` / `chatimg`，ChatTool 不再注册 `TongyiConfig`、`HuggingFaceConfig`、`LiblibConfig`、`PollinationsConfig` 或 `SiliconFlowConfig`；需要配置 image provider 时请使用 `chatenv -t chatimg`。
 
 Feishu typed env schema 已由独立 `chatenv` 提供，ChatTool 不再 re-export `FeishuConfig`。飞书相关变量当前由独立 `ChatLark` / `chatlark` 使用：
 
