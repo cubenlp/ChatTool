@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-07-07
+- 准备 `7.1.1` patch 版本：随 ChatLark parent 分离 PR 发布，移除 ChatTool 内 Lark/Feishu bot helper runtime 与 Feishu env re-export。
 - Lark bot helper 已完成 parent 分离：移除 `chattool lark`、`chattool serve lark`、`src/chattool/tools/lark/`、`src/chattool/serve/lark_serve.py`、ChatTool 内 Lark 示例与 Lark 专属测试；常规 Lark 功能由独立 `ChatLark>=0.1.1,<0.2.0` / `chatlark` 负责。
 - `chattool[lark]` 和 `chattool[arch]` 现在安装独立 ChatLark；ChatTool 不再重复维护 LarkBot / MessageContext / ChatSession 实现，也不再 re-export Feishu typed env schema；Feishu 配置事实源为独立 `chatenv.configs.FeishuConfig`。
 - 模型调用相关 Lark 入口不在本次 parent update 中接回；如后续需要 AI chat bot，应在 ChatLark 侧单独设计模型 backend 边界。
