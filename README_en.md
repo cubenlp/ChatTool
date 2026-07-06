@@ -133,22 +133,20 @@ chatdns cert check -d example.com
 
 Install through ChatTool's optional dependency with `pip install "chattool[dns]"`. The nested `chattool dns` command has been removed so ChatTool no longer carries duplicate DNS/certificate business logic.
 
-### 5. AI Image Generation (`chattool image`)
+### 5. AI Image Generation (`chatimg`)
 
-Supports Tongyi, Hugging Face, LiblibAI, Pollinations.ai, and SiliconFlow.
+Image provider tools have moved to the standalone `ChatImg` package. Install it through ChatTool's optional dependency when you want the ChatArch aggregate install path:
 
 ```bash
-# Install image dependencies
 pip install "chattool[images]"
 
-# Pollinations (requires POLLINATIONS_API_KEY)
-chattool image pollinations list-models
-chattool image pollinations generate "a cat in space" -o cat.png
-
-# SiliconFlow (requires SILICONFLOW_API_KEY)
-chattool image siliconflow list-models
-chattool image siliconflow generate "a cute dog" -o dog.png
+chatimg pollinations generate "a cat in space" -o cat.png
+chatimg siliconflow generate "a cute dog" -o dog.png
+chatimg codex generate "a watercolor fox"
+chatimg openai generate "a clean app icon"
 ```
+
+The nested `chattool image` command has been removed so ChatTool no longer carries duplicate image provider business logic.
 
 ### 6. Nginx Config Generation (`chattool nginx`)
 
@@ -206,7 +204,7 @@ chatpypi probe mychat
 chatpypi mychat
 ```
 
-ChatTool no longer embeds `chattool pypi`; install `chattool[pypi]` or `ChatPyPI` and use the standalone `chatpypi` CLI. The `chattool[arch]` extra installs the parallel ChatArch tools: ChatGH, ChatUp, ChatPyPI, and ChatNet. Use `--without-mkdocs` or `--without-workflows` to skip optional scaffold files.
+ChatTool no longer embeds `chattool pypi`; install `chattool[pypi]` or `ChatPyPI` and use the standalone `chatpypi` CLI. The `chattool[arch]` extra installs the parallel ChatArch tools: ChatGH, ChatUp, ChatPyPI, ChatNet, ChatLark, and ChatImg. Use `--without-mkdocs` or `--without-workflows` to skip optional scaffold files.
 
 `chatpypi probe <name>` checks the exact project name on PyPI by default and prints a concise blocking result plus useful package metadata, including the latest release date, when the name already exists.
 

@@ -143,16 +143,17 @@ chattool nginx static-root ./nas.conf --set SERVER_NAME=share.example.com --set 
 chattool nginx -i  # 交互式选择模板并逐项填写
 ```
 
-### AI 绘图 (`chattool image`)
+### AI 绘图 (`chatimg`)
 
 ```bash
-chattool image pollinations generate "a cat in space" -o cat.png
-chattool image siliconflow generate "a cute dog" -o dog.png
-chattool image codex generate "a watercolor fox"
-chattool image huggingface generate
+pip install "chattool[images]"
+chatimg pollinations generate "a cat in space" -o cat.png
+chatimg siliconflow generate "a cute dog" -o dog.png
+chatimg codex generate "a watercolor fox"
+chatimg openai generate "a clean app icon"
 ```
 
-交互终端里，各家 `generate` 命令缺少 `prompt` 时会自动补问；`huggingface generate` 与 `codex generate` 未传 `-o` 时会默认写到当前目录下的 `generated/image_<provider>_<model>_<timestamp>.png`。显式传 `-I` 时保持直接报错。
+AI image provider 能力已迁移到独立 `ChatImg` / `chatimg`；`chattool image` 已移除，避免 ChatTool 继续持有重复 image provider 实现。
 
 ### 数据探索 (`chattool explore`)
 
@@ -211,11 +212,11 @@ chatpypi init -i                  # 交互式选择模板、mkdocs/workflow 等�
 chatpypi probe mychat
 ```
 
-也可以通过 `pip install "chattool[arch]"` 一次性安装 ChatGH、ChatUp、ChatPyPI、ChatNet。
+也可以通过 `pip install "chattool[arch]"` 一次性安装 ChatGH、ChatUp、ChatPyPI、ChatNet、ChatLark、ChatImg。
 
 `ChatPyPI` / `chatpypi` 是 Python 包创建、构建、校验、上传与探测能力的 canonical owner；ChatTool 不再内置 `chattool pypi` 或 `chatpypi` wrapper。
 
-默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板默认写入 `requires-python = ">=3.10"`，并依赖 `chatstyle>=0.1.0,<0.2.0` 与 `chatenv>=0.2.0,<0.3.0`。
+默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板默认写入 `requires-python = ">=3.10"`，并依赖 `chatstyle>=0.1.0,<0.2.0` 与 `chatenv>=0.2.2,<0.3.0`。
 
 `chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架；发布 workflow 由显式 `v*` tag 或 `workflow_dispatch` 触发，校验 tag 与包内 `__version__` 一致，并通过 PyPI Trusted Publishing 发布。默认不写 `environment: pypi`，除非 PyPI Trusted Publisher 明确配置了同名 environment。
 

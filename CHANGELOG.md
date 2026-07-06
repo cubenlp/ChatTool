@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-07-07
+- AI image providers 已完成 parent 分离：移除 `chattool image`、`src/chattool/tools/image/`、ChatTool 内 image provider config schemas 与 image 专属测试/文档；image 生成能力由独立 `ChatImg>=0.1.3,<0.2.0` / `chatimg` 负责。
+- `chattool[images]` 和 `chattool[arch]` 现在安装独立 `ChatImg[images]`；ChatTool 不再重复维护 Codex/HuggingFace/Liblib/Pollinations/SiliconFlow/Tongyi image provider 实现。
+- ChatTool 的 `chatenv` 下界同步提升到 `chatenv>=0.2.2,<0.3.0`，并依赖 ChatImg 0.1.3 的 Codex/OpenAI 配置边界：OpenAI-compatible image 使用 ChatEnv `OpenAIConfig`，Codex image 使用 ChatImg `CodexConfig` 且不占用 `openai-codex` typed-env alias。
 - 准备 `7.1.1` patch 版本：随 ChatLark parent 分离 PR 发布，移除 ChatTool 内 Lark/Feishu bot helper runtime 与 Feishu env re-export。
 - Lark bot helper 已完成 parent 分离：移除 `chattool lark`、`chattool serve lark`、`src/chattool/tools/lark/`、`src/chattool/serve/lark_serve.py`、ChatTool 内 Lark 示例与 Lark 专属测试；常规 Lark 功能由独立 `ChatLark>=0.1.1,<0.2.0` / `chatlark` 负责。
 - `chattool[lark]` 和 `chattool[arch]` 现在安装独立 ChatLark；ChatTool 不再重复维护 LarkBot / MessageContext / ChatSession 实现，也不再 re-export Feishu typed env schema；Feishu 配置事实源为独立 `chatenv.configs.FeishuConfig`。
