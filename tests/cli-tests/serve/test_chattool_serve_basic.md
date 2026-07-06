@@ -84,7 +84,7 @@ chattool serve capture --port 8000
 chattool serve svg2gif --port 8001 --chromedriver-url http://127.0.0.1:9515
 ```
 
-## 用例 5：cert 与 lark 服务
+## 用例 5：cert 服务
 
 - 初始环境准备：
   - 选定可用端口。
@@ -93,15 +93,12 @@ chattool serve svg2gif --port 8001 --chromedriver-url http://127.0.0.1:9515
 
 预期过程和结果：
   1. 执行 `chattool serve cert --port 8000`，预期证书服务启动。
-  2. 执行 `chattool serve lark echo`，预期飞书回显服务启动。
-  3. 执行 `chattool serve lark webhook --path /lark/events`，预期 webhook 服务启动。
+  2. Lark bot service 已迁移到 `chatlark serve`，不再由 `chattool serve lark` 提供。
 
 参考执行脚本（伪代码）：
 
 ```sh
 chattool serve cert --port 8000
-chattool serve lark echo
-chattool serve lark webhook --path /lark/events
 ```
 
 ## 清理 / 回滚

@@ -33,8 +33,9 @@ pip install "chattool[tools]"        # 常用工具全集
 pip install "chattool[mcp]"          # legacy MCP 服务（DNS MCP 本轮不维护）
 pip install "chattool[images]"       # 含图像工具
 pip install "chattool[pypi]"         # 安装独立 ChatPyPI，用 chatpypi 管理 Python 包创建/构建/发布
+pip install "chattool[lark]"         # 安装独立 ChatLark，用 chatlark 管理飞书/Lark bot helper
 pip install "chattool[setup]"        # 安装独立 ChatUp，用 chatup workspace/hermes/cc-connect 等命令做环境初始化
-pip install "chattool[arch]"         # 一次性安装 ChatGH / ChatUp / ChatPyPI / ChatNet 这四个平行 ChatArch 工具
+pip install "chattool[arch]"         # 一次性安装 ChatGH / ChatUp / ChatPyPI / ChatNet / ChatLark 这些平行 ChatArch 工具
 pip install "chattool[dev]"          # 仓库开发依赖
 ```
 
@@ -61,7 +62,7 @@ chatenv set OPENAI_API_KEY=sk-xxx
 chatenv new mini -t feishu      # 从当前激活配置复制一份新的 Feishu profile
 chatenv new -t openai           # 交互式创建 OpenAI profile：先问名称，再补齐字段，不改 active .env
 chatenv save work -t openai && chatenv use work -t openai   # 按类型管理 profile
-chattool lark info -e work       # 显式使用 Feishu profile，优先级高于当前 shell 环境变量
+chatlark info -e work          # 显式使用 Feishu profile，优先级高于当前 shell 环境变量
 chattool cc init -i --quiet      # 生成默认 quiet 的 cc-connect 项目配置
 ```
 
@@ -87,23 +88,25 @@ async for chunk in Chat().user("写一首诗").async_get_response_stream():
         print(chunk.delta_content, end="", flush=True)
 ```
 
-### 飞书机器人 (`chattool lark`)
+### 飞书/Lark Bot（已迁移到 ChatLark）
+
+飞书/Lark bot helper 已从 ChatTool 分离到独立包 `ChatLark`，请使用一等 CLI `chatlark`。模型调用相关入口暂不接回 ChatTool。
 
 ```bash
-chattool lark send USER_ID "Hello"
-chattool lark send "Hello"                  # 使用 FEISHU_DEFAULT_RECEIVER_ID
-chattool lark send -t chat_id "Hello team" # 使用 FEISHU_DEFAULT_CHAT_ID
-chattool lark info
-chatup lark-cli                         # 需安装 chattool[setup] 或 chatup
-chattool serve lark echo                        # 回显机器人
-chattool serve lark ai --system "你是工作助手"  # AI 对话机器人
+pip install "chattool[lark]"
+chatlark send USER_ID "Hello"
+chatlark send "Hello"                  # 使用 FEISHU_DEFAULT_RECEIVER_ID
+chatlark send -t chat_id "Hello team" # 使用 FEISHU_DEFAULT_CHAT_ID
+chatlark info
+chatlark serve echo
+chatlark serve webhook
 ```
 
 ```python
-from chattool.tools.lark import LarkBot, ChatSession
+from chatlark import LarkBot, ChatSession
 
 bot = LarkBot()
-session = ChatSession(system="你是助手")
+session = ChatSession(chat_factory=my_chat_factory)
 
 @bot.on_message
 def chat(ctx):

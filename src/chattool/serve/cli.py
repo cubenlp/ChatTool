@@ -21,11 +21,6 @@ def _load_cert():
     return command
 
 
-def _load_lark():
-    command = _load_attr("chattool.serve.lark_serve", "cli")
-    command.short_help = "Run the Lark webhook service."
-    return command
-
 
 def _load_local():
     command = _load_attr("chattool.serve.local", "local")
@@ -55,7 +50,6 @@ serve_cli._lazy_commands.update(
     {
         "capture": _load_capture,
         "cert": _load_cert,
-        "lark": _load_lark,
         "local": _load_local,
         "oauth": _load_oauth,
         "svg2gif": _load_svg2gif,
@@ -65,7 +59,6 @@ serve_cli._lazy_command_help.update(
     {
         "capture": "Run the screenshot capture server.",
         "cert": "Run the certificate service.",
-        "lark": "Run the Lark webhook service.",
         "local": "Serve a local directory or HTML file.",
         "oauth": "Run the local OAuth token service.",
         "svg2gif": "Run the SVG-to-GIF conversion service.",

@@ -21,7 +21,7 @@
 
 预期过程和结果：
 1. 执行 `chattool serve --help`。
-2. 输出中应包含 `capture`、`cert`、`lark`、`svg2gif` 的 short help。
+2. 输出中应包含 `capture`、`cert`、`local`、`oauth`、`svg2gif` 的 short help，且不再包含 `lark`。
 
 ## 用例 3：`skill --help` 应显示子命令说明
 

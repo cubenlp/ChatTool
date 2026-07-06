@@ -6,7 +6,6 @@ from .azure import AzureConfig
 from .aliyun import AliyunConfig
 from .tencent import TencentConfig
 from .zulip import ZulipConfig
-from .feishu import FeishuConfig
 from .tongyi import TongyiConfig
 from .huggingface import HuggingFaceConfig
 from .pollinations import PollinationsConfig
@@ -25,7 +24,6 @@ __all__ = [
     "ZulipConfig",
     "AliyunConfig",
     "TencentConfig",
-    "FeishuConfig",
     "TongyiConfig",
     "HuggingFaceConfig",
     "PollinationsConfig",

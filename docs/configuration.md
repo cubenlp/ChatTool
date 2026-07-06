@@ -15,7 +15,7 @@ ChatTool 从 v5.0.0 开始引入了全新的集中式配置管理系统，支持
 对于支持 `-e/--env` 一类显式 env 覆盖源，且同时会读取工具自身默认配置位置（例如 `~/.codex/`、`~/.config/opencode/`、`~/.lark-cli/`）的 setup 命令，优先级进一步细化为：
 
 1. **CLI / 调用方显式指定**
-2. **显式 env 引用**：例如 `chattool lark -e work` 或 `chattool lark -e /path/to/file.env`
+2. **显式 env 引用**：例如 setup 命令传入的 `-e work` 或 `-e /path/to/file.env`
 3. **工具默认配置位置**：例如 `~/.codex/config.toml`、`~/.config/opencode/opencode.json`
 4. **系统环境变量**
 5. **ChatTool `.env`**：例如 `envs/Feishu/.env`
@@ -227,15 +227,14 @@ chatenv test -t oai
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
-- **飞书**: `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `FEISHU_DEFAULT_RECEIVER_ID`, `FEISHU_DEFAULT_CHAT_ID` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 
 GitHub/gh 相关 typed env 已迁移到独立 `chatgh`，ChatTool 不再注册 `GITHUB_ACCESS_TOKEN` schema；需要配置 GitHub token 时请安装并使用 `chatgh set-token` / `chatenv -t gh`。
 
-其中飞书相关有两个额外约定：
+Feishu typed env schema 已由独立 `chatenv` 提供，ChatTool 不再 re-export `FeishuConfig`。飞书相关变量当前由独立 `ChatLark` / `chatlark` 使用：
 
-- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chattool lark send` 提供默认用户发送目标。
-- `FEISHU_DEFAULT_CHAT_ID`：给 `chattool lark send -t chat_id` 提供默认群聊发送目标。
+- `FEISHU_DEFAULT_RECEIVER_ID`：给 `chatlark send` 提供默认用户发送目标。
+- `FEISHU_DEFAULT_CHAT_ID`：给 `chatlark send -t chat_id` 提供默认群聊发送目标。
 
 ## SVG 转 GIF 服务配置
 

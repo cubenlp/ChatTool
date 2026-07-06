@@ -30,6 +30,7 @@ A Python toolkit integrating LLM chat, Feishu/Lark bots, DNS management, SSL cer
 
 ```bash
 pip install chattool --upgrade
+pip install "chattool[lark]"  # installs ChatLark; use chatlark for Feishu/Lark bot helpers
 pip install "chattool[setup]"  # installs ChatUp; use chatup workspace/hermes/cc-connect
 ```
 
@@ -89,37 +90,29 @@ async for chunk in Chat().user("Write a poem").async_get_response_stream():
         print(chunk.delta_content, end="", flush=True)
 ```
 
-### 3. Feishu/Lark Bot (`chattool lark`)
+### 3. Feishu/Lark Bot (moved to ChatLark)
 
-Send messages, start Echo/AI bots with one command. Supports text, image, file, and rich-text messages.
+Feishu/Lark bot helpers have moved out of ChatTool into the standalone `ChatLark` package. Use the first-level `chatlark` CLI. Model-calling commands are intentionally not wired back through ChatTool.
 
 ```bash
-# Send messages
-chattool lark send -r USER_ID -m "Hello"
-chattool lark send -r USER_ID --image photo.png
-chattool lark send -r USER_ID --file report.pdf
-
-# Start Echo bot (WebSocket)
-chattool serve lark echo
-
-# Start AI conversation bot
-chattool serve lark ai --model gpt-4o
-
-# View bot info and permissions
-chattool lark info
-chattool lark scopes
+pip install "chattool[lark]"
+chatlark send USER_ID "Hello"
+chatlark send "Hello"                  # Uses FEISHU_DEFAULT_RECEIVER_ID
+chatlark send -t chat_id "Hello team" # Uses FEISHU_DEFAULT_CHAT_ID
+chatlark info
+chatlark serve echo
+chatlark serve webhook
 ```
 
 ```python
-from chattool.tools.lark import LarkBot
+from chatlark import LarkBot
 
 bot = LarkBot()
 bot.send_text("ou_xxx", "open_id", "Hello!")
-bot.send_image_file("ou_xxx", "open_id", "photo.png")
 
 @bot.on_message
 def handle(ctx):
-    ctx.reply_text(f"Received: {ctx.text}")
+    ctx.reply(f"Received: {ctx.text}")
 
 bot.start()
 ```

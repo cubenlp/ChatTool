@@ -236,7 +236,7 @@ def _prompt_secret_with_optional_default(label: str, default: str = "") -> str:
 
 
 def _get_feishu_candidate_options() -> dict[str, str]:
-    from chattool.config import FeishuConfig
+    from chatenv.configs import FeishuConfig
 
     candidates: dict[str, str] = {}
     if FeishuConfig.FEISHU_APP_ID.value:

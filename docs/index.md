@@ -13,7 +13,7 @@
     </a>
 </div>
 
-ChatTool 是一个以 CLI 为核心的 Python 开发套件，集成 LLM 对话、工具箱（DNS、飞书、绘图等）、MCP 服务和环境管理。
+ChatTool 是一个以 CLI 为核心的 Python 开发套件，集成 LLM 对话、工具箱、MCP 服务和环境管理；DNS、Lark 等成熟能力逐步迁移到独立 ChatArch 包。
 
 ## 架构概览
 
@@ -29,7 +29,7 @@ flowchart LR
         subgraph CORE["核心能力"]
             direction TB
             LLM["🤖 llm"]
-            TOOLS["🧰 tools\nDNS · 飞书 · 绘图 · 网络"]
+            TOOLS["🧰 tools\n绘图 · 网络 · 轻量工具"]
         end
         subgraph WRAP["封装加工"]
             direction TB
@@ -47,7 +47,7 @@ flowchart LR
 ChatTool 按层构建：
 
 - `config` 和 `setup/docker` 是基础设施——前者管理所有模块的环境变量和凭证，后者负责运行环境的构建（Chrome、FRP、Nginx 等）。
-- `llm` 和 `tools` 是核心能力层，两者并行发展。`llm` 提供 LLM 路由和对话接口，`tools` 实现各类具体功能（DNS、飞书、绘图等），每个 tool 内部提供 Python API、CLI 和 MCP 三种接入形式。
+- `llm` 和 `tools` 是核心能力层，两者并行发展。`llm` 提供 LLM 路由和对话接口，`tools` 保留仍在 ChatTool 内维护的轻量工具；DNS、Lark 等成熟能力优先迁移到独立 ChatArch 包。
 - `client/serve/mcp` 是封装加工层——`client` 把能力暴露为本地 CLI，`serve` 把敏感或重计算的操作拆到云端，`mcp` 实现标准 MCP Server 供 Claude/Cursor 等 AI 客户端直接调用。
 - `skills` 是能力出口，把以上所有封装好的功能收敛为可复用的 skill 片段，注入 Codex/Claude Code，让 AI agent 能直接调用 ChatTool 的能力。
 
@@ -91,12 +91,13 @@ resp = chat.get_response()
 print(resp.content)
 ```
 
-### 飞书机器人
+### 飞书/Lark Bot（ChatLark）
 
 ```bash
-chattool lark send USER_ID "Hello"
-chattool lark info
-chattool serve lark ai --system "你是工作助手"
+pip install "chattool[lark]"
+chatlark send USER_ID "Hello"
+chatlark info
+chatlark serve echo
 ```
 
 ### DNS 管理（ChatDNS）

@@ -242,15 +242,11 @@ INFO: Start opencode setup
   - `tests/mock-cli-tests/*.md` / `tests/mock-cli-tests/*.py`：基于 mock 的 CLI 编排、参数流向、输出格式与懒加载验证。
 - **真实执行测试的落点**：`tests/cli-tests/*.py` 只作为对应 `.md` 的真实 CLI 执行实现，真实链路测试应标记为 `@pytest.mark.e2e`。
 - **Mock 收纳规则**：所有使用 `mock`、`patch`、`monkeypatch`、fake client、fake API 的 CLI 测试，都必须收纳到 `tests/mock-cli-tests/`。
-- **GitHub 自动测试范围有限**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 `lark` / `dns` 等第三方链路与大多数 `@pytest.mark.e2e`；不要把“GitHub CI 通过”误当成这些能力已验收。
+- **GitHub 自动测试范围有限**：当前 `.github/workflows/ci.yml` 只跑 stable smoke tests，不包含 DNS 等第三方链路与大多数 `@pytest.mark.e2e`；不要把“GitHub CI 通过”误当成这些能力已验收。
 - **`tests/code-tests/` 的定位**：`tests/code-tests/` 收纳非 CLI 代码测试与历史测试迁移，不再作为新 CLI 测试默认落点。
 - **禁止无文档测试实现**：没有对应 `.md` 的 CLI 测试实现不应新增。
-- 对第三方集成，尤其是 Feishu，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值；如果改用 mock，只能放到 `tests/mock-cli-tests/`。
-- 如果测试依赖接收者、群聊或其他运行时参数，也应通过配置项暴露，例如 `FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`，并在对应 `.md` 中写清配置要求与回滚方式。
-- Feishu 相关测试设计应统一落在 `tests/cli-tests/lark/<topic>/`；不再维护仓库内 `skills/feishu/` 入口。
-- Feishu 的真实执行测试只能以这些 `tests/cli-tests/lark/<topic>/*.md` 为准；`tests/code-tests/tools/lark/` 中的历史文件不再作为主规范依据。
-- Feishu 真实测试文档至少显式列出这些配置项：`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_DEFAULT_RECEIVER_ID`、`FEISHU_DEFAULT_CHAT_ID`。
-- Feishu 测试文档必须写明回滚策略，例如删除测试消息、删除测试文档，或说明为何保留测试痕迹。
+- 对仍留在 ChatTool 内的第三方集成，这类 `@pytest.mark.e2e` 测试必须从默认 `chatenv` / 配置对象读取生效值；如果改用 mock，只能放到 `tests/mock-cli-tests/`。
+- Feishu/Lark bot helper 已迁移到独立 `ChatLark`，相关 `chatlark` CLI 与 Python API 测试应在 ChatLark 仓库维护；ChatTool 内只保留 Feishu typed env 兼容路径测试。
 - **文档更新**：功能变更必须同步更新 `docs/` 下的文档和 `README.md`。
 - **变更记录**：每次功能或修复更新必须同步更新 `CHANGELOG.md`。
 - **发版记录**：每次正式发版必须先确保目标版本已在 PR/MR 阶段写入 `src/chattool/__init__.py` 与对应 `CHANGELOG.md`，再从已合并主线推送标准 tag `vX.Y.Z` 触发发布；若 PyPI 已存在该版本，必须先走新的版本 bump 变更，不能复用同版本 tag；发版信息只维护在 `CHANGELOG.md`。
@@ -299,4 +295,4 @@ INFO: Start opencode setup
 - [任务驱动沉淀](task-driven-iteration.md)：执行任务时沉淀工具与技能的流程规范。
 - [CLI 交互统一设计](../design/chattool-cli-interaction-design.md)：统一 interactive 策略、TUI 模块边界与迁移顺序。
 - [Mock CLI Tests](mock-cli-tests.md)：mock CLI 测试的目录边界、doc-first 规则与使用边界。
-- [飞书能力设计](../design/feishu-cli.md)：`chattool lark` 与外部 lark-cli/workspace skill 的边界。
+- [飞书能力设计](../design/feishu-cli.md)：历史 `chattool lark`、外部 lark-cli、ChatLark 与 workspace skill 的边界。

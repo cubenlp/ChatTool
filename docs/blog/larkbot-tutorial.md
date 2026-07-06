@@ -26,7 +26,7 @@ Ready? Let's go.
 
 在写代码之前，我们需要先去 [飞书开放平台](https://open.feishu.cn/) 申请一个“身份证”。
 
-> 如果你已经有 App ID 和 Secret，可以跳过此步。详细步骤请参考：[飞书 CLI 使用教程](../tools/lark/index.md)
+> 如果你已经有 App ID 和 Secret，可以跳过此步。详细步骤请参考：[飞书 CLI 使用教程](https://github.com/ChatArch/ChatLark)
 
 ### 1. 创建应用
 登录开发者后台，点击「**创建企业自建应用**」，起个好听的名字，比如 `AI 摸鱼助手`。
@@ -157,7 +157,7 @@ bot.start()
 
 现在，你的机器人已经是一个能记住上下文的 AI 助手了！
 
-> 进阶阅读：[飞书 CLI 使用教程](../tools/lark/index.md)
+> 进阶阅读：[飞书 CLI 使用教程](https://github.com/ChatArch/ChatLark)
 
 ---
 
@@ -205,7 +205,7 @@ def on_card_done(ctx):
 
 效果非常丝滑，完全不需要用户重新发消息。
 
-> 进阶阅读：[飞书 CLI 使用教程](../tools/lark/index.md)
+> 进阶阅读：[飞书 CLI 使用教程](https://github.com/ChatArch/ChatLark)
 
 ---
 
@@ -229,7 +229,7 @@ chattool lark send rexwzh "老板，今晚不加班！"
 chattool serve lark ai --system "你是一个翻译官，把我说的话翻译成英文"
 ```
 
-> 进阶阅读：[命令行工具手册](../tools/lark/index.md)
+> 进阶阅读：[命令行工具手册](https://github.com/ChatArch/ChatLark)
 
 ---
 
@@ -241,6 +241,6 @@ chattool serve lark ai --system "你是一个翻译官，把我说的话翻译�
 3.  **智能**：内置 Session 管理，一行代码接 AI。
 4.  **交互**：卡片回调极其简单。
 
-如果你想在生产环境（服务器）部署，只需要把 `bot.start()` 改成 Webhook 模式即可（支持 Flask/FastAPI），具体可以参考 [飞书 CLI 使用教程](../tools/lark/index.md)。
+如果你想在生产环境（服务器）部署，只需要把 `bot.start()` 改成 Webhook 模式即可（支持 Flask/FastAPI），具体可以参考 [飞书 CLI 使用教程](https://github.com/ChatArch/ChatLark)。
 
 **现在，去动手写一个属于你的飞书机器人吧！** 🚀
