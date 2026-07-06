@@ -36,7 +36,6 @@ BaseEnvConfig.load_all(CHATARCH_ENV_DIR)
 
 
 _LAZY_ATTRS = {
-    "LarkBot": ("chattool.tools.lark", "LarkBot"),
     "SSLCertUpdater": ("chatdns", "SSLCertUpdater"),
 }
 
@@ -66,6 +65,5 @@ __all__ = [
     "AliyunConfig",
     "TencentConfig",
     "ZulipConfig",
-    "LarkBot",
     "SSLCertUpdater",
 ]

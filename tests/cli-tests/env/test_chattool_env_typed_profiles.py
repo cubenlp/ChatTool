@@ -111,7 +111,7 @@ def test_env_list_profiles_by_type(tmp_path: Path):
     assert "profile2.env" in result.stdout
 
 
-def test_lark_explicit_env_ref_overrides_os_environment(tmp_path: Path):
+def test_feishu_explicit_env_ref_overrides_os_environment_via_chatenv(tmp_path: Path):
     config_dir = tmp_path / "config"
     feishu_dir = config_dir / "envs" / "Feishu"
     feishu_dir.mkdir(parents=True, exist_ok=True)
@@ -127,9 +127,11 @@ def test_lark_explicit_env_ref_overrides_os_environment(tmp_path: Path):
     with_env_ref = _run_python(
         "\n".join(
             [
-                "from chattool.tools.lark.cli import _load_runtime_env",
-                "from chattool.config import FeishuConfig",
-                "_load_runtime_env('work')",
+                "from chattool.config import BaseEnvConfig",
+                "from chatenv.configs import FeishuConfig",
+                "from chattool.const import CHATARCH_ENV_DIR",
+                "env_file = FeishuConfig.get_profile_env_file(CHATARCH_ENV_DIR, 'work')",
+                "BaseEnvConfig.load_all_with_override(CHATARCH_ENV_DIR, env_file)",
                 "print(FeishuConfig.FEISHU_APP_ID.value)",
             ]
         ),
@@ -143,7 +145,15 @@ def test_lark_explicit_env_ref_overrides_os_environment(tmp_path: Path):
     assert with_env_ref.stdout.strip() == "from_explicit"
 
     without_env_ref = _run_python(
-        "from chattool.config import FeishuConfig; print(FeishuConfig.FEISHU_APP_ID.value)",
+        "\n".join(
+            [
+                "from chattool.config import BaseEnvConfig",
+                "from chatenv.configs import FeishuConfig",
+                "from chattool.const import CHATARCH_ENV_DIR",
+                "BaseEnvConfig.load_all_with_override(CHATARCH_ENV_DIR, None)",
+                "print(FeishuConfig.FEISHU_APP_ID.value)",
+            ]
+        ),
         config_dir=config_dir,
         extra_env={
             "FEISHU_APP_ID": "from_os",

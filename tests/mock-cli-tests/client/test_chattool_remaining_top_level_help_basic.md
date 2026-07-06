@@ -5,7 +5,7 @@
 ## 元信息
 
 - 命令：`chattool <command> --help`
-- 目的：覆盖 `lark`、`tplogin`、`cc` 等剩余一级入口的 help 一致性，并确认已迁移能力不再出现在顶层入口。
+- 目的：覆盖 `tplogin`、`cc` 等剩余一级入口的 help 一致性，并确认已迁移能力不再出现在顶层入口。
 - 标签：`cli`、`mock`
 - 前置条件：无外部服务依赖。
 - 环境准备：使用 `CliRunner` 调用统一入口 `chattool`。
@@ -23,11 +23,11 @@
 1. 执行 `chattool pypi --help`。
 2. 应返回 `No such command 'pypi'`，Python package lifecycle 能力由独立 `chatpypi` CLI 提供。
 
-## 用例 3：`lark --help`
+## 用例 3：`lark` 已迁移
 
 预期过程和结果：
 1. 执行 `chattool lark --help`。
-2. 子命令 short help 应与顶层英文风格一致。
+2. 应返回 `No such command 'lark'`，Lark bot helper 能力由独立 `chatlark` CLI 提供。
 
 ## 用例 4：`tplogin --help`
 

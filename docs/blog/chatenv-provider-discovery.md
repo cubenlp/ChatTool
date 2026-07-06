@@ -182,7 +182,7 @@ ChatTool 现在就是一个 ChatEnv consumer。
 chattool = "chattool.config"
 ```
 
-在 `src/chattool/config/__init__.py` 中统一导出配置类。具体 schema 按类型拆到独立文件，例如 `src/chattool/config/openai.py`、`src/chattool/config/feishu.py`：
+在 `src/chattool/config/__init__.py` 中统一导出 ChatTool 仍然拥有的配置类。具体 schema 按类型拆到独立文件，例如 `src/chattool/config/openai.py`；Feishu schema 已上移到独立 `chatenv.configs.FeishuConfig`，不再由 ChatTool re-export：
 
 ```python
 from chatenv.fields import BaseEnvConfig, EnvField
@@ -211,7 +211,7 @@ chatenv paste
 chatenv test -t oai
 ```
 
-`chatenv` 只负责统一 CLI 和文件读写；OpenAI、Feishu、DNS、CRS 等具体变量仍由 ChatTool 自己维护。
+`chatenv` 负责统一 CLI 和文件读写；ChatTool 只维护自身仍拥有的 schema（如 OpenAI、CRS 等）。Feishu/Lark bot 相关配置由独立 ChatEnv/ChatLark 链路承接。
 
 ---
 

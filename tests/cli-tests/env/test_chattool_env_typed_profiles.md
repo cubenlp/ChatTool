@@ -4,7 +4,7 @@
 
 ## 元信息
 
-- 命令：`chatenv ...`、`chattool lark ...`
+- 命令：`chatenv ...`、ChatEnv Feishu canonical config path
 - 目的：验证 `envs/<Config>/.env` 与 `envs/<Config>/<profile>.env` 的真实行为，以及 `显式参数 > -e/显式 env > 内置 .env > environment > default` 的加载顺序。
 - 标签：`cli`
 - 前置条件：无
@@ -52,7 +52,7 @@ chatenv use work -t openai
 OPENAI_API_KEY=from_os chatenv cat -t openai --no-mask
 ```
 
-## 用例 3：`chattool lark -e` 覆盖系统环境变量
+## 用例 3：显式 Feishu profile 覆盖系统环境变量
 
 - 初始环境准备：
   - 在 `envs/Feishu/.env` 写入一组默认飞书配置。
@@ -60,12 +60,12 @@ OPENAI_API_KEY=from_os chatenv cat -t openai --no-mask
   - 进程环境变量里写入另一组冲突值。
 
 预期过程和结果：
-  1. 以 `-e work` 进入飞书运行时加载流程，预期显式 profile 中的值优先于系统环境变量。
+  1. 通过 ChatEnv `BaseEnvConfig.load_all_with_override()` 显式加载 `work.env`，预期显式 profile 中的值优先于系统环境变量。
   2. 未传 `-e` 时，预期系统环境变量仍优先于 `envs/Feishu/.env`。
 
 参考执行脚本（伪代码）：
 
 ```sh
-FEISHU_APP_ID=from_os python -c 'from chattool.tools.lark.cli import _load_runtime_env; from chattool.config import FeishuConfig; _load_runtime_env("work"); print(FeishuConfig.FEISHU_APP_ID.value)'
-python -c 'from chattool.config import FeishuConfig; print(FeishuConfig.FEISHU_APP_ID.value)'
+FEISHU_APP_ID=from_os python -c 'from chattool.config import BaseEnvConfig; from chatenv.configs import FeishuConfig; from chattool.const import CHATARCH_ENV_DIR; env_file = FeishuConfig.get_profile_env_file(CHATARCH_ENV_DIR, "work"); BaseEnvConfig.load_all_with_override(CHATARCH_ENV_DIR, env_file); print(FeishuConfig.FEISHU_APP_ID.value)'
+python -c 'from chattool.config import BaseEnvConfig; from chatenv.configs import FeishuConfig; from chattool.const import CHATARCH_ENV_DIR; BaseEnvConfig.load_all_with_override(CHATARCH_ENV_DIR, None); print(FeishuConfig.FEISHU_APP_ID.value)'
 ```

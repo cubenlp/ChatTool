@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-07-07
+- Lark bot helper 已完成 parent 分离：移除 `chattool lark`、`chattool serve lark`、`src/chattool/tools/lark/`、`src/chattool/serve/lark_serve.py`、ChatTool 内 Lark 示例与 Lark 专属测试；常规 Lark 功能由独立 `ChatLark>=0.1.1,<0.2.0` / `chatlark` 负责。
+- `chattool[lark]` 和 `chattool[arch]` 现在安装独立 ChatLark；ChatTool 不再重复维护 LarkBot / MessageContext / ChatSession 实现，也不再 re-export Feishu typed env schema；Feishu 配置事实源为独立 `chatenv.configs.FeishuConfig`。
+- 模型调用相关 Lark 入口不在本次 parent update 中接回；如后续需要 AI chat bot，应在 ChatLark 侧单独设计模型 backend 边界。
+
 ## 2026-06-28
 - 移除仓库根 `skills/` 旧随包资产；ChatTool 不再把 repo-local skills 当作当前 agent workflow 或默认安装源。
 - `chattool skill` / `chatskill` 继续保留安装/列出能力，但源目录必须来自显式 `--source`、`CHATTOOL_SKILLS_DIR` 或 ChatEnv 配置；不再自动定位仓库 `skills/`。

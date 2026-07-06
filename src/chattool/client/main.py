@@ -85,7 +85,6 @@ cli._lazy_commands.update(
         "client": _build_client_group,
         "nginx": lambda: _load_attr("chattool.tools.nginx.cli", "cli"),
         "mcp": lambda: _load_attr("chattool.mcp.cli", "cli"),
-        "lark": lambda: _load_attr("chattool.tools.lark.cli", "cli"),
         "image": lambda: _load_attr("chattool.tools.image.cli", "cli"),
         "tplogin": lambda: _load_attr("chattool.tools.tplogin_cli", "cli"),
         "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),

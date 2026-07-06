@@ -2,7 +2,7 @@ import pytest
 import time
 import os
 from chattool.llm import Chat
-from chattool.tools import ZulipClient, LarkBot
+from chattool.tools import ZulipClient
 from chattool.serve.capture import app as capture_app
 from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
@@ -50,8 +50,3 @@ def zulip_client():
     """Zulip 客户端"""
     zulip_client = ZulipClient()
     return zulip_client
-
-@pytest.fixture
-def lark_bot():
-    """Fixture to provide a configured LarkBot instance."""
-    return LarkBot()

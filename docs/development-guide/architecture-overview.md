@@ -126,7 +126,7 @@ ChatTool 不是只为本地命令行设计。它同时支持三类出口：
 
 例如：
 
-- `src/chattool/serve/lark_serve.py` 适合处理机器人服务场景。
+- `src/chattool/serve/` 适合处理仍由 ChatTool 承载的本地服务场景；Lark bot 服务已迁移到 `ChatLark`。
 - `src/chattool/mcp/` 和 `tools/*/mcp.py` 适合把现有工具暴露给支持 MCP 的客户端。
 - `src/chattool/skill/cli.py` 支持从显式外部 source / `CHATTOOL_SKILLS_DIR` 安装技能到 Codex / Claude Code。
 
@@ -182,7 +182,6 @@ ChatTool 当前架构很重要的一点，是它不是先抽象一套理想架�
 
 代表目录：
 
-- [src/chattool/tools/lark](../../src/chattool/tools/lark)
 - [src/chattool/tools/image](../../src/chattool/tools/image)
 - [src/chattool/tools/zulip](../../src/chattool/tools/zulip)
 - [src/chattool/tools/browser](../../src/chattool/tools/browser)
@@ -193,7 +192,7 @@ ChatTool 当前架构很重要的一点，是它不是先抽象一套理想架�
 - 工具实现可以同时面向 Python、CLI、MCP 多种形式开放。
 - 新增能力时，优先进入 `tools/<name>/`，保证项目归位规则稳定。
 
-它解决的是“真正的能力应该放在哪里”的问题。成熟并已独立发布的能力（例如 DNS -> `ChatDNS`）应从 parent 业务实现中移出，只保留必要的依赖/注册边界。
+它解决的是“真正的能力应该放在哪里”的问题。成熟并已独立发布的能力（例如 DNS -> `ChatDNS`、Lark bot helper -> `ChatLark`）应从 parent 业务实现中移出，只保留必要的依赖/注册边界。
 
 ### `client/`：统一 CLI 门面
 

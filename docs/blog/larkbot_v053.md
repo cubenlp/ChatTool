@@ -177,6 +177,6 @@ chattool serve lark echo -l DEBUG
 
 ## 文档
 
-完整文档见 [飞书 CLI 使用教程](../tools/lark/index.md)：
+完整文档见 [飞书 CLI 使用教程](https://github.com/ChatArch/ChatLark)：
 
-- [飞书机器人 CLI 教程](../tools/lark/index.md) — 凭证、权限、发送、监听与本地调试
+- [飞书机器人 CLI 教程](https://github.com/ChatArch/ChatLark) — 凭证、权限、发送、监听与本地调试
