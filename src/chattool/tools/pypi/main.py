@@ -413,7 +413,9 @@ def _build_chatarch_pyproject_content(
         ]
     )
     if include_mkdocs:
-        lines.append('docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mike>=2.0.0"]')
+        lines.append(
+            'docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mkdocs-static-i18n>=1.2.0", "mike>=2.0.0"]'
+        )
     lines.extend(
         [
             "",
@@ -765,7 +767,7 @@ def _build_chatarch_docs_index(package_name: str) -> str:
             mkdocs serve
             ```
 
-            英文版见：[index.en.md](index.en.md)。
+            英文版通过页面右上角语言切换进入。
             """
         ).strip()
         + "\n"
@@ -787,7 +789,7 @@ def _build_chatarch_docs_index_en(package_name: str) -> str:
             mkdocs serve
             ```
 
-            Chinese version: [index.md](index.md).
+            Use the language selector in the page header to switch languages.
             """
         ).strip()
         + "\n"
@@ -803,12 +805,50 @@ def _build_chatarch_mkdocs_yml(package_name: str) -> str:
             site_name: {package_name} 文档
             site_url: {docs_url}
             repo_url: https://github.com/{repo_slug}
+            repo_name: {repo_slug}
+            edit_uri: edit/main/docs/
+            docs_dir: docs/
             theme:
               name: material
               language: zh
+              features:
+                - navigation.tabs
+                - navigation.sections
+                - navigation.expand
+                - navigation.top
+                - search.highlight
+                - search.share
+                - content.code.copy
+                - content.action.edit
+            plugins:
+              - search
+              - i18n:
+                  docs_structure: suffix
+                  fallback_to_default: true
+                  reconfigure_material: true
+                  reconfigure_search: true
+                  languages:
+                    - locale: zh
+                      default: true
+                      name: 中文
+                      build: true
+                      site_name: {package_name} 文档
+                    - locale: en
+                      name: English
+                      build: true
+                      site_name: {package_name} Documentation
+                      nav_translations:
+                        首页: Home
+            extra:
+              alternate:
+                - name: 中文
+                  link: /{package_name}/
+                  lang: zh
+                - name: English
+                  link: /{package_name}/en/
+                  lang: en
             nav:
               - 首页: index.md
-              - English: index.en.md
             """
         ).strip()
         + "\n"

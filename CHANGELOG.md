@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-07-16
+- `chattool pypi init -t chatarch` 生成的 mkdocs 模板接入 `mkdocs-static-i18n`：使用 suffix 文档结构、Material 语言切换和 `extra.alternate`，不再把 `English: index.en.md` 当作普通导航栏目；生成项目的 docs extra 也同步包含 `mkdocs-static-i18n`，CI 可直接构建中英文站点。
+
 ## 2026-06-24
 - 准备 `7.1.0` minor 版本：适配 ChatEnv `0.3.x` shared OpenAI/Feishu schema，并按 ChatArch 内部依赖规范为 `chatgh`、`chatstyle`、`chatenv` 增加上界窗口。
 - `chattool.config.OpenAIConfig` / `FeishuConfig` 改为继承 ChatEnv shared configs，字段事实源上移到 ChatEnv；ChatTool 保留兼容 import 和自身连接测试逻辑。

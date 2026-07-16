@@ -262,6 +262,13 @@ def test_scaffold_chatarch_defaults_to_python_310_and_chatarch_deps(tmp_path):
     cli_text = (project_dir / "src" / "mychat_cli" / "cli.py").read_text(
         encoding="utf-8"
     )
+    mkdocs_text = (project_dir / "mkdocs.yml").read_text(encoding="utf-8")
+    docs_index_text = (project_dir / "docs" / "index.md").read_text(
+        encoding="utf-8"
+    )
+    docs_index_en_text = (project_dir / "docs" / "index.en.md").read_text(
+        encoding="utf-8"
+    )
     workflow_texts = [
         path.read_text(encoding="utf-8")
         for path in sorted((project_dir / ".github" / "workflows").iterdir())
@@ -270,9 +277,17 @@ def test_scaffold_chatarch_defaults_to_python_310_and_chatarch_deps(tmp_path):
     assert 'requires-python = ">=3.10"' in pyproject_text
     assert '"chatstyle>=0.1.0,<0.2.0"' in pyproject_text
     assert '"chatenv>=0.2.0,<0.3.0"' in pyproject_text
+    assert '"mkdocs-static-i18n>=1.2.0"' in pyproject_text
     assert 'Homepage = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
     assert 'Repository = "https://github.com/ChatArch/mychat-cli"' in pyproject_text
     assert 'Documentation = "https://ChatArch.github.io/mychat-cli"' in pyproject_text
+    assert "docs_structure: suffix" in mkdocs_text
+    assert "extra:" in mkdocs_text
+    assert "alternate:" in mkdocs_text
+    assert "link: /mychat-cli/en/" in mkdocs_text
+    assert "English: index.en.md" not in mkdocs_text
+    assert "index.en.md" not in docs_index_text
+    assert "index.md" not in docs_index_en_text
     assert "CommandSchema" in cli_text
     assert all('python-version: "3.10"' in text for text in workflow_texts)
     assert all("3.11" not in text for text in workflow_texts)
