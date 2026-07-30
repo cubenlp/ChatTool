@@ -45,8 +45,6 @@ tests/cli-tests/
 │   └── test_chattool_skill_practice_make_perfact_reference.md
 ├── tplogin/
 │   └── test_chattool_tplogin_basic.md
-└── zulip/
-    └── test_chattool_zulip_basic.md
 ```
 
 ## 文件级别说明

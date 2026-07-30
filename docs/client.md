@@ -13,7 +13,7 @@ CLI按功能分为几个命令组：
 - **`mcp`**: 模型上下文协议 (MCP) 服务器管理。
 - **`lark`**: 保留的飞书最小调试命令（`info` / `send` / `chat`）。
 - **`kb`**: 知识库 (Knowledge Base) 管理工具。
-- **`zulip`**: Zulip 社区阅读与资讯汇总工具（仅只读）。
+- **Zulip**: 已迁移到独立 `ChatZulip` / `chatzulip`，ChatTool 不再暴露 `chattool zulip`。
 - **`setup`**: 环境初始化与依赖安装（Node.js / zsh / cc-connect / Codex / Claude / OpenCode / lark-cli / Docker / Chrome / FRP）。
 - **`cc`**: cc-connect 的初始化、启动、日志与诊断工具。
 
@@ -496,47 +496,26 @@ chatgh repo-perms --repo owner/repo --token github_pat_xxx
 
 ---
 
-## 5. Zulip 工具 (`zulip`)
+## 5. Zulip 已迁移到 ChatZulip
 
-用于读取 Zulip 社区消息并生成资讯摘要（**只读**，不提供发送接口以避免误发）。
-
-### 5.1 配置
-
-使用 `chatenv` 查看或配置：
+Zulip 社区阅读、资讯汇总、Python API 与 MCP adapter 已迁移到独立 `ChatZulip>=0.1.0,<0.2.0` 包。ChatTool parent 不再维护 `chattool zulip` 嵌套命令、`chattool.tools.zulip` 实现或 Zulip typed env re-export。
 
 ```bash
+# 安装独立能力
+python -m pip install ChatZulip
+# 或通过 ChatTool 聚合 extra 安装
+python -m pip install 'chattool[zulip]'
+
+# 使用独立 CLI
+chatzulip --help
+chatzulip streams
+chatzulip news --since-hours 24 --stream general
+
+# Zulip 配置由 ChatZulip 注册到 ChatEnv 的 zulip provider 负责
 chatenv cat -t zulip
 ```
 
-常用配置项：
-- `ZULIP_BOT_EMAIL`
-- `ZULIP_BOT_API_KEY`
-- `ZULIP_SITE`
-- `ZULIP_NEWS_STREAMS` (逗号分隔的默认 streams)
-- `ZULIP_NEWS_TOPICS` (逗号分隔的默认 topics)
-- `ZULIP_NEWS_SINCE_HOURS` (默认 24)
-- `ZULIP_NEWS_PER_STREAM` (默认 200)
-
-### 5.2 常用命令
-
-```bash
-# 列出订阅的 streams
-chattool zulip streams
-
-# 缺少 stream/topic 时自动补问
-chattool zulip topics
-chattool zulip topic
-
-# 查看消息（支持过滤）
-chattool zulip messages --stream general --before 20
-
-# 生成资讯摘要（控制台 + Markdown 文件）
-chattool zulip news --since-hours 24 --stream general --stream announcements
-```
-
-默认输出文件：`zulip-news-YYYYMMDD.md`（当前目录），可用 `--output` 覆盖。
-
-在交互终端里，`topics` / `topic` 缺少关键参数时会自动补问；显式传 `-I` 时保持直接报错。
+需要迁移旧用法时，将 `chattool zulip ...` 改为 `chatzulip ...`。
 
 ---
 

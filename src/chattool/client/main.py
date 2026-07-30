@@ -87,7 +87,6 @@ cli._lazy_commands.update(
         "mcp": lambda: _load_attr("chattool.mcp.cli", "cli"),
         "tplogin": lambda: _load_attr("chattool.tools.tplogin_cli", "cli"),
         "browser": lambda: _load_attr("chattool.tools.browser.cli", "cli"),
-        "zulip": lambda: _load_attr("chattool.tools.zulip.cli", "cli"),
         "skill": lambda: _load_attr("chattool.skill.cli", "skill_cli"),
         "cc": lambda: _load_attr("chattool.tools.cc.cli", "cli"),
         "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),

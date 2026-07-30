@@ -78,14 +78,10 @@ DNS 是已迁出能力，不再是当前 ChatTool parent 的 nested 命令。以
 
 - 缺少 PR 编号、run id、job id、repo/token 等关键参数时自动补问；PR 创建/编辑/合并等写操作在 ChatGH 暂未公开为稳定 CLI 前，不作为本表的公开命令面
 
-### Zulip
+### ChatZulip
 
-- `chattool zulip topics`
-- `chattool zulip topic`
-
-行为：
-
-- 缺少 `stream` / `topic` 时自动补问
+- `chattool zulip` 已迁移为独立 `chatzulip` CLI。
+- ChatTool parent 不再把 Zulip 作为 nested command 的交互规范样例；后续 Zulip 交互行为在 ChatZulip 仓库维护。
 
 ### Image
 
@@ -191,7 +187,7 @@ ChatTool 不再维护 `chattool pypi` 或 `chatpypi` wrapper；需要该能力�
   - `client cert`
   - `network ping`
   - `gh`
-  - `zulip`
+  - `chatzulip`（独立包）
   - `env/chatenv` 章节
   - Network 已迁出到独立 `ChatNet` / `chatnet`；ChatTool parent 不再维护 `docs/tools/network/index.md`。
 
