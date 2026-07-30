@@ -4,11 +4,7 @@ ChatTool 内置了符合 [Model Context Protocol (MCP)](https://modelcontextprot
 
 ## 功能模块
 
-ChatTool MCP Server 当前保留以下 legacy 模块：
-
-- [Zulip 集成](./zulip.md): 消息收发、频道管理
-
-DNS 与 Network 能力已迁移到独立包，不在本轮 ChatTool parent MCP 中保留兼容接入。后续如需要 MCP 支持，应分别在对应独立包或新的边界设计中单独 review。
+ChatTool parent 当前不再注册已拆分能力的 MCP 工具。DNS、Network 与 Zulip 能力均已迁移到独立包；如后续需要 MCP 支持，应分别在对应独立包或新的边界设计中单独 review。
 
 ## 安装与使用
 
@@ -95,7 +91,7 @@ chattool mcp info --json-output
 
 ## 配置说明
 
-MCP 服务会自动读取 ChatTool 的全局配置。当前 DNS / Network MCP 不在 ChatTool parent 中保留；DNS 记录管理请使用独立 `chatdns` CLI，网络扫描/链接检查/service URL 检查请使用独立 `chatnet` CLI。
+MCP 服务会自动读取 ChatTool 的全局配置。当前 DNS / Network / Zulip MCP 不在 ChatTool parent 中保留；DNS 记录管理请使用独立 `chatdns` CLI，网络扫描/链接检查/service URL 检查请使用独立 `chatnet` CLI，Zulip 读写与摘要能力请使用独立 `chatzulip` CLI / API。
 
 ```bash
 # 检查当前配置
@@ -123,16 +119,12 @@ ChatTool MCP 服务支持对工具进行分组和权限控制，你可以通过�
 
 ### 可用的标签 (Tags)
 
-- `zulip`: 所有 Zulip 聊天工具
-- `read`: 只读工具（如查询消息）
-- `write`: 写入工具（如发送消息）
+当前 ChatTool parent 没有内置 MCP tool catalog；标签只对未来重新注册的 parent-owned 工具生效。
 
 ## 在 Claude Desktop 中使用
 
 1. 完成上述配置。
 2. 重启 Claude Desktop。
-3. 在对话中，你现在可以直接要求 Claude：
-   - "帮我列出 Zulip 频道"
-   - "帮我查询某个 Zulip 话题下的最近消息"
+3. 当前 ChatTool parent 不再暴露已拆分能力的 MCP 工具。
 
-DNS 记录管理、DDNS、证书自动化、网络扫描、链接检查与 service URL 检查都不属于当前 ChatTool MCP 范围；请使用 `chatdns` / `chatdns cert` / `chatnet` CLI。相关 MCP 如需恢复，应单独 review 独立包与 ChatTool 的 MCP 边界。
+DNS 记录管理、DDNS、证书自动化、网络扫描、链接检查、service URL 检查与 Zulip 工具都不属于当前 ChatTool MCP 范围；请使用 `chatdns` / `chatdns cert` / `chatnet` / `chatzulip` CLI。相关 MCP 如需恢复，应单独 review 独立包与 ChatTool 的 MCP 边界。

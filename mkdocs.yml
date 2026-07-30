@@ -126,7 +126,6 @@ nav:
     - CC-Connect 管理: tools/cc/index.md
     - CRS 查询工具: tools/crs/index.md
     - MCP 服务指南: mcp/index.md
-    - Zulip 集成: mcp/zulip.md
 
   - 环境安装:
     - 概览: env/index.md

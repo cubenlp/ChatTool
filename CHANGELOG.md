@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-07-30
+- ChatZulip parent 分离：`chattool zulip`、`src/chattool/tools/zulip/`、ChatTool 内 `ZulipConfig` re-export、Zulip MCP catalog 与 Zulip 专属测试/文档已移除；Zulip 能力由独立 `ChatZulip>=0.1.0,<0.2.0` / `chatzulip` 负责。
+- 新增 `chattool[zulip]` optional extra，并把 `ChatZulip>=0.1.0,<0.2.0` 纳入 `chattool[arch]` / `chattool[tools]` 聚合安装；ChatTool base install 不再重复维护 Zulip runtime。
+
 ## 2026-07-07
 - 准备 `7.1.2` patch 版本：随 ChatImg parent 分离 PR 发布，ChatTool 不再维护 `chattool image` 内嵌 provider surface，并通过 `chattool[images]` / `chattool[arch]` 安装 `ChatImg[images]>=0.1.3,<0.2.0`。
 - AI image providers 已完成 parent 分离：移除 `chattool image`、`src/chattool/tools/image/`、ChatTool 内 image provider config schemas 与 image 专属测试/文档；image 生成能力由独立 `ChatImg>=0.1.3,<0.2.0` / `chatimg` 负责。

@@ -169,7 +169,7 @@ def demo(name, output, interactive):
 - `chattool client cert`
 - `chattool client svg2gif`
 - `chatgh`
-- `chattool zulip`
+- `chatzulip`
 - `chatimg`
 - `chatenv` 高频 profile/key/test 命令
 - `chattool explore arxiv get`

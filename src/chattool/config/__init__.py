@@ -5,7 +5,6 @@ from .skills import SkillsConfig
 from .azure import AzureConfig
 from .aliyun import AliyunConfig
 from .tencent import TencentConfig
-from .zulip import ZulipConfig
 from .tplink import TPLinkConfig
 from .browser import BrowserConfig
 
@@ -16,7 +15,6 @@ __all__ = [
     "AzureConfig",
     "OpenAIConfig",
     "CRSConfig",
-    "ZulipConfig",
     "AliyunConfig",
     "TencentConfig",
     "BrowserConfig",

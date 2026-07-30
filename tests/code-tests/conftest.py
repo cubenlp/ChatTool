@@ -2,7 +2,6 @@ import pytest
 import time
 import os
 from chattool.llm import Chat
-from chattool.tools import ZulipClient
 from chattool.serve.capture import app as capture_app
 from chattool.utils import HTTPClient, HTTPConfig, FastAPIManager
 
@@ -44,9 +43,3 @@ def config(server_url):
 def http_client(config):
     """同步HTTP客户端"""
     return HTTPClient(api_base=config.api_base)
-
-@pytest.fixture
-def zulip_client():
-    """Zulip 客户端"""
-    zulip_client = ZulipClient()
-    return zulip_client

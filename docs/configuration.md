@@ -150,11 +150,9 @@ chatenv delete test -t openai
 ├── OpenAI/
 │   ├── .env
 │   └── prod.env
-├── Feishu/
-│   ├── .env
-│   └── work.env
-└── Zulip/
-    └── .env
+└── Feishu/
+    ├── .env
+    └── work.env
 ```
 
 约定：
@@ -226,12 +224,13 @@ chatenv test -t oai
 - **Azure OpenAI**: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` 等
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
-- **Zulip**: `ZULIP_BOT_EMAIL`, `ZULIP_BOT_API_KEY` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 
 GitHub/gh 相关 typed env 已迁移到独立 `chatgh`，ChatTool 不再注册 `GITHUB_ACCESS_TOKEN` schema；需要配置 GitHub token 时请安装并使用 `chatgh set-token` / `chatenv -t gh`。
 
 AI image provider typed env schemas 已迁移到独立 `ChatImg` / `chatimg`，ChatTool 不再注册 `TongyiConfig`、`HuggingFaceConfig`、`LiblibConfig`、`PollinationsConfig` 或 `SiliconFlowConfig`；需要配置 image provider 时请使用 `chatenv -t chatimg`。
+
+Zulip typed env schema 已迁移到独立 `ChatZulip` / `chatzulip`，ChatTool 不再注册或 re-export `ZulipConfig`；需要配置 `ZULIP_SITE`、`ZULIP_BOT_EMAIL`、`ZULIP_BOT_API_KEY` 或 news 默认值时请安装 `ChatZulip` 并使用 `chatenv -t zulip`。
 
 Feishu typed env schema 已由独立 `chatenv` 提供，ChatTool 不再 re-export `FeishuConfig`。飞书相关变量当前由独立 `ChatLark` / `chatlark` 使用：
 

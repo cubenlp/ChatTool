@@ -25,7 +25,6 @@ from .config import (
     AzureConfig,
     AliyunConfig,
     TencentConfig,
-    ZulipConfig,
     BaseEnvConfig,
 )
 
@@ -64,6 +63,5 @@ __all__ = [
     "AzureConfig",
     "AliyunConfig",
     "TencentConfig",
-    "ZulipConfig",
     "SSLCertUpdater",
 ]

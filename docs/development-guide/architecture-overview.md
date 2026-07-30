@@ -42,7 +42,7 @@ flowchart LR
 
 - `src/chattool/config/`：环境变量、默认值和 profile 管理。
 - `src/chattool/llm/`：模型路由、Chat 对象、响应封装。
-- `src/chattool/tools/`：Lark、Image、Browser、Zulip、CC 等仍由 ChatTool parent 维护的核心工具；成熟能力可拆到独立包（例如 DNS -> `ChatDNS`，Network -> `ChatNet`）。
+- `src/chattool/tools/`：Browser、CC 等仍由 ChatTool parent 维护的核心工具；成熟能力可拆到独立包（例如 DNS -> `ChatDNS`，Network -> `ChatNet`，Zulip -> `ChatZulip`）。
 - `src/chattool/client/`：统一 `chattool` CLI 入口与命令路由。
 - `src/chattool/mcp/`：MCP 服务入口和工具注册。
 - `src/chattool/serve/`：服务端能力承载，处理密钥敏感或算力敏感场景。
@@ -64,7 +64,7 @@ ChatTool 的主要使用方式不是直接调用内部模块，而是通过 `cha
 
 仓库里这点体现得很明确：
 
-- `src/chattool/client/main.py` 统一聚合 `serve`、`mcp`、`lark`、`image`、`browser`、`zulip`、`skill`、`cc`、`docker` 等仍属于 ChatTool parent 的子命令；已拆分能力不再通过 parent nested command 暴露（例如 DNS 使用 `chatdns`，Network 使用 `chatnet`）。
+- `src/chattool/client/main.py` 统一聚合 `serve`、`mcp`、`browser`、`skill`、`cc`、`docker` 等仍属于 ChatTool parent 的子命令；已拆分能力不再通过 parent nested command 暴露（例如 DNS 使用 `chatdns`，Network 使用 `chatnet`，Zulip 使用 `chatzulip`）。
 - `pyproject.toml` 直接暴露 `chattool`、`chatskill`、`chatmcp`；`chatenv` 由独立 ChatEnv 包提供，ChatTool 通过 `chatenv.configs` 注册自己的配置 schema。Python package lifecycle 入口由独立 `ChatPyPI` 提供 `chatpypi`。
 - `tests/cli-tests/` 与 `tests/mock-cli-tests/` 都采用 doc-first 机制，说明 CLI 被视为一等公民，而不是实现之后顺带补一个壳。
 
@@ -183,7 +183,7 @@ ChatTool 当前架构很重要的一点，是它不是先抽象一套理想架�
 代表目录：
 
 - AI image providers have moved to standalone `ChatImg` / `chatimg`; ChatTool no longer keeps `src/chattool/tools/image` as a parent-owned implementation.
-- [src/chattool/tools/zulip](../../src/chattool/tools/zulip)
+- Zulip has moved to standalone `ChatZulip` / `chatzulip`; ChatTool no longer keeps `src/chattool/tools/zulip`.
 - [src/chattool/tools/browser](../../src/chattool/tools/browser)
 
 价值：

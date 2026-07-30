@@ -12,13 +12,7 @@ class MCPToolSpec:
     summary: str
 
 
-TOOL_SPECS: Sequence[MCPToolSpec] = (
-    MCPToolSpec("zulip_list_streams", "zulip", ("zulip", "read"), "列出 Zulip 频道"),
-    MCPToolSpec("zulip_get_messages", "zulip", ("zulip", "read"), "查询 Zulip 消息"),
-    MCPToolSpec("zulip_send_message", "zulip", ("zulip", "write"), "发送 Zulip 消息"),
-    MCPToolSpec("zulip_react", "zulip", ("zulip", "write"), "添加 Zulip 表情反应"),
-    MCPToolSpec("zulip_upload_file", "zulip", ("zulip", "write"), "上传 Zulip 文件"),
-)
+TOOL_SPECS: Sequence[MCPToolSpec] = ()
 
 
 def get_tool_specs() -> List[MCPToolSpec]:

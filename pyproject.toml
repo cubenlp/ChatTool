@@ -40,6 +40,7 @@ arch = [
     "ChatNet>=0.2.0,<0.3.0",
     "ChatLark>=0.1.1,<0.2.0",
     "ChatImg[images]>=0.1.3,<0.2.0",
+    "ChatZulip>=0.1.0,<0.2.0",
 ]
 interactive = [
     "questionary>=2.1.0",
@@ -57,6 +58,9 @@ lark = [
 ]
 images = [
     "ChatImg[images]>=0.1.3,<0.2.0",
+]
+zulip = [
+    "ChatZulip>=0.1.0,<0.2.0",
 ]
 screenshot = [
     "selenium",
@@ -89,7 +93,7 @@ setup = [
     "chatup>=0.2.0,<0.3.0",
 ]
 tools = [
-    "chattool[batch,browser,client,dns,images,interactive,lark,mcp,serve,screenshot]",
+    "chattool[batch,browser,client,dns,images,interactive,lark,mcp,serve,screenshot,zulip]",
 ]
 tests = [
     "coverage",
