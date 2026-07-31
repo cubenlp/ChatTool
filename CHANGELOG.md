@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-07-30
+- 准备 `7.1.3` patch 版本：发布 ChatZulip parent 分离结果，使 PyPI 用户获得移除后的 `chattool` surface 与新的 `chattool[zulip]` / `chattool[arch]` / `chattool[tools]` 依赖边界。
+- PyPI 发布工作流从长期 `PYPI_USERNAME` / `PYPI_PASSWORD` secrets 迁移到 `cubenlp/ChatTool` active Trusted Publisher 与 GitHub Actions OIDC；tag workflow 会先跑稳定测试、build 和 twine check，再执行 tokenless publish。
 - ChatZulip parent 分离：`chattool zulip`、`src/chattool/tools/zulip/`、ChatTool 内 `ZulipConfig` re-export、Zulip MCP catalog 与 Zulip 专属测试/文档已移除；Zulip 能力由独立 `ChatZulip>=0.1.0,<0.2.0` / `chatzulip` 负责。
 - 新增 `chattool[zulip]` optional extra，并把 `ChatZulip>=0.1.0,<0.2.0` 纳入 `chattool[arch]` / `chattool[tools]` 聚合安装；ChatTool base install 不再重复维护 Zulip runtime。
 
