@@ -118,8 +118,9 @@ dev = [
     "chattool[arch,docs,setup,tests,tools]",
 ]
 [project.urls]
-Homepage = "https://github.com/cubenlp/chattool"
-Repository = "https://github.com/cubenlp/chattool"
+Homepage = "https://github.com/CubeNLP/ChatTool"
+Repository = "https://github.com/CubeNLP/ChatTool"
+Documentation = "https://chattool.wzhecnu.cn"
 
 [project.scripts]
 chattool = "chattool.client:main_cli"

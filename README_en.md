@@ -193,6 +193,28 @@ python scripts/migrate_chattool_envs_to_chatarch.py --dry-run
 python scripts/migrate_chattool_envs_to_chatarch.py
 ```
 
+## CLI Tree
+
+`chattool --tree` is generated from the real Click/LazyGroup registry to lock the current parent command surface.
+
+```text
+chattool  # Unified entry point for ChatTool services and scripts.
+├── --help  # Show help for the current command.
+├── --version  # Show package version.
+├── --tree  # Print the registered CLI tree.
+├── browser  # Browser automation helpers.
+├── cc  # cc-connect helper commands.
+├── client  # Remote client tools.
+├── crs  # Claude Relay Service helper commands.
+├── docker  # Docker utility commands.
+├── explore  # Research and data exploration helpers.
+├── mcp  # MCP server inspection and launch helpers.
+├── nginx  # Nginx configuration generation helpers.
+├── serve  # Local service helpers.
+├── skill  # Install and manage ChatTool skills.
+└── tplogin  # TP-Link router helpers.
+```
+
 ## PyPI Package Scaffolding
 
 ```bash

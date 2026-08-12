@@ -3,13 +3,13 @@ name: Publish Package
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: read
 
 jobs:
-  build-and-publish:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,7 +44,7 @@ jobs:
           echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
       - name: Verify release commit is on master
         run: |
-          git fetch origin master
+          git fetch --no-tags origin master:refs/remotes/origin/master
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
             echo "Release tag commit $GITHUB_SHA is not contained in origin/master."
             exit 1

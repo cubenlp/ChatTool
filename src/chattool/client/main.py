@@ -5,6 +5,8 @@ from typing import Callable
 
 import click
 
+from chattool import __version__
+
 
 class LazyGroup(click.Group):
     def __init__(
@@ -47,6 +49,13 @@ class LazyGroup(click.Group):
                 formatter.write_dl(rows)
 
 
+_TREE_PARAM_PURPOSES = {
+    "help": "Show help for the current command.",
+    "version": "Show package version.",
+    "tree": "Print the registered CLI tree.",
+}
+
+
 def _load_attr(module_path: str, attr: str) -> click.Command:
     module = importlib.import_module(module_path)
     return getattr(module, attr)
@@ -73,10 +82,84 @@ def _build_client_group() -> click.Command:
     )
 
 
-@click.group(cls=LazyGroup)
-def cli():
-    """ChatTool CLI - Unified entry point for ChatTool services and scripts."""
-    pass
+def _command_help(command: click.Command) -> str:
+    if command.help:
+        return command.help
+    if command.short_help:
+        return command.short_help
+    if command.callback and command.callback.__doc__:
+        return command.callback.__doc__.strip()
+    return ""
+
+
+def _param_signature(param: click.Parameter) -> str:
+    opts = getattr(param, "opts", None) or []
+    secondary = getattr(param, "secondary_opts", None) or []
+    names = [*opts, *secondary]
+    if names:
+        return "/".join(names)
+    return param.human_readable_name.upper().replace("_", "-")
+
+
+def _param_purpose(param: click.Parameter) -> str:
+    if param.name in _TREE_PARAM_PURPOSES:
+        return _TREE_PARAM_PURPOSES[param.name]
+    if isinstance(param, click.Option) and param.help:
+        return param.help.rstrip(".") + "."
+    return "Option registered by Click."
+
+
+def _iter_command_rows(command: click.Command) -> list[tuple[str, str]]:
+    rows = [("--help", _TREE_PARAM_PURPOSES["help"])]
+    for param in command.params:
+        if getattr(param, "hidden", False):
+            continue
+        rows.append((_param_signature(param), _param_purpose(param)))
+    if isinstance(command, LazyGroup):
+        ctx = click.Context(command)
+        for name in command.list_commands(ctx):
+            if name in command.commands:
+                child = command.commands[name]
+                if child is None or child.hidden:
+                    continue
+            help_text = command._lazy_command_help.get(name)
+            if help_text is None and name in command.commands:
+                help_text = command.commands[name].get_short_help_str()
+            rows.append((name, help_text or ""))
+    elif isinstance(command, click.Group):
+        for name, child in sorted(command.commands.items()):
+            if child is None or child.hidden:
+                continue
+            rows.append((name, child.get_short_help_str()))
+    return rows
+
+
+def render_command_tree(command: click.Command, name: str = "chattool") -> str:
+    lines = [f"{name}  # {_command_help(command)}"]
+    rows = _iter_command_rows(command)
+    for index, (label, purpose) in enumerate(rows):
+        connector = "└──" if index == len(rows) - 1 else "├──"
+        lines.append(f"{connector} {label}  # {purpose}")
+    return "\n".join(lines)
+
+
+@click.group(cls=LazyGroup, invoke_without_command=True)
+@click.version_option(__version__, prog_name="chattool")
+@click.option(
+    "--tree",
+    "show_tree",
+    is_flag=True,
+    help="Print the registered CLI tree.",
+)
+@click.pass_context
+def cli(ctx: click.Context, show_tree: bool) -> None:
+    """Unified entry point for ChatTool services and scripts."""
+    if show_tree:
+        click.echo(render_command_tree(ctx.command, "chattool"))
+        ctx.exit(0)
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+        ctx.exit(0)
 
 
 cli._lazy_commands.update(
@@ -92,6 +175,21 @@ cli._lazy_commands.update(
         "docker": lambda: _load_attr("chattool.docker.cli", "docker_cmd"),
         "explore": lambda: _load_attr("chattool.explore.cli", "explore_cli"),
         "crs": lambda: _load_attr("chattool.tools.crs.cli", "cli"),
+    }
+)
+cli._lazy_command_help.update(
+    {
+        "browser": "Browser automation helpers.",
+        "cc": "cc-connect helper commands.",
+        "client": "Remote client tools.",
+        "crs": "Claude Relay Service helper commands.",
+        "docker": "Docker utility commands.",
+        "explore": "Research and data exploration helpers.",
+        "mcp": "MCP server inspection and launch helpers.",
+        "nginx": "Nginx configuration generation helpers.",
+        "serve": "Local service helpers.",
+        "skill": "Install and manage ChatTool skills.",
+        "tplogin": "TP-Link router helpers.",
     }
 )
 
