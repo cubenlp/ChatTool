@@ -222,6 +222,28 @@ chatpypi probe mychat
 
 如只想生成代码与测试骨架，可以用 `--without-mkdocs` 跳过 mkdocs/docs，用 `--without-workflows` 跳过 `.github/workflows/`。
 
+## CLI 树
+
+`chattool --tree` 从真实 Click/LazyGroup 注册面生成，用于锁定当前 parent command surface。
+
+```text
+chattool  # Unified entry point for ChatTool services and scripts.
+├── --help  # Show help for the current command.
+├── --version  # Show package version.
+├── --tree  # Print the registered CLI tree.
+├── browser  # Browser automation helpers.
+├── cc  # cc-connect helper commands.
+├── client  # Remote client tools.
+├── crs  # Claude Relay Service helper commands.
+├── docker  # Docker utility commands.
+├── explore  # Research and data exploration helpers.
+├── mcp  # MCP server inspection and launch helpers.
+├── nginx  # Nginx configuration generation helpers.
+├── serve  # Local service helpers.
+├── skill  # Install and manage ChatTool skills.
+└── tplogin  # TP-Link router helpers.
+```
+
 ## 开源协议
 
 MIT License

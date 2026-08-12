@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-08-12
+- 准备 `7.1.4` patch 版本：为 ChatTool parent 顶层 CLI 增加真实 Click/LazyGroup 注册面生成的 `chattool --tree`，并补齐顶层 `chattool --version`。
+- 文档与测试同步锁定当前 parent command surface：`browser`、`cc`、`client`、`crs`、`docker`、`explore`、`mcp`、`nginx`、`serve`、`skill`、`tplogin`；已迁出的 `dns`、`gh`、`image` 等不重新进入 parent CLI。
+- 发布与文档 workflow gate 同步：发布 workflow 只允许 tag 触发、使用 GitHub OIDC/Trusted Publishing、无 legacy PyPI/Twine password secret，并用 `git fetch --no-tags origin master:refs/remotes/origin/master` 校验 tag commit 在默认分支；Preview Docs 从 `mkdocs.yml site_url` 读 URL，并先同步 `gh-pages`。
+- MkDocs Material 启用 `pymdownx.emoji` 的 Material `twemoji`/`to_svg` renderer，避免 source/generated/live docs 漏出未渲染 Material icon shorthand。
+- 发布前置已回读：刷新 PyPI recent-auth 后，`chatpypi publisher detail chattool -e RexWzh` 显示 active Trusted Publisher `cubenlp/ChatTool` + `publish.yml` + `(Any)`，`pending_count=0`；可按正常 tag-driven OIDC 发布 gate 继续。
+
 ## 2026-07-30
 - 准备 `7.1.3` patch 版本：发布 ChatZulip parent 分离结果，使 PyPI 用户获得移除后的 `chattool` surface 与新的 `chattool[zulip]` / `chattool[arch]` / `chattool[tools]` 依赖边界。
-- PyPI 发布工作流从长期 `PYPI_USERNAME` / `PYPI_PASSWORD` secrets 迁移到 `cubenlp/ChatTool` active Trusted Publisher 与 GitHub Actions OIDC；tag workflow 会先跑稳定测试、build 和 twine check，再执行 tokenless publish。
+- PyPI 发布工作流从长期 PyPI username/password secrets 迁移到 `cubenlp/ChatTool` active Trusted Publisher 与 GitHub Actions OIDC；tag workflow 会先跑稳定测试、build 和 twine check，再执行 tokenless publish。
 - ChatZulip parent 分离：`chattool zulip`、`src/chattool/tools/zulip/`、ChatTool 内 `ZulipConfig` re-export、Zulip MCP catalog 与 Zulip 专属测试/文档已移除；Zulip 能力由独立 `ChatZulip>=0.1.0,<0.2.0` / `chatzulip` 负责。
 - 新增 `chattool[zulip]` optional extra，并把 `ChatZulip>=0.1.0,<0.2.0` 纳入 `chattool[arch]` / `chattool[tools]` 聚合安装；ChatTool base install 不再重复维护 Zulip runtime。
 

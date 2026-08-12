@@ -1,8 +1,10 @@
-name: preview
+name: Preview Docs
+
 on:
   pull_request:
     branches:
       - master
+
 permissions:
   contents: write
   pull-requests: write
@@ -19,28 +21,42 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+          python-version: "3.x"
+      - run: echo "cache_id=$(date --utc '+%V')" >> "$GITHUB_ENV"
       - uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install .[docs]
-      - run: |
-          git fetch origin
-          mike deploy dev -p --allow-empty
-          echo "Preview URL: https://chattool.wzhecnu.cn/dev/" >> $GITHUB_STEP_SUMMARY
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install '.[docs]'
+      - name: Deploy preview docs
+        run: |
+          git fetch origin gh-pages --depth=1 || true
+          mike deploy dev --push --update-aliases --allow-empty
+          site_url=$(python - <<'PY'
+          from pathlib import Path
 
+          for line in Path("mkdocs.yml").read_text(encoding="utf-8").splitlines():
+              if line.startswith("site_url:"):
+                  print(line.split(":", 1)[1].strip().rstrip("/"))
+                  break
+          else:
+              raise SystemExit("site_url not found")
+          PY
+          )
+          echo "CHATTOOL_PREVIEW_URL=${site_url}/dev/" >> "$GITHUB_ENV"
+          echo "Preview URL: ${site_url}/dev/" >> "$GITHUB_STEP_SUMMARY"
       - name: Comment PR with Preview Link
         uses: actions/github-script@v6
+        env:
+          CHATTOOL_PREVIEW_URL: ${{ env.CHATTOOL_PREVIEW_URL }}
         with:
           script: |
             const { payload } = context;
             const prNumber = payload.number;
-            const baseUrl = 'https://chattool.wzhecnu.cn';
-            const previewLink = `${baseUrl}/dev/`;
+            const previewLink = process.env.CHATTOOL_PREVIEW_URL;
             const comments = await github.rest.issues.listComments({
               issue_number: prNumber,
               owner: context.repo.owner,
@@ -52,6 +68,6 @@ jobs:
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `Preview available at: ${previewLink}`
+                body: `Preview available at: ${previewLink}`,
               });
             }
