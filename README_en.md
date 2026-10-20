@@ -178,6 +178,7 @@ chattool serve local . --html index.html --dry-run
 | Local HTML | `chattool serve local` | Serve a local HTML file or directory |
 | Cert Mgmt | `chattool serve cert` / `chattool client cert` | SSL certificate distribution |
 | Setup | `chatup codex/claude/opencode/hermes` | ChatTool setup has moved to the standalone ChatUp package. Install `chattool[setup]` or `chatup`, then use first-level `chatup ...` commands. |
+| CRS | `chatcrs` | Install `chattool[crs]` or `ChatCRS`; the parent no longer embeds CRS commands, client code, or its config provider. |
 | Workspace | `chatup workspace` | Create a collaboration workspace around a core project with `projects/` as the execution container and workspace-level files as the general-use protocol layer; supports `--with-chattool`, `--with-chatblog`, and `--with-memory` |
 | Skills | `chattool skill install` | Install ChatTool skills to Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | Quick cc-connect setup and start |
@@ -205,7 +206,6 @@ chattool  # Unified entry point for ChatTool services and scripts.
 ├── browser  # Browser automation helpers.
 ├── cc  # cc-connect helper commands.
 ├── client  # Remote client tools.
-├── crs  # Claude Relay Service helper commands.
 ├── docker  # Docker utility commands.
 ├── explore  # Research and data exploration helpers.
 ├── mcp  # MCP server inspection and launch helpers.

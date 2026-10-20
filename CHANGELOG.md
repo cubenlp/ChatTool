@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-10-20
+- `7.1.5` patch：将共享 runtime 依赖对齐到 `chatstyle>=0.2.0,<0.3.0` 与 `chatenv>=0.2.10,<0.3.0`，避免和已使用 ChatStyle 0.2 的 ChatArch 独立包产生解析冲突；原交互参数与 adapter 保持不变。
+- CRS 已由独立 ChatCRS 维护：移除 `chattool crs`、内嵌 CRS HTTP/CLI 实现及父包 CRSConfig 注册；`chattool[crs]` / `[arch]` 可安装 `ChatCRS>=0.3.5,<0.4.0`，实际命令使用 `chatcrs`。
+- 保留 `chattool serve oauth`：将其复用的通用 OAuth helper 原样移到 `chattool.serve.openai_oauth`，同步迁移测试，避免清理 CRS 时破坏独立的 OAuth 服务。
+- 更新 CRS 迁移说明、配置归属、双语 CLI 树与回归测试；不修改既有凭据或激活 profile。
+- CI 与发布依赖安装后增加 `pip check`，阻止共享依赖声明冲突进入正式发布。
+
 ## 2026-08-12
 - 准备 `7.1.4` patch 版本：为 ChatTool parent 顶层 CLI 增加真实 Click/LazyGroup 注册面生成的 `chattool --tree`，并补齐顶层 `chattool --version`。
 - 文档与测试同步锁定当前 parent command surface：`browser`、`cc`、`client`、`crs`、`docker`、`explore`、`mcp`、`nginx`、`serve`、`skill`、`tplogin`；已迁出的 `dns`、`gh`、`image` 等不重新进入 parent CLI。

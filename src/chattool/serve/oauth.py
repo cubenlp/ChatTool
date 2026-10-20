@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from chattool.config import BaseEnvConfig, OpenAIConfig  # type: ignore[attr-defined]
 from chattool.const import CHATARCH_ENV_DIR
-from chattool.tools.crs.openai_oauth import (
+from chattool.serve.openai_oauth import (
     build_openai_oauth_refresh_result,
     build_openai_oauth_status,
     refresh_openai_oauth_token,

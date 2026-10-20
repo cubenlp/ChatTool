@@ -83,11 +83,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install '.[dev]'
+          python -m pip check
       - name: Run stable smoke tests
         run: |
           python -m pytest -q \
             tests/code-tests/skills \
-            tests/mock-cli-tests
+            tests/mock-cli-tests \
+            tests/code-tests/serve/test_oauth_server.py \
+            tests/code-tests/serve/test_openai_oauth.py
       - name: Build distributions
         run: |
           python -m build

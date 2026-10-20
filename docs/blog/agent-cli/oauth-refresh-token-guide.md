@@ -312,7 +312,7 @@ Pandora 生态曾经广泛使用 ChatGPT access token 来模拟网页端能力�
 
 ## 对 ChatTool / CRS 的实践建议
 
-对于我们当前的 `chattool crs`：
+对于独立 `chatcrs`（早期在 ChatTool 中孵化，现已迁出）：
 
 - 不接入 ChatGPT Web 私有 token；
 - 不做网页端 conversation 编辑；

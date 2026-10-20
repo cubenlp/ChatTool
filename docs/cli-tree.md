@@ -10,7 +10,6 @@ chattool  # Unified entry point for ChatTool services and scripts.
 ├── browser  # Browser automation helpers.
 ├── cc  # cc-connect helper commands.
 ├── client  # Remote client tools.
-├── crs  # Claude Relay Service helper commands.
 ├── docker  # Docker utility commands.
 ├── explore  # Research and data exploration helpers.
 ├── mcp  # MCP server inspection and launch helpers.
@@ -24,4 +23,4 @@ chattool  # Unified entry point for ChatTool services and scripts.
 
 - 源码入口：`chattool.client.main.cli`
 - 回归测试：`tests/mock-cli-tests/client/test_chattool_version_tree_basic.py`
-- 发布版本：`chattool==7.1.4`
+- 发布版本：`chattool==7.1.5`
