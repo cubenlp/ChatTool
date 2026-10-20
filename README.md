@@ -188,7 +188,7 @@ chattool serve local . --html index.html --dry-run
 | Workspace | `chatup workspace` | 初始化围绕核心项目的人类-AI 协作工作区骨架；当前默认使用 `projects/` 作为实际工作的执行容器，workspace 根目录则保留 general-use 协议与上下文；可选 `--with-chattool`、`--with-chatblog`、`--with-memory` 分别挂载 ChatTool、ChatBlog、ChatMemory |
 | Skills | `chattool skill install` | 安装 ChatTool skills 到 Codex / Claude / OpenCode |
 | CC-Connect | `chattool cc` | cc-connect 快速配置与启动 |
-| CRS 查询 | `chattool crs` | 查询 Claude Relay Service API key 用量、模型统计和只读 admin 信息 |
+| CRS（独立包） | `chatcrs` | 安装 `chattool[crs]` 或 `ChatCRS`；CRS 功能已迁出，父包不再挂载命令或维护实现 |
 
 ## 文档
 
@@ -212,11 +212,11 @@ chatpypi init -i                  # 交互式选择模板、mkdocs/workflow 等�
 chatpypi probe mychat
 ```
 
-也可以通过 `pip install "chattool[arch]"` 一次性安装 ChatGH、ChatUp、ChatPyPI、ChatNet、ChatLark、ChatImg。
+也可以通过 `pip install "chattool[arch]"` 安装 ChatGH、ChatUp、ChatPyPI、ChatNet、ChatLark、ChatImg、ChatZulip、ChatCRS 等独立工具。
 
 `ChatPyPI` / `chatpypi` 是 Python 包创建、构建、校验、上传与探测能力的 canonical owner；ChatTool 不再内置 `chattool pypi` 或 `chatpypi` wrapper。
 
-默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板默认写入 `requires-python = ">=3.10"`，并依赖 `chatstyle>=0.1.0,<0.2.0` 与 `chatenv>=0.2.2,<0.3.0`。
+默认模板生成的 `pyproject.toml` 会写入 `requires-python = ">=3.9"`；`chatarch` 模板默认写入 `requires-python = ">=3.10"`，并依赖 `chatstyle>=0.2.0,<0.3.0` 与 `chatenv>=0.2.10,<0.3.0`。
 
 `chatarch` 模板会额外生成 `DEVELOP.md`、`CHANGELOG.md`、`AGENTS.md`、`README.en.md`、`mkdocs.yml`、`docs/`、`tests/cli-tests/`、`tests/mock-cli-tests/`、`tests/code-tests/` 与 `.github/workflows/` 骨架；发布 workflow 由显式 `v*` tag 或 `workflow_dispatch` 触发，校验 tag 与包内 `__version__` 一致，并通过 PyPI Trusted Publishing 发布。默认不写 `environment: pypi`，除非 PyPI Trusted Publisher 明确配置了同名 environment。
 
@@ -234,7 +234,6 @@ chattool  # Unified entry point for ChatTool services and scripts.
 ├── browser  # Browser automation helpers.
 ├── cc  # cc-connect helper commands.
 ├── client  # Remote client tools.
-├── crs  # Claude Relay Service helper commands.
 ├── docker  # Docker utility commands.
 ├── explore  # Research and data exploration helpers.
 ├── mcp  # MCP server inspection and launch helpers.

@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from chattool.config import OpenAIConfig
-from chattool.tools.crs.openai_oauth import (
+from chattool.serve.openai_oauth import (
     build_openai_oauth_status,
     refresh_openai_oauth_token,
     save_openai_oauth_token_data,
@@ -40,7 +40,7 @@ def test_refresh_openai_oauth_token_returns_access_and_expiry(monkeypatch):
             return FakeResponse()
 
     fixed_now = datetime(2026, 6, 21, 1, 2, 3, tzinfo=timezone.utc)
-    monkeypatch.setattr("chattool.tools.crs.openai_oauth.httpx.Client", FakeClient)
+    monkeypatch.setattr("chattool.serve.openai_oauth.httpx.Client", FakeClient)
 
     with patch.object(OpenAIConfig.OPENAI_OAUTH_BASE_URL, "value", "https://auth.openai.com"):
         result = refresh_openai_oauth_token(
@@ -84,7 +84,7 @@ def test_refresh_openai_oauth_token_keeps_old_refresh_when_rotation_not_returned
             return FakeResponse()
 
     fixed_now = datetime(2026, 6, 21, 1, 2, 3, tzinfo=timezone.utc)
-    monkeypatch.setattr("chattool.tools.crs.openai_oauth.httpx.Client", FakeClient)
+    monkeypatch.setattr("chattool.serve.openai_oauth.httpx.Client", FakeClient)
 
     result = refresh_openai_oauth_token("old-refresh-token", now=fixed_now)
 
@@ -119,7 +119,7 @@ def test_refresh_openai_oauth_token_uses_configured_base_url(monkeypatch):
             captured["url"] = url
             return FakeResponse()
 
-    monkeypatch.setattr("chattool.tools.crs.openai_oauth.httpx.Client", FakeClient)
+    monkeypatch.setattr("chattool.serve.openai_oauth.httpx.Client", FakeClient)
     with patch.object(
         OpenAIConfig.OPENAI_OAUTH_BASE_URL,
         "value",

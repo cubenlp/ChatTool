@@ -220,13 +220,14 @@ chatenv test -t oai
 目前支持以下服务的配置：
 
 - **OpenAI**: `OPENAI_API_KEY`, `OPENAI_API_BASE`, `OPENAI_API_MODEL`, `OPENAI_ACCESS_TOKEN`, `OPENAI_REFRESH_TOKEN`, `OPENAI_OAUTH_BASE_URL`, `OPENAI_ACCESS_TOKEN_EXPIRES_AT` 等；OAuth token、OAuth auth server base URL 与 access token 过期时间也收纳在同一 OAI/OpenAI 配置类型下，不再拆分独立 Codex 配置类型。
-- **Claude Relay Service (CRS)**: `CRS_API_BASE`, `CRS_API_KEY`, `CRS_USERNAME`, `CRS_PASSWORD`, `CRS_ACCESS_TOKEN`；供 `chattool crs` 查询用量、自统计和只读 admin 信息。
 - **Azure OpenAI**: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` 等
 - **阿里云**: `ALIBABA_CLOUD_ACCESS_KEY_ID`, `ALIBABA_CLOUD_ACCESS_KEY_SECRET` 等
 - **腾讯云**: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY` 等
 - **Skills**: `CHATTOOL_SKILLS_DIR`（skills 源目录，`chattool skill` / `chatskill` 在未传 `--source` 时默认读取）
 
 GitHub/gh 相关 typed env 已迁移到独立 `chatgh`，ChatTool 不再注册 `GITHUB_ACCESS_TOKEN` schema；需要配置 GitHub token 时请安装并使用 `chatgh set-token` / `chatenv -t gh`。
+
+CRS 配置由独立 `ChatCRS` 的 provider 注册，ChatTool 不再维护或 re-export `CRSConfig`。安装 `chattool[crs]` 或 `ChatCRS` 后使用 `chatcrs` / `chatenv -t crs`；已有 `CRS` profile 文件保留，父包升级不会修改它们。具体字段、远程管理与动态 token 存储以 [ChatCRS 文档](https://arch.gh.wzhecnu.cn/ChatCRS/) 为准。
 
 AI image provider typed env schemas 已迁移到独立 `ChatImg` / `chatimg`，ChatTool 不再注册 `TongyiConfig`、`HuggingFaceConfig`、`LiblibConfig`、`PollinationsConfig` 或 `SiliconFlowConfig`；需要配置 image provider 时请使用 `chatenv -t chatimg`。
 
