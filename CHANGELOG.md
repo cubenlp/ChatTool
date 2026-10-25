@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
 ## 2026-10-25
+- 发布 `7.1.6` patch：修复 OpenAI 配置连通性测试的双协议覆盖与错误判断，不修改既有配置或模型。
 - 修复 OpenAI provider 的 `chatenv test -t oai/openai`：Responses 优先但不再提前返回，独立测试并分别报告 Responses / Chat Completions；仅一项通过不误判整个配置不可用，两项失败非零退出。
 - 修复过小生成限额：Responses 使用 256-token 测试预算，Chat Completions 改用 `max_completion_tokens=256`；预算耗尽给明确诊断，不把 HTTP 200、未完成 SSE 或空输出判为成功。
 - 提供可复用 `probe_openai_apis` 结构化 Python API；测试不输出生成正文、上游错误正文或凭据，HTTP 请求有超时且不自动重试；保留现有 schema 与 profile 存储。
