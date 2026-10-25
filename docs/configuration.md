@@ -209,7 +209,16 @@ BaseEnvConfig.print_config()
 
 ## 测试配置连通性
 
-`chatenv test -t oai` 会优先使用 OpenAI Responses API 进行最小生成测试：请求 `/responses` 的 streaming 接口，并读取到 `response.output_text.delta` 或 `response.completed` 事件才算成功。它适配 CRS/Codex 风格的 OpenAI 兼容端点和 `gpt-5.x` 这类走 `/responses` 的模型；如果该接口不可用，会回退到旧的 Chat Completions 测试路径。
+安装 ChatTool provider 后，`chatenv test -t oai`（同 `-t openai`）默认先测 `/responses` streaming，再**独立测试** `/chat/completions`，两项都报告，不再因 Responses 成功而跳过另一项。两请求使用同一生效 profile 的 base/key/model，各自设置 30 秒 HTTP timeout，不自动重试。
+
+- 两项通过：两种协议均完成最小文本生成。
+- 仅一项通过：配置可经通过的协议使用；另一项只报告本次测试失败，不把整个服务判为不可用。
+- 两项失败：分别报告诊断，CLI 非零退出。
+- HTTP 200 或 Responses 的 created/首段输出不单独算通过；Responses 必须有文本且收到 completed，失败、取消、incomplete 和中断均不算通过。Chat Completions 必须返回有效文本并正常结束。
+- Responses 使用 `max_output_tokens=256`，Chat Completions 使用 `max_completion_tokens=256`，不再发送 Responses 的 8-token 限额或 Chat 的旧 `max_tokens=5`。预算耗尽明确报告为测试预算问题，不能据此认定协议不受支持。
+- 默认不展示回复正文、原始错误体或任何 secret。HTTP 错误报告状态码；服务端错误内容不直接回显。
+
+现有命令树不变。ChatEnv 0.2.14+ 可用 `chatenv test NAME -t oai -I`，0.2.15+ 也可用 `--profile NAME`，不会激活该 profile。Python 调用可使用 `chattool.config.openai.probe_openai_apis(api_base=..., api_key=..., model=...)`，返回两项 `OpenAIProbeResult(protocol, success, detail)`，不依赖 CLI 输出解析。
 
 ```bash
 chatenv test -t oai

@@ -59,6 +59,7 @@ chatenv cat                      # 查看配置（敏感值打码）
 chatenv cat -t feishu           # 查看飞书配置，供 chattool cc init 默认候选值参考
 chatenv cat -t openai --no-mask | chatenv paste --stdin --yes  # 跨设备复制/导入配置
 chatenv set OPENAI_API_KEY=sk-xxx
+chatenv test -t oai -I         # 先测 Responses，再独立测 Chat Completions，分别报告
 chatenv new mini -t feishu      # 从当前激活配置复制一份新的 Feishu profile
 chatenv new -t openai           # 交互式创建 OpenAI profile：先问名称，再补齐字段，不改 active .env
 chatenv save work -t openai && chatenv use work -t openai   # 按类型管理 profile

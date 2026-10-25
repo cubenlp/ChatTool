@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也记录在本文件，不再维护待发布分组。
 
+## 2026-10-25
+- 修复 OpenAI provider 的 `chatenv test -t oai/openai`：Responses 优先但不再提前返回，独立测试并分别报告 Responses / Chat Completions；仅一项通过不误判整个配置不可用，两项失败非零退出。
+- 修复过小生成限额：Responses 使用 256-token 测试预算，Chat Completions 改用 `max_completion_tokens=256`；预算耗尽给明确诊断，不把 HTTP 200、未完成 SSE 或空输出判为成功。
+- 提供可复用 `probe_openai_apis` 结构化 Python API；测试不输出生成正文、上游错误正文或凭据，HTTP 请求有超时且不自动重试；保留现有 schema 与 profile 存储。
+
 ## 2026-10-20
 - `7.1.5` patch：将共享 runtime 依赖对齐到 `chatstyle>=0.2.0,<0.3.0` 与 `chatenv>=0.2.10,<0.3.0`，避免和已使用 ChatStyle 0.2 的 ChatArch 独立包产生解析冲突；原交互参数与 adapter 保持不变。
 - CRS 已由独立 ChatCRS 维护：移除 `chattool crs`、内嵌 CRS HTTP/CLI 实现及父包 CRSConfig 注册；`chattool[crs]` / `[arch]` 可安装 `ChatCRS>=0.3.5,<0.4.0`，实际命令使用 `chatcrs`。
