@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Definitions for gradients and shadows -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="card-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#334155;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+      <feOffset dx="0" dy="5" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.5"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bg-gradient)"/>
+  
+  <!-- Title -->
+  <text x="600" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="48" fill="#f8fafc">From Code to Agent Skill</text>
+  <text x="600" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8">Evolution of Tool Capabilities</text>
+
+  <!-- Cards Container -->
+  <g transform="translate(100, 250)">
+    
+    <!-- Step 1: Code -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="200" height="200" rx="15" fill="url(#card-gradient)" stroke="#3b82f6" stroke-width="2" filter="url(#drop-shadow)"/>
+      <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#3b82f6">Layer 1</text>
+      <!-- Icon: Code -->
+      <text x="100" y="110" text-anchor="middle" font-family="Courier New, monospace" font-weight="bold" font-size="48" fill="#e2e8f0">&lt;/&gt;</text>
+      <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#cbd5e1">Code Import</text>
+    </g>
+
+    <!-- Arrow 1 -->
+    <line x1="210" y1="100" x2="250" y2="100" stroke="#94a3b8" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+    <!-- Step 2: CLI -->
+    <g transform="translate(260, 0)">
+      <rect x="0" y="0" width="200" height="200" rx="15" fill="url(#card-gradient)" stroke="#10b981" stroke-width="2" filter="url(#drop-shadow)"/>
+      <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#10b981">Layer 2</text>
+      <!-- Icon: Terminal -->
+      <text x="100" y="110" text-anchor="middle" font-family="Courier New, monospace" font-weight="bold" font-size="48" fill="#e2e8f0">&gt;_</text>
+      <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#cbd5e1">CLI</text>
+    </g>
+
+    <!-- Arrow 2 -->
+    <line x1="470" y1="100" x2="510" y2="100" stroke="#94a3b8" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+    <!-- Step 3: Server -->
+    <g transform="translate(520, 0)">
+      <rect x="0" y="0" width="200" height="200" rx="15" fill="url(#card-gradient)" stroke="#f59e0b" stroke-width="2" filter="url(#drop-shadow)"/>
+      <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#f59e0b">Layer 3</text>
+      <!-- Icon: Server -->
+      <!-- Moved up from y=70 to y=55 and adjusted scale slightly if needed to avoid overlap -->
+      <g transform="translate(65, 55) scale(0.15)" fill="#e2e8f0">
+         <path d="M40,0H420a40,40,0,0,1,40,40V120a40,40,0,0,1-40,40H40A40,40,0,0,1,0,120V40A40,40,0,0,1,40,0Z"/>
+         <path d="M40,200H420a40,40,0,0,1,40,40v80a40,40,0,0,1-40,40H40a40,40,0,0,1-40-40V240A40,40,0,0,1,40,200Z"/>
+         <path d="M40,400H420a40,40,0,0,1,40,40v80a40,40,0,0,1-40,40H40a40,40,0,0,1-40-40V440A40,40,0,0,1,40,400Z"/>
+      </g>
+      <!-- Moved text down slightly to 170 -->
+      <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#cbd5e1">Server-Client</text>
+    </g>
+
+    <!-- Arrow 3 -->
+    <line x1="730" y1="100" x2="770" y2="100" stroke="#94a3b8" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+    <!-- Step 4: Skill -->
+    <g transform="translate(780, 0)">
+      <rect x="0" y="0" width="200" height="200" rx="15" fill="url(#card-gradient)" stroke="#8b5cf6" stroke-width="2" filter="url(#drop-shadow)"/>
+      <text x="100" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#8b5cf6">Layer 4</text>
+      <!-- Icon: Brain/Agent -->
+      <!-- Moved up from y=65 to y=50 -->
+      <g transform="translate(60, 50) scale(0.16)" fill="#e2e8f0">
+         <path d="M256 448c141.4 0 256-93.1 256-208S397.4 32 256 32 0 125.1 0 240c0 45.1 17.7 86.8 47.7 120.9-1.9 24.5-11.4 46.3-21.4 62.9-5.5 9.2-11.1 16.6-15.2 21.6-2.1 2.5-3.7 4.4-4.9 5.7l-.6.7c-3.6 4.1-3.9 10.3-.5 14.6 3.2 4 8.7 5.2 13.3 2.9l.4-.2c25.4-13.4 46-29.4 60.9-45.6 15.5 5.9 31.9 9.1 48.9 9.1 8.8 0 17.5-.9 26-2.6 14.2 8.3 29.2 14.9 45 19.4-1.2 1.6-2.4 3.3-3.6 5-14.9 21.6-26.4 49.3-15.2 75.3 5.4 12.6 17.5 20.8 31.2 20.8h6.2c13.7 0 25.8-8.2 31.2-20.8 11.2-26 25.2-46.7 41.6-62.1 16.4 15.4 30.4 36.1 41.6 62.1 5.4 12.6 17.5 20.8 31.2 20.8h6.2c13.7 0 25.8-8.2 31.2-20.8 11.2-26-.3-53.7-15.2-75.3-1.2-1.7-2.4-3.4-3.6-5 29.8-8.6 56.4-23.7 78.6-43.5 13.3-11.9 21.8-27.7 24-45.3z"/>
+      </g>
+      <!-- Moved text down slightly to 170 -->
+      <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#cbd5e1">Skill / MCP</text>
+    </g>
+
+  </g>
+  
+  <!-- Footer -->
+  <text x="600" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#64748b">Powered by ChatTool</text>
+
+</svg>
